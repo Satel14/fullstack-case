@@ -1,3 +1,163 @@
+@font-face {
+    font-family: "Avenir Next LT Pro Bold";
+    src: url("./fonts/Avenir\ Next\ LT\ Pro\ Bold.otf") format("truetype");
+}
+
+@font-face {
+    font-family: "Muller Bold";
+    src: url("./fonts/Muller\ Bold.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Muller Regular";
+    src: url("./fonts/Muller\ Regular.ttf") format("truetype");
+}
 body {
-    font-family: "Roboto", sans-serif;
-  }
+    font-family: "Muller Regular";
+
+    background-color: #0f121e;
+    background-attachment: fixed;
+    background-size: 100%;
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
+    background-position-y: 20%;
+    min-width: 68.75rem;
+    padding: 0;
+    margin: 0;
+    color: #fff;
+}
+
+$backgroundColor1: #262e43;
+$backgroundColor2: #161b29;
+$backgroundColor3: #10131e;
+$backgroundColor4: #0d101a;
+$backgroundColor5: #f0af44;
+
+#root {
+    .ant-layout {
+        background-color: transparent !important;
+
+        &-content {
+            min-height: calc(100vh - 200px);
+        }
+    }
+    .headertop {
+        background-color: $backgroundColor1;
+
+        .ant-menu {
+            background-color: $backgroundColor1;
+            text-transform: uppercase;
+
+            &-item {
+                svg {
+                    color: #8990a1;
+                    font-size: 25px;
+                }
+
+                &:hover {
+                    background-color: transparent;
+                }
+                &-selected {
+                    background-color: transparent;
+                }
+            }
+        }
+
+        &-sitename {
+            font-family: "Avenir Next LT Pro Bold", serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 20px;
+            letter-spacing: 0.7px;
+            color: #fff;
+            text-shadow: 0 0 2px #ffffff, 0 0 2px #01a9fb;
+
+            .logo {
+                display: block;
+                background-image: url("img/logo.png");
+                padding: 25px;
+                float: left;
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                height: 65px;
+            }
+        }
+    }
+
+    .headersecond {
+        background-color: $backgroundColor2;
+        text-transform: uppercase;
+        .ant-menu {
+            background-color: $backgroundColor2;
+        }
+    }
+
+    footer {
+        background: #0d101a;
+        padding: 2.5rem 1.875rem;
+
+        .container {
+            & > * {
+                margin: 0 2em;
+            }
+            color: #262e43;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .leftblock {
+            width: 600px;
+            font-size: 13px;
+            color: #5d6477;
+        }
+        .rightblock {
+            display: flex;
+            flex-direction: column;
+
+            a {
+                text-decoration: none;
+                margin: 0.225rem;
+                font-size: 13px;
+                color: #adb0b9;
+                &:hover {
+                    color: #fff;
+                }
+            }
+        }
+
+        .logo {
+            width: 200px;
+            display: block;
+            background-image: url("img/logo.png");
+            float: left;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            height: 100px;
+        }
+    }
+}
+
+.container {
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+@media (min-width: 768px) {
+    .container {
+        width: 750px;
+    }
+}
+@media (min-width: 992px) {
+    .container {
+        width: 970px;
+    }
+}
+@media (min-width: 1200px) {
+    .container {
+        width: 1170px;
+    }
+}

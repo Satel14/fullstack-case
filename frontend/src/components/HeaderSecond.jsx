@@ -22,7 +22,7 @@ export default class HeaderSecond extends React.Component {
   render() {
     const { current } = this.state;
     return (
-      <Header>
+      <Header className="headersecond">
         <Menu
           onClick={this.handleClick}
           selectedKeys={[current]}

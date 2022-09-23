@@ -2,6 +2,9 @@ import React from 'react'
 import { Redirect } from "react-router-dom";
 import Layout from "../Layout"
 import Main from "./../pages/Main"
+import Article from "./../pages/Article"
+import Case from "./../pages/Case"
+import History from "./../pages/History"
 
 // eslint-disable-next-line import/no-anonymous-default-export
 export default [
@@ -12,32 +15,31 @@ export default [
         breadcrumb: "Головна",
         exact: true,
     },
-      // {
-  //   path: "/stats",
-  //   exact: true,
-  //   layout: Layout,
-  //   breadcrumb: "Статистика",
-  //   component: Tabletop,
-  // },
-  // {
-  //   path: "/auth",
-  //   exact: true,
-  //   layout: Layout,
-  //   breadcrumb: "Авторизация",
-  //   component: AuthSite,
-  // },
+    {
+        path: "/article",
+        exact: true,
+        layout: Layout,
+        breadcrumb: "Cтаття",
+        component: Article,
+    },
+    {
+        path: "/case",
+        exact: true,
+        layout: Layout,
+        breadcrumb: "Кейси",
+        component: Case,
+    },
+    {
+        path: "/history",
+        layout: Layout,
+        breadcrumb: "Історія",
+        component: History,
+    },
+    // {
+    //     path: "/player",
+    //     exact: true,
+    //     breadcrumb: "Гравці",
 
-  // {
-  //   path: "/extramods",
-  //   layout: Layout,
-  //   breadcrumb: "Статистика Extra Mods",
-  //   component: TabletopExtra,
-  // },
-  // {
-  //   path: "/player",
-  //   exact: true,
-  //   breadcrumb: "Игроки",
-
-  //   component: () => <Redirect to="/stats" />,
-  // },
+    //     component: () => <Redirect to="/stats" />,
+    // },
 ];
