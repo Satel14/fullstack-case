@@ -1,64 +1,34 @@
 import React from "react";
-import { Menu, Layout } from "antd";
-import {
-  MailOutlined,
-  AppstoreOutlined,
-  SettingOutlined,
-} from "@ant-design/icons";
+import { Layout } from "antd";
 
-const { SubMenu } = Menu;
 const { Header } = Layout;
 
 export default class HeaderSecond extends React.Component {
-  state = {
-    current: "mail",
-  };
-
-  handleClick = (e) => {
-    console.log("click ", e);
-    this.setState({ current: e.key });
-  };
-
-  render() {
-    const { current } = this.state;
-    return (
-      <Header className="headersecond">
-        <Menu
-          onClick={this.handleClick}
-          selectedKeys={[current]}
-          mode="horizontal"
-        >
-          <Menu.Item key="mail" icon={<MailOutlined />}>
-            Navigation One
-          </Menu.Item>
-          <Menu.Item key="app" disabled icon={<AppstoreOutlined />}>
-            Navigation Two
-          </Menu.Item>
-          <SubMenu
-            key="SubMenu"
-            icon={<SettingOutlined />}
-            title="Navigation Three - Submenu"
-          >
-            <Menu.ItemGroup title="Item 1">
-              <Menu.Item key="setting:1">Option 1</Menu.Item>
-              <Menu.Item key="setting:2">Option 2</Menu.Item>
-            </Menu.ItemGroup>
-            <Menu.ItemGroup title="Item 2">
-              <Menu.Item key="setting:3">Option 3</Menu.Item>
-              <Menu.Item key="setting:4">Option 4</Menu.Item>
-            </Menu.ItemGroup>
-          </SubMenu>
-          <Menu.Item key="alipay">
-            <a
-              href="https://ant.design"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Navigation Four - Link
-            </a>
-          </Menu.Item>
-        </Menu>
-      </Header>
-    );
-  }
+    render() {
+        return (
+            <Header className="headersecond">
+                <div className="headersecond-stats">
+                    <div className="headersecond-stats__opened" />
+                    <div className="headersecond-stats__block">
+                        <i>2222</i>
+                        <span>Відкрито кейсів</span>
+                    </div>
+                </div>
+                <div className="headersecond-stats">
+                    <div className="headersecond-stats__users" />
+                    <div className="headersecond-stats__block">
+                        <i>3333</i>
+                        <span>Користувачів</span>
+                    </div>
+                </div>
+                <div className="headersecond-stats">
+                    <div className="headersecond-stats__online" />
+                    <div className="headersecond-stats__block">
+                        <i>156</i>
+                        <span>Онлайн</span>
+                    </div>
+                </div>
+            </Header>
+        );
+    }
 }

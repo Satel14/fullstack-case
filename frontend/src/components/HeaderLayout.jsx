@@ -11,7 +11,7 @@ const HeaderLayout = () => {
     return (
         <Header className="headertop">
             <div className='logo' />
-            <Menu theme="dark" mode="horizontal" defaultSelectedKeys={["2"]}>
+            <Menu theme="dark" mode="horizontal" defaultSelectedKeys={["1"]}>
                 <Menu.Item key='1' className='headertop-sitename' icon={<div className='logo' />}>
                     <Link to="/">Case</Link>
                 </Menu.Item>

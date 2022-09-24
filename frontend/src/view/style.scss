@@ -14,7 +14,7 @@
 }
 body {
     font-family: "Muller Regular";
-
+    // background: url("img/background.jpg");
     background-color: #0f121e;
     background-attachment: fixed;
     background-size: 100%;
@@ -33,80 +33,308 @@ $backgroundColor2: #161b29;
 $backgroundColor3: #10131e;
 $backgroundColor4: #0d101a;
 $backgroundColor5: #f0af44;
+$backgroundColor6: #0a0a13e0;
 
 #root {
     .ant-layout {
         background-color: transparent !important;
-
+        .ant-breadcrumb span {
+            color: #fff;
+        }
         &-content {
-            min-height: calc(100vh - 200px);
+            min-height: 75vh;
+            background: $backgroundColor6;
+            .ant-page-header {
+                color: #fff;
+                padding-left: 5px;
+                background-color: transparent;
+            }
+            .ant-page-header-heading-title,
+            .ant-page-header-back-button {
+                color: #fff;
+            }
+            .ant-page-header-heading-sub-title {
+                color: gray;
+            }
+            .caselist {
+                display: flex;
+                flex-flow: row wrap;
+                justify-content: space-between;
+                &::after {
+                    content: "";
+                    flex: auto;
+                }
+                .case {
+                    color: #fff;
+                    text-align: center;
+                    width: 210px;
+                    display: flex;
+                    margin: 0 5px 25px 5px;
+                    flex-direction: column;
+                    height: 250px;
+                    justify-content: center;
+
+                    &-name {
+                        font-size: 14px;
+                        margin: 10px 0;
+                    }
+                    &-price {
+                        padding: 8px 10px;
+                        border-radius: 15px;
+                        background: #00a0ff;
+                        display: block;
+                        width: auto;
+                        color: #000;
+                        max-width: 200px;
+                        min-width: 20px;
+                        font-weight: 700;
+                        margin: auto;
+                        line-height: 9px;
+                    }
+                    &-img {
+                        transition: 0.3s all;
+                        width: 100%;
+                    }
+                    &:hover {
+                        -webkit-transform: translate3d(0, -0.5rem, 0) scale(1.06);
+                        -moz-transform: translate3d(0, -0.5rem, 0) scale(1.06);
+                        -o-transform: translate3d(0, -0.5rem, 0) scale(1.06);
+                        -ms-transform: translate3d(0, -0.5rem, 0) scale(1.06);
+                        transform: translate3d(0, -0.5rem, 0) scale(1.06);
+                    }
+                }
+            }
         }
     }
+
+    .headersecond.third {
+        height: 70px;
+        background: transparent;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 5px;
+        margin: 3px -6px;
+
+        .casepage-itemlist_item {
+            height: 52px;
+            width: 52px;
+            margin: 3px;
+            border-radius: 5px;
+            border: 1px #ffffff8a solid;
+        }
+    }
+    .casepage {
+        display: flex;
+        flex-direction: column;
+
+        &-openbutton {
+            text-align: center;
+            margin: 10px 0 20px 0;
+        }
+
+        &-title-second {
+            font-size: 24px;
+            border-bottom: 1px #00a0ff3d solid;
+            padding-bottom: 6px;
+            margin-bottom: 13px;
+            display: flex;
+            align-items: center;
+            i {
+                color: gray;
+                font-style: normal;
+                font-size: 13px;
+                padding: 2px 13px;
+                line-height: 15px;
+            }
+        }
+        &-more {
+            text-align: center;
+            font-size: 30px;
+            img {
+                width: 400px;
+            }
+        }
+        &-itemlist {
+            display: flex;
+            flex-flow: row wrap;
+            justify-content: space-between;
+            margin: 0 -5px;
+
+            &::after {
+                content: "";
+                flex: auto;
+            }
+            &_item {
+                height: 115px;
+                width: 115px;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-size: contain;
+                position: relative;
+                margin: 4px;
+                border: 1px #00a0ff3d solid;
+                &:hover {
+                    cursor: pointer;
+                }
+                span {
+                    position: absolute;
+                    bottom: 0;
+                    background: #0000008a;
+                    font-size: 12px;
+                    width: 100%;
+                    text-align: center;
+                }
+            }
+        }
+    }
+
     .headertop {
         background-color: $backgroundColor1;
+        padding: 0 15px;
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px;
 
         .ant-menu {
             background-color: $backgroundColor1;
             text-transform: uppercase;
 
             &-item {
-                svg {
-                    color: #8990a1;
-                    font-size: 25px;
+                &.headertop-sitename {
+                    font-family: "Avenir Next LT Pro Bold", serif;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    font-size: 28px;
+                    padding-left: 53px;
+                    border: 0 !important;
+                    a {
+                        color: #fff !important;
+                    }
+                    .logo {
+                        display: block;
+                        background-image: url("img/logo.png");
+                        padding: 37px;
+                        float: left;
+                        background-size: contain;
+                        background-repeat: no-repeat;
+                        background-position: center;
+                        height: 65px;
+                        margin-right: 0;
+                        position: absolute;
+                        left: 0;
+                        z-index: 1;
+                        top: 1px;
+                    }
                 }
+                &-icon {
+                    position: absolute;
+                    left: 10px;
+                    top: 20px;
+                    margin: 0;
 
+                    svg {
+                        color: #00a0ff;
+                        font-size: 20px;
+                    }
+                }
+                border-bottom: 1px transparent solid;
+                padding-left: 45px;
+                padding-right: 20px;
+                margin-top: -1px;
+
+                &-selected,
                 &:hover {
+                    border-color: #00a0ff;
                     background-color: transparent;
                 }
-                &-selected {
-                    background-color: transparent;
-                }
-            }
-        }
-
-        &-sitename {
-            font-family: "Avenir Next LT Pro Bold", serif;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 20px;
-            letter-spacing: 0.7px;
-            color: #fff;
-            text-shadow: 0 0 2px #ffffff, 0 0 2px #01a9fb;
-
-            .logo {
-                display: block;
-                background-image: url("img/logo.png");
-                padding: 25px;
-                float: left;
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                height: 65px;
             }
         }
     }
 
     .headersecond {
-        background-color: $backgroundColor2;
+        padding: 0 15px;
+        background-color: transparent !important;
         text-transform: uppercase;
+        display: flex;
+        position: relative;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
         .ant-menu {
             background-color: $backgroundColor2;
+        }
+        &-stats {
+            display: flex;
+            align-items: center;
+            margin-right: 2rem;
+            &__block {
+                display: flex;
+                flex-direction: column;
+                i {
+                    font-size: 14px;
+                    font-family: "Avenir Next LT Pro Bold", serif;
+                    color: #fff;
+                    font-style: normal;
+                    line-height: 16px;
+                    padding-bottom: 3px;
+                }
+                span{
+                    line-height: 8px;
+                    font-size: 10px;
+                    color: gray;
+                }
+            }
+            &__opened {
+                position: relative;
+                height: 1em;
+                width: 1em;
+                background-repeat: no-repeat;
+                background-size: contain;
+                font-size: medium;
+                background-position: 50%;
+                width: 3em;
+                height: 3em;
+                background-image: url("./img/svg/box.svg");
+              }
+              &__users {
+                position: relative;
+                height: 1em;
+                width: 1em;
+                background-repeat: no-repeat;
+                background-size: contain;
+                font-size: medium;
+                background-position: 50%;
+                width: 3em;
+                height: 3em;
+                margin-left: 0.9375rem;
+                background-image: url("./img/svg/users.svg");
+              }
+              &__online {
+                position: relative;
+                height: 1em;
+                width: 1em;
+                background-repeat: no-repeat;
+                background-size: contain;
+                font-size: medium;
+                background-position: 50%;
+                width: 3em;
+                height: 3em;
+                margin-left: 0.9375rem;
+                background-image: url("./img/svg/online.svg");
+              }
         }
     }
 
     footer {
         background: #0d101a;
         padding: 2.5rem 1.875rem;
-
-        .container {
-            & > * {
-                margin: 0 2em;
-            }
-            color: #262e43;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        & > * {
+            margin: 0 2em;
         }
+        color: #262e43;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
         .leftblock {
             width: 600px;
             font-size: 13px;
