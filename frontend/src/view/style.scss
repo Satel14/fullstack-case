@@ -12,6 +12,30 @@
     font-family: "Muller Regular";
     src: url("./fonts/Muller\ Regular.ttf") format("truetype");
 }
+
+.ant-input-affix-wrapper,
+.ant-input-affix-wrapper > input.ant-input,
+.ant-input{
+    background-color: #262e43 !important;
+    border: none !important;
+    color: #fff;
+}
+.ant-input-prefix {
+    margin-right: 10px;
+}
+.ant-modal-content{
+    background-color: #161b29;
+
+    .ant-modal-header,
+    .ant-modal-footer{
+        background-color: #161b29;
+        border-color: #00588c;
+    }
+    .ant-modal-title,
+    .ant-form-item-label > label {
+      color: #ffffff;
+    }
+}
 body {
     font-family: "Muller Regular";
     // background: url("img/background.jpg");
@@ -36,10 +60,20 @@ $backgroundColor5: #f0af44;
 $backgroundColor6: #0a0a13e0;
 
 #root {
+    blockquote{
+        background: #262e436b;
+        border: 1px #ffffff26 solid;
+        padding: 10px 20px;
+        border-radius: 6px;
+        margin: 12px 0;
+        line-height: 23px;
+    }
     .ant-layout {
+        padding-top: 66px;
         background-color: transparent !important;
         .ant-breadcrumb span {
             color: #fff;
+            font-weight: 400;
         }
         &-content {
             min-height: 75vh;
@@ -80,7 +114,7 @@ $backgroundColor6: #0a0a13e0;
                     }
                     &-price {
                         padding: 8px 10px;
-                        border-radius: 15px;
+                        border-radius: 8px;
                         background: #00a0ff;
                         display: block;
                         width: auto;
@@ -94,6 +128,7 @@ $backgroundColor6: #0a0a13e0;
                     &-img {
                         transition: 0.3s all;
                         width: 100%;
+                        margin: auto;
                     }
                     &:hover {
                         -webkit-transform: translate3d(0, -0.5rem, 0) scale(1.06);
@@ -123,6 +158,27 @@ $backgroundColor6: #0a0a13e0;
             border-radius: 5px;
             border: 1px #ffffff8a solid;
         }
+    }
+    .registrationpage{
+        .ant-checkbox + span,
+        .ant-form-item-label > label{
+            color: #fff;
+        }
+        max-width: 560px;
+        margin: auto;
+        .ant-form-item-explain .ant-form-item-explain-error {
+            margin-top: 5px;
+          }
+    }
+    .loginpage{
+        max-width: 360px;
+        margin: auto;
+        .ant-checkbox + span{
+            color: #fff;
+        }
+        .ant-form-item-explain .ant-form-item-explain-error {
+            margin-top: 5px;
+          }
     }
     .casepage {
         display: flex;
@@ -194,12 +250,52 @@ $backgroundColor6: #0a0a13e0;
         padding: 0 15px;
         border-bottom-left-radius: 5px;
         border-bottom-right-radius: 5px;
-
+        position: fixed;
+        max-width: 1140px;
+        width: 100%;
+        top: 0;
+        z-index: 1;
         .ant-menu {
             background-color: $backgroundColor1;
             text-transform: uppercase;
 
             &-item {
+                &.headertop-profile{
+                    float: right;
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    margin-right: -15px;
+                    border-color: #00a0ff;
+                    border-bottom-right-radius: 6px;
+                    >span:not(.ant-menu-item-icon){
+                        height: 64px;
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    a{
+                        color: #fff;
+                        height: 40px;
+                    }
+                    .credits{
+                        background-image: url("./img/svg/credits.png");
+                        line-height: 15px;
+                        color: #b5b0b0;
+                        left: 0;
+                        bottom: 7px;
+                        background-position: left;
+                        background-size: 13px;
+                        background-repeat: no-repeat;
+                        padding-left: 19px;
+                        padding-top: 3px;
+                        font-size: 11px;
+                        letter-spacing: 0.3px;
+                        position: inherit;
+                        margin-top: 0;
+                        margin-left: 0;
+                    }
+                }
                 &.headertop-sitename {
                     font-family: "Avenir Next LT Pro Bold", serif;
                     font-weight: 700;

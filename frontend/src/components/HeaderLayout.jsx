@@ -19,10 +19,14 @@ const HeaderLayout = () => {
                     <Link to='/'>Кейси</Link>
                 </Menu.Item>
                 <Menu.Item key='3' icon={<QuestionCircleOutlined />}>
-                    <Link to="/article">FAQ</Link>
+                    <Link to="/article/1">FAQ</Link>
                 </Menu.Item>
                 <Menu.Item key='4' icon={<UserOutlined />}>
-                    <Link to="/myprofile">Мій профіль/Авторизуватися</Link>
+                    <Link to="/login">Увійти</Link>
+                </Menu.Item>
+                <Menu.Item key='5' icon={<UserOutlined className='headertop-profile'/>}>
+                    <Link to="/myprofile">Satel</Link>
+                    <span className='credits'>52321</span>
                 </Menu.Item>
             </Menu>
         </Header>
