@@ -28,6 +28,9 @@ const HeaderLayout = () => {
                     <Link to="/myprofile">Satel</Link>
                     <span className='credits'>52321</span>
                 </Menu.Item>
+                <Menu.Item key='6' icon={<QuestionCircleOutlined/>}>
+                    <Link to="/Test">Test</Link>
+                </Menu.Item>
             </Menu>
         </Header>
     )

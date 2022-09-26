@@ -7,7 +7,7 @@ import Cases from '../pages/Cases'
 import ErrorPage from '../pages/ErrorPage'
 import Login from '../pages/Auth/Login'
 import Registration from '../pages/Auth/Registration'
-
+import Test from '../pages/Test'
 // eslint-disable-next-line import/no-anonymous-default-export
 export default [
     {
@@ -29,6 +29,13 @@ export default [
         layout: Layout,
         component: Registration,
         breadcrumb: "Registration",
+        exact: true,
+    },
+    {
+        path: "/test",
+        layout: Layout,
+        component: Test,
+        breadcrumb: "Test",
         exact: true,
     },
     {

@@ -4,7 +4,7 @@ import Fade from "react-reveal/Fade";
 import Zoom from "react-reveal/Zoom";
 import { Tooltip, Button } from "antd";
 
-export default class Case extends Component {
+export default class Test extends Component {
   constructor(props) {
     super(props);
     this.state = {

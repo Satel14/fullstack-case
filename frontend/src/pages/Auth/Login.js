@@ -9,15 +9,17 @@ const Login = () => {
     }
     return (
         <div className='loginpage'>
-            <h1>Авторизація</h1>
+            <h1 className='title'>Авторизація</h1>
             <Form
                 name="normal_login"
                 className='login-form'
                 initialValues={{ remember: true }}
                 onFinish={onFinish}
+                scrollToFirstError
             >
                 <Form.Item
                     name="username"
+                    label="Логін"
                     rules={[{ required: true, message: "Введіть ваш логін!" }]}
                 >
                     <Input
@@ -26,6 +28,7 @@ const Login = () => {
                 </Form.Item>
                 <Form.Item
                     name="password"
+                    label="Пароль"
                     rules={[{ required: true, message: "Введіть ваш пароль!" }]}
                 >
                     <Input

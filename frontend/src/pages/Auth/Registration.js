@@ -45,7 +45,7 @@ const Registration = () => {
     const [autoCompleteResult, setAutoCompleteResult] = useState([])
     return (
         <div className="registratinpage">
-            <h1>Регістрація</h1>
+            <h1 className="title">Регістрація</h1>
             <Form
                 {...formItemLayout}
                 form={form}

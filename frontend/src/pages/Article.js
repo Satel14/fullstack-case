@@ -16,7 +16,7 @@ export default class Article extends Component {
                 {this.state.data.map((item, i) =>
                 (
                     <Fade>
-                        <h1>{item.name}</h1>
+                        <h1 className="title">{item.name}</h1>
                         <div className="articlepage-content">
                             <div dangerouslySetInnerHTML={{
                                 __html: item.text,
