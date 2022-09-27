@@ -92,6 +92,45 @@ $backgroundColor6: #0a0a13e0;
     }
     .opencase {
         position: absolute;
+        &-result {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            width: 400px;
+            margin: 20px auto;
+            font-family: "Muller Regular";
+            text-shadow: 1px 1px 4px #00a0ff, 0 0 1em #00a0ff;
+            color: #fff;
+            font-size: 32px;
+            letter-spacing: 1px;
+            flex-direction: column;
+            & > span {
+                font-size: 18px;
+                line-height: 1;
+            }
+            &__img {
+                margin-bottom: 15px;
+                height: 160px;
+                width: 160px;
+                background-repeat: no-repeat;
+                background-size: cover;
+                border-radius: 6px;
+                border: 1px #ffffff1f solid;
+            }
+            &__buttons {
+                display: flex;
+                margin: 20px -10px;
+                font-family: "Muller Regular";
+                button {
+                    span {
+                        line-height: 30px;
+                    }
+                    font-size: 15px;
+                    margin: 0 10px;
+                }
+            }
+        }
         .case-overlay {
             position: absolute;
             left: 0;
@@ -130,7 +169,7 @@ $backgroundColor6: #0a0a13e0;
         }
         &-titleitem {
             position: absolute;
-            right: 85px;
+            left: 650px;
             top: 225px;
             font-size: 55px;
             display: flex;
@@ -160,11 +199,11 @@ $backgroundColor6: #0a0a13e0;
             flex-direction: column;
             width: 110px;
             margin: 0 auto;
-            margin: 40px auto;
+            margin: 20px auto;
             position: relative;
             border-top: 3px rgb(15, 14, 23) solid;
             box-shadow: 0 0 18px 8px rgba(0, 160, 255, 0.45);
-            @keyframes move {
+            @keyframes setOpacity {
                 20% {
                     top: 40px;
                 }
@@ -173,11 +212,11 @@ $backgroundColor6: #0a0a13e0;
                 }
             }
             .line-overlay {
-                z-index: 1;
+                z-index: 2;
                 background: #ffffff;
                 height: 1px;
                 position: absolute;
-                top: 260px;
+                top: 270px;
                 left: 0;
                 display: inline;
                 width: 100%;
@@ -187,7 +226,7 @@ $backgroundColor6: #0a0a13e0;
                     content: "";
                     position: absolute;
                     right: 0;
-                    bottom: -10px;
+                    bottom: -9px;
                     border: 10px solid transparent;
                     border-top: 10px solid #7fc8f3;
                     transform: rotate(90deg);
@@ -196,15 +235,15 @@ $backgroundColor6: #0a0a13e0;
                     content: "";
                     position: absolute;
                     left: 0;
-                    bottom: -10px;
+                    bottom: -9px;
                     border: 10px solid transparent;
                     transform: rotate(-90deg);
                     border-top: 10px solid #7fc8f3;
                 }
             }
             .shadow-overlay {
-                animation: move 5s;
-                animation-timing-function: ease;
+                // animation: move 5s;
+                // animation-timing-function: ease;
                 position: absolute;
                 top: -40px;
                 .item {
@@ -220,6 +259,11 @@ $backgroundColor6: #0a0a13e0;
                     border: 1px #00a0ff26 solid;
                     margin: -1px 0;
                     z-index: 0;
+                    &.active{
+                        opacity: 1;
+                        z-index: 1;
+                        box-shadow: 0 0 70px;
+                    }
                 }
             }
         }
