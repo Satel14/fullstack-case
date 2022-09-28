@@ -19,11 +19,11 @@ module.exports = {
         machine_guns: "machine guns",
     },
     RARITY: {
-        FACTORY_NEW: "Factory_New",
-        MINIMAL_WEAR: " Minimal wear",
-        FIELD_TESTED: "Field-Tested",
-        WELL_WORN: "well worn",
-        BATTLE_SCARRED: "battle scarred"
+        FACTORY_NEW: "Factory New",
+        MINIMAL_WEAR: "Minimal wear",
+        FIELD_TESTED: "Field Tested",
+        WELL_WORN: "Well Worn",
+        BATTLE_SCARRED: "Battle Scarred"
     },
     COLORS: {
         DEFAULT: "Default",

@@ -15,6 +15,18 @@ const openCase = {
         { id: 5, name: "Hyper Beast", type: "pistols", rare: "MINIMAL_WEAR" },
         { id: 5, name: "Hyper Beast", type: "pistols", rare: "MINIMAL_WEAR" },
         { id: 4, name: "Bloodsport", type: "assault_rifles", rare: "MINIMAL_WEAR" },
+        { id: 8, name: "Buzz Kill", type: "assault_rifles", rare: "MINIMAL_WEAR" },
+        { id: 6, name: "The Emperor", type: "assault_rifles", rare: "MINIMAL_WEAR" },
+        { id: 9, name: "The Coalition", type: "assault_rifles", rare: "MINIMAL_WEAR" },
+        { id: 10, name: "Howl", type: "assault_rifles", rare: "MINIMAL_WEAR" },
+        { id: 11, name: "Player Two", type: "assault_rifles", rare: "MINIMAL_WEAR" },
+        { id: 12, name: "Cyrex", type: "assault_rifles", rare: "MINIMAL_WEAR" },
+        { id: 14, name: "Chantico's Fire", type: "assault_rifles", rare: "MINIMAL_WEAR" },
+        { id: 15, name: "Wasteland Rebel", type: "pistols", rare: "MINIMAL_WEAR" },
+        { id: 14, name: "Gamma Doppler", type: "pistols", rare: "MINIMAL_WEAR" },
+        { id: 16, name: "Bullet Queen", type: "pistols", rare: "MINIMAL_WEAR" },
+        { id: 17, name: "Hyper Beast", type: "pistols", rare: "MINIMAL_WEAR" },
+        { id: 18, name: "Angry Mob", type: "pistols", rare: "MINIMAL_WEAR" },
         
     ],
     winner: {
