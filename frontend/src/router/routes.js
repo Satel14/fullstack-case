@@ -1,19 +1,20 @@
 import { Redirect } from "react-router-dom";
 import Layout from "../Layout"
-import Main from "./../pages/Main"
 import Article from "./../pages/Article"
 import Case from "./../pages/Case"
 import Cases from '../pages/Cases'
 import ErrorPage from '../pages/ErrorPage'
 import Login from '../pages/Auth/Login'
 import Registration from '../pages/Auth/Registration'
-import Test from '../pages/Test'
+import Test from '../stuff/Test'
+import Settings from "../pages/Settings";
+import Profile from '../pages/Profile'
 // eslint-disable-next-line import/no-anonymous-default-export
 export default [
     {
         path: "/",
         layout: Layout,
-        component: Main,
+        component: Cases,
         breadcrumb: "Головна",
         exact: true,
     },
@@ -72,11 +73,24 @@ export default [
         breadcrumb: "Кейси",
         component: Cases,
     },
-    // {
-    //     path: "/player",
-    //     exact: true,
-    //     breadcrumb: "Гравці",
-
-    //     component: () => <Redirect to="/stats" />,
-    // },
+    {
+        path: "/settings",
+        exact: true,
+        layout: Layout,
+        breadcrumb: "Налаштування",
+        component: Settings,
+    },
+    {
+        path: "/profile/:id",
+        exact: true,
+        layout: Layout,
+        breadcrumb: "Профіль",
+        component: Profile,
+    },
+    {
+        path: "/profile",
+        exact: true,
+        breadcrumb: "Профіль",
+        component: () => <Redirect to="/404" />,
+    },
 ];

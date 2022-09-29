@@ -1,5 +1,7 @@
 const ErrorPage = () => {
-    return <div className="caselist">404 Страница не найдена</div>;
+    return <div className="errorpage">
+        <span><i>404</i> Сторінку не знайдено</span>
+    </div>;
   };
   
   export default ErrorPage;

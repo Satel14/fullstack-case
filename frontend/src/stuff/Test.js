@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import testCase from "./../data/testCase";
+import testCase from "../data/testCase";
 import Fade from "react-reveal/Fade";
 import Zoom from "react-reveal/Zoom";
 import { Tooltip, Button } from "antd";
@@ -106,6 +106,7 @@ export default class Test extends Component {
                                     icon={<RollbackOutlined />}
                                     size="large"
                                     danger
+                                    obClick={()=> window.history.back()}
                                 >
                                     Повернутися назад
                                 </Button>

@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Layout,
+  BackTop,
 } from "antd";
 import ContentLayout from "./components/ContentLayout";
 import HeaderLayout from "./components/HeaderLayout";
@@ -23,6 +24,7 @@ export default class App extends React.Component {
         <HeaderSecond />
         <ContentLayout children={this.props.children} />
         <FooterLayout />
+        <BackTop className="buttontotop"/>
       </Layout>
     );
   }
