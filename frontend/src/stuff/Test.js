@@ -106,7 +106,7 @@ export default class Test extends Component {
                                     icon={<RollbackOutlined />}
                                     size="large"
                                     danger
-                                    obClick={()=> window.history.back()}
+                                    onClick={()=> window.history.back()}
                                 >
                                     Повернутися назад
                                 </Button>

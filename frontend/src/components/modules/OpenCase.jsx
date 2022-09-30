@@ -36,7 +36,6 @@ export default class Test extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            id: props.match.params.id,
             case: testOpenCase.resultWithItem,
             winner: testOpenCase.winner,
             fetching: 0,

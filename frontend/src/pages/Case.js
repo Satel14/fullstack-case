@@ -3,7 +3,7 @@ import testCase from "./../data/testCase";
 import Fade from "react-reveal/Fade";
 import Zoom from "react-reveal/Zoom";
 import { Tooltip, Button } from "antd";
-
+import OpenCase from '../components/modules/OpenCase'
 export default class Test extends Component {
   constructor(props) {
     super(props);
@@ -30,21 +30,9 @@ export default class Test extends Component {
   render() {
     return (
       <div className="casepage">
-        <div className="casepage-more">
-          <Fade delay={800}>{"Кейс " + this.state.case.name}</Fade>
-          <Zoom top>
-            <img src={this.state.case.img} alt={this.state.case.name} />
-          </Zoom>
-        </div>
-
         <div className="casepage-openbutton">
-          <Fade top delay={650}>
-            <Button size={"large"} type="primary" ghost>
-              Відкрити кейс
-            </Button>
-          </Fade>
+        <OpenCase case={this.state.case}/>
         </div>
-
         <span className="casepage-title-second">
         Вміст кейсу <i>Кількість відкритих: 55</i>
         </span>

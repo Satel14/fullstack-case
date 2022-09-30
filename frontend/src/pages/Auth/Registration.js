@@ -8,6 +8,7 @@ import {
     Col,
     Checkbox,
     Button,
+    Radio,
     AutoComplete,
 } from "antd";
 
@@ -36,6 +37,14 @@ const tailFormItemLayout = {
     },
 }
 
+const Images = [
+    {url: './img/avatars/1.png', id:1},
+    {url: './img/avatars/2.png', id:2},
+    {url: './img/avatars/3.png', id:3},
+    {url: './img/avatars/4.png', id:4},
+    {url: './img/avatars/5.png', id:5},
+    {url: './img/avatars/6.png', id:6},
+]
 const Registration = () => {
     const [form] = Form.useForm()
 
@@ -115,6 +124,15 @@ const Registration = () => {
                     ]}
                 >
                     <Input />
+                </Form.Item>
+                <Form.Item label="Виберіть аватарку">
+                        <Radio.Group defaultValue="1" buttonStyle="solid">
+                        {Images.map((item)=>(
+                            <Radio.Button value={item.id} className="radio-avatar">
+                                    <img src={item.url} alt={item.id + "avatar"}/>
+                            </Radio.Button>
+                        ))}
+                        </Radio.Group>
                 </Form.Item>
                 <Form.Item
                     name="agreement"

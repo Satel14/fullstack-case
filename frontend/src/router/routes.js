@@ -33,13 +33,6 @@ export default [
         exact: true,
     },
     {
-        path: "/test",
-        layout: Layout,
-        component: Test,
-        breadcrumb: "Test",
-        exact: true,
-    },
-    {
         path: "/404",
         layout: Layout,
         component: ErrorPage,
@@ -57,11 +50,10 @@ export default [
         exact: true,
         layout: Layout,
         breadcrumb: "Кейси",
-        component: ()=> <Redirect to="/404"/>,
+        component: () => <Redirect to="/404" />,
     },
     {
         path: "/case/:id",
-        exact: true,
         layout: Layout,
         breadcrumb: "Кейс",
         component: Case,
@@ -71,7 +63,7 @@ export default [
         exact: true,
         layout: Layout,
         breadcrumb: "Кейси",
-        component: Cases,
+        component: () => <Redirect to="/" />,
     },
     {
         path: "/settings",
@@ -82,7 +74,6 @@ export default [
     },
     {
         path: "/profile/:id",
-        exact: true,
         layout: Layout,
         breadcrumb: "Профіль",
         component: Profile,
@@ -90,6 +81,7 @@ export default [
     {
         path: "/profile",
         exact: true,
+        layout: Layout,
         breadcrumb: "Профіль",
         component: () => <Redirect to="/404" />,
     },
