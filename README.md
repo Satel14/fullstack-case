@@ -8,6 +8,6 @@
 <li>SCSS</li>
 
 ## How to install
-<code>Folder backend npm install</code>
+Folder backend <code>npm install</code>
 
-<code>Folder frontend npm install</code>
+Folder frontend <code>npm install</code>
