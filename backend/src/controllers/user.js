@@ -1,4 +1,4 @@
-const Users = require('./../models/users')
+const Users = require('../models/users')
 
 module.exports = (app) => {
     app.get('/api/user/:id', function (request, response) {

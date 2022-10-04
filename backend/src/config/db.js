@@ -89,4 +89,4 @@ module.exports = new Sequelize(
 [Op.col]: 'user.organization_id' // = "user"."organization_id", with dialect specific column identifiers, PG in this example
 [Op.gt]: { [Op.all]: literal('SELECT 1') }
                           // > ALL (SELECT 1)
-                          *
+*/

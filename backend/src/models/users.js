@@ -32,8 +32,8 @@ module.exports = sequelize.define("users",
             field: "update_at",
             type: Sequelize.DATE,
         },
+    },
     {
         timestamps: false,
     }
-}
 );
