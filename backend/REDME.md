@@ -1,0 +1,9 @@
+Backend
+<li>node
+<li>express
+<li>sequalize
+<li>passport
+<li>mysql
+<li>express-validator
+<li>lodash
+<li>cors
