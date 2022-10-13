@@ -1,5 +1,5 @@
 const Sequelize = require("sequelize")
-require("dotenv").config()
+const config = require('./serverConfig')
 
 const Op = Sequelize.Op;
 
@@ -41,12 +41,12 @@ const operatorsAliases = {
 };
 
 module.exports = new Sequelize(
-    process.env.DB_NAME,
-    process.env.DB_LOGIN,
-    process.env.DB_PASSWORD,
+    config.database,
+    pconfig.username,
+    config.password,
     {
         operatorsAliases,
-        host: process.env.DB_HOST,
+        host: config.host,
         dialect: "mysql",
         define: {
             freezeTableName: true
