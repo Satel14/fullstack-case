@@ -2,9 +2,9 @@ const mode = process.env.NODE_ENV || "development"
 
 const config = {
     development: {
-        username: "root",
+        username: "admin",
         password: "1234",
-        database: "",
+        database: "case",
         host: "localhost",
         port: "3003",
     },

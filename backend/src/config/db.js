@@ -42,7 +42,7 @@ const operatorsAliases = {
 
 module.exports = new Sequelize(
     config.database,
-    pconfig.username,
+    config.username,
     config.password,
     {
         operatorsAliases,

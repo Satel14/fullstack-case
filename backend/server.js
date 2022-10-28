@@ -5,7 +5,7 @@ const bodyParser = require("body-parser")
 const config = require('./src/config/serverConfig')
 
 
-console.log(process.env.NODE_ENV)
+console.log(process.env.NODE_ENV, 1)
 const app = express()
 const port = process.env.PORT || 5000;
 
