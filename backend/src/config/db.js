@@ -1,7 +1,7 @@
-const Sequelize = require("sequelize")
+const Sequelize = require('sequelize')
 const config = require('./serverConfig')
 
-const Op = Sequelize.Op;
+const { Op } = Sequelize;
 
 const operatorsAliases = {
     $eq: Op.eq, // equal
@@ -47,9 +47,9 @@ module.exports = new Sequelize(
     {
         operatorsAliases,
         host: config.host,
-        dialect: "mysql",
+        dialect: 'mysql',
         define: {
-            freezeTableName: true
+            freezeTableName: true,
         }
     }
 )
@@ -86,7 +86,7 @@ module.exports = new Sequelize(
 [Op.contained]: [1, 2]     // <@ [1, 2] (PG array contained by operator)
 [Op.any]: [2,3]            // ANY ARRAY[2, 3]::INTEGER (PG only)
 
-[Op.col]: 'user.organization_id' // = "user"."organization_id", with dialect specific column identifiers, PG in this example
+[Op.col]: 'user.organization_id' // = 'user'.'organization_id', with dialect specific column identifiers, PG in this example
 [Op.gt]: { [Op.all]: literal('SELECT 1') }
                           // > ALL (SELECT 1)
 */

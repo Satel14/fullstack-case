@@ -1,4 +1,4 @@
-const ITEM_CONFIG = require("../config/itemConfig");
+const ITEM_CONFIG = require('../config/itemConfig');
 
 module.exports = class OpenCase {
     _min = 1;
@@ -7,7 +7,7 @@ module.exports = class OpenCase {
     _afterStart = 6;
     _totalRandomed = 30
     _raryTypes = []
-    case = require("./../data/testCase").VELOCITY_CRATE;
+    case = require('./../data/testCase').VELOCITY_CRATE;
 
     constructor() {
         console.log(this.openCase());

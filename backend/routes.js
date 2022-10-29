@@ -6,5 +6,5 @@ module.exports = (app) => {
     require('./src/auth/logout')(app);
 
     //Users
-    require("./src/controllers/user")(app);
+    require('./src/controllers/user')(app);
 }

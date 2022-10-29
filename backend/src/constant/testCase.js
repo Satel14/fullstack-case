@@ -1,1 +1,1 @@
-const Sequelize = require("sequelize")
+const ITEMS = require('../config/')

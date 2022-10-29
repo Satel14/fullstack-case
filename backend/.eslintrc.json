@@ -5,45 +5,34 @@
         "node": true
     },
     "extends": [
-        "plugin:react/recommended",
         "eslint:recommended",
         "plugin:import/errors",
         "plugin:import/warnings",
-        "plugin:import/typescript",
         "airbnb",
         "plugin:lodash/recommended",
+        "plugin:node/recommended",
         "plugin:promise/recommended"
     ],
     "parserOptions": {
         "ecmaFeatures": {
-            "jsx": true,
-            "tsx": true
+            "jsx": true
         },
         "ecmaVersion": 12,
         "sourceType": "module"
     },
     "plugins": [
-        "react",
         "only-warn",
         "import",
         "lodash",
         "promise"
     ],
     "rules": {
-        // Indent with 4 spaces
         "indent": [
             "error",
-            4
-        ],
-        // Indent JSX with 4 spaces
-        "react/jsx-indent": [
-            "error",
-            4
-        ],
-        // Indent props with 4 spaces
-        "react/jsx-indent-props": [
-            "error",
-            4
+            4,
+            {
+                "SwitchCase": 1
+            }
         ],
         "import/no-unresolved": [
             2,
@@ -52,6 +41,36 @@
                 "amd": true
             }
         ],
+        "node/exports-style": [
+            "error",
+            "module.exports"
+        ],
+        "node/file-extension-in-import": [
+            "error",
+            "always"
+        ],
+        "node/prefer-global/buffer": [
+            "error",
+            "always"
+        ],
+        "node/prefer-global/console": [
+            "error",
+            "always"
+        ],
+        "node/prefer-global/process": [
+            "error",
+            "always"
+        ],
+        "node/prefer-global/url-search-params": [
+            "error",
+            "always"
+        ],
+        "node/prefer-global/url": [
+            "error",
+            "always"
+        ],
+        "node/prefer-promises/dns": "error",
+        "node/prefer-promises/fs": "error",
         "promise/always-return": "error",
         "promise/no-return-wrap": "error",
         "promise/param-names": "error",
@@ -71,20 +90,11 @@
         "linebreak-style": 0,
         "no-var": "error",
         "semi": "error",
-        "camelcase": [
-            2,
-            {
-                "properties": "always"
-            }
-        ],
+        "camelcase": [2, {"properties": "always"}],
         "no-multi-spaces": "error",
         "space-in-parens": "error",
         "no-multiple-empty-lines": "error",
         "prefer-const": "error",
-        "no-use-before-define": "error",
-        "react/jsx-filename-extension": [
-            0
-        ],
-        "import/extensions": "off"
+        "no-use-before-define": "error"
     }
 }
