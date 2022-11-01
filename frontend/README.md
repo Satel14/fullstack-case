@@ -1,5 +1,5 @@
-React
-Redux
-Typescript
-Scss
-Ant
+<lI>React
+<lI>Redux
+<lI>Typescript
+<lI>Scss
+<lI>Ant
