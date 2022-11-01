@@ -1,48 +1,48 @@
-import React, { Component } from "react";
-import testCase from "./../data/testCase";
-import Fade from "react-reveal/Fade";
-import Zoom from "react-reveal/Zoom";
-import { Tooltip, Button, Tabs } from "antd";
-import OpenCase from "./../components/modules/OpenCase";
-import { HistoryOutlined, AndroidOutlined } from "@ant-design/icons";
-import Loader from "../components/mini/Loader";
+import React, { Component } from 'react';
+import Fade from 'react-reveal/Fade';
+import map from 'lodash/map';
+import { Tooltip, Tabs } from 'antd';
+import { HistoryOutlined } from '@ant-design/icons';
+import testCase from '../data/testCase';
+import Loader from '../components/mini/Loader';
+
 const { TabPane } = Tabs;
+
+const renderItemProp = (item) => (
+    `Назва: ${
+        item.name
+    }, Тип: ${
+        item.type
+    }, Рарність: ${
+        item.rare
+    }, Колір: ${
+        item.painted}`
+);
 
 export default class Profile extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            id: props.match.params.id,
+            // id: props.match.params.id,
             case: testCase[0],
             fetching: true,
         };
-    }
-
-    renderItemProp(item) {
-        return (
-            "Назва: " +
-            item.name +
-            ", Тип: " +
-            item.type +
-            ", Рарність: " +
-            item.rare +
-            ", Колір: " +
-            item.painted
-        );
     }
 
     componentDidMount() {
         setTimeout(() => {
             this.setState({
                 fetching: false,
-            })
-        }, 2000)
+            });
+        }, 2000);
     }
+
     render() {
+        const { fetching, caseCollection } = this.state;
         return (
-            <div className="profile">
+            <div className="profilepage">
                 <h1 className="title">Профіль</h1>
-                {this.state.fetching ? (
+                {fetching ? (
                     <Loader />
                 ) : (
                     <>
@@ -54,9 +54,10 @@ export default class Profile extends Component {
                             </div>
                             <div className="profilepage-firstblock__stats">
                                 <div className="profiletitle">Satel</div>
-                                <div className="profilpage-firstblock__stats__logo"
-                                    style={{ backgroundImage: "url(/img/avatars/6.png)" }}
-                                ></div>
+                                <div
+                                    className="profilpage-firstblock__stats__logo"
+                                    style={{ backgroundImage: 'url(/img/avatars/6.png)' }}
+                                />
                                 <div className="profilpage-firstblock__stats__info">
                                     <div>
                                         Кейси
@@ -70,29 +71,33 @@ export default class Profile extends Component {
                             </div>
                             <div className="profilepage-firstblock__bestdrop">
                                 <div className="profiletitle">Найкращий дроп</div>
-                                <div className="profilepage-firstblock__bestdrop__drop"
-                                    style={{ backgroundImage: "url(/img/items/9.png)" }}
-                                ></div>
+                                <div
+                                    className="profilepage-firstblock__bestdrop__drop"
+                                    style={{ backgroundImage: 'url(/img/items/9.png)' }}
+                                />
                                 <span>Fuel injector</span>
                             </div>
                         </div>
                         <div className="profilepage-secondblock">
                             <Tabs defaultActiveKey="1" centered size="large">
                                 <TabPane
-                                    tab={
+                                    tab={(
                                         <span>
                                             <HistoryOutlined />
                                         </span>
-                                    }
-                                    key='1'
+                                    )}
+                                    key="1"
                                 >
                                     <div className="casehistory-itemlist">
-                                        {this.state.case.items.map((item, i) => (
+                                        {map(caseCollection.items, (item, i) => (
                                             <Fade delay={i * 50}>
-                                                <Tooltip placement="bottom" title={this.renderItemProp(item)}>
-                                                    <div className="casehistory-itemlist_item" style={{
-                                                        backgroundImage: "url(" + item.img + ")",
-                                                    }}>
+                                                <Tooltip placement="bottom" title={renderItemProp(item)}>
+                                                    <div
+                                                        className="casehistory-itemlist_item"
+                                                        style={{
+                                                            backgroundImage: `url(${item.img})`,
+                                                        }}
+                                                    >
                                                         <span>{item.name}</span>
                                                     </div>
                                                 </Tooltip>
@@ -105,6 +110,6 @@ export default class Profile extends Component {
                     </>
                 )}
             </div>
-        )
+        );
     }
 }

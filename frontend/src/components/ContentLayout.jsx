@@ -1,5 +1,6 @@
-import React from 'react'
-import { Menu, Layout } from "antd";
+import React from 'react';
+import { Layout } from 'antd';
+import PropTypes from 'prop-types';
 // import {
 //     MailOutlined,
 //     AppstoreOutlined,
@@ -7,16 +8,21 @@ import { Menu, Layout } from "antd";
 // } from "@ant-design/icons";
 // import { Breadcrumb, PageHeader, Button, Descriptions } from "antd";
 // const { SubMenu } = Menu;
-const { Header, Content } = Layout;
-const ContentLayout = (props) => {
-    return (
-        <Content style={{ padding: "25px" }}>
-            <div className="site-layout-content">{props.children}
-            </div>
-        </Content>
-    )
-}
+const { Content } = Layout;
+const ContentLayout = ({ children }) => (
+    <Content style={{ padding: '25px' }}>
+        <div className="site-layout-content">
+            {children}
+        </div>
+    </Content>
+);
+ContentLayout.propTypes = {
+    children: PropTypes.element,
+};
 
+ContentLayout.defaultProps = {
+    children: 'Main page',
+};
 // <PageHeader
 //     ghost={false}
 //     onBack={() => window.history.back()}
@@ -38,4 +44,4 @@ const ContentLayout = (props) => {
 //     }
 // ></PageHeader>
 
-export default ContentLayout
+export default ContentLayout;

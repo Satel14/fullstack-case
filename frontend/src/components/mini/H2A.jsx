@@ -1,16 +1,26 @@
-import React from 'react'
+import React from 'react';
+import PropTypes from 'prop-types';
 
-const H2A = (props) => {
-  return (
-    <div className='title-a'>
-        <span className='title-a__1'/>
-        <span className='title-a__heading'>
-            {props.title}
-            <span>{props.subTitle}</span>
-        </span>
-        <span className='title-a__r'/>
-    </div>
-  )
+function H2Component({ title, subTitle }) {
+    return (
+        <div className="title-a">
+            <span className="title-a__1" />
+            <span className="title-a__heading">
+                {title}
+                <span>{subTitle}</span>
+            </span>
+            <span className="title-a__r" />
+        </div>
+    );
 }
 
-export default H2A
+H2Component.propTypes = {
+    title: PropTypes.string,
+    subTitle: PropTypes.string,
+};
+
+H2Component.defaultProps = {
+    title: 'Назва',
+    subTitle: 'Сабтайтл',
+};
+export default H2Component;

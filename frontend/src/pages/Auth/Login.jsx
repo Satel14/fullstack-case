@@ -1,8 +1,9 @@
+/* eslint-disable */
 import React from 'react'
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import ForgotPassword from "./ForgotPassword";
 import { Link } from "react-router-dom";
-import { Form, Input, Button, Checkbox } from "antd";
+import { Form, Input, Button } from "antd";
 const Login = () => {
     const onFinish = (values: any) => {
         console.log("Received values of form: ", values);
@@ -52,6 +53,9 @@ const Login = () => {
                         Увійти
                     </Button>
                     або <Link to='/registration'>Зареєстуватися</Link>
+                </Form.Item>
+                <Form.Item>
+                    <ForgotPassword/>
                 </Form.Item>
             </Form>
         </div>

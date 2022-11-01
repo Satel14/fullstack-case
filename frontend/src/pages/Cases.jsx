@@ -1,22 +1,24 @@
-import React from "react";
-import Case from "./../components/mini/Case";
-import testCaseList from "../data/testCaseList";
-import Flip from "react-reveal/Flip";
-import { Divider } from "antd";
-import H2A from "../components/mini/H2A";
-export default class Class extends React.Component {
+import React, { Component } from 'react';
+import Flip from 'react-reveal/Flip';
+import map from 'lodash/map';
+import Case from '../components/mini/Case';
+import testCaseList from '../data/testCaseList';
+import H2A from '../components/mini/H2A';
+
+export default class Cases extends Component {
     constructor(props) {
-        super(props)
+        super(props);
         this.state = {
-            fetching: 0
-        }
+            // fetching: 0,
+        };
     }
+
     render() {
         return (
             <>
+                <H2A title="Кращі" subTitle=" Кейси" />
                 <div className="caselist">
-                    <H2A title="Кращі" subTitle=" Кейси" />
-                    {testCaseList.map((item, i) => (
+                    {map(testCaseList, (item, i) => (
                         <>
                             {i < 10 && (
                                 <Flip bottom delay={i * 100}>
@@ -26,9 +28,9 @@ export default class Class extends React.Component {
                         </>
                     ))}
                 </div>
+                <H2A title="Нові" subTitle=" Кейси" />
                 <div className="caselist">
-                    <H2A title="Нові" subTitle=" Кейси" />
-                    {testCaseList.map((item, i) => (
+                    {map(testCaseList, (item, i) => (
                         <>
                             {i < 10 && (
                                 <Flip bottom delay={i * 100}>
@@ -38,9 +40,9 @@ export default class Class extends React.Component {
                         </>
                     ))}
                 </div>
+                <H2A title="Кращі" subTitle=" Кейси" />
                 <div className="caselist">
-                    <H2A title="Кращі" subTitle=" Кейси" />
-                    {testCaseList.map((item, i) => (
+                    {map(testCaseList, (item, i) => (
                         <>
                             {i < 4 && (
                                 <Flip bottom delay={i * 100}>
@@ -51,6 +53,6 @@ export default class Class extends React.Component {
                     ))}
                 </div>
             </>
-        )
+        );
     }
 }

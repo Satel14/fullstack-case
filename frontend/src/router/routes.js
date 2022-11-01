@@ -1,88 +1,87 @@
-import { Redirect } from "react-router-dom";
-import Layout from "../Layout"
-import Article from "./../pages/Article"
-import Case from "./../pages/Case"
-import Cases from '../pages/Cases'
-import ErrorPage from '../pages/ErrorPage'
-import Login from '../pages/Auth/Login'
-import Registration from '../pages/Auth/Registration'
-import Test from '../stuff/Test'
-import Settings from "../pages/Settings";
-import Profile from '../pages/Profile'
-// eslint-disable-next-line import/no-anonymous-default-export
+import { Redirect } from 'react-router-dom';
+import Layout from '../Layout.tsx';
+import Article from '../pages/Article';
+import Case from '../pages/Case';
+import Cases from '../pages/Cases';
+import ErrorPage from '../pages/ErrorPage';
+import Login from '../pages/Auth/Login.jsx';
+import Registration from '../pages/Auth/Registration.jsx';
+import Settings from '../pages/Settings';
+import Profile from '../pages/Profile';
+
 export default [
     {
-        path: "/",
+        path: '/',
         layout: Layout,
         component: Cases,
-        breadcrumb: "Головна",
+        breadcrumb: 'Головна',
         exact: true,
     },
     {
-        path: "/login",
+        path: '/login',
         layout: Layout,
         component: Login,
-        breadcrumb: "Авторизація",
+        breadcrumb: 'Авторизація',
         exact: true,
     },
     {
-        path: "/registration",
+        path: '/registration',
         layout: Layout,
         component: Registration,
-        breadcrumb: "Registration",
+        breadcrumb: 'Registration',
         exact: true,
     },
     {
-        path: "/404",
+        path: '/404',
         layout: Layout,
         component: ErrorPage,
-        breadcrumb: "Сторінка не найдена",
+        breadcrumb: 'Сторінка не найдена',
         exact: true,
     },
     {
-        path: "/article/:id",
+        path: '/article/:id',
         layout: Layout,
-        breadcrumb: "Cтаття",
+        breadcrumb: 'Cтаття',
         component: Article,
     },
     {
-        path: "/article",
+        path: '/article',
         exact: true,
         layout: Layout,
-        breadcrumb: "Кейси",
+        breadcrumb: 'Кейси',
         component: () => <Redirect to="/404" />,
     },
     {
-        path: "/case/:id",
+        path: '/case/:id',
         layout: Layout,
-        breadcrumb: "Кейс",
+        breadcrumb: 'Кейс',
         component: Case,
     },
     {
-        path: "/case",
+        path: '/case',
         exact: true,
         layout: Layout,
-        breadcrumb: "Кейси",
+        breadcrumb: 'Кейси',
         component: () => <Redirect to="/" />,
     },
     {
-        path: "/settings",
+        path: '/settings',
         exact: true,
         layout: Layout,
-        breadcrumb: "Налаштування",
+        breadcrumb: 'Налаштування',
         component: Settings,
     },
     {
-        path: "/profile/:id",
+        path: '/profile/:id',
         layout: Layout,
-        breadcrumb: "Профіль",
+        breadcrumb: 'Профіль',
         component: Profile,
     },
     {
-        path: "/profile",
+        path: '/profile',
         exact: true,
         layout: Layout,
-        breadcrumb: "Профіль",
+        breadcrumb: 'Профіль',
         component: () => <Redirect to="/404" />,
     },
 ];

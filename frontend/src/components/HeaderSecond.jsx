@@ -1,10 +1,17 @@
-import React from "react";
-import { Layout, Tooltip, Menu } from "antd";
-import { Link } from "react-router-dom";
-import { GiftOutlined } from "@ant-design/icons";
+import React from 'react';
+import { Layout } from 'antd';
+import { GiftOutlined } from '@ant-design/icons';
+
 const { Header } = Layout;
 
 export default class HeaderSecond extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            // data: [testArticle[0]],
+        };
+    }
+
     render() {
         return (
             <Header className="headersecond">
@@ -37,7 +44,7 @@ export default class HeaderSecond extends React.Component {
                     </div>
                 </div>
                 <div className="headersecond-stats custom">
-                    <GiftOutlined/>
+                    <GiftOutlined />
                     <div className="headersecond-stats__block">
                         <i>Бонуси</i>
                         <span>Розіграші, роздачі</span>

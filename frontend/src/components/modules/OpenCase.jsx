@@ -1,18 +1,18 @@
-import React, { Component } from "react";
-import testCase from "../../data/testCase";
-import Fade from "react-reveal/Fade";
-import Zoom from "react-reveal/Zoom";
-import { Tooltip, Button } from "antd";
-import testOpenCase from '../../data/testOpenCase'
-import styled, { keyframes } from 'styled-components'
-import rariestColors from '../../data/itemConfig'
+import React, { Component } from 'react';
+import Fade from 'react-reveal/Fade';
+import Zoom from 'react-reveal/Zoom';
+import { Button } from 'antd';
+import styled, { keyframes } from 'styled-components';
 import {
     SyncOutlined,
     DollarOutlined,
     RollbackOutlined,
-} from "@ant-design/icons";
+} from '@ant-design/icons';
+import map from 'lodash/map';
+import testOpenCase from '../../data/testOpenCase';
+import rariestColors from '../../data/itemConfig';
 
-const delayAnimation = 4
+const delayAnimation = 4;
 
 const moveVertically = (top) => keyframes`
   0%{
@@ -28,29 +28,36 @@ const moveVertically = (top) => keyframes`
 const ShadowOverlay = styled.div`
   transform: translateY(${(p) => (p.load ? p.top : -140)}px);
   animation-timing-function: ease;
-  animation: ${(p) => (p.load ? moveVertically(p.top) : "none")}
+  animation: ${(p) => (p.load ? moveVertically(p.top) : 'none')}
     ${delayAnimation}s ease;
   animation-fill-mode: forwards;
 `;
+
+const randomInteger = (min, max) => {
+    const rand = min + Math.random() * (max + 1 - min);
+    return Math.floor(rand);
+};
+
+const getColorRariest = (rariest) => rariestColors[rariest];
 export default class Test extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            case: testOpenCase.resultWithItem,
+            caseCollection: testOpenCase.resultWithItem,
             winner: testOpenCase.winner,
-            fetching: 0,
+            // fetching: 0,
             load: false,
             loadItem: false,
         };
     }
 
     calculatePositionForLine() {
+        const { winner } = this.state;
         const heightOneBlock = 110;
-        const resultTopPixel =
-            -heightOneBlock * (this.state.winner.winIndex - 1) +
-            270 +
-            this.state.winner.winIndex -
-            this.randomInteger(5, heightOneBlock - 5);
+        const resultTopPixel = -heightOneBlock * (winner.winIndex - 1)
+            + 270
+            + winner.winIndex
+            - randomInteger(5, heightOneBlock - 5);
 
         return resultTopPixel;
     }
@@ -62,105 +69,128 @@ export default class Test extends Component {
         setTimeout(() => {
             this.setState({
                 loadItem: true,
-            })
-        }, delayAnimation * 1000 + 1000)
-    }
-
-    randomInteger = (min, max) => {
-        let rand = min + Math.random() * (max + 1 - min);
-        return Math.floor(rand);
-    };
-
-    getColorRariest(rariest) {
-        return rariestColors[rariest];
+            });
+        }, delayAnimation * 1000 + 1000);
     }
 
     render() {
+        const {
+            caseCollection, load, loadItem, winner,
+        } = this.state;
         return (
             <>
-                <Button
-                    onClick={() => this.Click()}
-                    style={{ position: "absolute", zIndex: 10 }}
-                >Відрити
-                </Button>
-                <div className="opencase">
-                    {this.state.loadItem ? (
-                        <div className="opencase-result">
-                            <div className="opencase-result__img"
-                                style={{
-                                    backgroundImage: `url(/img/items/${this.state.winner.item.id}.png)`,
-                                    boxShadow: "inset 0px -30px 60px -30px" + this.getColorRariest(this.state.winner.item.rare),
-                                }}
-                            />
-                            {this.state.winner.item.name}
-                            <span>
-                                {this.state.winner.item.rare} {this.state.winner.item.type}
-                            </span>
-                            <div className="opencase-result__buttons">
-                                <Button type="primary" icon={<SyncOutlined />} size="large">
-                                    Спробувати ще раз
-                                </Button>
-                                <Button
-                                    type="primary"
-                                    icon={<RollbackOutlined />}
-                                    size="large"
-                                    danger
-                                >
-                                    Повернутися назад
-                                </Button>
-                                <Button
-                                    type="primary"
-                                    icon={<DollarOutlined />}
-                                    ghost
-                                    size="large"
-                                >
-                                    Продати за 500 cred
-                                </Button>
-                            </div>
+                {!load ? (
+                    <>
+                        <div className="casepage-more">
+                            <Fade>
+                                {`Кейс ${caseCollection.name}`}
+                                <img src={caseCollection.img} alt={caseCollection.name} />
+                            </Fade>
                         </div>
-                    ) : (
-                        <>
-                            <Zoom left>
-                                <div className="opencase-titlecrate">
-                                    Відкриття <span>Кейс - Prime</span>
+                        <Button
+                            onClick={() => this.Click()}
+                            size="large"
+                            type="primary"
+                            ghost
+                        >
+                            Відрити
+                        </Button>
+                    </>
+                ) : (
+                    <div className="opencase">
+                        {loadItem ? (
+                            <div className="opencase-result">
+                                <div
+                                    className="opencase-result__img"
+                                    style={{
+                                        backgroundImage: `url(/img/items/${winner.item.id}.png)`,
+                                        boxShadow: `inset 0px -30px 60px -30px${getColorRariest(winner.item.rare)}`,
+                                    }}
+                                />
+                                {winner.item.name}
+                                <span>
+                                    {winner.item.rare}
+                                    {' '}
+                                    {winner.item.type}
+                                </span>
+                                <div className="opencase-result__buttons">
+                                    <Button type="primary" icon={<SyncOutlined />} size="large">
+                                        Спробувати ще раз
+                                    </Button>
+                                    <Button
+                                        type="primary"
+                                        icon={<RollbackOutlined />}
+                                        size="large"
+                                        danger
+                                    >
+                                        Повернутися назад
+                                    </Button>
+                                    <Button
+                                        type="primary"
+                                        icon={<DollarOutlined />}
+                                        ghost
+                                        size="large"
+                                    >
+                                        Продати за 500 cred
+                                    </Button>
                                 </div>
-                            </Zoom>
-                            <Zoom right>
-                                <div className="opencase-overlay">
-                                    <Fade delay={delayAnimation * 1000 + 500}>
-                                        <div className="opencase-titleitems">
-                                            {this.state.winner.item.name}
-                                            <span>
-                                                {this.state.winner.item.rare} {this.state.winner.item.type}
-                                            </span>
-                                        </div>
-                                    </Fade>
-                                    <div className="opencase-block">
-                                        <div className="line-overlay"></div>
-                                        <div className="shadow-overlay">
-                                            <ShadowOverlay
-                                                load={this.state.load}
-                                                top={this.calculatePositionForLine()}
-                                            >
-                                                {this.state.case.map((item, i) => (
-                                                    <>
-                                                        <div className={i === this.state.winner.winIndex - 1 ? "item active" : "item"}
-                                                            style={{
-                                                                backgroundImage: `url(/img/items/${item.id}.png)`,
-                                                                boxShadow: "inset 0px -30px 60px -30px" + this.getColorRariest(item.rare)
-                                                            }}
-                                                            key={`openedItem` + i} ></div>
-                                                    </>
-                                                ))}
-                                            </ShadowOverlay>
-                                        </div>
+                            </div>
+                        ) : (
+                            <>
+                                <Zoom left>
+                                    <div className="opencase-titlecrate">
+                                        Відкриття
+                                        {' '}
+                                        <span>Кейс - Prime</span>
+                                    </div>
+                                </Zoom>
+                                <Zoom right>
+                                    <div className="case-overlay" />
+                                </Zoom>
+                                <Fade delay={delayAnimation * 1000 + 500}>
+                                    <div className="opencase-titleitem">
+                                        {winner.item.name}
+                                        <span>
+                                            {winner.item.rare}
+                                            {' '}
+                                            {winner.item.type}
+                                        </span>
+                                    </div>
+                                </Fade>
+
+                                <div className="opencase-block">
+                                    <div className="line-overlay" />
+
+                                    <div className="shadow-overlay">
+                                        <ShadowOverlay
+                                            load={load}
+                                            top={this.calculatePositionForLine()}
+                                        >
+                                            {map(caseCollection, (item, i) => (
+                                                <>
+                                                    <div
+                                                        className={
+                                                            i === winner.winIndex - 1
+                                                                ? 'item active'
+                                                                : 'item '
+                                                        }
+                                                        style={{
+                                                            backgroundImage: `url(/img/items/${item.id}.png)`,
+                                                            boxShadow: `inset  0px -30px 60px -30px 
+                                                            ${getColorRariest(item.rare)}`,
+                                                        }}
+                                                        key={`openedItem${i}`}
+                                                    />
+                                                </>
+                                            ))}
+                                        </ShadowOverlay>
                                     </div>
                                 </div>
-                            </Zoom>
-                        </>
-                    )}
-                </div>
+                            </>
+                        )}
+                    </div>
+                )}
             </>
-        )
+        );
     }
 }

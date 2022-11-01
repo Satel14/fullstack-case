@@ -51,7 +51,7 @@ const Registration = () => {
     const onFinish = (values: any) => {
         console.log("Received values of form: ", values);
     }
-    const [autoCompleteResult, setAutoCompleteResult] = useState([])
+    //const [autoCompleteResult, setAutoCompleteResult] = useState([])
     return (
         <div className="registratinpage">
             <h1 className="title">Регістрація</h1>
