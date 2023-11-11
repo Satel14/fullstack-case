@@ -3,11 +3,18 @@ import {
     UPDATE_USER_SETTINGS,
     LOGIN_USER,
     LOGOUT_USER,
-    AUTH_MESSAGE_ERROR,
 } from '../types';
 
 import { API_URL } from '../../api/config';
 
+const loginUser = (user) => ({
+    type: LOGIN_USER,
+    payloadUser: user,
+});
+
+export const logoutUser = () => ({
+    type: LOGOUT_USER,
+});
 export const getProfileFetch = () => (dispatch) => {
     const { token } = localStorage;
     if (token) {
@@ -21,14 +28,12 @@ export const getProfileFetch = () => (dispatch) => {
         })
             .then((resp) => resp.json())
             .then((data) => {
-                if (data.message !== 'oks') {
-                    localStorage.removeItem('token');
-                    return;
-                }
-                dispatch(loginUser(data.user, data.profile));
+                dispatch(loginUser(data.user));
             });
     }
+    return null;
 };
+
 export const userPostFetch = (body) => (dispatch) => fetch(`${API_URL}/profile/login`, {
     method: 'POST',
     headers: {
@@ -39,11 +44,12 @@ export const userPostFetch = (body) => (dispatch) => fetch(`${API_URL}/profile/l
 })
     .then((resp) => resp.json())
     .then((data) => {
-        if (data.message === 'ok') {
-            localStorage.setItem('token', data.jwt);
-            dispatch(loginUser(data.user, data.profile));
+        if (Object.prototype.hasOwnProperty.call(data, 'message')) {
+            return data.message;
         }
-        dispatch(authError(data.message));
+        localStorage.setItem('token', data.jwt);
+        dispatch(loginUser(data.user));
+        return false;
     });
 
 export const userPostRegisterFetch = (body) => (dispatch) => fetch(`${API_URL}/profile/register`, {
@@ -56,27 +62,17 @@ export const userPostRegisterFetch = (body) => (dispatch) => fetch(`${API_URL}/p
 })
     .then((resp) => resp.json())
     .then((data) => {
-        if (data.message === 'ok') {
-            localStorage.setItem('token', data.jwt);
-            dispatch(loginUser(data.user, data.profile));
+        if ((Object.prototype.hasOwnProperty.call(data, 'message'))) {
+            return data.message;
         }
-        dispatch(authError(data.message));
+        localStorage.setItem('token', data.jwt);
+        dispatch(loginUser(data.user));
     });
 
-const authError = (message) => ({
-    type: AUTH_MESSAGE_ERROR,
-    payload: message,
-});
-
-const loginUser = (user, profile) => ({
-    type: LOGIN_USER,
-    payloadUser: user,
-    payloadProfile: profile,
-});
-
-export const logoutUser = () => ({
-    type: LOGOUT_USER,
-});
+export const logoutProfile = () => (dispatch) => {
+    localStorage.removeItem('token');
+    dispatch(logoutUser());
+}
 
 export const saveUserSettings = (params, updateData) => async (dispatch, getState) => {
     const { user } = getState();

@@ -135,6 +135,126 @@ const cases = [
                 img:
               'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpou-6kejhjxszFJTwW09C5goW0m_7zO6-fw20G7pNw2bmZoI3wjFflqktraz2nJYadegc_ZVyF_Vm3yb_t0cS_6IOJlyXmINWx1g/140fx105f/image.png',
             },
+            {
+                itemId: 14,
+                name: 'Azimov',
+                type: 'assaultrifles',
+                rare: 'classified',
+                chance: 4,
+                painted: 'default',
+                img:
+                    'https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpou-6kejhjxszFJQJD_9W7m5a0mvLwOq7cqWdQ-sJ0xOvEpIj0jAbkqEE_ZD3xctLGJAE_Zw7U-QTowefth8TpvM_InHZh6XQ8pSGKWYJAoJI/360fx360f',
+            },
+            {
+                itemId: 15,
+                name: 'Glock-18 Gradient',
+                type: 'assaultrifles',
+                rare: 'classified',
+                chance: 4,
+                painted: 'default',
+                img:
+                    'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgposbaqKAxf0vL3dzxG6eO6nYeDg7miYr7VlWgHscN32LyT8dmm31XgrxdtZzvzJYDGIFM2Y16D-FfvlOu9m9bi66Oq9HyE/140fx105f/image.png',
+            },
+            {
+                itemId: 16,
+                name: '★ M9 bayonet knife | Legends',
+                type: 'assaultrifles',
+                rare: 'classified',
+                chance: 4,
+                painted: 'default',
+                img:
+                    'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpovbSsLQJf3qr3czxb49KzgL-Igsj5aoTTl3Ju5Mpjj9bN_Iv9nBq2_xE6Mmv1cIOSclI6ZViFr1XtwertgZK6vJiYwXNjuSEr5XaJzhfhn1gSOWAjuI7h/140fx105f/image.png',
+            },
+            {
+                itemId: 17,
+                name: '',
+                type: 'assaultrifles',
+                rare: 'classified',
+                chance: 4,
+                painted: 'default',
+                img:
+                    'https://community.cloudflare.steamstatic.com/economy/image/fWFc82js0fmoRAP-qOIPu5THSWqfSmTELLqcUywGkijVjZYMUrsm1j-9xgEObwgfEh_nvjlWhNzZCveCDfIBj98xqodQ2CZknz56I_OKMyJYdAXUBKxfY_Qt5DfhDCM7_cotA4Lhr7lSLQ_tt4GVYrl4MY1IGJOGX_fTYF-p6E1u0qJVL5GB8S-9jDOpZDknDIyvzQ/140fx105f/image.png',
+            },
+            {
+                itemId: 17,
+                name: '',
+                type: 'assaultrifles',
+                rare: 'classified',
+                chance: 4,
+                painted: 'default',
+                img:
+                    'https://community.cloudflare.steamstatic.com/economy/image/fWFc82js0fmoRAP-qOIPu5THSWqfSmTELLqcUywGkijVjZYMUrsm1j-9xgEObwgfEh_nvjlWhNzZCveCDfIBj98xqodQ2CZknz56P7fiDz9-TQXJVfdSXfgF-Q3oADI_ppdnDdK18e4CLQ_v5YeQMuYkMtEdHpLYWP7XMw6v60xpiKhfJpWBpCrxnXO-X5QNkco/140fx105f/image.png',
+            },
+            {
+                itemId: 17,
+                name: '',
+                type: 'assaultrifles',
+                rare: 'classified',
+                chance: 4,
+                painted: 'default',
+                img:
+                    'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpot7HxfDhjxszJemkV08y5nY6fqPP9ILrDhGpI18h0juDU-MLx2gKy8xFqMDr2IIORcAU6MlnS_Vjtxu7rhcK-u5-cyXZqsiEg7HnUgVXp1kpd_x09/140fx105f/image.png',
+            },
+            {
+                itemId: 17,
+                name: '',
+                type: 'assaultrifles',
+                rare: 'classified',
+                chance: 4,
+                painted: 'default',
+                img:
+                    'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpot7HxfDhjxszJemkV09-5k5SDnvnzIITdn2xZ_IsoiL2XotT03wS3-EJpNmynIobEcAY9ZVvWqFbvyOu80ZLvucmamnpqpGB8sq6j9EZr/140fx105f/image.png',
+            },
+            {
+                itemId: 17,
+                name: '',
+                type: 'assaultrifles',
+                rare: 'classified',
+                chance: 4,
+                painted: 'default',
+                img:
+                    'https://community.cloudflare.steamstatic.com/economy/image/fWFc82js0fmoRAP-qOIPu5THSWqfSmTELLqcUywGkijVjZYMUrsm1j-9xgEObwgfEh_nvjlWhNzZCveCDfIBj98xqodQ2CZknz56P7fiDzZ2TQXJVfdhX_Qo4A3gNio37M52WZmz9e0ALAjttYKVN7QvZtxEG8nXCPXSYwD970huiKgLK8Daoim-ji7oJC5UDGS-VkfD/140fx105f/image.png',
+            },
+            {
+                itemId: 17,
+                name: '',
+                type: 'assaultrifles',
+                rare: 'classified',
+                chance: 4,
+                painted: 'default',
+                img:
+                    'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpovbSsLQJf2PLacDBA5ciJk5O0nPbmMrbul35F59FjhefI9rP5gVO8v11pMj_1d4eVelVrYlCG_VDowefpgcC97s-dyXQx6SQqtn6JnECyhR5OcKUx0sEUJJZ_/140fx105f/image.png',
+            },
+            {
+                itemId: 17,
+                name: '',
+                type: 'assaultrifles',
+                rare: 'classified',
+                chance: 4,
+                painted: 'default',
+                img:
+                    'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DeXEl7NwdOtbagFABs3OXNYgJP48i5hoOSlPvxDLbemGRu6sp-h9bM8Ij8nVn6qkZoN2qlIYHHd1Q-YQ2F-QTrle7vhZa8uZnNmHprsiIg7S7fnBWw1wYMMLL5HY2qBw/140fx105f/image.png',
+            },
+            {
+                itemId: 17,
+                name: '',
+                type: 'assaultrifles',
+                rare: 'classified',
+                chance: 4,
+                painted: 'default',
+                img:
+                    'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DfVlxgLQFFibKkJQN3wfLYYgJK7dKyg5KKh8j3MrbeqWxD7dxOh-zF_Jn4xlCyrktsZmvxINLBdw9vNA7T_Fbrx73vjJPptJucnHdqvCJwsSyImBypwUYblwFxuLY/140fx105f/image.png',
+            },
+            {
+                itemId: 17,
+                name: '',
+                type: 'assaultrifles',
+                rare: 'classified',
+                chance: 4,
+                painted: 'default',
+                img:
+                    'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DAQ1h3LAVbv6mxFABs3OXNYgJR_Nm1nYGHnuTgDL_VhmpF18Jjj-zPyo_0hVuLphY4OiyuOoTDdgFoMArYrAS7l7_rg5W-7pzOmnRq7yUnty7YyRSzhUpEZ7Ft1_2ACQLJ0i7bxGA/140fx105f/image.png',
+            },
         ],
     },
 ];

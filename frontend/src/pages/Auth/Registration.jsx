@@ -1,27 +1,26 @@
+/* eslint-disable */
 import React, { useState } from "react";
 import {
     Form,
     Input,
-    Cascader,
-    Select,
-    Row,
-    Col,
     Checkbox,
     Button,
     Radio,
-    AutoComplete,
 } from "antd";
+import {userPostRegisterFetch} from "../../store/actions/user";
+import {connect} from "react-redux";
+import capitalize from "lodash/capitalize";
+import openNotification from '../../components/mini/openNotification';
 
-const { Option } = Select;
 
 const formItemLayout = {
     labelCol: {
-        xs: { span: 24 },
+        xs: { span: 8 },
         sm: { span: 8 },
     },
     wrapperCol: {
-        xs: { span: 24 },
-        sm: { span: 16 },
+        xs: { span: 9 },
+        sm: { span: 9 },
     },
 };
 const tailFormItemLayout = {
@@ -45,16 +44,37 @@ const Images = [
     {url: './img/avatars/5.png', id:5},
     {url: './img/avatars/6.png', id:6},
 ]
-const Registration = () => {
-    const [form] = Form.useForm()
 
-    const onFinish = (values: any) => {
-        console.log("Received values of form: ", values);
+const mapDispatchToProps = (dispatch) => ({
+        userPostRegisterFetch: (userInfo) => dispatch(userPostRegisterFetch(userInfo))
+    })
+const Registration = (props) => {
+    const [form] = Form.useForm()
+    const [avatar, setAvatar] = useState(1);
+    const [loading, setLoading] = useState(false);
+
+    const onFinish = (values) => {
+        setLoading(true);
+        values.avatar = avatar;
+        props.userPostRegisterFetch({
+            login: values.username,
+            password: values.password,
+            email: values.email,
+            avatar: values.avatar
+        }).then((errMessage) => {
+            setLoading(false)
+            if(errMessage) {
+                openNotification('error', 'Помилка', errMessage)
+                return
+            }
+            props.history.push('/')
+            openNotification('success', 'Успішний вхід', 'Ласкаво просимо на сайт ' + capitalize(values.username) + '!')
+        })
     }
-    //const [autoCompleteResult, setAutoCompleteResult] = useState([])
+
     return (
-        <div className="registratinpage">
-            <h1 className="title">Регістрація</h1>
+        <div className="registrationpage">
+            <h1 className="title">Реєстрація</h1>
             <Form
                 {...formItemLayout}
                 form={form}
@@ -126,9 +146,9 @@ const Registration = () => {
                     <Input />
                 </Form.Item>
                 <Form.Item label="Виберіть аватарку">
-                        <Radio.Group defaultValue="1" buttonStyle="solid">
+                        <Radio.Group defaultValue={avatar} buttonStyle="solid">
                         {Images.map((item)=>(
-                            <Radio.Button value={item.id} className="radio-avatar">
+                            <Radio.Button value={item.id} key={item.id} className="radio-avatar" onClick={() => setAvatar(item.id)}>
                                     <img src={item.url} alt={item.id + "avatar"}/>
                             </Radio.Button>
                         ))}
@@ -152,7 +172,7 @@ const Registration = () => {
                         </Checkbox>
                 </Form.Item>
                 <Form.Item {...tailFormItemLayout}>
-                        <Button type="primary" htmlType="submit">
+                        <Button type="primary" htmlType="submit" loading={loading}>
                             Зареєструватися
                         </Button>
                 </Form.Item>
@@ -161,4 +181,4 @@ const Registration = () => {
     )
 }
 
-export default Registration
+export default connect(null, mapDispatchToProps)(Registration);

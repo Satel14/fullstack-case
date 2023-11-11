@@ -24,6 +24,22 @@ module.exports = sequelize.define("users",
             field: "avatar",
             type: Sequelize.INTEGER,
         },
+        user_balance : {
+            field: "balance",
+            type: Sequelize.DECIMAL,
+        },
+        user_rank : {
+            field: 'rank',
+            type: Sequelize.DECIMAL,
+        },
+        user_receiveInfo : {
+            field: 'receiveInfo',
+            type: Sequelize.TEXT,
+        },
+        user_role : {
+            field: 'role',
+            type: Sequelize.INTEGER,
+        },
         created_at: {
             field: "created_at",
             type: Sequelize.DATE,

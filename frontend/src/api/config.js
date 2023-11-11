@@ -1,3 +1,4 @@
-const API_URL = 'http://localhost:3003/api';
+const SITENAME = 'http://localhost:3003';
+const API_URL = 'http://localhost:3003/api'
 
-export default { API_URL };
+module.exports = { SITENAME, API_URL };

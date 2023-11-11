@@ -1,67 +1,86 @@
 import React from 'react';
-import { Layout, Tooltip } from 'antd';
+import { Layout, Popover, Tooltip } from 'antd';
 import Fade from 'react-reveal/Fade';
 import map from 'lodash/map';
 import testCase from '../data/testCase';
-
+import {renderItemProp} from '../helpers/Case';
+import { Link } from 'react-router-dom';
+import ItemColor from './mini/ItemColor';
 const { Header } = Layout;
 
-const renderItemProp = (item) => (
-    `Назва: ${
-        item.name
-    }, Тип: ${
-        item.type
-    }, Рарність: ${
-        item.rare
-    }, Колір: ${
-        item.painted}`
-);
-const getColor = (paint) => {
-    let color;
 
-    if (paint === 'tw') {
-        color = 'white';
-    } else if (paint === 'cobalt') {
-        color = 'blue';
-    } else if (paint === 'very rare') {
-        color = 'blue';
-    } else if (paint === 'exotic') {
-        color = 'yellow';
-    } else {
-        color = 'grey';
-    }
-
-    return color;
-};
+const ProfileInline = ({ data }) => (
+    <Link to={`/profile/${data.user_id}`} className='popover-history-user'>
+        <div className='popover-history-user__avatar'
+        style={{
+            backgroundImage: `url(/img/avatars/${data.user_avatar}.webp)`,
+        }}
+        >
+            <span>{data.user_login}</span>
+        </div>
+    </Link>
+)
+const CaseInfo = ({ data }) => (
+    <Link to={`/case/${data.case_id}`} className='popover-history-case'>
+        <img className="case-img" src={data.case_img} alt={data.case_title}/>
+        <div className="case-name">{data.case_title}</div>
+    </Link>
+)
 export default class HeaderThird extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            cases: testCase[0],
+            storageLast: [],
+            userList: {},
+            caseList: {}
             // fetching: 0,
         };
     }
 
+    getShortInfoItem(id, fieldName = null) {
+        const { itemCache } = this.props;
+        if (fieldName === null) {
+            return itemCache[id];
+        }
+        if (itemCache[id]) {
+            return itemCache[id][fieldName];
+        }
+        return '';
+    }
+
     render() {
-        const { cases } = this.state;
+        const { storageLast, userList, caseList } = this.state;
         return (
             <Header className="headersecond third">
-                {map(cases.items, (item, i) => (
-                    <>
-                        {i < 17 && (
-                            <Fade delay={i * 50}>
-                                <Tooltip placement="bottom" title={renderItemProp(item)}>
-                                    <div
-                                        className="casepage-itemlist__item"
-                                        style={{
-                                            backgroundImage: `url(${item.img})`,
-                                            borderColor: getColor(item.painted),
-                                        }}
-                                    />
+                {map(storageLast, (item, i) => (
+                    <div key={`header ${item.storage_id}`}>
+                        {i < 24 && (
+                                <Tooltip
+                                    placement="bottom"
+                                    title={renderItemProp(
+                                        this.getShortInfoItem(item.storage_itemId, null),
+                                        item.storage_color,
+                                    )}>
+                                    <Link to={`/profile/${item.storage_itemId}`}>
+                                        <Popover
+                                         placement="bottom"
+                                         content={<CaseInfo data={caseList[item.storage_caseId]}/>}
+                                         title={<ProfileInline data={userList[item.storage_userId]}/>}
+                                        >
+                                            <div className={`casepage-itemlist_item r-${
+                                                this.getShortInfoItem(item.storage_itemId, "item_rare")}`
+                                            }
+                                            style={{
+                                                backgroundImage: `url(/img/items/${item.storage_itemId}.webp)`
+                                            }}
+                                            >
+                                                <ItemColor color={item.storage_color}/>
+                                            </div>
+                                        </Popover>
+                                    </Link>
                                 </Tooltip>
-                            </Fade>
                         )}
-                    </>
+                    </div>
                 ))}
             </Header>
         );

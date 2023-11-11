@@ -49,7 +49,7 @@ export default class Profile extends Component {
                         <div className="profilepage-firstblock">
                             <div className="profilepage-firstblock__favoritecase">
                                 <div className="profiletitle">Улюблений кейс</div>
-                                <img src="img/case/richboycase.png" alt="кейс" />
+                                <img src="/img/case/richboycase.png" alt="кейс" />
                                 <span>Rich boy case</span>
                             </div>
                             <div className="profilepage-firstblock__stats">
@@ -89,20 +89,20 @@ export default class Profile extends Component {
                                     key="1"
                                 >
                                     <div className="casehistory-itemlist">
-                                        {map(caseCollection.items, (item, i) => (
-                                            <Fade delay={i * 50}>
-                                                <Tooltip placement="bottom" title={renderItemProp(item)}>
-                                                    <div
-                                                        className="casehistory-itemlist_item"
-                                                        style={{
-                                                            backgroundImage: `url(${item.img})`,
-                                                        }}
-                                                    >
-                                                        <span>{item.name}</span>
-                                                    </div>
-                                                </Tooltip>
-                                            </Fade>
-                                        ))}
+                                        {/* {map(caseCollection.items, (item, i) => ( */}
+                                        {/*     <Fade delay={i * 50}> */}
+                                        {/*         <Tooltip placement="bottom" title={renderItemProp(item)}> */}
+                                        {/*             <div */}
+                                        {/*                 className="casehistory-itemlist_item" */}
+                                        {/*                 style={{ */}
+                                        {/*                     backgroundImage: `url(${item.img})`, */}
+                                        {/*                 }} */}
+                                        {/*             > */}
+                                        {/*                 <span>{item.name}</span> */}
+                                        {/*             </div> */}
+                                        {/*         </Tooltip> */}
+                                        {/*     </Fade> */}
+                                        {/* ))} */}
                                     </div>
                                 </TabPane>
                             </Tabs>

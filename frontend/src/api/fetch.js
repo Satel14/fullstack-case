@@ -25,9 +25,29 @@ export const post = async (destination, body) => {
         return await result.json();
     }
 
-    throw (error: result.status)
-}
+    // eslint-disable-next-line no-throw-literal
+    throw { error: result.status };
+};
+export const put = async (destination, body, notificationErr = false) => {
+    const headers = await getHeaders();
 
+    const result = await fetch(`${API_URL}${destination}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(body),
+    });
+
+    if (result.ok) {
+        return result.json();
+    }
+
+    if (notificationErr) {
+        openNotification('error', 'Помилка', 'Сталася помилка на сервері');
+    }
+
+    // eslint-disable-next-line no-throw-literal
+    throw { error: result.status };
+};
 export const get = async (destination) => {
     const headers = await getHeaders();
     const result = await fetch(`${API_URL}${destination}`, {
@@ -37,5 +57,6 @@ export const get = async (destination) => {
     if (result.ok) {
         return await result.json()
     }
-    throw (error: result.status)
-}
+    // eslint-disable-next-line no-throw-literal
+    throw { error: result.status };
+};

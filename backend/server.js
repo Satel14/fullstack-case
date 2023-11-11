@@ -1,18 +1,26 @@
 const express = require('express')
-const router = require('./routes')
 const bodyParser = require('body-parser')
+const cors = require('cors')
+const compression = require('compression')
+const routers = require('./routes')
 const config = require('./src/config/serverConfig')
+require('dotenv').config()
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+app.use(compression());
+routers(app);
 
 
-const app = express()
+const server = app.listen(config.port, () =>
+    console.log(`Listening on port ${config.port}`)
+);
 
-// require('dotenv').config()
 
-const port = process.env.PORT || 5000;
-
-app.use(bodyParser.urlencoded({ extended: true }))
-app.use(bodyParser.json())
-
-router(app);
-
-app.listen(config.port, () => console.log(`Listening on port ${config.port}`));
+if (process.env.CI) {
+    console.log(`Tested success`);
+    process.exit(0);
+}

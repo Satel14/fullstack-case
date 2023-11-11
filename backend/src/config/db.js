@@ -1,4 +1,4 @@
-const Sequelize = require('sequelize')
+const Sequelize = require("sequelize");
 const config = require('./serverConfig')
 
 const { Op } = Sequelize;
@@ -41,18 +41,21 @@ const operatorsAliases = {
 };
 
 module.exports = new Sequelize(
-    config.database,
-    config.username,
-    config.password,
+    config.database.database,
+    config.database.username,
+    config.database.password,
     {
         operatorsAliases,
-        host: config.host,
+        host: config.database.host,
+        port: config.database.db_port,
         dialect: 'mysql',
         define: {
             freezeTableName: true,
-        }
+        },
+        logging: false,
     }
-)
+);
+
 /*
 [Op.and]: [{a: 5}, {b: 6}] // (a = 5) AND (b = 6)
 [Op.or]: [{a: 5}, {a: 6}]  // (a = 5 OR a = 6)

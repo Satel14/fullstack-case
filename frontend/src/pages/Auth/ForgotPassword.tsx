@@ -20,7 +20,7 @@ const CollectionCreateForm: React.FC<CollectionCreateFormProps> = ({
     const [form] = Form.useForm();
     return (
         <Modal
-            visible={visible}
+            open={visible}
             title="Нагадати пароль"
             okText="Згадати"
             cancelText="Закрити"

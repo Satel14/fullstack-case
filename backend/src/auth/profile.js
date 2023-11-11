@@ -13,19 +13,18 @@ module.exports = (app) => {
 }
 
 passport.use(
-    new JwtStategy(jwtOptions, async (jtw_payload, next)  =>{
-        await Users.findOne({
+    new JwtStategy(jwtOptions, (async (jwt_payload, next)  =>{
+
+        const profile = await Users.findOne({
             where: { id: jwt_payload.id },
-            attributes: ['user_login', 'user_id'],
-        }).then((profile) => {
-            if (profile) {
-                next(null, {
-                    profile: profile.dataValues,
-                    user: profile,
-                })
-            } else {
-                next(null, false)
-            }
+            attributes: ['user_login', 'user_id', 'user_balance', 'user_avatar', 'user_email', 'user_receiveInfo', 'user_role'],
         })
-    })
-)
+        if(profile) {
+            next(null, {
+                profile: profile,
+            })
+        } else {
+            next(null, false);
+        }
+    })),
+);

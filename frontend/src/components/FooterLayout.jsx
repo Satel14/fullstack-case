@@ -1,25 +1,24 @@
 import React from 'react';
 import { Layout } from 'antd';
+import { Link } from 'react-router-dom';
 
 const { Footer } = Layout;
 
 const FooterLayout = () => (
     <Footer>
-        <div className="logo">
-            <div className="leftblock">
-                <div>2022 Case</div>
-            </div>
-            <div>
-                На нашому сайт ви можете відкрити різні кейси CS:GO по самим вигідним цінам.
-                Цей сайт захищений reCAPTCHA та Google Політика
-                конфіденційності та Умови використання
-            </div>
+        <div className="leftblock">
+            <div>2023 Case</div>
+        </div>
+        <div>
+           На нашому сайт ви можете відкрити різні кейси CS:GO по самим вигідним цінам.
+           Цей сайт захищений reCAPTCHA та Google Політика
+           конфіденційності та Умови використання
         </div>
         <div className="rightblock">
-            <a href="/">Користувацька угода</a>
-            <a href="/">Контакти та коорпоративна інформація</a>
-            <a href="/">Питання/відповідь</a>
-            <a href="/">Відгуки</a>
+            <Link to='/article/3'>Користувацька угода</Link>
+            <Link to='/article/6'>Правила</Link>
+            <Link to='/article/7'>Питання/відповідь</Link>
+            <Link to='/article/9'>Відгуки</Link>
         </div>
     </Footer>
 );

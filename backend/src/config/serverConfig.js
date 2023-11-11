@@ -1,19 +1,26 @@
 const mode = process.env.NODE_ENV || 'development'
+require('dotenv').config()
 
 const config = {
     development: {
-        username: 'admin',
-        password: '1234',
-        database: 'case',
-        host: 'localhost',
+        database: {
+            username: 'root',
+            password: '1234',
+            database: 'case',
+            host: 'localhost',
+            db_port: '3006',
+        },
         port: '3003',
     },
     production: {
-        username: 'db_user_name',
-        password: 'db_user_password',
-        database: 'db_name',
-        host: '127.0.0.1',
-        port: '3003'
+        database: {
+            host: 'localhost',
+            db_port: '3306',
+            database: 'case',
+            username: 'root',
+            password: '1234',
+        },
+        port: process.env.SERVER_PORT,
     }
 }
 

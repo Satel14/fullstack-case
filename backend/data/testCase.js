@@ -99,7 +99,7 @@ const VELOCITY_CRATE = [
     },
     {
         id: 17,
-        name: 'Chantico's Fire',
+        name: "Chantico's Fire",
         type: ITEMS.TYPE.assault_rifles,
         rare: ITEMS.RARITY.MINIMAL_WEAR,
     },

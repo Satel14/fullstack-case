@@ -41,5 +41,83 @@ const cases = [
         price: 290,
         img: 'https://images.steamcdn.io/forcedrop/cases/Rage_6.png',
     },
+    {
+        name: 'Case Knife',
+        id: 7,
+        price: 290,
+        img: 'https://images.steamcdn.io/forcedrop/cases/1new_rare.png',
+    },
+    {
+        name: 'Case Buy',
+        id: 7,
+        price: 290,
+        img: 'https://images.steamcdn.io/forcedrop/cases/buycase.png',
+    },
+    {
+        name: 'Case Fire-and-Water',
+        id: 7,
+        price: 290,
+        img: 'https://images.steamcdn.io/forcedrop/cases/Case-FD_Fire-and-Water.png',
+    },
+    {
+        name: 'Case Hyper Beast',
+        id: 7,
+        price: 290,
+        img: 'https://images.steamcdn.io/forcedrop/cases/hyperbeast1.png',
+    },
+    {
+        name: 'Case Fire',
+        id: 7,
+        price: 290,
+        img: 'https://images.steamcdn.io/forcedrop/cases/fireee.png',
+    },
+    {
+        name: 'Case Covert',
+        id: 7,
+        price: 290,
+        img: 'https://images.steamcdn.io/forcedrop/cases/1new_covert.png',
+    },
+    {
+        name: 'Case Mecha Industries',
+        id: 7,
+        price: 290,
+        img: 'https://images.steamcdn.io/forcedrop/cases/mecha.png',
+    },
+    {
+        name: 'Print stream',
+        id: 7,
+        price: 290,
+        img: 'https://images.steamcdn.io/forcedrop/cases/1PrintStream.png',
+    },
+    {
+        name: 'Case VIP',
+        id: 7,
+        price: 290,
+        img: 'https://images.steamcdn.io/forcedrop/cases/VIPCASE.png',
+    },
+    {
+        name: 'Case Asimov',
+        id: 7,
+        price: 290,
+        img: 'https://images.steamcdn.io/forcedrop/cases/asimov.png',
+    },
+    {
+        name: 'Case Neo-Noir',
+        id: 7,
+        price: 290,
+        img: 'https://images.steamcdn.io/forcedrop/cases/neo.png',
+    },
+    {
+        name: 'Case Gold',
+        id: 7,
+        price: 290,
+        img: 'https://images.steamcdn.io/forcedrop/cases/goldd.png',
+    },
+    {
+        name: '',
+        id: 7,
+        price: 290,
+        img: '',
+    },
 ];
 export default cases;

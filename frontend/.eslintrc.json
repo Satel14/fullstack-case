@@ -5,13 +5,10 @@
         "node": true
     },
     "extends": [
-        "plugin:react/recommended",
         "eslint:recommended",
         "plugin:import/errors",
         "plugin:import/warnings",
-        "plugin:import/typescript",
         "airbnb",
-        "plugin:lodash/recommended",
         "plugin:promise/recommended"
     ],
     "parserOptions": {
@@ -26,38 +23,20 @@
         "react",
         "only-warn",
         "import",
-        "lodash",
         "promise"
     ],
     "rules": {
-        // Indent with 4 spaces
-        "indent": [
-            "error",
-            4
-        ],
-        // Indent JSX with 4 spaces
-        "react/jsx-indent": [
-            "error",
-            4
-        ],
-        // Indent props with 4 spaces
-        "react/jsx-indent-props": [
-            "error",
-            4
-        ],
-        "import/no-unresolved": [
-            2,
-            {
-                "commonjs": true,
-                "amd": true
-            }
-        ],
+        "max-len": "off",
+        "react/prop-types": "off",
+        "import/no-unresolved": "off",
         "promise/always-return": "error",
         "promise/no-return-wrap": "error",
         "promise/param-names": "error",
         "promise/catch-or-return": "error",
         "promise/no-native": "off",
         "promise/no-nesting": "warn",
+        "no-plusplus": "off",
+        "react/jsx-filename-extension": "off",
         "promise/no-promise-in-callback": "warn",
         "promise/no-callback-in-promise": "warn",
         "promise/avoid-new": "warn",
@@ -69,22 +48,17 @@
         "import/default": 2,
         "import/export": 2,
         "linebreak-style": 0,
+        "indent": "off",
+        "react/destructuring-assignment": "off",
+        "react/jsx-indent": "off",
+        "react/jsx-indent-props": "off",
         "no-var": "error",
         "semi": "error",
-        "camelcase": [
-            2,
-            {
-                "properties": "always"
-            }
-        ],
         "no-multi-spaces": "error",
         "space-in-parens": "error",
         "no-multiple-empty-lines": "error",
         "prefer-const": "error",
         "no-use-before-define": "error",
-        "react/jsx-filename-extension": [
-            0
-        ],
         "import/extensions": "off"
     }
 }
