@@ -1,16 +1,19 @@
+/* eslint-disable camelcase */
 import {
-    UPDATE_MMR,
-    UPDATE_USER_SETTINGS,
-    ADD_USER,
     LOGIN_USER,
     LOGOUT_USER,
-    AUTH_MESSAGE_ERROR,
+    UPDATE_USER_FIELD,
 } from '../types';
+import userFields from '../config/userFields';
 
 const initialState = {
-    user: {},
-    profile: {},
-    message: '',
+    id: null,
+    login: '',
+    email: '',
+    balance: 0.00,
+    avatar: 1,
+    receiveInfo: '',
+    role: 1,
 };
 
 const usersReducer = (prevState = initialState, action) => {
@@ -18,32 +21,22 @@ const usersReducer = (prevState = initialState, action) => {
     case LOGIN_USER:
         return {
             ...prevState,
-            user: action.payload_user,
-            profile: action.payload_profile,
+            [userFields.user_id]: action.payloadUser.user_id,
+            [userFields.user_login]: action.payloadUser.user_login,
+            [userFields.user_email]: action.payloadUser.user_email,
+            [userFields.user_balance]: action.payloadUser.user_balance,
+            [userFields.user_avatar]: action.payloadUser.user_avatar,
+            [userFields.user_receiveInfo]: action.payloadUser.user_receiveInfo,
+            [userFields.user_role]: action.payloadUser.user_role,
         };
     case LOGOUT_USER:
         return {
-            ...prevState, user: {}, profile: {}, message: '',
+            ...prevState, login: null,
         };
-    case UPDATE_USER_SETTINGS:
+    case UPDATE_USER_FIELD:
         return {
             ...prevState,
-            user: action.payload,
-        };
-    case UPDATE_MMR:
-        return {
-            ...prevState,
-            user: action.payload,
-        };
-    case AUTH_MESSAGE_ERROR:
-        return {
-            ...prevState,
-            message: action.payload,
-        };
-    case ADD_USER:
-        return {
-            ...prevState,
-            user: action.payload,
+            [action.payloadKey]: action.payloadData,
         };
     default:
         return prevState;
@@ -51,3 +44,4 @@ const usersReducer = (prevState = initialState, action) => {
 };
 
 export default usersReducer;
+

@@ -1,7 +1,8 @@
 const Sequelize = require("sequelize")
 const sequelize = require("../config/db")
 
-module.exports = sequelize.define("users",
+module.exports = sequelize.define(
+    "users",
     {
         user_id: {
             field: "id",
@@ -12,7 +13,7 @@ module.exports = sequelize.define("users",
             field: "login",
             type: Sequelize.STRING,
         },
-        user_pass: {
+        user_password: {
             field: "password",
             type: Sequelize.STRING,
         },
@@ -24,28 +25,28 @@ module.exports = sequelize.define("users",
             field: "avatar",
             type: Sequelize.INTEGER,
         },
-        user_balance : {
+        user_balance: {
             field: "balance",
             type: Sequelize.DECIMAL,
         },
-        user_rank : {
-            field: 'rank',
+        user_rank: {
+            field: "rank",
             type: Sequelize.DECIMAL,
         },
-        user_receiveInfo : {
-            field: 'receiveInfo',
+        user_receiveInfo: {
+            field: "receiveInfo",
             type: Sequelize.TEXT,
         },
-        user_role : {
-            field: 'role',
+        user_role: {
+            field: "role",
             type: Sequelize.INTEGER,
         },
         created_at: {
             field: "created_at",
             type: Sequelize.DATE,
         },
-        update_at: {
-            field: "update_at",
+        updated_at: {
+            field: "updated_at",
             type: Sequelize.DATE,
         },
     },

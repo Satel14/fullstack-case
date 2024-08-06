@@ -20,7 +20,7 @@ const CasePrice = (props) => (
         {checkPrice(props.data) ? (
             <>
                 <div className="case-price">
-                    <Tooltip placement="right" title="Скидка">
+                    <Tooltip placement="right" title="Знижка">
                         {getSummPrice(props.data.case_discount, props.count)}
                         ₴
                     </Tooltip>

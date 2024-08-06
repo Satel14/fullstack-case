@@ -49,7 +49,19 @@ const randomInteger = (min, max) => {
 
 const mapStateToProps = (state) => ({
     user: state.user,
-})
+    itemCache: state.itemCache,
+    modules: state.modules,
+});
+// react/sort-comp
+const calculatePositionForLine = (winner) => {
+    const heightOneBlock = 110; // 110px
+    const resultTopPixel = -heightOneBlock * (winner.winIndex - 1)
+        + 270
+        + winner.winIndex
+        - randomInteger(5, heightOneBlock - 5);
+
+    return resultTopPixel;
+};
 
 const getColorRariest = (rariest) => rariestColors[rariest];
 class Test extends Component {
@@ -68,28 +80,21 @@ class Test extends Component {
             openCount: '1'
         };
     }
-
-    calculatePositionForLine() {
-        const { winner } = this.state;
-        const heightOneBlock = 110;
-        const resultTopPixel = -heightOneBlock * (winner.winIndex - 1)
-            + 270
-            + winner.winIndex
-            - randomInteger(5, heightOneBlock - 5);
-
-        return resultTopPixel;
-    }
     async open() {
         const { data } = this.props;
+        console.log(data)
         const { openCount } = this.state;
-        if (data.case_openLimit <= data.case_openedCount && data.case_openLimit !== 0) {
+        if (
+            data.case_openLimit <= data.case_openedCount
+            && data.case_openLimit !== 0
+        ) {
             this.setState({
                 load: false,
                 openMethod: '',
                 processWorking: false,
                 loadItem: false,
                 loading: false,
-            })
+            });
             openNotification(
                 'error',
                 'У цього кейса досяг ліміт відкриття. Цей кейс більше не можна відрити!',
@@ -108,18 +113,19 @@ class Test extends Component {
             openNotification('error', 'Помилка', result.message);
             this.setState({
                 loading: false,
-            })
+            });
             return false;
         }
 
         const actualPricesD = [];
 
-        for(const key in result.data) {
+        for (const key in result.data) {
             const element = result.data[key];
 
+            // eslint-disable-next-line no-await-in-loop
             const itemPrice = await getItemPriceById(element.winner.item.id);
-            const prices = JSON.parse(itemPrice.price);
-            let {color} = element.winner.item;
+            const prices = JSON.parse(itemPrice.prices);
+            let { color } = element.winner.item;
             color = color.toLowerCase();
             color = color.replace(' ', '');
 
@@ -131,25 +137,25 @@ class Test extends Component {
                     actualPrice = parseInt(prices[color] * creditToUAH * 100, 10) / 100;
                 }
             }
-            actualPricesD.push(actualPrice)
+            actualPricesD.push(actualPrice);
         }
 
         const randomList = [];
         const winnerList = [];
 
-        for(const key in result.data) {
+        for (const key in result.data) {
             const element = result.data[key];
             randomList.push(element.resultWithItem);
-            winnerList.push(element.winner)
+            winnerList.push(element.winner);
         }
         this.setState({
             randomItemsList: randomList,
             winner: winnerList,
-            price: actualPricesD,
-        })
+            prices: actualPricesD,
+        });
 
         window.HeaderSecond.changeBalance(result.balance);
-        return true
+        return true;
     }
     async openFastMethod() {
         const {processWorking, loading} = this.state;
@@ -266,9 +272,7 @@ class Test extends Component {
     }
 
     render() {
-        const {
-            caseCollection, load, loadItem, winner, openCount, loading
-        } = this.state;
+        const {caseCollection, load, loadItem, winner, openCount, loading} = this.state;
         const {data, user} = this.props;
         return (
             <>
@@ -407,7 +411,7 @@ class Test extends Component {
                                             <div className="shadow-overlay">
                                                 <ShadowOverlay
                                                     load={load}
-                                                    top={this.calculatePositionForLine()}
+                                                    top={calculatePositionForLine(winner[i])}
                                                 >
                                                     {map(caseCollection, (item, i) => (
                                                         <>
@@ -438,8 +442,8 @@ class Test extends Component {
                     <>
                         <div className='casepage-more'>
                             <Fade>
-                               {/* <H2A title="Кейс" subTitle={data.case_title}/> */}
-                               {/*  <CasePrice data={data} count={openCount}/> */}
+                               {/* <H2A title="Кейс" subTitle={'222222222222'}/> */}
+                                {/* <CasePrice data={data} count={openCount}/> */}
                             </Fade>
                         </div>
                         <div className="alert-case-auth">

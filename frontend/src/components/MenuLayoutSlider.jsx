@@ -43,7 +43,8 @@ class MenuLayoutSlider extends React.Component {
         }
     }
     render() {
-        const { user } = this.props;
+        const {user} = this.props;
+        console.log(user);
         return (
             <>
                 <Menu theme="dark" mode="inline" defaultSelectedKeys={['cases']}>

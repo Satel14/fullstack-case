@@ -5,15 +5,16 @@ const JwtStategy = require('passport-jwt').Strategy;
 const { authenticate } = require('../middleware/authenticate')
 
 module.exports = (app) => {
-    app.post('/api/profile/get', authenticate, async (req, res) => {
+    app.get('/api/profile/get', authenticate, async (req, res) => {
         res.status(200).json({
-            user: req.user.user,
-        })
-    })
-}
+            user: req.user.profile,
+        });
+    });
+};
+
 
 passport.use(
-    new JwtStategy(jwtOptions, (async (jwt_payload, next)  =>{
+    new JwtStategy(jwtOptions, (async (jwt_payload, next) => {
 
         const profile = await Users.findOne({
             where: { id: jwt_payload.id },

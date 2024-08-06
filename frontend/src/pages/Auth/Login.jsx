@@ -11,26 +11,31 @@ import capitalize from 'lodash/capitalize';
 
 
 const mapDispatchToProps = (dispatch) => ({
-        userPostFetch: (userInfo) => dispatch(userPostFetch(userInfo))
-    })
+    userPostFetch: (userInfo) => dispatch(userPostFetch(userInfo)),
+});
 const Login = (props) => {
 
     const [loading, setLoading] = useState(false);
     const onFinish = (values) => {
         setLoading(true);
         props.userPostFetch({
-            login: values.username,
-            password: values.password
-        }).then((errMessage) => {
-            setLoading(false)
-            if (errMessage) {
-                openNotification('error', 'Помилка', "Дані не вірні")
-                return
-            }
-            props.history.push('/')
-            openNotification('success', 'Успішний вхід', 'Ласкаво просимо на сайт ' + capitalize(values.username) + '!')
-        })
-    }
+                login: values.username,
+                password: values.password,
+            })
+            .then((errMessage) => {
+                setLoading(false);
+                if (errMessage) {
+                    openNotification("error", "Помилка", "Дані не вірні");
+                    return;
+                }
+                props.history.push("/");
+                openNotification(
+                    "success",
+                    "Успішний вхід",
+                    "Ласкаво просимо на сайт" + capitalize(values.username) + "!"
+                );
+            });
+    };
     return (
         <div className='loginpage'>
             <h1 className='title'>Авторизація</h1>

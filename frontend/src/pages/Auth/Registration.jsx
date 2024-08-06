@@ -46,8 +46,8 @@ const Images = [
 ]
 
 const mapDispatchToProps = (dispatch) => ({
-        userPostRegisterFetch: (userInfo) => dispatch(userPostRegisterFetch(userInfo))
-    })
+    userPostRegisterFetch: (userInfo) => dispatch(userPostRegisterFetch(userInfo)),
+});
 const Registration = (props) => {
     const [form] = Form.useForm()
     const [avatar, setAvatar] = useState(1);
@@ -60,7 +60,7 @@ const Registration = (props) => {
             login: values.username,
             password: values.password,
             email: values.email,
-            avatar: values.avatar
+            avatar: values.avatar,
         }).then((errMessage) => {
             setLoading(false)
             if(errMessage) {
@@ -83,7 +83,7 @@ const Registration = (props) => {
                 scrollToFirstError
             >
                 <Form.Item
-                    name="nickname"
+                    name="username"
                     label="Логін"
                     rules={[
                         {

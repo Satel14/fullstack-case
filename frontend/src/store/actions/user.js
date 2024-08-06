@@ -1,6 +1,4 @@
 import {
-    ADD_USER,
-    UPDATE_USER_SETTINGS,
     LOGIN_USER,
     LOGOUT_USER,
 } from '../types';
@@ -15,6 +13,7 @@ const loginUser = (user) => ({
 export const logoutUser = () => ({
     type: LOGOUT_USER,
 });
+
 export const getProfileFetch = () => (dispatch) => {
     const { token } = localStorage;
     if (token) {
@@ -27,10 +26,12 @@ export const getProfileFetch = () => (dispatch) => {
             },
         })
             .then((resp) => resp.json())
+            // eslint-disable-next-line promise/always-return
             .then((data) => {
                 dispatch(loginUser(data.user));
             });
     }
+
     return null;
 };
 
@@ -72,16 +73,16 @@ export const userPostRegisterFetch = (body) => (dispatch) => fetch(`${API_URL}/p
 export const logoutProfile = () => (dispatch) => {
     localStorage.removeItem('token');
     dispatch(logoutUser());
-}
-
-export const saveUserSettings = (params, updateData) => async (dispatch, getState) => {
-    const { user } = getState();
-    const copy = { ...user.user };
-    copy[param] = updateData;
-
-    dispatchEvent({ type: UPDATE_USER_SETTINGS, payload: copy });
 };
 
-export const addUserFromLayout = (user) => async (dispatch) => {
-    dispatch({ type: ADD_USER, payload: user[0] });
-};
+// export const saveUserSettings = (params, updateData) => async (dispatch, getState) => {
+//     const { user } = getState();
+//     const copy = { ...user.user };
+//     copy[param] = updateData;
+//
+//     dispatchEvent({ type: UPDATE_USER_SETTINGS, payload: copy });
+// };
+
+// export const addUserFromLayout = (user) => async (dispatch) => {
+//     dispatch({ type: ADD_USER, payload: user[0] });
+// };

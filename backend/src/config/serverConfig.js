@@ -8,7 +8,7 @@ const config = {
             password: '1234',
             database: 'case',
             host: 'localhost',
-            db_port: '3006',
+            db_port: '3306',
         },
         port: '3003',
     },

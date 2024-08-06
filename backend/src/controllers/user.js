@@ -7,7 +7,7 @@ module.exports = (app) => {
             if (users) {
                 response.json(users)
             } else {
-                response.stats(404).send()
+                response.status(404).send()
             }
         })
     })

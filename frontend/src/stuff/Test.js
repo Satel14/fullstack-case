@@ -15,16 +15,16 @@ import {
 const delayAnimation = 4
 
 const moveVertically = (top) => keyframes`
-  0%{
-    transform: translateY(-140px)
+  0% {
+    transform: translateY(-140px);
   }
-  20%{
-    transform: translateY(-100px)
+  20% {
+    transform: translateY(-100px);
   }
-  100{
-    transform: translateY(${top}px)
+  100% {
+    transform: translateY(${top}px);
   }
-  `;
+`;
 const ShadowOverlay = styled.div`
   transform: translateY(${(p) => (p.load ? p.top : -140)}px);
   animation-timing-function: ease;
