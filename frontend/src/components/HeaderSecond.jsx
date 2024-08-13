@@ -1,10 +1,11 @@
 /* eslint-disable no-restricted-syntax */
 import React from 'react';
-import { Layout, Menu } from 'antd';
+import { Button, Dropdown, Layout, Menu, Tooltip } from 'antd';
 import { DollarOutlined, GiftOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import CountUp from 'react-countup';
 import { connect } from 'react-redux';
+import { isAuthorized } from '../helpers/Player';
 const { Header } = Layout;
 
 
@@ -39,6 +40,7 @@ class HeaderSecond extends React.Component {
         super(props);
         this.state = {
             balance: this.props.user.balance,
+            onlineUser: {old: 0, new: 0}
         };
         window.HeaderSecond = this;
     }
@@ -48,8 +50,33 @@ class HeaderSecond extends React.Component {
             balance,
         })
     }
+
+    chatButtonStatusHeader(status) {
+        this.setState({
+            chatButton: status
+        })
+    }
+
+    renderUserList() {
+        const arr = [];
+        const { onlineUserList } = this.state;
+        if (onlineUserList && !onlineUserList.length) {
+            return <></>
+        }
+
+        for (const key in onlineUserList) {
+            if (Object.hasOwnProperty.call(onlineUserList, key)) {
+                const element = onlineUserList[key];
+                console.log(element.user_login);
+                arr.push(<div>{element.user_login}</div>)
+            }
+        }
+
+        return arr;
+    }
     render() {
         const { user } = this.props;
+        const {chatButton, onlineUser} = this.state;
 
         return (
             <Header
@@ -91,9 +118,11 @@ class HeaderSecond extends React.Component {
                         <div className="headersecond-stats__online" />
                         <div className="headersecond-stats__block">
                             <i>
-                                <CountUp start={20} end={150}/>
+                                <CountUp start={onlineUser.old} end={onlineUser.new + 1}/>
                             </i>
+                            <Tooltip placement="bottom" title={this.renderUserList()}>
                             <span>Онлайн</span>
+                            </Tooltip>
                         </div>
                     </div>
 
@@ -103,6 +132,46 @@ class HeaderSecond extends React.Component {
                             <i>Бонуси</i>
                             <span>Розіграші, роздачі</span>
                         </div>
+                    </div>
+
+                    <div className="headersecond-rightblock flex"
+                    style={{alignItems: 'center'}}
+                    >
+                        {chatButton && (
+                            <Button
+                            className="color-white small"
+                            style={{ marginRight: "15px"}}
+                            onClick={() => window.Layout.onCollapseChat(false)}
+                            >
+                                Чат
+                            </Button>
+                        )}
+                        {isAuthorized(user) && (
+                            <>
+                            <Link to="/deposit">
+                                <Button size="small" className="color-pink">
+                                    Поповнити
+                                </Button>
+                            </Link>
+                                <div className="headersecond-profile">
+                                    <Dropdown
+                                    overlay={menu(user.id)} trigger="click"
+                                    >
+                                        <Link to={`/profile/${user.id}`}>
+                                            <div className="headersecond-profile__avatar"
+                                                style={{
+                                                    backgroundImage: `url(/img/avatars/${user.avatar}.png)`,
+                                            }}
+                                            />
+                                            <div className="headersecond-profile__info">
+                                                <span className="nickname">{user.login}</span>
+                                                <span className="balance">{user.balance}</span>
+                                            </div>
+                                        </Link>
+                                    </Dropdown>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </Header>

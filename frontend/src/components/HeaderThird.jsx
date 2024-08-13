@@ -55,30 +55,31 @@ export default class HeaderThird extends React.Component {
                 {map(storageLast, (item, i) => (
                     <div key={`header ${item.storage_id}`}>
                         {i < 24 && (
-                                <Tooltip
-                                    placement="bottom"
-                                    title={renderItemProp(
-                                        this.getShortInfoItem(item.storage_itemId, null),
-                                        item.storage_color,
-                                    )}>
-                                    <Link to={`/profile/${item.storage_itemId}`}>
-                                        <Popover
-                                         placement="bottom"
-                                         content={<CaseInfo data={caseList[item.storage_caseId]}/>}
-                                         title={<ProfileInline data={userList[item.storage_userId]}/>}
+                            <Tooltip
+                                placement="bottom"
+                                title={renderItemProp(
+                                    this.getShortInfoItem(item.storage_itemId, null),
+                                    item.storage_color,
+                                )}>
+                                <Link to={`/profile/${item.storage_itemId}`}>
+                                    <Popover
+                                        placement="bottom"
+                                        content={<CaseInfo data={caseList[item.storage_caseId]}/>}
+                                        title={<ProfileInline
+                                            data={userList[item.storage_userId]}/>}
+                                    >
+                                        <div className={`casepage-itemlist_item r-${
+                                            this.getShortInfoItem(item.storage_itemId, 'item_rare')}`
+                                        }
+                                             style={{
+                                                 backgroundImage: `url(/img/items/${item.storage_itemId}.webp)`
+                                             }}
                                         >
-                                            <div className={`casepage-itemlist_item r-${
-                                                this.getShortInfoItem(item.storage_itemId, "item_rare")}`
-                                            }
-                                            style={{
-                                                backgroundImage: `url(/img/items/${item.storage_itemId}.webp)`
-                                            }}
-                                            >
-                                                <ItemColor color={item.storage_color}/>
-                                            </div>
-                                        </Popover>
-                                    </Link>
-                                </Tooltip>
+                                            <ItemColor color={item.storage_color}/>
+                                        </div>
+                                    </Popover>
+                                </Link>
+                            </Tooltip>
                         )}
                     </div>
                 ))}

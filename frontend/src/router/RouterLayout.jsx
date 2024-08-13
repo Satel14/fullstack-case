@@ -1,14 +1,15 @@
-import React, {Component} from 'react';
-import {BrowserRouter, Route, Switch} from 'react-router-dom';
+import React, { Component } from 'react';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import map from 'lodash/map';
 import routes from './routes';
-import Layout from '../Layout.tsx';
-import {connect} from 'react-redux';
-import {isAuthorized} from '../helpers/Player';
+import Layout from '../Layout.jsx';
+import { connect } from 'react-redux';
+import { isAuthorized } from '../helpers/Player';
 import Banned from '../components/Banned';
 import ErrorPage from '../pages/ErrorPage';
-import {getProfileFetch} from '../store/actions/user';
-import roles from '../enum/role'
+import { getProfileFetch } from '../store/actions/user';
+import roles from '../enum/role';
+import { getAllModules } from '../store/actions/module';
 
 const mapDispatchToProps = (dispatch) => ({
     getProfileFetch: () => dispatch(getProfileFetch()),
@@ -29,14 +30,15 @@ class RouterLayout extends Component {
     }
 
     async componentDidMount() {
-        this.updateOnline()
+        this.updateOnline();
 
         await this.props.getProfileFetch();
     }
+
     updateOnline() {
         const { user } = this.props;
         if (isAuthorized(user)) {
-            console.log("profileIsOnline");
+            console.log('profileIsOnline');
         }
     }
 
@@ -46,7 +48,7 @@ class RouterLayout extends Component {
         console.log(user);
         if (isAuthorized(user)) {
             if (roles.BANNED === user.role) {
-                return <Banned />;
+                return <Banned/>;
             }
         }
         return (

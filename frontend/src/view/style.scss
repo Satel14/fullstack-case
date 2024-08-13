@@ -25,6 +25,30 @@
     font-family: "Roboto Slab";
     src: url(./fonts/Roboto-Slab.ttf) format("truetype");
 }
+
+.smiles-list {
+    max-width: 240px;
+    margin: 0 -2px;
+    display: flex;
+    flex-wrap: wrap;
+
+    > div {
+        margin: 3px;
+        height: 28px;
+        width: 28px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        border-radius: 6px;
+        padding: 5px;
+
+        &:hover {
+            cursor: pointer;
+            background-color: #fff;
+        }
+    }
+}
+
 .ant-input-affix-wrapper,
 .ant-input-affix-wrapper > input.ant-input,
 .ant-input {
@@ -269,6 +293,205 @@ $colorRed: #f51417;
     .ant-menu-root {
         background: transparent;
         padding: 15px;
+    }
+}
+
+.slider-right {
+    border-left: 1px solid rgb(34, 38, 47);
+    background-color: $backgroundColor6;
+
+    .ant-menu-root {
+        background: transparent;
+    }
+}
+
+.chat {
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    &-header {
+        display: flex;
+        align-items: flex-start;
+        border-bottom: 1px solid #22262f;
+        flex-direction: column;
+        padding: 13px 17px 12px 65px;
+        max-height: 63px;
+        position: relative;
+
+        &_icon {
+            position: absolute;
+            left: 21px;
+            top: 17px;
+
+            svg {
+                font-size: 28px;
+                color: #00a0ff;
+            }
+        }
+
+        &_closebutton {
+            position: absolute;
+            right: 10px;
+            top: 20px;
+        }
+
+        &_name {
+            font-family: "Roboto Slab";
+            text-align: center;
+            text-transform: uppercase;
+            font-size: 14px;
+            margin-bottom: 2px;
+            line-height: 1;
+            display: flex;
+
+            &__online {
+                font-size: 10px;
+                display: flex;
+                align-items: center;
+                margin-left: 10px;
+                font-family: "Roboto Regular";
+                color: #00a0ff;
+
+                @keyframes blinker {
+                    from {
+                        opacity: 1;
+                    }
+                    to {
+                        opacity: 0;
+                    }
+                }
+
+                .blink {
+                    animation: blinker 1.5s cubic-bezier(0.5, 0, 1, 1) infinite
+                    alternate;
+                    margin-right: 5px;
+                    padding: 3px;
+                    background-color: #00a0ff;
+                    border-radius: 50%;
+                    box-shadow: 1px 1px 20px #00a0ff !important;
+                }
+            }
+        }
+
+        &_sub {
+            display: flex;
+
+            &_whos {
+                margin: 0 -7px;
+            }
+
+            button {
+                margin: 0 5px;
+                padding: 3px;
+                font-size: 8px;
+                min-height: 12px;
+                height: auto;
+                letter-spacing: 0.4px;
+
+                background: transparent !important;
+                color: #fff !important;
+                box-shadow: none !important;
+                border: 0 !important;
+            }
+        }
+    }
+    &-messages {
+        height: calc(100vh - 185px);
+        position: relative;
+        padding-right: 0.1rem;
+        overflow-y: auto;
+
+        &::-webkit-scrollbar {
+            width: 3px;
+        }
+        &::-webkit-scrollbar-track {
+            background: #262e43;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: #1d4b83;
+        }
+
+        &-list {
+            padding-left: 15px;
+            list-style-type: none;
+            margin: 0;
+
+            &_item {
+                color: #9ca4bf;
+                position: relative;
+                font-size: 12px;
+                display: flex;
+                color: #ebeffd;
+                display: flex;
+                align-items: flex-start;
+                padding-top: 10px;
+                padding-bottom: 10px;
+                border-top: 1px solid #22262f;
+
+                &__msg {
+                    text-align: left;
+                    margin-right: 12px;
+                    > a {
+                        color: #fff;
+                        text-transform: capitalize;
+                        font-family: "Muller Bold";
+                        font-size: 12px;
+                    }
+                    > div {
+                        line-height: 1.2;
+                    }
+                }
+
+                &__profile {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    text-align: center;
+                    margin-right: 12px;
+                    a > div {
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 8px;
+                        border: 1px solid #00a0ff85;
+                        background-color: #0f0d16;
+                        padding: 2px;
+                        background-size: 80%;
+                        background-repeat: no-repeat;
+                        background-position: center;
+                    }
+                    span {
+                        position: absolute;
+                        right: 10px;
+                        top: 10px;
+                        padding: 0 7px;
+                        display: inline-block;
+                        text-align: center;
+                        font-size: 10px;
+                        color: darkgrey;
+                    }
+                }
+            }
+        }
+    }
+    &-form {
+        position: relative;
+        border-top: 1px solid #22262f;
+        form {
+            padding: 15px 20px;
+            input {
+                padding: 7px;
+                background: transparent;
+                border: 1px #00a0ff solid;
+                border-radius: 6px;
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            button {
+                width: 100%;
+            }
+        }
     }
 }
 
@@ -1167,6 +1390,69 @@ blockquote {
         > a {
             display: flex;
             align-items: center;
+        }
+        &__avatar {
+            height: 40px;
+            width: 40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-right: 6px;
+        }
+        &__info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.5;
+            color: #fff;
+            font-size: 12px;
+
+            .nickname {
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+                white-space: nowrap;
+                display: inline-block;
+                max-width: 100px;
+            }
+
+            .balance {
+                background: transparent;
+                color: #fff;
+                position: relative;
+                height: 18px;
+                font-size: 10px;
+                padding: 0 8px 0 18px;
+                line-height: 1;
+                letter-spacing: 0.3px;
+                margin: 0;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                font-weight: 400;
+                border: 1px #f58948 solid;
+
+                &:after {
+                    content: "\20B4";
+                    background: #f58948;
+                    position: absolute;
+                    left: 0;
+                    border-top-left-radius: 3px;
+                    border-bottom-left-radius: 3px;
+                    border-right: 1px #0d101a solid;
+                    height: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 15px;
+                    font-size: 11px;
+                    line-height: 0.5;
+                    color: #000;
+                    font-family: "ValueSansPro";
+                    font-weight: 300;
+                    box-shadow: 0 0 10px #f94b6a;
+                }
+            }
         }
     }
     .ant-menu {
