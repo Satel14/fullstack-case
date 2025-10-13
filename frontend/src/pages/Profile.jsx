@@ -1,25 +1,25 @@
 import React, { Component } from 'react';
 import Fade from 'react-reveal/Fade';
-import map from 'lodash/map';
 import { Tooltip, Tabs } from 'antd';
 import { HistoryOutlined } from '@ant-design/icons';
 import testCase from '../data/testCase';
 import Loader from '../components/mini/Loader';
+import { connect } from 'react-redux';
+import { itemInfoFetch } from '../store/actions/itemCache';
+import { Link } from 'react-router-dom';
 
 const { TabPane } = Tabs;
 
-const renderItemProp = (item) => (
-    `Назва: ${
-        item.name
-    }, Тип: ${
-        item.type
-    }, Рарність: ${
-        item.rare
-    }, Колір: ${
-        item.painted}`
-);
+const mapStateToProps = (state) => ({
+    itemCache: state.itemCache,
+    user: state.user,
+})
 
-export default class Profile extends Component {
+const mapDispatchToProps = (dispatch) => ({
+    itemInfoFetch: (id) => dispatch(itemInfoFetch(id)),
+});
+
+class Profile extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -38,7 +38,8 @@ export default class Profile extends Component {
     }
 
     render() {
-        const { fetching, caseCollection } = this.state;
+        const { fetching, caseCollection, favoriteCase } = this.state;
+        console.log(favoriteCase, 'favoriteCase');
         return (
             <div className="profilepage">
                 <h1 className="title">Профіль</h1>
@@ -49,8 +50,10 @@ export default class Profile extends Component {
                         <div className="profilepage-firstblock">
                             <div className="profilepage-firstblock__favoritecase">
                                 <div className="profiletitle">Улюблений кейс</div>
-                                <img src="/img/case/richboycase.png" alt="кейс" />
-                                <span>Rich boy case</span>
+                                <Link to={`/case/${favoriteCase.case_id}`}>
+                                    <img src={favoriteCase.case_img} alt="кейс"/>
+                                    <span>{favoriteCase.case_title}</span>
+                                </Link>
                             </div>
                             <div className="profilepage-firstblock__stats">
                                 <div className="profiletitle">Satel</div>
@@ -113,3 +116,6 @@ export default class Profile extends Component {
         );
     }
 }
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(Profile);
