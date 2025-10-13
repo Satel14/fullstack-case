@@ -1,3 +1,8 @@
+/* eslint-disable guard-for-in */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+
 import React, { Component } from 'react';
 import Fade from 'react-reveal/Fade';
 import Zoom from 'react-reveal/Zoom';
@@ -9,17 +14,18 @@ import {
     RollbackOutlined, UnlockOutlined, BlockOutlined, ThunderboltOutlined,
 } from '@ant-design/icons';
 import map from 'lodash/map';
-import { getItemPriceById } from '../../api/all/item'
+import { connect } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { isAuthorized } from '../../helpers/Player';
 import { openCaseById } from '../../api/all/cases'
-import testOpenCase from '../../data/testOpenCase';
-import rariestColors from '../../data/itemConfig';
+import { sellItemByStorageId } from '../../api/all/storage';
+import { getItemPriceById } from '../../api/all/item'
+import openNotification from '../mini/openNotification';
 import H2A from '../mini/H2A';
 import CasePrice from '../mini/CasePrice';
-import openNotification from '../mini/openNotification';
-import { isAuthorized } from '../../helpers/Player';
-import { connect } from 'react-redux';
-import Case from '../mini/Case';
-import { Link } from 'react-router-dom';
+import { itemInfoFetch } from '../../store/actions/itemCache';
+import { success } from 'concurrently/src/defaults';
+import ItemColor from '../mini/ItemColor';
 
 const delayAnimation = 4;
 
@@ -47,6 +53,10 @@ const randomInteger = (min, max) => {
     return Math.floor(rand);
 };
 
+const mapDispatchToProps = (dispatch) => ({
+    itemInfoFetch: (id) => dispatch(itemInfoFetch(id)),
+});
+
 const mapStateToProps = (state) => ({
     user: state.user,
     itemCache: state.itemCache,
@@ -63,8 +73,7 @@ const calculatePositionForLine = (winner) => {
     return resultTopPixel;
 };
 
-const getColorRariest = (rariest) => rariestColors[rariest];
-class Test extends Component {
+class OpenCase extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -79,10 +88,94 @@ class Test extends Component {
             loading: false,
             openCount: '1'
         };
+
+        this.openBlockMethod = this.openBlockMethod.bind(this);
+        this.openScrollMethod = this.openScrollMethod.bind(this);
+        this.getBack = this.getBack.bind(this);
+        this.getLoginPage = this.getLoginPage.bind(this);
+    }
+
+    getShortInfoItem(id, fieldName) {
+        const {itemCache} = this.props;
+        if (itemCache[id]) {
+            return itemCache[id][fieldName];
+        }
+
+        return '';
+    }
+
+    async openFastMethod() {
+        const {processWorking, loading} = this.state;
+        if (processWorking || loading) {
+            return;
+        }
+
+        this.setState({
+            processWorking: true,
+            loading: true,
+        });
+
+        const result = await this.open();
+
+        if (!result) {
+            return;
+        }
+
+        setTimeout(() => {
+            this.setState({
+                load: true,
+                openMethod: '',
+                loadItem: true,
+                processWorking: false,
+                loading: false
+            });
+        });
+    }
+
+    getBack() {
+        this.setState({
+            openMethod: '',
+            load: false,
+            randomItemList: [],
+            winner: null,
+            loadIndex: null,
+            loadItem: false,
+            loadAll: false,
+            clicked: false,
+            openCount: '1',
+            prices: [],
+        })
+    }
+
+    getLoginPage() {
+        const { history } = this.props;
+        if (history) {
+            history.push('/login')
+        }
+    }
+
+    async sellItem(storageId, i, notify = true) {
+        const {prices} = this.state;
+
+        const result = await sellItemByStorageId(storageId);
+        if (result.status === 200){
+            window.HeaderSecond.changeBalance(result.balance);
+            if (notify) {
+                openNotification(success, 'Предмето продано');
+            }
+            delete prices[i];
+            this.setState({
+                prices,
+            })
+            return;
+        }
+        if (notify) {
+            openNotification('error', 'Виникла помилка');
+        }
     }
     async open() {
         const { data } = this.props;
-        console.log(data)
+        console.log(data, 'data')
         const { openCount } = this.state;
         if (
             data.case_openLimit <= data.case_openedCount
@@ -157,7 +250,31 @@ class Test extends Component {
         window.HeaderSecond.changeBalance(result.balance);
         return true;
     }
-    async openFastMethod() {
+
+    onChangeRadio(e) {
+        const { value } = e.target;
+        this.setState({openCount: value});
+    }
+
+    getSummAll() {
+        const {prices} = this.state;
+        let sum = 0.0;
+
+        for (let index = 0; index <prices.length; index++) {
+            const element = parseFloat(prices[index]);
+            if (element) {
+                sum += element;
+            }
+        }
+
+        if (sum === 0.0) {
+            return null;
+        }
+
+        return sum.toFixed(2);
+    }
+
+    async openScrollMethod() {
         const {processWorking, loading} = this.state;
         if (processWorking || loading) {
             return;
@@ -173,23 +290,20 @@ class Test extends Component {
         if (!result) {
             return;
         }
-
+        this.setState({
+            openMethod: 'scroll',
+            load: true,
+        })
         setTimeout(() => {
             this.setState({
-                load: true,
-                openMethod: '',
                 loadItem: true,
+                openMethod: '',
                 processWorking: false,
                 loading: false
             });
-        });
+        }, delayAnimation * 1000 + 2000);
     }
-    getLoginPage() {
-        const { history } = this.props;
-        if (history) {
-            history.push('/login')
-        }
-    }
+
     async openBlockMethod(index = null) {
         const {processWorking, loading} = this.state;
         if (processWorking || loading) {
@@ -204,6 +318,12 @@ class Test extends Component {
         if (index === null || this.state.clicked) {
             return;
         }
+
+        this.setState({
+            openMethod: 'block',
+            load: true,
+            loading: true,
+        })
 
         this.setState({
             processWorking: true,
@@ -236,109 +356,167 @@ class Test extends Component {
         }, 3000);
     }
 
-    async openScrollMethod() {
-        const {processWorking, loading} = this.state;
-        if (processWorking || loading) {
-            return;
+    async sellItemAll() {
+        const { winner } = this.state;
+        const storageIds = [];
+
+        for (const key in winner) {
+            storageIds.push(winner[key].storageId);
         }
 
-        this.setState({
-            processWorking: true,
-            loading: true,
-        });
-
-        const result = await this.open();
-
-        if (!result) {
-            return;
+        const promises = [];
+        for (let index = 0; index < storageIds.length; index++) {
+            const element = storageIds[index];
+            promises.push(await this.sellItem(element, index, false));
         }
-        this.setState({
-            openMethod: 'scroll',
-            load: true,
-        })
-        setTimeout(() => {
-            this.setState({
-                loadItem: true,
-                openMethod: '',
-                processWorking: false,
-                loading: false
-            });
-        }, delayAnimation * 1000 + 1000);
+
+        await Promise.all(promises);
+        openNotification('success', 'Предмети продані');
     }
 
-    onChangeRadio(e){
-        const { value } = this.state;
-        this.setState({openCount: value});
+    renderBlock() {
+        const massive = [];
+        const max = 22; // full 22
+        const randomItemsList = this.state.randomItemsList[0];
+
+        const newMassive = [];
+
+        if (randomItemsList) {
+            const {loadIndex} = this.state;
+            const {winIndex} = this.state.winner;
+            const startRandomList = winIndex - loadIndex - 1;
+            for (
+                let index = startRandomList;
+                index < randomItemsList.length;
+                index++
+            ) {
+                newMassive.push(randomItemsList[index])
+            }
+
+            if (newMassive.length < max) {
+                for (let index = 0; index < 100; index++) {
+                    newMassive.push(randomItemsList[index]);
+
+                    if (newMassive.length === max) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        for (let index = 0; index < max; index++) {
+            const item = newMassive[index] || {};
+
+            massive.push(
+                <div
+                className={
+                    index === this.state.loadIndex || this.state.loadAll
+                    ? 'loterylist opened'
+                    : 'loterylist'
+                }
+                >
+                    <div className="front" onClick={() => this.openBlockMethod(index)} />
+                    <div className="back">
+                        {newMassive.length && (
+                            <div
+                            className={`casepage-itemlist_item rc-${this.getShortInfoItem(
+                                item.id,
+                                'item_rare',
+                            )}`}
+                            style={{
+                                backgroundImage: `url(/img/items/${item.id}.png)`,
+                            }}
+                            >
+                                <ItemColor color={item.color} />
+                                <span>{this.getShortInfoItem(item.id, 'item_name')}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )
+        }
     }
 
     render() {
-        const {caseCollection, load, loadItem, winner, openCount, loading} = this.state;
+        const {
+            randomItemList,
+            load,
+            loadItem,
+            winner,
+            openMethod,
+            clicked,
+            loading,
+            openCount,
+            prices,
+        } = this.state;
         const {data, user} = this.props;
+
         return (
             <>
                 {isAuthorized(user) ? (
                     <>
                         {!load && (
                             <>
-                                    <div className="casepage-more">
-                                        <Fade>
-                                            {/* <H2A title="Кейс" subTitle={caseCollection.name}/> */}
-                                            {/*  <img src={caseCollection.img} alt={caseCollection.name} /> */}
-                                        </Fade>
-                                        <div>
-                                            {/* <CasePrice data={data} count={openCount}/> */}
-                                        </div>
-                                        <div className="count-buttons">
-                                            <Radio.Group
-                                                buttonStyle="solid"
-                                                defaultValue={openCount}
-                                                onChange={(e) => this.onChangeRadio(e)}
-                                                value={openCount}
-                                            >
-                                                <Radio.Button value='1'>1</Radio.Button>
-                                                <Radio.Button value='2'>2</Radio.Button>
-                                                <Radio.Button value='3'>3</Radio.Button>
-                                                <Radio.Button value='4'>4</Radio.Button>
-                                                <Radio.Button value='5'>5</Radio.Button>
-                                                <Radio.Button value='10'>10</Radio.Button>
-                                                <Radio.Button value='20'>20</Radio.Button>
-                                            </Radio.Group>
-                                        </div>
+                                <div className="casepage-more">
+                                    <Fade>
+                                        <div />
+                                        {/* <H2A title="Кейс" subTitle={data.case_title}/> */}
+                                        {/*  <img src={caseCollection.img} alt={caseCollection.name} /> */}
+                                    </Fade>
+                                    <div>
+                                        {/* <CasePrice data={data} count={openCount}/> */}
                                     </div>
+                                    <div className="count-buttons">
+                                        <Radio.Group
+                                            buttonStyle="solid"
+                                            defaultValue={openCount}
+                                            onChange={(e) => this.onChangeRadio(e)}
+                                            value={openCount}
+                                        >
+                                            <Radio.Button value="1">1</Radio.Button>
+                                            <Radio.Button value="2">2</Radio.Button>
+                                            <Radio.Button value="3">3</Radio.Button>
+                                            <Radio.Button value="4">4</Radio.Button>
+                                            <Radio.Button value="5">5</Radio.Button>
+                                            <Radio.Button value="10">10</Radio.Button>
+                                            <Radio.Button value="20">20</Radio.Button>
+                                        </Radio.Group>
+                                    </div>
+                                </div>
+                                <Button
+                                    onClick={() => this.openScrollMethod()}
+                                    size="large"
+                                    type="primary"
+                                    icon={<UnlockOutlined/>}
+                                    style={{ marginRight: 10 }}
+                                    className="color-purple"
+                                    loading={loading}
+                                >
+                                    Відкрити
+                                </Button>
+                                {openCount === '1' && (
                                     <Button
-                                        onClick={() => this.openScrollMethod()}
+                                        onClick={() => this.openBlockMethod()}
                                         size="large"
                                         type="primary"
-                                        icon={<UnlockOutlined/>}
-                                        style={{marginRight: 10}}
-                                        className='color-purple'
+                                        icon={<BlockOutlined/>}
+                                        style={{ marginRight: 10 }}
+                                        className="color-red"
                                         loading={loading}
                                     >
-                                        Відкрити
+                                        Відкрити блоками
                                     </Button>
-                                    {openCount === '1' && (
-                                        <Button
-                                            onClick={()=> this.openBlockMethod()}
-                                            size="large"
-                                            type="primary"
-                                            icon={<BlockOutlined/>}
-                                            style={{marginRight: 10}}
-                                            className='color-red'
-                                            loading={loading}
-                                        >
-                                            Відкрити блоками
-                                        </Button>
-                                    )}
-                                    <Button
-                                        onClick={() => this.openFastMethod()}
-                                        size='large'
-                                        type='primary'
-                                        icon={<ThunderboltOutlined/>}
-                                        className="color-orange"
-                                        loading={loading}
-                                    >
-                                        Швидко
-                                    </Button>
+                                )}
+                                <Button
+                                    onClick={() => this.openFastMethod()}
+                                    size="large"
+                                    type="primary"
+                                    icon={<ThunderboltOutlined/>}
+                                    className="color-orange"
+                                    loading={loading}
+                                >
+                                    Швидко
+                                </Button>
                             </>
                         )}
 
@@ -359,22 +537,23 @@ class Test extends Component {
                                             {winner.item.type}
                                                         </span>
                                         <div className="opencase-result__buttons">
-                                            <Button type="primary" icon={<SyncOutlined />} size="large">
+                                            <Button type="primary" icon={<SyncOutlined/>}
+                                                    size="large">
                                                 Спробувати ще раз
                                             </Button>
                                             <Button
-                                                className='buttons-back'
+                                                className="buttons-back"
                                                 type="primary"
-                                                icon={<RollbackOutlined />}
+                                                icon={<RollbackOutlined/>}
                                                 size="large"
                                                 danger
-                                                onClick={()=> window.history.back()}
+                                                onClick={() => window.history.back()}
                                             >
                                                 Повернутися назад
                                             </Button>
                                             <Button
                                                 type="primary"
-                                                icon={<DollarOutlined />}
+                                                icon={<DollarOutlined/>}
                                                 ghost
                                                 size="large"
                                             >
@@ -392,7 +571,7 @@ class Test extends Component {
                                             </div>
                                         </Zoom>
                                         <Zoom right>
-                                            <div className="case-overlay" />
+                                            <div className="case-overlay"/>
                                         </Zoom>
                                         <Fade delay={delayAnimation * 1000 + 500}>
                                             <div className="opencase-titleitem">
@@ -406,7 +585,7 @@ class Test extends Component {
                                         </Fade>
 
                                         <div className="opencase-block">
-                                            <div className="line-overlay" />
+                                            <div className="line-overlay"/>
 
                                             <div className="shadow-overlay">
                                                 <ShadowOverlay
@@ -440,27 +619,27 @@ class Test extends Component {
                     </>
                 ) : (
                     <>
-                        <div className='casepage-more'>
+                        <div className="casepage-more">
                             <Fade>
-                               {/* <H2A title="Кейс" subTitle={'222222222222'}/> */}
+                                {/* <H2A title="Кейс" subTitle={'222222222222'}/> */}
                                 {/* <CasePrice data={data} count={openCount}/> */}
                             </Fade>
                         </div>
                         <div className="alert-case-auth">
                             <Alert
-                            message="Щоб відкрити кейс потрібно пройти авторизацію"
-                            type='error'
-                            showIcon
+                                message="Щоб відкрити кейс потрібно пройти авторизацію"
+                                type="error"
+                                showIcon
                             />
                         </div>
 
-                        <Link to='/login'>
+                        <Link to="/login">
                             <Button
-                            onClick={() => this.getLoginPage()}
-                            size='large'
-                            type='primary'
-                            icon={<ThunderboltOutlined/>}
-                            className="color-red"
+                                onClick={() => this.getLoginPage()}
+                                size="large"
+                                type="primary"
+                                icon={<ThunderboltOutlined/>}
+                                className="color-red"
                             >
                                 Авторизуватися
                             </Button>
@@ -472,4 +651,4 @@ class Test extends Component {
     }
 }
 
-export default connect(mapStateToProps, null)(Test)
+export default connect(mapStateToProps, mapDispatchToProps)(OpenCase)

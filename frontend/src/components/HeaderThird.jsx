@@ -72,7 +72,7 @@ export default class HeaderThird extends React.Component {
                                             this.getShortInfoItem(item.storage_itemId, 'item_rare')}`
                                         }
                                              style={{
-                                                 backgroundImage: `url(/img/items/${item.storage_itemId}.webp)`
+                                                 backgroundImage: `url(/img/items/${item.storage_itemId}.png)`
                                              }}
                                         >
                                             <ItemColor color={item.storage_color}/>
