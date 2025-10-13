@@ -30,10 +30,15 @@ class RouterLayout extends Component {
     }
 
     async componentDidMount() {
-        this.updateOnline();
-
-        await this.props.getProfileFetch();
+        try {
+            await this.props.getAllModules();
+            this.updateOnline();
+            await this.props.getProfileFetch();
+        } catch (error) {
+            console.error('Error fetching modules or profile:', error);
+        }
     }
+
 
     updateOnline() {
         const { user } = this.props;
