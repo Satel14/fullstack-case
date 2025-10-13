@@ -380,8 +380,8 @@ p {
         align-items: flex-start;
         border-bottom: 1px solid #22262f;
         flex-direction: column;
-        padding: 13px 17px 12px 65px;
-        max-height: 63px;
+        padding: 13px 90px 12px 65px;
+        min-height: 63px;
         position: relative;
 
         &_icon {

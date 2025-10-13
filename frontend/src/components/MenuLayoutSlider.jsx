@@ -17,24 +17,6 @@ const mapStateToProps = (state) => ({
     user: state.user,
 });
 
-const defaultMenu = [
-    {
-        key: 'cases', link: '/', label: "Кейси", icon: <CodeSandboxOutlined/>,
-    },
-    {
-        key: 'topplayers', link: '/top', label: "Топ гравців", icon: <BarChartOutlined/>,
-    },
-    {
-        key: 'bonus', link: '/bonus', label: "Бонуси", icon: <GiftOutlined/>,
-    },
-    {
-        key: 'faq', link: '/article/1', label: "FAQ", icon: <QuestionCircleOutlined/>,
-    },
-    {
-        key: 'moneynotenough', link: '/article/8', label: "Ще грошей", icon: <TagsOutlined/>,
-    },
-]
-
 class MenuLayoutSlider extends React.Component {
     constructor(props) {
         super(props);
@@ -42,23 +24,59 @@ class MenuLayoutSlider extends React.Component {
 
         }
     }
+
+    getMenuItems = () => {
+        const { user } = this.props;
+        const defaultMenu = [
+            {
+                key: 'cases',
+                label: <Link to="/">Кейси</Link>,
+                icon: <CodeSandboxOutlined />,
+            },
+            {
+                key: 'topplayers',
+                label: <Link to="/top">Топ гравців</Link>,
+                icon: <BarChartOutlined />,
+            },
+            {
+                key: 'bonus',
+                label: <Link to="/bonus">Бонуси</Link>,
+                icon: <GiftOutlined />,
+            },
+            {
+                key: 'faq',
+                label: <Link to="/article/1">FAQ</Link>,
+                icon: <QuestionCircleOutlined />,
+            },
+            {
+                key: 'moneynotenough',
+                label: <Link to="/article/8">Ще грошей</Link>,
+                icon: <TagsOutlined />,
+            },
+        ];
+
+        if (!isAuthorized(user)) {
+            defaultMenu.push({
+                key: '6',
+                label: <Link to="/login">Увійти</Link>,
+                icon: <UserOutlined />,
+            });
+        }
+
+        return defaultMenu;
+    }
+
     render() {
-        const {user} = this.props;
+        const { user } = this.props;
         console.log(user);
         return (
             <>
-                <Menu theme="dark" mode="inline" defaultSelectedKeys={['cases']}>
-                    {defaultMenu.map((menu) => (
-                        <Menu.Item key={menu.key} icon={menu.icon}>
-                            <Link to={menu.link}>{menu.label}</Link>
-                        </Menu.Item>
-                    ))}
-                    {!isAuthorized(user) && (
-                        <Menu.Item key="6" icon={<UserOutlined/>}>
-                            <Link to='/login'>Увійти</Link>
-                        </Menu.Item>
-                    )}
-                </Menu>
+                <Menu 
+                    theme="dark" 
+                    mode="inline" 
+                    defaultSelectedKeys={['cases']}
+                    items={this.getMenuItems()}
+                />
 
                 <div className="custom social">
                     <Socials />

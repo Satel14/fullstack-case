@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 import React from 'react';
-import { Button, Dropdown, Layout, Menu, Tooltip } from 'antd';
+import { Button, Dropdown, Layout, Tooltip } from 'antd';
 import { DollarOutlined, GiftOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import CountUp from 'react-countup';
@@ -12,29 +12,38 @@ const { Header } = Layout;
 const mapStateToProps = (state) => ({
     user: state.user,
 })
-const menu = (id) => (
-    <Menu theme="dark" className="menu-dropdown-profile">
-        <Menu.Item key='7' icon={<UserOutlined/>}>
-            <Link to={`/profile/${id}`}>Мій профіль</Link>
-        </Menu.Item>
 
-        <Menu.Item key='15deposit' icon={<DollarOutlined/>}>
-            <Link to="/deposit">Поповнити рахунок</Link>
-        </Menu.Item>
-
-        <Menu.Item key='15' icon={<SettingOutlined/>}>
-            <Link to="/inventory">Налаштування</Link>
-        </Menu.Item>
-
-        <Menu.Item key='7' icon={<UserOutlined/>}>
-            <Link to="/settings">Ввести промокод</Link>
-        </Menu.Item>
-
-        <Menu.Item key='7' icon={<UserOutlined/>}>
-            <Link to="/logout">Вийти</Link>
-        </Menu.Item>
-    </Menu>
-)
+const getMenuItems = (id) => ({
+    items: [
+        {
+            key: '7',
+            label: <Link to={`/profile/${id}`}>Мій профіль</Link>,
+            icon: <UserOutlined />,
+        },
+        {
+            key: '15deposit',
+            label: <Link to="/deposit">Поповнити рахунок</Link>,
+            icon: <DollarOutlined />,
+        },
+        {
+            key: '15',
+            label: <Link to="/inventory">Налаштування</Link>,
+            icon: <SettingOutlined />,
+        },
+        {
+            key: '8',
+            label: <Link to="/settings">Ввести промокод</Link>,
+            icon: <UserOutlined />,
+        },
+        {
+            key: '9',
+            label: <Link to="/logout">Вийти</Link>,
+            icon: <UserOutlined />,
+        },
+    ],
+    theme: "dark",
+    className: "menu-dropdown-profile",
+})
 class HeaderSecond extends React.Component {
     constructor(props) {
         super(props);
@@ -155,7 +164,8 @@ class HeaderSecond extends React.Component {
                             </Link>
                                 <div className="headersecond-profile">
                                     <Dropdown
-                                    overlay={menu(user.id)} trigger="click"
+                                        menu={getMenuItems(user.id)}
+                                        trigger={["click"]}
                                     >
                                         <Link to={`/profile/${user.id}`}>
                                             <div className="headersecond-profile__avatar"
