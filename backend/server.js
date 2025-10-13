@@ -19,6 +19,7 @@ const server = app.listen(config.port, () =>
     console.log(`Listening on port ${config.port}`)
 );
 
+require('./src/socket/chat')(server);
 
 if (process.env.CI) {
     console.log(`Tested success`);
