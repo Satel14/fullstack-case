@@ -1,4 +1,4 @@
-const ITEMS = require('./../config/itemConfig')
+const ITEMS = require('../src/constant/itemConfig')
 
 const VELOCITY_CRATE = [
     {
