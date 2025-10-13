@@ -1,0 +1,98 @@
+# problems with mysql connect
+
+x-common-variables: &common-variables
+  MYSQL_USER: root
+  MYSQL_PASSWORD: 1234
+  MYSQL_DATABASE: case
+  MYSQL_PORT: 3306
+  MYSQL_HOST_IP: mysql-db
+  SERVER_PORT: 3003
+  JWT_SECRET_KEY: asf4ASGiuh8xc735unjk
+
+version: "3.8"
+services:
+  nginx:
+    restart: always
+    build:
+      context: ./nginx
+    ports:
+      - "3009:3009"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - public
+      - private
+
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+        - private
+
+  mysql-db:
+    image: mariadb:10.3
+    container_name: fullstack-case
+    environment:
+      <<: *common-variables
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 3307:3307
+    networks:
+      - private
+      - public
+    restart: unless-stopped
+    volumes:
+      - ./mysql/roketka_db.sql:/docker-entrypoint-initdb.d/roketka_db.sql
+
+  backend:
+    build:
+      args:
+        - NODE_ENV=production
+      context: backend
+    command: npm start
+    container_name: fullstack_case_backend
+    environment:
+      <<: *common-variables
+      NODE_ENV: production
+    ports:
+      - 3001:3001
+    volumes:
+      - ./backend/src:/code/src:ro
+      - ./backend/package.json:/code/package.json
+      - ./backend/package-lock.json:/code/package-lock.json
+      - back-notused:/opt/app/node_modules
+    networks:
+      - private
+    depends_on:
+      - redis
+      - mysql-db
+
+  frontend:
+    stdin_open: true
+    restart: unless-stopped
+    container_name: fullstack_case_frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - 3033:3033
+    volumes:
+      - '/app/node_modules'
+      - .:/app
+    networks:
+      - public
+    depends_on:
+      - backend
+
+networks:
+  public:
+      driver: bridge
+  private:
+
+volumes:
+  back-notused:
+
