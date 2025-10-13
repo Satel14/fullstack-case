@@ -20,6 +20,7 @@ export const getAllModules = () => (dispatch) => fetch(`${API_URL}/module/all`, 
     .then((resp) => resp.json())
     // eslint-disable-next-line promise/always-return
     .then((data) => {
+        // console.log(data);
         const modulesAll = data.data;
         // eslint-disable-next-line no-restricted-syntax
         for (const key in modulesAll) {
