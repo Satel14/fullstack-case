@@ -4,10 +4,10 @@ export const getToken = async () => {
     try {
         const token = await localStorage.token;
         if (token !== null) {
-            return tokenToString;
+            return tokenToString(token);
         }
     } catch (e) {
-        return null
+        return null;
     }
 }
 
