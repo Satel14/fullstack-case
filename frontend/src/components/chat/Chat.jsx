@@ -8,6 +8,7 @@ import role from '../../enum/role';
 import roles from '../../enum/role';
 import {default as socket} from '../../api/all/ws';
 import smiles from '../../data/smiles';
+import { Rules } from './Rules';
 
 function TextFilter(value) {
     if (!value) {
@@ -52,7 +53,7 @@ const ProfileAvatar = ({ id, avatar, unix }) => (
         <Link to={`/profile/${id}`}>
             <div
                 style={{
-                    backgroundImage: `url(/img/avatars/${avatar}.webp)`,
+                    backgroundImage: `url(/img/avatars/${avatar}.png)`,
                 }}
             />
         </Link>
@@ -207,7 +208,7 @@ const Chat = ({ user, enabled }) => {
                         </Popover>
                     </div>
                     <div className="chat-header_sub_rules">
-                        {/* <Rules/> */}
+                        <Rules />
                     </div>
                 </div>
 
@@ -246,8 +247,8 @@ const Chat = ({ user, enabled }) => {
                                 />
                                 <Popover
                                 placement="topLeft"
-                                visible={visible}
-                                onVisibleChange={(e) => setVisible(e)}
+                                open={visible}
+                                onOpenChange={(e) => setVisible(e)}
                                 content={
                                     <div className="smiles-list">
                                         {smiles.map((smile, i) => (
