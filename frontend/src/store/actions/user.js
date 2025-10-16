@@ -75,6 +75,30 @@ export const logoutProfile = () => (dispatch) => {
     dispatch(logoutUser());
 };
 
+export const usePromocodeFetch = (body) => (dispatch) => {
+    const { token } = localStorage;
+    if (!token) {
+        return Promise.reject(new Error('Not authorized'));
+    }
+
+    return fetch(`${API_URL}/profile/promocode`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+    })
+        .then((resp) => resp.json())
+        .then((data) => {
+            if (data.balance) {
+                dispatch(getProfileFetch());
+            }
+            return data;
+        });
+};
+
 // export const saveUserSettings = (params, updateData) => async (dispatch, getState) => {
 //     const { user } = getState();
 //     const copy = { ...user.user };

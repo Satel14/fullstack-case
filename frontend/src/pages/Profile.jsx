@@ -8,8 +8,6 @@ import { connect } from 'react-redux';
 import { itemInfoFetch } from '../store/actions/itemCache';
 import { Link } from 'react-router-dom';
 
-const { TabPane } = Tabs;
-
 const mapStateToProps = (state) => ({
     itemCache: state.itemCache,
     user: state.user,
@@ -26,15 +24,28 @@ class Profile extends Component {
             // id: props.match.params.id,
             case: testCase[0],
             fetching: true,
+            favoriteCase: testCase[0] || {},
+            caseCollection: [],
         };
+        this.timeoutId = null;
     }
 
     componentDidMount() {
-        setTimeout(() => {
-            this.setState({
-                fetching: false,
-            });
+        this.timeoutId = setTimeout(() => {
+            if (this._isMounted) {
+                this.setState({
+                    fetching: false,
+                });
+            }
         }, 2000);
+        this._isMounted = true;
+    }
+
+    componentWillUnmount() {
+        this._isMounted = false;
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+        }
     }
 
     render() {
@@ -82,33 +93,39 @@ class Profile extends Component {
                             </div>
                         </div>
                         <div className="profilepage-secondblock">
-                            <Tabs defaultActiveKey="1" centered size="large">
-                                <TabPane
-                                    tab={(
-                                        <span>
-                                            <HistoryOutlined />
-                                        </span>
-                                    )}
-                                    key="1"
-                                >
-                                    <div className="casehistory-itemlist">
-                                        {/* {map(caseCollection.items, (item, i) => ( */}
-                                        {/*     <Fade delay={i * 50}> */}
-                                        {/*         <Tooltip placement="bottom" title={renderItemProp(item)}> */}
-                                        {/*             <div */}
-                                        {/*                 className="casehistory-itemlist_item" */}
-                                        {/*                 style={{ */}
-                                        {/*                     backgroundImage: `url(${item.img})`, */}
-                                        {/*                 }} */}
-                                        {/*             > */}
-                                        {/*                 <span>{item.name}</span> */}
-                                        {/*             </div> */}
-                                        {/*         </Tooltip> */}
-                                        {/*     </Fade> */}
-                                        {/* ))} */}
-                                    </div>
-                                </TabPane>
-                            </Tabs>
+                            <Tabs 
+                                defaultActiveKey="1" 
+                                centered 
+                                size="large"
+                                items={[
+                                    {
+                                        key: '1',
+                                        label: (
+                                            <span>
+                                                <HistoryOutlined />
+                                            </span>
+                                        ),
+                                        children: (
+                                            <div className="casehistory-itemlist">
+                                                {/* {map(caseCollection.items, (item, i) => ( */}
+                                                {/*     <Fade delay={i * 50}> */}
+                                                {/*         <Tooltip placement="bottom" title={renderItemProp(item)}> */}
+                                                {/*             <div */}
+                                                {/*                 className="casehistory-itemlist_item" */}
+                                                {/*                 style={{ */}
+                                                {/*                     backgroundImage: `url(${item.img})`, */}
+                                                {/*                 }} */}
+                                                {/*             > */}
+                                                {/*                 <span>{item.name}</span> */}
+                                                {/*             </div> */}
+                                                {/*         </Tooltip> */}
+                                                {/*     </Fade> */}
+                                                {/* ))} */}
+                                            </div>
+                                        ),
+                                    },
+                                ]}
+                            />
                         </div>
                     </>
                 )}
