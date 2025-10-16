@@ -49,12 +49,7 @@ module.exports.getAllCategories = async () => {
 
         if (!categories) throw new Error(MESSAGE.CASE.ERROR_CATEGORY);
 
-        const items = [];
-
-        categories.forEach((element) => {
-            item.push(element.dataValue);
-        })
-        return items;
+        return categories;
     } catch (e) {
         throw Error(e.message);
     }

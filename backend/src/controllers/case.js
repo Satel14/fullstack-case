@@ -100,7 +100,7 @@ module.exports.getAllCase = async (req, res) => {
         }
 
         const cases = await CaseService.getAllCases();
-        // console.log(cases)
+        console.log('All cases:', cases);
 
         const categoryArray = [];
         // eslint-disable-next-line guard-for-in
@@ -111,10 +111,15 @@ module.exports.getAllCase = async (req, res) => {
                 categoryArray.push(categoryId);
             }
         }
+        console.log('Category IDs from cases:', categoryArray);
+        
         const categories = await CaseService.getAllCategories();
+        console.log('All categories from DB:', categories);
+        
         const filtredCategories = categories.filter((item) =>
             categoryArray.includes(item.category_id)
         );
+        console.log('Filtered categories:', filtredCategories);
 
         return res
             .status(200)
