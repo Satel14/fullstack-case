@@ -1,4 +1,6 @@
 const Storage = require('../models/storage');
+const { sequelize } = require('../config/db');
+const Users = require('../models/users');
 
 module.exports.addItem = async (userId, itemId, itemColor, caseId) => {
     try {
@@ -59,3 +61,23 @@ module.exports.getStorageLastItemsByUserId = async (id, limit, offset) => {
         throw Error(e.message);
     }
 }
+
+module.exports.getStorageAllItems = async () => {
+    try {
+        const storageItems = await Storage.findAll({
+            attributes: ['storage_color', 'storage_itemId', 'storage_userId', 'storage_id', 'storage_caseId'],
+        });
+
+        if (!storageItems) throw new Error(MESSAGE.CASE.NOT_EXIST);
+
+        const items = [];
+        // eslint-disable-next-line lodash/prefer-lodash-method
+        storageItems.forEach((element) => {
+            items.push(element.dataValues);
+        });
+
+        return items;
+    } catch (e) {
+        throw Error(e.message);
+    }
+};

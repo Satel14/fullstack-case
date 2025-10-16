@@ -1,7 +1,9 @@
 const Sequelize = require("sequelize")
 const sequelize = require("../config/db")
+const Users = require("./users")
 
-module.exports = sequelize.define("storage",
+module.exports = sequelize.define(
+    'storage',
     {
         storage_id: {
             field: 'id',
@@ -44,5 +46,5 @@ module.exports = sequelize.define("storage",
     },
     {
         timestamps: false,
-    }
+    },
 );

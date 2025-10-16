@@ -7,6 +7,7 @@ module.exports = (app) => {
     require("./src/auth/forgotPassword")(app);
     require("./src/routes/case")(app);
     require("./src/routes/module")(app);
+    require("./src/routes/storage")(app);
 
     //Users
     require('./src/controllers/user')(app);

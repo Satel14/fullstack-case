@@ -6,6 +6,7 @@ const PUBLIC_FIELDS = [
     "user_avatar",
     "user_rank",
     "user_role",
+    "created_at"
 ];
 
 module.exports.editUserPassword = async(email, newPasswordHash) => {
@@ -30,6 +31,40 @@ module.exports.getBalanceByUserId = async (id) => {
         throw Error(e.message);
     }
 }
+
+module.exports.getUserById = async (id) => {
+    try {
+        const user = await User.findByPk(id, {
+            attributes: PUBLIC_FIELDS,
+        });
+        
+        if (!user) {
+            return null;
+        }
+        
+        return user.dataValues;
+    } catch (e) {
+        throw Error(e.message);
+    }
+}
+
+module.exports.getUserByIdController = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
+        }
+
+        const { id } = req.params;
+        const user = await UserService.getUserById(id);
+        const openCaseHistory = await StorageService.getStorageLastItems(24);
+
+        return res.status(200).json({ status: 200, data: user, openCaseHistory });
+    } catch (e) {
+        return res.status(400).json({ status: 400, message: e.message });
+    }
+};
 
 module.exports.getOnlineUsers = async () => {
     try {

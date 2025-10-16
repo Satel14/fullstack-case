@@ -7,8 +7,11 @@ import Case from '../pages/Case';
 import ErrorPage from '../pages/ErrorPage';
 import Login from '../pages/Auth/Login.jsx';
 import Registration from '../pages/Auth/Registration.jsx';
-import Settings from '../pages/Settings';
+import Promocode from '../pages/Promocode';
 import Profile from '../pages/Profile';
+import Deposit from '../pages/Deposit';
+import Inventory from '../pages/Inventory';
+import Top from '../pages/Top';
 
 export default {
     private: [
@@ -16,8 +19,22 @@ export default {
             path: '/settings',
             exact: true,
             layout: Layout,
+            breadcrumb: 'Промокоди',
+            component: Promocode,
+        },
+        {
+            path: '/deposit',
+            exact: true,
+            layout: Layout,
+            breadcrumb: 'Поповнити рахунок',
+            component: Deposit,
+        },
+        {
+            path: '/inventory',
+            exact: true,
+            layout: Layout,
             breadcrumb: 'Налаштування',
-            component: Settings,
+            component: Inventory,
         },
     ],
     public: [
@@ -87,6 +104,13 @@ export default {
             layout: Layout,
             breadcrumb: 'Профіль',
             component: () => <Redirect to="/404"/>,
+        },
+        {
+            path: '/top',
+            exact: true,
+            layout: Layout,
+            breadcrumb: 'ТОП 50 гравців',
+            component: Top,
         }
     ]
 };
