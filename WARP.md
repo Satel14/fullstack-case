@@ -60,7 +60,7 @@ Containerized development and run
   - Frontend: http://localhost:3009
   - Backend API (proxied): http://localhost:3009/api
 - Notes:
-  - MariaDB is seeded from ./mysql/roketka_db.sql on first run (see docker-compose.yml volume mapping)
+  - MariaDB is seeded from ./mysql/case_db.sql on first run (see docker-compose.yml volume mapping)
   - Backend and frontend Dockerfiles live in backend/ and frontend/ respectively; the frontend container builds the CRA app and serves it via nginx inside the image specified by frontend/Dockerfile
 
 Configuration notes

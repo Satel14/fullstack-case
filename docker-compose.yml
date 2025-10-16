@@ -46,7 +46,7 @@ services:
       - public
     restart: unless-stopped
     volumes:
-      - ./mysql/roketka_db.sql:/docker-entrypoint-initdb.d/roketka_db.sql
+      - ./mysql/case_db.sql:/docker-entrypoint-initdb.d/case_db.sql
 
   backend:
     build:
