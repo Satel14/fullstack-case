@@ -60,9 +60,9 @@ class RouterLayout extends Component {
             <BrowserRouter>
                 <Layout>
                     <Switch>
-                        {map(routes.public, (route, index) => (
+                        {map(routes.public, (route) => (
                             <Route
-                                key={index}
+                                key={`public-${route.path}`}
                                 path={route.path}
                                 exact={route.exact}
                                 breadcrumb={route.breadcrumb}
@@ -75,9 +75,9 @@ class RouterLayout extends Component {
 
                         {isAuthorized(user) && (
                             <>
-                                {map(routes.private, (route, index) => (
+                                {map(routes.private, (route) => (
                                     <Route
-                                        key={index}
+                                        key={`private-${route.path}`}
                                         path={route.path}
                                         exact={route.exact}
                                         breadcrumb={route.breadcrumb}
@@ -89,7 +89,7 @@ class RouterLayout extends Component {
                                 ))}
                             </>
                         )}
-                        <Route component={ErrorPage}/>
+                        <Route key="404-fallback" component={ErrorPage}/>
                     </Switch>
                 </Layout>
             </BrowserRouter>

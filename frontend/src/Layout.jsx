@@ -66,11 +66,11 @@ export default class App extends React.Component {
           }}
           >
               <div className="header-sitename">
-                    <div className="header-sitename__beta">CS</div>
+                    <div className="header-sitename_beta">CS</div>
                   <Link to="/">
                         <div className="low">GO</div>
                         <div className="full">CASES</div>
-                      <span>ua</span>
+                      <span>.ua</span>
                   </Link>
               </div>
               <MenuLayoutSlider/>
@@ -90,11 +90,7 @@ export default class App extends React.Component {
                       onCollapse={(e) => this.onCollapseChat(e)}
                       className="slider-right"
                       width={360}
-                      trigger={(
-                          <Button className="openchat-button color-red">
-                              Закрити чат
-                          </Button>
-                      )}
+                      trigger={null}
                       collapsedWidth={0}
                   >
                       <Chat enabled={!collapsedChat}/>

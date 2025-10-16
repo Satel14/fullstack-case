@@ -67,8 +67,6 @@ class MenuLayoutSlider extends React.Component {
     }
 
     render() {
-        const { user } = this.props;
-        console.log(user);
         return (
             <>
                 <Menu 

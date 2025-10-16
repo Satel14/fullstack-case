@@ -7,7 +7,7 @@ const { Footer } = Layout;
 const FooterLayout = () => (
     <Footer>
         <div className="leftblock">
-            <div>2023 Case</div>
+            <div>2025 Case</div>
         </div>
         <div>
             На нашому сайт ви можете відкрити різні кейси CS:GO по самим вигідним цінам.
