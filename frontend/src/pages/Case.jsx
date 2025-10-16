@@ -133,7 +133,7 @@ class Case extends Component {
                             </i>
                         </span>
                         <div className="casepage-itemlist more">
-                            {map(caseCollection.ITEMS, (item, i) => (
+                            {caseCollection && caseCollection.ITEMS && map(caseCollection.ITEMS, (item, i) => (
                                 <Fade delay={i * 50} key={`itemlist${item.id}`}>
                                     <Tooltip
                                         placement="bottom"

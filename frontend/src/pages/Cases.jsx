@@ -40,9 +40,10 @@ export default class Cases extends Component {
 
         getAllCases().then((data) => {
            if (this.mounted) {
+              console.log('Cases data received:', data);
               this.setState({
-                  allCases: data.data,
-                  categories: data.categories,
+                  allCases: data.data || [],
+                  categories: data.categories || [],
                   fetching: false,
               });
            }
@@ -50,7 +51,10 @@ export default class Cases extends Component {
         })
         .catch((err) => {
            // eslint-disable-next-line no-console
-           console.log('Error', err);
+           console.log('Error fetching cases:', err);
+           if (this.mounted) {
+               this.setState({ fetching: false });
+           }
         });
     }
 
@@ -122,10 +126,7 @@ export default class Cases extends Component {
             for (const key in sortCaseList) {
                 const element = sortCaseList[key];
                 let price = element.case_price;
-                if (element.case_discount > 0) {
-                    newSortedList.push(element);
-                }
-
+                
                 if (price >= min && price <= max) {
                     newSortedList.push(element);
                 }
@@ -268,8 +269,8 @@ export default class Cases extends Component {
                             <>
                             <H2A title="Знайдено" subTitle="Кейси" />
                                 <div className="caselist">
-                                    {map(sortedCases, (item) => (
-                                        <div style={{ position: 'relative' }} key={`${`caselist${item.case_id}`}`}>
+                                    {map(sortedCases, (item, index) => (
+                                        <div style={{ position: 'relative' }} key={`caselist-sorted-${item.case_id}-${index}`}>
                                             <CaseMini data={item}/>
                                         </div>
                                     ))}
@@ -277,24 +278,39 @@ export default class Cases extends Component {
                             </>
                         ) : (
                             <>
-                                {map(categories, (category) => (
-                                    <div key={`categories${category.category_title}`}>
-                                        <H2A
-                                            title={splitTitle(category.category_title, 0)}
-                                            subTitle={splitTitle(category.category_title, 1)}
-                                            help={category.category_titleHelp}
-                                            />
+                                {categories.length > 0 ? (
+                                    <>
+                                        {map(categories, (category) => (
+                                            <div key={`categories${category.category_title}`}>
+                                                <H2A
+                                                    title={splitTitle(category.category_title, 0)}
+                                                    subTitle={splitTitle(category.category_title, 1)}
+                                                    help={category.category_titleHelp}
+                                                    />
+                                                <div className="caselist">
+                                                    {map(filteredCases(category.category_id, allCases),
+                                                        (item, i) => (
+                                                            <Flip bottom delay={i * 100} key={`caselistfiltered-${category.category_id}-${item.case_id}`}>
+                                                                <CaseMini data={item} />
+                                                            </Flip>
+                                                        )
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </>
+                                ) : allCases.length > 0 ? (
+                                    <>
+                                        <H2A title="Всі" subTitle="Кейси" />
                                         <div className="caselist">
-                                            {map(filteredCases(category.category_id, allCases),
-                                                (item, i) => (
-                                                    <Flip bottom delay={i * 100} key={`${`caselistfiltered ${item.case_id}`}`}>
-                                                        <CaseMini data={item} />
-                                                    </Flip>
-                                                )
-                                            )}
+                                            {map(allCases, (item, i) => (
+                                                <Flip bottom delay={i * 100} key={`caselist-all-${item.case_id}`}>
+                                                    <CaseMini data={item} />
+                                                </Flip>
+                                            ))}
                                         </div>
-                                    </div>
-                                ))}
+                                    </>
+                                ) : null}
                             </>
                         )}
                     </>

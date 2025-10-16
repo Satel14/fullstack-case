@@ -198,7 +198,14 @@ class OpenCase extends Component {
         const result = await openCaseById(
             data.case_id,
             parseInt(openCount, 10),
-        ).then((res) => res);
+        ).then((res) => res).catch((err) => {
+            openNotification('error', 'Помилка', 'Ви не авторизовані або недостатньо коштів');
+            this.setState({
+                loading: false,
+                processWorking: false,
+            });
+            return null;
+        });
 
         if (!result) return false;
 
@@ -573,33 +580,36 @@ class OpenCase extends Component {
                                         <Zoom right>
                                             <div className="case-overlay"/>
                                         </Zoom>
-                                        <Fade delay={delayAnimation * 1000 + 500}>
-                                            <div className="opencase-titleitem">
-                                                {winner.item.name}
-                                                <span>
-                                                                    {winner.item.rare}
-                                                    {' '}
-                                                    {winner.item.type}
-                                                                </span>
-                                            </div>
-                                        </Fade>
+                                        {winner && winner.item && (
+                                            <Fade delay={delayAnimation * 1000 + 500}>
+                                                <div className="opencase-titleitem">
+                                                    {winner.item.name}
+                                                    <span>
+                                                        {winner.item.rare}
+                                                        {' '}
+                                                        {winner.item.type}
+                                                    </span>
+                                                </div>
+                                            </Fade>
+                                        )}
 
-                                        <div className="opencase-block">
-                                            <div className="line-overlay"/>
+                                        {winner && (
+                                            <div className="opencase-block">
+                                                <div className="line-overlay"/>
 
-                                            <div className="shadow-overlay">
-                                                <ShadowOverlay
-                                                    load={load}
-                                                    top={calculatePositionForLine(winner[i])}
-                                                >
-                                                    {map(caseCollection, (item, i) => (
-                                                        <>
-                                                            <div
-                                                                className={
-                                                                    i === winner.winIndex - 1
-                                                                        ? 'item active'
-                                                                        : 'item '
-                                                                }
+                                                <div className="shadow-overlay">
+                                                    <ShadowOverlay
+                                                        load={load}
+                                                        top={calculatePositionForLine(winner[i])}
+                                                    >
+                                                        {map(caseCollection, (item, i) => (
+                                                            <>
+                                                                <div
+                                                                    className={
+                                                                        i === winner.winIndex - 1
+                                                                            ? 'item active'
+                                                                            : 'item '
+                                                                    }
                                                                 style={{
                                                                     backgroundImage: `url(/img/items/${item.id}.png)`,
                                                                     boxShadow: `inset  0px -30px 60px -30px
@@ -608,10 +618,11 @@ class OpenCase extends Component {
                                                                 key={`openedItem${i}`}
                                                             />
                                                         </>
-                                                    ))}
-                                                </ShadowOverlay>
+                                                        ))}
+                                                    </ShadowOverlay>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </>
                                 )}
                             </div>
