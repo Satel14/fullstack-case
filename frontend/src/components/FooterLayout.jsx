@@ -3,22 +3,23 @@ import { Layout } from 'antd';
 import { Link } from 'react-router-dom';
 
 const { Footer } = Layout;
+const currentYear = new Date().getFullYear();
 
 const FooterLayout = () => (
     <Footer>
         <div className="leftblock">
-            <div>2025 Case</div>
+            <div>{`${currentYear} Case`}</div>
         </div>
         <div>
-            На нашому сайт ви можете відкрити різні кейси CS:GO по самим вигідним цінам.
-            Цей сайт захищений reCAPTCHA та Google Політика
-            конфіденційності та Умови використання
+            Відкривайте кейси CS2/CS:GO на прозорих умовах та з історією дій у профілі.
+            Цей сайт захищений reCAPTCHA, також діють Політика конфіденційності
+            та Умови використання Google.
         </div>
         <div className="rightblock">
             <Link to="/article/3">Користувацька угода</Link>
-            <Link to="/article/6">Правила</Link>
-            <Link to="/article/7">Питання/відповідь</Link>
-            <Link to="/article/9">Відгуки</Link>
+            <Link to="/article/6">Правила сервісу</Link>
+            <Link to="/faq">FAQ</Link>
+            <Link to="/article/9">Відгуки користувачів</Link>
         </div>
     </Footer>
 );

@@ -10,8 +10,9 @@ import Registration from '../pages/Auth/Registration.jsx';
 import Promocode from '../pages/Promocode';
 import Profile from '../pages/Profile';
 import Deposit from '../pages/Deposit';
-import Inventory from '../pages/Inventory';
+import Settings from '../pages/Settings.jsx';
 import Top from '../pages/Top';
+import Faq from '../pages/Faq';
 
 export default {
     private: [
@@ -30,11 +31,11 @@ export default {
             component: Deposit,
         },
         {
-            path: '/inventory',
+            path: '/Settings',
             exact: true,
             layout: Layout,
             breadcrumb: 'Налаштування',
-            component: Inventory,
+            component: Settings,
         },
     ],
     public: [
@@ -63,13 +64,13 @@ export default {
             path: '/404',
             layout: Layout,
             component: ErrorPage,
-            breadcrumb: 'Сторінка не найдена',
+            breadcrumb: 'Сторінка не знайдена',
             exact: true,
         },
         {
             path: '/article/:id',
             layout: Layout,
-            breadcrumb: 'Cтаття',
+            breadcrumb: 'Стаття',
             component: Article,
         },
         {
@@ -111,6 +112,13 @@ export default {
             layout: Layout,
             breadcrumb: 'ТОП 50 гравців',
             component: Top,
-        }
-    ]
+        },
+        {
+            path: '/faq',
+            exact: true,
+            layout: Layout,
+            breadcrumb: 'FAQ',
+            component: Faq,
+        },
+    ],
 };

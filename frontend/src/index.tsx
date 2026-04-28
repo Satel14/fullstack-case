@@ -9,6 +9,7 @@ import { Provider } from "react-redux";
 import store from "./store/index"
 
 ReactDOM.render(
+  // @ts-ignore
   <Provider store={store}>
     <RouterLayout />
   </Provider>,

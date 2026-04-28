@@ -1,17 +1,18 @@
 import React from 'react';
-import {Menu} from 'antd';
-import {Link} from 'react-router-dom';
-import {connect} from 'react-redux'
+import { Menu } from 'antd';
+import { Link } from 'react-router-dom';
+import { connect } from 'react-redux';
 import {
     QuestionCircleOutlined,
     BarChartOutlined,
     CodeSandboxOutlined,
     GiftOutlined,
-    TagsOutlined, UserOutlined
+    TagsOutlined,
+    UserOutlined,
 } from '@ant-design/icons';
 
 import Socials from './mini/Socials';
-import {isAuthorized} from '../helpers/Player';
+import { isAuthorized } from '../helpers/Player';
 
 const mapStateToProps = (state) => ({
     user: state.user,
@@ -20,9 +21,7 @@ const mapStateToProps = (state) => ({
 class MenuLayoutSlider extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-
-        }
+        this.state = {};
     }
 
     getMenuItems = () => {
@@ -45,7 +44,7 @@ class MenuLayoutSlider extends React.Component {
             },
             {
                 key: 'faq',
-                label: <Link to="/article/1">FAQ</Link>,
+                label: <Link to="/faq">FAQ</Link>,
                 icon: <QuestionCircleOutlined />,
             },
             {
@@ -69,9 +68,9 @@ class MenuLayoutSlider extends React.Component {
     render() {
         return (
             <>
-                <Menu 
-                    theme="dark" 
-                    mode="inline" 
+                <Menu
+                    theme="dark"
+                    mode="inline"
                     defaultSelectedKeys={['cases']}
                     items={this.getMenuItems()}
                 />
@@ -80,9 +79,8 @@ class MenuLayoutSlider extends React.Component {
                     <Socials />
                 </div>
             </>
-        )
+        );
     }
 }
-
 
 export default connect(mapStateToProps, null)(MenuLayoutSlider);

@@ -4,9 +4,8 @@ import { connect } from 'react-redux';
 import { message, Button, Popover } from 'antd';
 import { CommentOutlined, SendOutlined, SmileOutlined } from '@ant-design/icons';
 import UserOnline from './UserOnline';
-import role from '../../enum/role';
 import roles from '../../enum/role';
-import {default as socket} from '../../api/all/ws';
+import { default as socket } from '../../api/all/ws';
 import smiles from '../../data/smiles';
 import { Rules } from './Rules';
 
@@ -48,19 +47,6 @@ function timeConverterHoursMin(unix) {
     return time;
 }
 
-const ProfileAvatar = ({ id, avatar, unix }) => (
-    <div className="chat-messages-list_item__profile">
-        <Link to={`/profile/${id}`}>
-            <div
-                style={{
-                    backgroundImage: `url(/img/avatars/${avatar}.png)`,
-                }}
-            />
-        </Link>
-        <span>{timeConverterHoursMin(unix)}</span>
-    </div>
-);
-
 const MessageBlock = ({ message, id, nickname }) => (
     <div className="chat-messages-list_item__msg">
         <Link to={`/profile/${id}`}>{nickname}</Link>
@@ -100,13 +86,31 @@ const Chat = ({ user, enabled }) => {
         socket.on("user-on", (list) => {
             setUsersOnline(list);
         })
-    }, [chat, enabled, login]);
+    }, [enabled]);
+
+    useEffect(() => {
+        if (!enabled || !login) return;
+
+        const registerUser = () => {
+            socket.emit('new-user', login);
+        };
+
+        if (socket.connected) {
+            registerUser();
+        }
+
+        socket.on("connect", registerUser);
+
+        return () => {
+            socket.off("connect", registerUser);
+        }
+    }, [login, enabled]);
 
     useEffect(() => {
         if (!enabled) {
             return
         }
-        socket.on("chat message" , ({login, msg, id, avatar, time}) => {
+        socket.on("chat message", ({ login, msg, id, avatar, time }) => {
             let newList = chat;
             if (chat.length > 150) {
                 newList = newList.slice(
@@ -145,7 +149,7 @@ const Chat = ({ user, enabled }) => {
             return;
         }
 
-        socket.emit("chat message" , {
+        socket.emit("chat message", {
             login,
             msg,
             id,
@@ -178,12 +182,12 @@ const Chat = ({ user, enabled }) => {
         <div className="chat">
             <div className="chat-header">
                 <div className="chat-header_icon">
-                    <CommentOutlined/>
+                    <CommentOutlined />
                 </div>
                 <div className="chat-header_name">
                     Онлайн чат
                     <div className="chat-header_name__online">
-                        <i className="blink"/>
+                        <i className="blink" />
                         {usersOnline !== null ? usersOnline.length : "0"}
                     </div>
                 </div>
@@ -192,15 +196,15 @@ const Chat = ({ user, enabled }) => {
                         <Popover
                             placement="bottom"
                             content={
-                                <>
-                                    {usersOnline !== null
+                                <div className="online-users-popover">
+                                    {usersOnline && usersOnline.length > 0
                                         ? usersOnline.map((el, index) => (
                                             <div key={index}>
-                                                <UserOnline nickname={el}/>
+                                                <UserOnline nickname={el} />
                                             </div>
                                         ))
-                                        : ''}
-                                </>
+                                        : 'Немає користувачів'}
+                                </div>
                             }
                             trigger="click"
                         >
@@ -225,7 +229,7 @@ const Chat = ({ user, enabled }) => {
                 <ul className="chat-messages-list">
                     {chat.map((el, index) => (
                         <li key={"chat" + index} className="chat-messages-list_item">
-                            <ProfileAvatar id={el.id} avatar={el.avatar} unix={el.time} />
+                            {/* <ProfileAvatar id={el.id} avatar={el.avatar} unix={el.time} /> */}
                             <MessageBlock nickname={el.login} id={el.id} message={el.msg} />
                         </li>
                     ))}
@@ -239,38 +243,39 @@ const Chat = ({ user, enabled }) => {
                                 <input
                                     type="text"
                                     name="message"
+                                    value={msg}
                                     onChange={(e) => {
                                         setMsg(e.target.value);
                                     }}
-                                    // disabled
-                                    // value={"виключено чат"}
+                                // disabled
+                                // value={"виключено чат"}
                                 />
                                 <Popover
-                                placement="topLeft"
-                                open={visible}
-                                onOpenChange={(e) => setVisible(e)}
-                                content={
-                                    <div className="smiles-list">
-                                        {smiles.map((smile, i) => (
-                                            <div
-                                            key={"smile" + i}
-                                            style={{
-                                                backgroundImage: `url(${smile.url})`,
-                                            }}
-                                            onClick={(e) => {
-                                                setMsg(`${msg} ${smile.name}`), setVisible(false);
-                                            }}
-                                            />
+                                    placement="topLeft"
+                                    open={visible}
+                                    onOpenChange={(e) => setVisible(e)}
+                                    content={
+                                        <div className="smiles-list">
+                                            {smiles.map((smile, i) => (
+                                                <div
+                                                    key={"smile" + i}
+                                                    style={{
+                                                        backgroundImage: `url(${smile.url})`,
+                                                    }}
+                                                    onClick={(e) => {
+                                                        setMsg(`${msg} ${smile.name}`), setVisible(false);
+                                                    }}
+                                                />
                                             ))}
-                                    </div>
-                                }
-                                trigger="click"
+                                        </div>
+                                    }
+                                    trigger="click"
                                 >
                                     <Button
-                                    style={{ marginRight: "4%", width: "16%"}}
-                                    className="color-black"
+                                        style={{ marginRight: "4%", width: "16%" }}
+                                        className="color-black"
                                     >
-                                        <SmileOutlined/>
+                                        <SmileOutlined />
 
                                     </Button>
                                 </Popover>
@@ -278,8 +283,8 @@ const Chat = ({ user, enabled }) => {
                                     style={{ width: "80%" }}
                                     className="color-skyblue"
                                     onClick={(e) => submitMsg(e)}
-                                    // disabled={!login}
-                                    // disabled={true}
+                                    disabled={!login}
+                                // disabled={true}
                                 >
                                     <SendOutlined />
                                 </Button>
