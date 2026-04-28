@@ -1,6 +1,8 @@
 const ChatService = require("../services/chat")
 
-module.exports = function(server) {
+let ioInstance = null;
+
+module.exports = function (server) {
     const io = require('socket.io')(server, {
         cors: {
             // origin: 'https://127.0.0.1:3003',
@@ -8,6 +10,8 @@ module.exports = function(server) {
             credentials: true,
         },
     });
+
+    ioInstance = io;
 
     const usersConnected = new Map();
 
@@ -17,7 +21,7 @@ module.exports = function(server) {
         socket.on('user connected', async () => {
             console.log('анонім підключився +++');
 
-            io.emit('users-on', Array.from(usersConnected.keys()));
+            io.emit('user-on', Array.from(usersConnected.keys()));
             const lastMessages = await ChatService.get();
             io.emit('chat messages', lastMessages);
             return;
@@ -27,7 +31,7 @@ module.exports = function(server) {
             console.log('connection' + login);
 
             usersConnected.set(login, [socket.client.id, socket.id]);
-            io.emit('users-on', Array.from(usersConnected.keys()));
+            io.emit('user-on', Array.from(usersConnected.keys()));
             return;
         });
 
@@ -56,7 +60,9 @@ module.exports = function(server) {
                 }
             }
 
-            io.emit('users-on', Array.from(usersConnected.keys()));
+            io.emit('user-on', Array.from(usersConnected.keys()));
         })
     })
 }
+
+module.exports.getIo = () => ioInstance;

@@ -1,4 +1,5 @@
-const User = require('../models/users');
+const User = require("../models/user");
+const MESSAGE = require("../constant/responseMessages");
 
 const PUBLIC_FIELDS = [
     "user_id",
@@ -6,63 +7,38 @@ const PUBLIC_FIELDS = [
     "user_avatar",
     "user_rank",
     "user_role",
-    "created_at"
 ];
-
-module.exports.editUserPassword = async(email, newPasswordHash) => {
-    try {
-        const user = await User.update(
-            {user_password: newPasswordHash},
-            {where: {user_email: email}}
-        );
-        return user;
-    } catch (e) {
-        throw Error(e.message);
-    }
-}
-
-module.exports.getBalanceByUserId = async (id) => {
-    try {
-        const balance = await User.findByPk(id, {
-            attributes: ["user_balance"],
-        });
-        return balance.dataValues.user_balance;
-    } catch (e) {
-        throw Error(e.message);
-    }
-}
+const PRIVATE_FIELDS = ["user_balance", "user_email", "user_password"];
+const EDITABLE_FOR_USER_FIELDS = [
+    "user_password",
+    "user_avatar",
+    "user_receiveInfo",
+];
+// const ALL_FIELDS = PUBLIC_FIELDS.concat(PRIVATE_FIELDS);
 
 module.exports.getUserById = async (id) => {
     try {
         const user = await User.findByPk(id, {
-            attributes: PUBLIC_FIELDS,
+            attributes: [...PUBLIC_FIELDS, "updated_at", "created_at"],
         });
-        
-        if (!user) {
-            return null;
-        }
-        
-        return user.dataValues;
+
+        if (!user) throw new Error(MESSAGE.USER.NOT_EXIST);
+
+        return user;
     } catch (e) {
         throw Error(e.message);
     }
-}
+};
 
-module.exports.getUserByIdController = async (req, res) => {
+module.exports.getUserFullInfoById = async (id) => {
     try {
-        const errors = validationResult(req);
+        const user = await User.findByPk(id);
 
-        if (!errors.isEmpty()) {
-            return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
-        }
+        if (!user) throw new Error(MESSAGE.USER.NOT_EXIST);
 
-        const { id } = req.params;
-        const user = await UserService.getUserById(id);
-        const openCaseHistory = await StorageService.getStorageLastItems(24);
-
-        return res.status(200).json({ status: 200, data: user, openCaseHistory });
+        return user;
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        throw Error(e.message);
     }
 };
 
@@ -75,22 +51,122 @@ module.exports.getOnlineUsers = async () => {
             attributes: PUBLIC_FIELDS,
             order: [["updated_at", "DESC"]],
             where: {
-                updated_at: { $gt: fiveMinutesAgo},
+                updated_at: { $gt: fiveMinutesAgo },
             },
         });
 
         const list = [];
 
-        for (const key in user.rows) {
+        for (const key in users.rows) {
             const element = users.rows[key];
             list.push(element);
         }
 
-        return {count: users.count, userList: list}
+        return { count: users.count, userList: list };
     } catch (e) {
         throw Error(e.message);
     }
-}
+};
+
+module.exports.editUserPassword = async (email, newPasswordHash) => {
+    try {
+        const user = await User.update(
+            { user_password: newPasswordHash },
+            { where: { user_email: email } }
+        );
+        return user;
+    } catch (e) {
+        throw Error(e.message);
+    }
+};
+
+module.exports.editUser = async (fields, id) => {
+    try {
+    // eslint-disable-next-line no-restricted-syntax
+        for (const fieldName in fields) {
+            if (!EDITABLE_FOR_USER_FIELDS.includes(fieldName)) {
+                throw new Error(MESSAGE.USER.CANT_UPDATE_FIELD);
+            }
+        }
+        const user = await User.update(fields, { where: { user_id: id } });
+        return user;
+    } catch (e) {
+        throw Error(e.message);
+    }
+};
+
+module.exports.getBalanceByUserId = async (id) => {
+    try {
+        const balance = await User.findByPk(id, {
+            attributes: ["user_balance"],
+        });
+        return balance.dataValues.user_balance;
+    } catch (e) {
+        throw Error(e.message);
+    }
+};
+
+module.exports.incrementBalance = async (value, id) => {
+    try {
+        await User.increment("user_balance", {
+            by: value,
+            where: { user_id: id },
+        }).then((result) => result);
+        return true;
+    } catch (e) {
+        throw Error(e.message);
+    }
+};
+
+module.exports.resetBalance = async (id) => {
+    try {
+        const defaultBalance = 1000;
+        await User.update(
+            { user_balance: defaultBalance },
+            { where: { user_id: id } }
+        );
+        return true;
+    } catch (e) {
+        throw Error(e.message);
+    }
+};
+
+module.exports.resetRank = async (id) => {
+    try {
+        const defaultRank = 0;
+        await User.update(
+            { user_rank: defaultRank },
+            { where: { user_id: id } }
+        );
+        return true;
+    } catch (e) {
+        throw Error(e.message);
+    }
+};
+
+module.exports.incrementRank = async (value, id) => {
+    try {
+        await User.increment("user_rank", {
+            by: value,
+            where: { user_id: id },
+        }).then((result) => result);
+        return true;
+    } catch (e) {
+        throw Error(e.message);
+    }
+};
+
+module.exports.decrementBalance = async (value, id) => {
+    try {
+        await User.decrement("user_balance", {
+            by: value,
+            where: { user_id: id },
+        }).then((result) => result);
+        return true;
+    } catch (e) {
+        throw Error(e.message);
+    }
+};
 
 module.exports.getCountOfAllUsers = async () => {
     try {
@@ -99,18 +175,4 @@ module.exports.getCountOfAllUsers = async () => {
     } catch (e) {
         throw Error(e.message);
     }
-}
-
-module.exports.decrementBalance = async (value, id) => {
-    try {
-        await User.decrement("user_balance", {
-            by: value,
-            where: {
-                user_id: id
-            }
-        }).then((result) => result);
-        return true;
-    } catch (e) {
-        throw Error(e.message);
-    }
-}
+};

@@ -1,6 +1,6 @@
 const RedisManager = require("../redis/manager");
-const {v4: uuidv4} = require('uuid');
-const {normalizeChatMessagesFromRedis} = require('../helpers/chat');
+const { v4: uuidv4 } = require('uuid');
+const { normalizeChatMessagesFromRedis } = require('../helpers/chat');
 const MAXIMUM_SEND_MESSAGES = 26;
 
 
@@ -20,7 +20,7 @@ module.exports.add = async (data) => {
 
 module.exports.get = async () => {
     try {
-        let lastMessages = (await RedisManager.getAllDataWithKey("chat_hash")) || [];
+        let lastMessages = (await RedisManager.getAllDataHashWithKey("chat_hash")) || [];
 
         if (Object.keys(lastMessages).length > 1) {
             lastMessages = normalizeChatMessagesFromRedis(lastMessages);
@@ -41,7 +41,7 @@ module.exports.get = async () => {
 
 module.exports.clean = async () => {
     try {
-        const lastMessages = (await RedisManager.getAllDataWithKey("chat_hash")) || [];
+        const lastMessages = (await RedisManager.getAllDataHashWithKey("chat_hash")) || [];
 
         const MAXIMUM_CAN_SAVE = 500;
 

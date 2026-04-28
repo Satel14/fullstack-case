@@ -20,3 +20,44 @@ module.exports.getAllItems = async () => {
         throw Error(e.message);
     }
 };
+
+module.exports.getItemPrice = async (name) => {
+    try {
+        const itemData = await InsiderPrices.findByPk(name);
+        if (!itemData) {
+            console.log(`Item ${name} doesn't have on database.`);
+            return null;
+        }
+
+        return itemData.dataValues;
+    } catch (e) {
+        throw Error(e.message);
+    }
+};
+
+module.exports.addItem = async (name, pricesInCredits) => {
+    try {
+        const item = {
+            name,
+            pricesInCredits: JSON.stringify(pricesInCredits),
+        };
+
+        const itemData = await InsiderPrices.findByPk(name);
+
+        if (!itemData) {
+            await InsiderPrices.create(item);
+            return;
+        }
+
+        await InsiderPrices.update(
+            {
+                pricesInCredits: JSON.stringify(pricesInCredits),
+            },
+            { where: { name } }
+        );
+
+        return;
+    } catch (e) {
+        throw Error(e.message);
+    }
+};

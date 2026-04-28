@@ -1,5 +1,6 @@
 const redis = require('redis');
-const client = redis.createClient(6379);
+const redisHost = process.env.REDIS_HOST || (process.env.NODE_ENV === 'production' ? 'redis' : 'localhost');
+const client = redis.createClient(6379, redisHost);
 
 const InsiderPricesService = require("./../services/insiderPrices");
 const ItemService = require("./../services/item");
@@ -61,6 +62,7 @@ async function initialRedisState() {
                     name: element.item_name,
                     rare: element.item_rare,
                     type: element.item_type,
+                    item_imagePath: element.item_imagePath,
                     pricesInCredits: findedPrice.pricesInCredits,
                 })
             )
@@ -71,9 +73,8 @@ async function initialRedisState() {
     console.log("[Redis] Items Loaded");
 }
 
-client.on("connect", async function() {
+client.on("connect", async function () {
     console.log('[Redis] Redis Connected');
-    await initialRedisState();
 });
 
 module.exports = {
@@ -81,4 +82,5 @@ module.exports = {
     getAllDataHashWithKey,
     setDataHashWithKey,
     cleanDataHashWithKey,
+    initialRedisState,
 };

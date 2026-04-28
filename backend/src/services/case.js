@@ -29,6 +29,20 @@ module.exports.addUsedCount = async (id) => {
     }
 }
 
+module.exports.decrementLimit = async (id, count = 1) => {
+    try {
+        await Case.decrement('case_openLimit', {
+            by: count,
+            where: {
+                case_id: id
+            }
+        })
+        return;
+    } catch (e) {
+        throw Error(e.message)
+    }
+}
+
 module.exports.unpublishCase = async (id) => {
     try {
         Case.update({case_published: 0}, {where: {case_id: id}})
