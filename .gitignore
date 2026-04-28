@@ -25,8 +25,9 @@ yarn-error.log*
 # IDE
 .idea/
 
-# Claude Code local settings
+# Claude Code local settings and guides
 .claude/
+CLAUDE.md
 
 # Local Redis Windows binaries (Redis runs in its own container in prod)
 backend/redis/
