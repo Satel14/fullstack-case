@@ -290,7 +290,7 @@ export default class Cases extends Component {
                                                 <div className="caselist">
                                                     {map(filteredCases(category.category_id, allCases),
                                                         (item, i) => (
-                                                            <Flip bottom delay={i * 100} key={`caselistfiltered-${category.category_id}-${item.case_id}`}>
+                                                            <Flip bottom delay={i * 30} key={`caselistfiltered-${category.category_id}-${item.case_id}`}>
                                                                 <CaseMini data={item} />
                                                             </Flip>
                                                         )
@@ -304,7 +304,7 @@ export default class Cases extends Component {
                                         <H2A title="Всі" subTitle="Кейси" />
                                         <div className="caselist">
                                             {map(allCases, (item, i) => (
-                                                <Flip bottom delay={i * 100} key={`caselist-all-${item.case_id}`}>
+                                                <Flip bottom delay={i * 30} key={`caselist-all-${item.case_id}`}>
                                                     <CaseMini data={item} />
                                                 </Flip>
                                             ))}

@@ -1,37 +1,21 @@
 import React, { Component } from 'react';
-import Flip from 'react-reveal/Flip';
-import map from 'lodash/map';
-import CaseMini from '../components/mini/CaseMini';
-import testCaseList from '../data/testCaseList';
-import H2A from '../components/mini/H2A';
-import collectionCase from '../data/collectionCase';
-import { itemInfoFetch } from '../store/actions/itemCache';
 import { connect } from 'react-redux';
+import { Tooltip } from 'antd';
+import map from 'lodash/map';
+import Fade from 'react-reveal/Fade';
+import { itemInfoFetch } from '../store/actions/itemCache';
 import { getCaseById } from '../api/all/cases';
+import { renderItemProp } from '../helpers/Case';
 import Loader from '../components/mini/Loader';
 import OpenCase from '../components/modules/OpenCase';
-import Fade from 'react-reveal/Fade';
-import { renderItemProp } from '../helpers/Case';
-import { Tooltip } from 'antd';
 
 const mapStateToProps = (state) => ({
     itemCache: state.itemCache,
-})
+});
 
 const mapDispatchToProps = (dispatch) => ({
-    itemInfoFetch: (id) => dispatch(itemInfoFetch(id))
-})
-
-const isHaveColors = (colors) => {
-    if (!colors || !Array.isArray(colors)) {
-        return false;
-    }
-    if (colors.length === 1) {
-        return true;
-    }
-
-    return false;
-}
+    itemInfoFetch: (id) => dispatch(itemInfoFetch(id)),
+});
 
 class Case extends Component {
     constructor(props) {
@@ -45,52 +29,48 @@ class Case extends Component {
     }
 
     async componentDidMount() {
-        await this.getData()
-    }
-
-    getShortInfoItem(item, fieldName = null) {
-        const {id} = item;
-        const {itemCache} = this.props;
-
-        if (fieldName === null) {
-            return itemCache[id];
-        }
-
-        if (itemCache[id]) {
-            return itemCache[id][fieldName]
-        }
-
-        return '';
-    }
-
-    addItemsToCache(arrayItemIds) {
-        const { itemCache } = this.props;
-        for (let index = 0; index < arrayItemIds.length; index++) {
-            const id = arrayItemIds[index];
-            if (!itemCache[id]) {
-                this.props.itemInfoFetch(id);
-            }
-        }
+        await this.getData();
     }
 
     componentDidUpdate(prevProps) {
         if (this.props.match.params.id !== prevProps.match.params.id) {
             this.setState({
                     id: this.props.match.params.id,
-                },
-                () => this.getData(),
-            );
+                }, () => this.getData());
         }
     }
 
+    getShortInfoItem(item, fieldName = null) {
+        const { id } = item;
+        const { itemCache } = this.props;
+
+        if (fieldName === null) {
+            return itemCache[id];
+        }
+
+        if (itemCache[id]) {
+            return itemCache[id][fieldName];
+        }
+
+        return '';
+    }
+
+    getImagePath(item) {
+        const itemInfo = this.getShortInfoItem(item);
+
+        if (itemInfo && itemInfo.item_imagePath) {
+            return encodeURI(itemInfo.item_imagePath);
+        }
+
+        return '';
+    }
+
     async getData() {
-        this.setState({fetching: true});
-        const {id} = this.state;
-        const {history} = this.props;
+        this.setState({ fetching: true });
+        const { id } = this.state;
+        const { history } = this.props;
 
         const caseData = await getCaseById(id).then((data) => data);
-
-        console.log(caseData);
 
         if (!caseData) {
             history.push('/404');
@@ -99,22 +79,36 @@ class Case extends Component {
 
         const massiveIds = [];
 
-        // caseData.caseCollection.ITEMS.forEach((element) => {
-        //     massiveIds.push(element.id);
-        // });
-        //
-        // this.addItemsToCache(massiveIds);
+        if (caseData.caseCollection && caseData.caseCollection.ITEMS) {
+            caseData.caseCollection.ITEMS.forEach((element) => {
+                massiveIds.push(element.id);
+            });
+
+            this.addItemsToCache(massiveIds);
+        }
 
         this.setState({
             caseCollection: caseData.caseCollection,
             caseData: caseData.data,
-            fetching: false
+            fetching: false,
         });
+    }
+
+    addItemsToCache(arrayItemIds) {
+        const { itemCache } = this.props;
+        if (!itemCache || !arrayItemIds || arrayItemIds.length === 0) {
+            return;
+        }
+        for (let index = 0; index < arrayItemIds.length; index++) {
+            const id = arrayItemIds[index];
+            if (!itemCache[id]) {
+                this.props.itemInfoFetch(id);
+            }
+        }
     }
 
     render() {
         const { caseCollection, caseData, fetching } = this.state;
-        console.log(caseCollection, 'caseCollection');
         return (
             <div className="casepage">
                 {fetching ? (
@@ -128,22 +122,32 @@ class Case extends Component {
                         <span className="casepage-title-second">
                             Вміст кейсу
                             <i>
-                                Кількість відкритих: {' '}
+                                Кількість відкритих:
+                                {' '}
                                 {caseData.case_openedCount}
                             </i>
                         </span>
                         <div className="casepage-itemlist more">
                             {caseCollection && caseCollection.ITEMS && map(caseCollection.ITEMS, (item, i) => (
-                                <Fade delay={i * 50} key={`itemlist${item.id}`}>
-                                    <Tooltip
-                                        placement="bottom"
-                                        title={renderItemProp(this.getShortInfoItem(item))}
-                                    >
-                                        <div>
-
+                                <Tooltip
+                                    placement="bottom"
+                                    title={renderItemProp(this.getShortInfoItem(item))}
+                                    key={`itemlist${item.id}`}
+                                >
+                                    <Fade delay={i * 50}>
+                                        <div
+                                            className={`casepage-itemlist_item rc-${this.getShortInfoItem(item, 'item_rare')}`}
+                                            style={{
+                                                backgroundImage: `url(${this.getImagePath(item)})`,
+                                                backgroundSize: 'contain',
+                                                backgroundPosition: 'center',
+                                                backgroundRepeat: 'no-repeat',
+                                            }}
+                                        >
+                                            <span>{this.getShortInfoItem(item, 'item_name')}</span>
                                         </div>
-                                    </Tooltip>
-                                </Fade>
+                                    </Fade>
+                                </Tooltip>
                             ))}
                         </div>
                     </>
@@ -153,4 +157,4 @@ class Case extends Component {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Case)
+export default connect(mapStateToProps, mapDispatchToProps)(Case);
