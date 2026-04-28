@@ -21,3 +21,12 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# IDE
+.idea/
+
+# Claude Code local settings
+.claude/
+
+# Local Redis Windows binaries (Redis runs in its own container in prod)
+backend/redis/
