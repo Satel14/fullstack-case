@@ -1,4 +1,4 @@
-const Users = require('../models/users');
+const Users = require('../models/user');
 const message = require('../constant/responseMessages')
 const mailSender = require('../modules/mailSender')
 const Encrypt = require('../modules/Encrypt')

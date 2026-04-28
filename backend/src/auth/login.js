@@ -1,4 +1,4 @@
-const Users = require('../models/users');
+const Users = require('../models/user');
 const jwt = require('jsonwebtoken');
 const message = require('./../constant/responseMessages');
 const jwtOptions = require('./jwtConfig');
@@ -35,7 +35,7 @@ module.exports = (app) => {
         );
 
         if (!comparePass) {
-            res.status(401).json({ message: message.AUTH.NOT_CORRECT})
+            return res.status(401).json({ message: message.AUTH.NOT_CORRECT })
         }
 
         const payload = { id: user.user_id }

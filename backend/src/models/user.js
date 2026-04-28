@@ -1,5 +1,5 @@
-const Sequelize = require("sequelize")
-const sequelize = require("../config/db")
+const Sequelize = require("sequelize");
+const sequelize = require("../config/db");
 
 module.exports = sequelize.define(
     "users",
@@ -8,6 +8,7 @@ module.exports = sequelize.define(
             field: "id",
             type: Sequelize.INTEGER,
             primaryKey: true,
+            autoIncrement: true,
         },
         user_login: {
             field: "login",
@@ -40,6 +41,7 @@ module.exports = sequelize.define(
         user_role: {
             field: "role",
             type: Sequelize.INTEGER,
+            defaultValue: 1,
         },
         created_at: {
             field: "created_at",

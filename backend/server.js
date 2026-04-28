@@ -13,13 +13,35 @@ app.use(bodyParser.json());
 
 app.use(compression());
 routes(app);
+// Initialize models to allow sync
+require('./src/models/article');
+require('./src/models/balanceHistory');
+require('./src/models/bonusHistory');
+require('./src/models/case');
+require('./src/models/category');
+require('./src/models/insiderPrices');
+require('./src/models/item');
+require('./src/models/module');
+require('./src/models/promocode');
+require('./src/models/storage');
+require('./src/models/user');
 
+const sequelize = require('./src/config/db');
 
-const server = app.listen(config.port, () =>
-    console.log(`Listening on port ${config.port}`)
-);
+sequelize.sync().then(() => {
+    console.log('Database synchronized');
+    const server = app.listen(config.port, () =>
+        console.log(`Listening on port ${config.port}`)
+    );
 
-require('./src/socket/chat')(server);
+    require('./src/socket/chat')(server);
+
+    // Load initial data into Redis only after database is ready
+    const RedisManager = require('./src/redis/manager');
+    RedisManager.initialRedisState().catch(console.error);
+}).catch(err => {
+    console.error('Failed to sync database:', err);
+});
 
 if (process.env.CI) {
     console.log(`Tested success`);

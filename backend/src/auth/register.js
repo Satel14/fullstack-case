@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const Users = require('../models/users');
+const Users = require('../models/user');
 const jwtOptions = require('./jwtConfig');
 const message = require('../constant/responseMessages');
 const Encrypt = require('../modules/Encrypt');
@@ -27,8 +27,15 @@ module.exports = (app) => {
 
         const passwordHash = await Encrypt.cryptPassword(password);
 
+        const now = new Date();
+
         await Users.create({
-            user_login: login, user_password: passwordHash, user_email: email, user_avatar: avatar,
+            user_login: login,
+            user_password: passwordHash,
+            user_email: email,
+            user_avatar: avatar,
+            created_at: now,
+            updated_at: now,
         });
 
         mailSender.userRegistered(email, { login, password });
