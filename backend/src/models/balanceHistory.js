@@ -1,36 +1,37 @@
-const Sequelize = require("sequelize")
-const sequelize = require("../config/db")
+const Sequelize = require('sequelize');
+const sequelize = require('../config/db');
 
 module.exports = sequelize.define(
-    "balanceHistory",
+    'balance_history',
     {
         history_id: {
-            field: "id",
+            field: 'id',
             type: Sequelize.INTEGER,
             primaryKey: true,
+            autoIncrement: true,
         },
         history_userId: {
-            field: "userId",
+            field: 'userId',
             type: Sequelize.INTEGER,
         },
         history_type: {
-            field: "type",
+            field: 'type',
             type: Sequelize.ENUM('payment', 'promocode', 'sellitem', 'opencase', 'bonus', 'sendmoney'),
         },
         history_change: {
-            field: "balanceChange",
+            field: 'balanceChange',
             type: Sequelize.INTEGER,
         },
         history_extraData: {
-            field: "extraData",
+            field: 'extraData',
             type: Sequelize.STRING,
         },
-        create_at: {
-            field: "created_at",
+        created_at: {
+            field: 'created_at',
             type: Sequelize.DATE,
         },
     },
     {
         timestamps: false,
-    }
+    },
 );

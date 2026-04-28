@@ -26,7 +26,7 @@ module.exports = class OpenCase {
         }
 
         this._max = arrChances.reduce((a, b) => a + b, 0);
-        this.allItems = await RedisManager.getAllDataWithKey(ITEM_HASH);
+        this.allItems = await RedisManager.getAllDataHashWithKey(ITEM_HASH);
 
         this.loadRaryTypes();
         const results = this.getRandomArrayWithWinner();
@@ -45,7 +45,7 @@ module.exports = class OpenCase {
         let newMassiveForSend = [];
 
         resultWithItem.forEach((currentItem) => {
-            let {id, color} = currentItem;
+            let { id, color } = currentItem;
             let itemCache = JSON.parse(this.allItems[id]);
 
             let element = {
@@ -134,7 +134,11 @@ module.exports = class OpenCase {
             return;
         }
 
-        let collectionRareItems = this.case.filter((item) => item.rare === rariest);
+        let collectionRareItems = this.case.ITEMS.filter((item) => item.rare === rariest);
+        if (collectionRareItems.length === 0) {
+            // Fallback: If no items match the rolled rarity, pick any random item from this case
+            collectionRareItems = this.case.ITEMS;
+        }
         return collectionRareItems[this.randomArrayIndex(collectionRareItems)];
     }
 
@@ -193,7 +197,7 @@ module.exports = class OpenCase {
             JSON.parse(this.allItems[item.id.toString()]).pricesInCredits
         );
 
-        itemColors = this.normalizeColors(JSON.parse(itemColors));
+        itemColors = this.normalizeColors(itemColors);
         const countColors = Object.keys(itemColors).length;
 
         if (countColors > 1) {

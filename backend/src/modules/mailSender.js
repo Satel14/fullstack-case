@@ -1,41 +1,32 @@
 const nodemailer = require('nodemailer');
 const emailOptions = require('../config/email');
 
-const transporter = nodemailer.createTransport({
-    name: emailOptions.name,
-    service: emailOptions.service,
-    port: emailOptions.port,
-    secure: emailOptions.secure,
-    logger: emailOptions.logger,
-    debug: emailOptions.debug,
-    secureConnection: emailOptions.secureConnection,
-    auth: {
-        email: emailOptions.auth.user,
-        pass: emailOptions.auth.pass
-    },
-    tls: {
-        rejectUnauthorized: emailOptions.tls.rejectUnauthorized,
-    },
-});
+const { Resend } = require('resend');
+
+const resend = new Resend(process.env.RESEND_API_KEY || 're_4zhginK1_Jgfj3wYJ4fq2z6BqzuGKNAjW');
 
 module.exports = {
     userRegistered(mailTo, data) {
-        transporter.sendMail({
-            from: '"Підтримка caseUA 👻" <ostaplvov@gmail.com>',
+        resend.emails.send({
+            from: 'caseUA <onboarding@resend.dev>',
             to: mailTo,
             subject: 'Успішна реєстрація на сайті',
-            text: `Ваш логін: ${data.login} ваш пароль: ${data.password}`,
-            html: `Ваш логін: ${data.login} ваш пароль: ${data.password}`,
-        });
+            html: `<h1>Вітаємо на caseUA!</h1>
+                   <p>Ваша реєстрація успішна.</p>
+                   <p><strong>Ваш логін:</strong> ${data.login}</p>
+                   <p><strong>Ваш пароль:</strong> ${data.password}</p>`,
+        }).then((res) => console.log('Welcome email sent via Resend:', res))
+            .catch(err => console.error('Failed to send Resend welcome email:', err.message));
     },
     forgotPassword(mailTo, data) {
-        transporter.sendMail({
-            from: '"Підтримка caseUA 👻" <ostaplvov@gmail.com>',
+        resend.emails.send({
+            from: 'caseUA <onboarding@resend.dev>',
             to: mailTo,
-            subject: 'Нагадуємо ваш логін і пароль',
-            text: `Ваш логін: ${data.login} ваш пароль: ${data.password}`,
-            html: `Ваш логін: ${data.login} ваш пароль: ${data.password}`,
-        }).then(() => console.log('Email sent!'))
-        .catch((error) => console.error('Error sending email:', error));
+            subject: 'Відновлення доступу',
+            html: `<h1>Відновлення пароля</h1>
+                   <p><strong>Ваш логін:</strong> ${data.login}</p>
+                   <p><strong>Ваш пароль:</strong> ${data.password}</p>`,
+        }).then((res) => console.log('Recovery email sent via Resend:', res))
+            .catch((error) => console.error('Error sending recovery email:', error.message));
     }
 }

@@ -14,10 +14,10 @@ const config = {
     },
     production: {
         database: {
-            host: 'localhost',
+            host: process.env.MYSQL_HOST_IP || 'mysql-db',
             db_port: '3306',
             database: 'case',
-            username: 'root',
+            username: 'fullstack',
             password: '1234',
         },
         port: process.env.SERVER_PORT,

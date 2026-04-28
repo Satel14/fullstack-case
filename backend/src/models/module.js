@@ -6,7 +6,7 @@ module.exports = sequlize.define(
     {
         param: {
             field: 'param',
-            type: Sequelize.INTEGER,
+            type: Sequelize.STRING,
             primaryKey: true,
         },
         status: {

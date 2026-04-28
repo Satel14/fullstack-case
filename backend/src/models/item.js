@@ -25,6 +25,10 @@ module.exports = sequelize.define(
             field: 'type',
             type: Sequelize.STRING,
         },
+        item_imagePath: {
+            field: 'imagePath',
+            type: Sequelize.STRING,
+        },
     },
     {
         timestamps: false,
