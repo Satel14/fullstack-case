@@ -7,11 +7,7 @@ npm-debug.log
 *.md
 .vscode
 .idea
-redis
-data
-config/config.json
-*.log
+build
 coverage
 .nyc_output
-dist
-build
+

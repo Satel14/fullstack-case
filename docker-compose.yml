@@ -1,7 +1,7 @@
 # problems with mysql connect
 
 x-common-variables: &common-variables
-  MYSQL_USER: root
+  MYSQL_USER: fullstack
   MYSQL_PASSWORD: 1234
   MYSQL_DATABASE: case
   MYSQL_PORT: 3306
@@ -40,7 +40,7 @@ services:
       <<: *common-variables
       MYSQL_ROOT_PASSWORD: root
     ports:
-      - 3307:3307
+      - "3307:3307"
     networks:
       - private
       - public
@@ -59,11 +59,12 @@ services:
       <<: *common-variables
       NODE_ENV: production
     ports:
-      - 3001:3001
+      - "3003:3003"
     volumes:
       - ./backend/src:/code/src:ro
       - ./backend/package.json:/code/package.json
       - ./backend/package-lock.json:/code/package-lock.json
+      - ./frontend/public:/frontend/public:ro
       - back-notused:/opt/app/node_modules
     networks:
       - private
