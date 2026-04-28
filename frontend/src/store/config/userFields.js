@@ -9,4 +9,4 @@ const userFields = {
     user_role: 'role',
 };
 
-module.exports = userFields;
+export default userFields;

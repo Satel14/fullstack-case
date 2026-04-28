@@ -1,7 +1,8 @@
 import io from "socket.io-client";
-import { API_URL } from '../config';
 
-const ws = io(API_URL, {
+const WS_URL = 'http://localhost:3003';
+
+const ws = io(WS_URL, {
     transports: ["websocket"],
     withCredentials: true,
     reconnection: false,

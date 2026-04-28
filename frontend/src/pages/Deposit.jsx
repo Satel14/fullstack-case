@@ -1,117 +1,124 @@
 import React, { Component } from 'react';
-import { Card, Form, Input, Button, Radio, Alert, Divider } from 'antd';
-import { DollarOutlined, CreditCardOutlined } from '@ant-design/icons';
+import {
+    Row,
+    Col,
+    Tabs,
+    Input,
+    Button,
+    Form,
+} from 'antd';
+import { DollarOutlined } from '@ant-design/icons';
+import { connect } from 'react-redux';
+import Fade from 'react-reveal/Fade';
+import H2A from '../components/mini/H2A';
+import { itemInfoFetch } from '../store/actions/itemCache';
+import { SUPPORT_EMAIL } from '../config/publicInfo.js';
 
-export default class Deposit extends Component {
+const mapDispatchToProps = (dispatch) => ({
+    itemInfoFetch: (id) => dispatch(itemInfoFetch(id)),
+});
+
+const mapStateToProps = (state) => ({
+    user: state.user,
+    itemCache: state.itemCache,
+});
+
+class Deposit extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            amount: '',
-            paymentMethod: 'card',
+            // tabActive: 'money',
         };
+
+        this.getSettingsPage = this.getSettingsPage.bind(this);
     }
 
-    onFinish = (values) => {
-        console.log('Deposit values:', values);
-        // TODO: Implement payment logic
-    };
+    getSettingsPage() {
+        const { history } = this.props;
+        history.push('/settings');
+    }
 
     render() {
+        const tabItems = [
+            {
+                key: 'money',
+                label: 'Поповнити',
+                children: (
+                    <div className="depositpage-list">
+                        <div className="notworking">Недоступно</div>
+
+                        <div className="depositpage-list__payment">
+                            <Form layout="vertical">
+                                <Form.Item
+                                    label="ВВЕДІТЬ СУМУ (UAH)"
+                                >
+                                    <Input
+                                        size="large"
+                                        prefix={<DollarOutlined className="site-form-item-icon" />}
+                                    />
+                                </Form.Item>
+
+                                <Button
+                                    type="primary"
+                                    danger
+                                    size="large"
+                                    className="color-green"
+                                    onClick={() => this.getSettingsPage()}
+                                >
+                                    Поповнити баланс
+                                </Button>
+                            </Form>
+                        </div>
+
+                        <div className="depositpage-list__paymentlist">
+                            Для поповнення балансу ви будете перенаправлені на сайт
+                            платіжної системи.
+                            Баланс поповнюється миттєво, але якщо цього не
+                            сталося протягом години, напишіть нам на пошту
+                            {' '}
+                            {SUPPORT_EMAIL}
+                            , вказавши детальні дані платежу.
+                        </div>
+                    </div>
+                ),
+            },
+            {
+                key: 'history',
+                label: 'Історія поповнень',
+                children: (
+                    <div className="depositpage-list">
+                        <div className="notworking">Недоступно</div>
+                    </div>
+                ),
+            },
+        ];
+
         return (
             <div className="depositpage">
-                <h1 className="title">Поповнити рахунок</h1>
-                
-                <Alert
-                    message="Мінімальна сума поповнення - 10 грн"
-                    type="info"
-                    showIcon
-                    style={{ marginBottom: 20 }}
-                />
-
-                <Card className="blockstyle-first">
-                    <Form
-                        layout="vertical"
-                        onFinish={this.onFinish}
-                        initialValues={{
-                            paymentMethod: 'card',
-                        }}
-                    >
-                        <Form.Item
-                            label="Сума поповнення"
-                            name="amount"
-                            rules={[
-                                { required: true, message: 'Введіть суму' },
-                                {
-                                    validator: (_, value) => {
-                                        if (value && value < 10) {
-                                            return Promise.reject(
-                                                'Мінімальна сума - 10 грн'
-                                            );
-                                        }
-                                        return Promise.resolve();
-                                    },
-                                },
-                            ]}
-                        >
-                            <Input
-                                type="number"
-                                prefix={<DollarOutlined />}
-                                placeholder="Введіть суму"
-                                size="large"
+                <H2A title="Поповнення" subTitle="рахунку" />
+                <Fade>
+                    <Row gutter={16}>
+                        <Col className="gutter-row" span={24}>
+                            <Tabs
+                                defaultActiveKey="money"
+                                tabBarExtraContent={(
+                                    <Button
+                                        type="primary"
+                                        danger
+                                        className="color-orange"
+                                        onClick={() => this.getSettingsPage()}
+                                    >
+                                        Використати промокод для поповнення
+                                    </Button>
+                                )}
+                                items={tabItems}
                             />
-                        </Form.Item>
-
-                        <Form.Item
-                            label="Спосіб оплати"
-                            name="paymentMethod"
-                            rules={[{ required: true }]}
-                        >
-                            <Radio.Group size="large">
-                                <Radio.Button value="card">
-                                    <CreditCardOutlined /> Банківська карта
-                                </Radio.Button>
-                                <Radio.Button value="liqpay">LiqPay</Radio.Button>
-                                <Radio.Button value="crypto">Криптовалюта</Radio.Button>
-                            </Radio.Group>
-                        </Form.Item>
-
-                        <Divider />
-
-                        <Form.Item>
-                            <Button
-                                type="primary"
-                                htmlType="submit"
-                                size="large"
-                                className="color-green"
-                                block
-                            >
-                                Поповнити
-                            </Button>
-                        </Form.Item>
-                    </Form>
-                </Card>
-
-                <Card
-                    title="Швидке поповнення"
-                    style={{ marginTop: 20 }}
-                    className="blockstyle-first"
-                >
-                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        {[50, 100, 200, 500, 1000].map((amount) => (
-                            <Button
-                                key={amount}
-                                size="large"
-                                onClick={() =>
-                                    this.setState({ amount: amount.toString() })
-                                }
-                            >
-                                {amount} грн
-                            </Button>
-                        ))}
-                    </div>
-                </Card>
+                        </Col>
+                    </Row>
+                </Fade>
             </div>
         );
     }
 }
 
+export default connect(mapStateToProps, mapDispatchToProps)(Deposit);

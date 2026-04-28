@@ -1,49 +1,44 @@
-import React, { Component } from 'react';
+import React from 'react';
 import Fade from 'react-reveal/Fade';
-import { Collapse } from 'antd';
-import map from 'lodash/map';
+import { Link } from 'react-router-dom';
 import testArticle from '../data/testArticle';
 
-const { Panel } = Collapse;
+const Article = ({ match }) => {
+    const articleId = Number(match.params.id);
+    const article = testArticle.find((item) => item.id === articleId);
 
-const text = 'lorem lorem lorem lorem lorem lorem lorem lorem lorem';
-export default class Article extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            data: [testArticle[0]],
-        };
-    }
-
-    render() {
-        const { data } = this.state;
+    if (!article) {
         return (
             <div className="articlepage">
-                <Collapse>
-                    <Panel header="This is panel header 1" key="1">
-                        <p>{text}</p>
-                    </Panel>
-                    <Panel header="This is panel header 2" key="2">
-                        <p>{text}</p>
-                    </Panel>
-                    <Panel header="This is panel header 3" key="3">
-                        <p>{text}</p>
-                    </Panel>
-                </Collapse>
-                {map(data, (item) => (
-                    <Fade>
-                        <h1 className="title">{item.name}</h1>
-                        <div className="articlepage-content">
-                            <div
-                            // eslint-disable-next-line react/no-danger
-                                dangerouslySetInnerHTML={{
-                                    __html: item.text,
-                                }}
-                            />
-                        </div>
-                    </Fade>
-                ))}
+                <h1 className="title">Матеріал не знайдено</h1>
+                <Fade>
+                    <div className="articlepage-content">
+                        <p>Сторінка, яку ви відкрили, недоступна або була видалена.</p>
+                        <p>Перейдіть до розділу FAQ або поверніться на головну.</p>
+                        <p>
+                            <Link to="/faq">Відкрити FAQ</Link>
+                        </p>
+                    </div>
+                </Fade>
             </div>
         );
     }
-}
+
+    return (
+        <div className="articlepage">
+            <Fade>
+                <h1 className="title">{article.name}</h1>
+                <div className="articlepage-content">
+                    <p>{`Дата публікації: ${article.data}`}</p>
+                    <p>{`Оновлено: ${article.dataUpdate}`}</p>
+                    <div
+                        // eslint-disable-next-line react/no-danger
+                        dangerouslySetInnerHTML={{ __html: article.text }}
+                    />
+                </div>
+            </Fade>
+        </div>
+    );
+};
+
+export default Article;
