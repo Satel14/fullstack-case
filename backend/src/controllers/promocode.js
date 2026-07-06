@@ -4,6 +4,7 @@ const BalanceHistoryService = require('../services/balanceHistory');
 const PromocodeService = require('../services/promocode');
 const MESSAGE = require('../constant/responseMessages');
 const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
+const sequelize = require('../config/db');
 
 module.exports.usePromocode = async (req, res) => {
     try {
@@ -16,11 +17,21 @@ module.exports.usePromocode = async (req, res) => {
         const { user_id } = req.user.profile;
         const code = req.body.promocode;
 
-        const { bonus, description } = await PromocodeService.usePromocode(code, user_id);
-        await UserService.incrementBalance(bonus, user_id);
-        await BalanceHistoryService.addBalanceChange(
-            user_id, BalanceHistoryEnum.PROMOCODE, bonus,
-        );
+        let bonus;
+        let description;
+        await sequelize.transaction(async (t) => {
+            const result = await PromocodeService.usePromocode(code, user_id, {
+                transaction: t,
+                lock: t.LOCK.UPDATE,
+            });
+            bonus = result.bonus;
+            description = result.description;
+
+            await UserService.incrementBalance(bonus, user_id, { transaction: t });
+            await BalanceHistoryService.addBalanceChange(
+                user_id, BalanceHistoryEnum.PROMOCODE, bonus, '', { transaction: t },
+            );
+        });
 
         const actualBalance = await UserService.getBalanceByUserId(user_id);
         return res.status(200).json({ status: 200, balance: actualBalance, message: `${MESSAGE.PROMOCODE.ADDED} ${bonus} ₽. Описание бонуса: ${description}` });
