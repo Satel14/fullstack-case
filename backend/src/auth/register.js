@@ -49,7 +49,7 @@ module.exports = (app) => {
         }).then((user) => user);
 
         const payload = { id: profile.dataValues.user_id }
-        const token = jwt.sign(payload, jwtOptions.secretOrKey)
+        const token = jwt.sign(payload, jwtOptions.secretOrKey, jwtOptions.signOptions)
         res.status(200).json({
             jwt: token,
             user: profile.dataValues,

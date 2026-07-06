@@ -40,7 +40,7 @@ module.exports = (app) => {
         }
 
         const payload = { id: user.user_id }
-        const token = jwt.sign(payload, jwtOptions.secretOrKey)
+        const token = jwt.sign(payload, jwtOptions.secretOrKey, jwtOptions.signOptions)
         res.status(200).json({
             message: 'ok',
             jwt: token,
