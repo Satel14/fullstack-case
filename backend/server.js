@@ -25,6 +25,8 @@ require('./src/models/module');
 require('./src/models/promocode');
 require('./src/models/storage');
 require('./src/models/user');
+require('./src/models/provablyFairSeed');
+require('./src/models/caseOpenRecord');
 
 const sequelize = require('./src/config/db');
 
