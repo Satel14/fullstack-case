@@ -34,7 +34,7 @@ module.exports.usePromocode = async (req, res) => {
         });
 
         const actualBalance = await UserService.getBalanceByUserId(user_id);
-        return res.status(200).json({ status: 200, balance: actualBalance, message: `${MESSAGE.PROMOCODE.ADDED} ${bonus} ₽. Описание бонуса: ${description}` });
+        return res.status(200).json({ status: 200, balance: actualBalance, message: `${MESSAGE.PROMOCODE.ADDED} ${bonus} ₴. Опис бонусу: ${description}` });
     } catch (e) {
         return res.status(200).json({ status: 200, message: e.message });
     }

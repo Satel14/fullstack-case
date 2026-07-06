@@ -63,12 +63,12 @@ class ItemOptions extends Component {
     color = color.replace(' ', '');
 
     const creditModule = this.props.modules && this.props.modules['uah-credit-rate'];
-    const creditToRub = creditModule ? creditModule.extraData : 1;
+    const creditToUah = creditModule ? creditModule.extraData : 1;
 
     let actualPrice = null;
     if (prices) {
       if (prices[color]) {
-        actualPrice = parseInt(prices[color] * creditToRub * 100, 10) / 100;
+        actualPrice = parseInt(prices[color] * creditToUah * 100, 10) / 100;
       }
     }
 
