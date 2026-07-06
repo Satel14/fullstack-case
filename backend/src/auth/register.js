@@ -40,7 +40,7 @@ module.exports = (app) => {
             updated_at: now,
         });
 
-        mailSender.userRegistered(email, { login, password });
+        mailSender.userRegistered(email, { login });
 
 
         const profile = await Users.findOne({
