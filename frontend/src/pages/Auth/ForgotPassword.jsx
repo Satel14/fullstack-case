@@ -1,6 +1,7 @@
 /* eslint-disable */
 import React, { useState } from 'react'
 import { Button, Modal, Form, Input } from "antd";
+import { useTranslation } from 'react-i18next';
 import { forgotPassword } from '../../api/all/user';
 import openNotification from '../../components/mini/openNotification';
 
@@ -8,13 +9,14 @@ import openNotification from '../../components/mini/openNotification';
 const CollectionCreateForm = ({
     visible, onCreate, onCancel,
 }) => {
+    const { t } = useTranslation();
     const [form] = Form.useForm();
     return (
         <Modal
             open={visible}
-            title="Нагадати пароль"
-            okText="Згадати"
-            cancelText="Закрити"
+            title={t('auth.forgot.modalTitle')}
+            okText={t('auth.forgot.ok')}
+            cancelText={t('auth.forgot.cancel')}
             onCancel={onCancel}
             onOk={() => {
                 form
@@ -36,15 +38,15 @@ const CollectionCreateForm = ({
             >
                 <Form.Item
                     name="email"
-                    label="Email"
+                    label={t('auth.forgot.emailLabel')}
                     rules={[
                         {
                             type: "email",
-                            message: "Це не почта",
+                            message: t('auth.forgot.emailInvalid'),
                         },
                         {
                             required: true,
-                            message: "Введіть почту"
+                            message: t('auth.forgot.emailRequired')
                         },
                     ]}
                 >
@@ -56,16 +58,17 @@ const CollectionCreateForm = ({
 }
 
 const ForgotPassword = () => {
+    const { t } = useTranslation();
     const [visible, setVisible] = useState(false);
 
     const onCreate = async (values) => {
         await forgotPassword(values.email).then((results) => {
             if(results.status === 'sended'){
-                openNotification('success', "Успішно", results.message)
+                openNotification('success', t('auth.forgot.successTitle'), results.message)
                 setVisible(false);
                 return;
             } else {
-                openNotification('error', 'Помилка', results.message)
+                openNotification('error', t('auth.forgot.errorTitle'), results.message)
             }
         });
     };
@@ -78,7 +81,7 @@ const ForgotPassword = () => {
                     setVisible(true)
                 }}
             >
-                Нагадати пароль
+                {t('auth.forgot.trigger')}
             </Button>
             <CollectionCreateForm
                 visible={visible}

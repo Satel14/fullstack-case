@@ -4,6 +4,7 @@ import map from 'lodash/map';
 import { getAllCases } from '../api/all/cases';
 import Loader from '../components/mini/Loader'
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
+import { withTranslation } from 'react-i18next';
 import H2A from '../components/mini/H2A';
 import CaseMini from '../components/mini/CaseMini';
 import Flip from 'react-reveal/Flip';
@@ -12,7 +13,7 @@ const filteredCases = (categoryId, cases) => cases.filter((item) => item.case_ca
 
 const splitTitle = (title, index) => title.split(' ')[index];
 
-export default class Cases extends Component {
+class Cases extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -200,6 +201,7 @@ export default class Cases extends Component {
 
     render() {
         const { fetching, categories, sortedCases, allCases, sortOptions } = this.state;
+        const { t } = this.props;
         return (
             <div className="casepage">
                 {fetching ? (
@@ -208,7 +210,7 @@ export default class Cases extends Component {
                     <>
                         <div className="casespage sortblock">
                             <Input
-                                placeholder="Назва кейсу"
+                                placeholder={t('cases.searchPlaceholder')}
                                 prefix={<SearchOutlined/>}
                                 onChange={(e) => this.onChangeText(e)}
                             />
@@ -251,7 +253,7 @@ export default class Cases extends Component {
                                 onChange={(e) => this.onChangeCheckbox(e)}
                                 checked={sortOptions.discount}
                             >
-                                Тільки зі знижкою
+                                {t('cases.onlyDiscount')}
                             </Checkbox>
                             {sortOptions.resetButton && (
                                 <Button
@@ -260,14 +262,14 @@ export default class Cases extends Component {
                                 className="color-red"
                                 onClick={() => this.setInitialSortOptions()}
                                 >
-                                    Скинути
+                                    {t('cases.reset')}
                                 </Button>
                             )}
                         </div>
 
                         {sortedCases ? (
                             <>
-                            <H2A title="Знайдено" subTitle="Кейси" />
+                            <H2A title={t('cases.foundTitle')} subTitle={t('cases.casesWord')} />
                                 <div className="caselist">
                                     {map(sortedCases, (item, index) => (
                                         <div style={{ position: 'relative' }} key={`caselist-sorted-${item.case_id}-${index}`}>
@@ -301,7 +303,7 @@ export default class Cases extends Component {
                                     </>
                                 ) : allCases.length > 0 ? (
                                     <>
-                                        <H2A title="Всі" subTitle="Кейси" />
+                                        <H2A title={t('cases.allTitle')} subTitle={t('cases.casesWord')} />
                                         <div className="caselist">
                                             {map(allCases, (item, i) => (
                                                 <Flip bottom delay={i * 30} key={`caselist-all-${item.case_id}`}>
@@ -320,28 +322,4 @@ export default class Cases extends Component {
     }
 }
 
-
-// <div className="casepage-openbutton">
-//     <OpenCase case={caseCollection} />
-// </div>
-// <span className="casepage-title-second">
-//                     Вміст кейсу
-//     {' '}
-//     <i>Кількість відкритих: 55</i>
-//                 </span>
-// <div className="casepage-itemlist">
-//     {map(caseCollection.items, (item, i) => (
-//         <Fade delay={i * 50}>
-//             <Tooltip placement="bottom">
-//                 <div
-//                     className="casepage-itemlist_item"
-//                     style={{
-//                         backgroundImage: `url(${item.img})`,
-//                     }}
-//                 >
-//                     <span>{item.name}</span>
-//                 </div>
-//             </Tooltip>
-//         </Fade>
-//     ))}
-// </div>
+export default withTranslation()(Cases);

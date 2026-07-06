@@ -1,4 +1,4 @@
-import { post, get } from '../fetch';
+import { post, get, put } from '../fetch';
 
 const getProfileStorage = (fields) => post('/profile/storage', {
     ...fields,
@@ -14,9 +14,9 @@ const getStorageItemsCountByUserId = (id) => get(`/storage/count/${id}`);
 
 const getFavoriteCaseByUserId = (id) => get(`/storage/favorite/${id}`);
 
-const sellItemByStorageId = (storageId) => get(`/storage/sell/${storageId}`);
+const sellItemByStorageId = (storageId) => put(`/storage/sell/${storageId}`, {});
 
-const receiveItemByStorageId = (storageId) => get(`/storage/receive/${storageId}`);
+const receiveItemByStorageId = (storageId) => put(`/storage/receive/${storageId}`, {});
 
 const getStorageTop = (limit, offset) => get(`/storage/top/${limit}/${offset}`);
 

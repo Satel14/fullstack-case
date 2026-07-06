@@ -3,6 +3,7 @@ import { Layout, Popover, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
 import map from 'lodash/map';
 import { connect } from 'react-redux';
+import { withTranslation } from 'react-i18next';
 import { renderItemProp } from '../helpers/Case';
 import ItemColor from './mini/ItemColor';
 import { getStorageLastItemsWithUserInfo } from '../api/all/storage';
@@ -65,7 +66,6 @@ class HeaderThird extends React.Component {
                     caseList: result.caseList || {},
                 });
 
-                // Pre-fetch item info for each item in the list
                 if (result.data) {
                     for (const item of result.data) {
                         this.props.fetchItemInfo(item.storage_itemId);
@@ -130,6 +130,7 @@ class HeaderThird extends React.Component {
                                 title={renderItemProp(
                                     this.getShortInfoItem(item.storage_itemId, null),
                                     item.storage_color,
+                                    this.props.t,
                                 )}>
                                 <Link to={`/profile/${item.storage_userId}`}>
                                     <div
@@ -151,4 +152,4 @@ class HeaderThird extends React.Component {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(HeaderThird);
+export default connect(mapStateToProps, mapDispatchToProps)(withTranslation()(HeaderThird));

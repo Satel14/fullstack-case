@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { message, Button, Popover } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { CommentOutlined, SendOutlined, SmileOutlined } from '@ant-design/icons';
 import UserOnline from './UserOnline';
 import roles from '../../enum/role';
@@ -59,6 +60,7 @@ const MessageBlock = ({ message, id, nickname }) => (
 );
 
 const Chat = ({ user, enabled }) => {
+    const { t } = useTranslation();
     const { id, avatar, role, login } = user;
     const [usersOnline, setUsersOnline] = useState([]);
     const [chat, setChat] = useState([]);
@@ -138,14 +140,14 @@ const Chat = ({ user, enabled }) => {
         e.preventDefault();
 
         if (!id || !login) {
-            message.error("Ви не авторизовані")
+            message.error(t('chat.notAuthorized'))
             return;
         }
 
         const checkMsg = msg.replace(/\s/g, "");
 
         if (msg === "" || checkMsg.length === 0) {
-            message.error("Напишіть повідомлення");
+            message.error(t('chat.writeMessage'));
             return;
         }
 
@@ -185,7 +187,7 @@ const Chat = ({ user, enabled }) => {
                     <CommentOutlined />
                 </div>
                 <div className="chat-header_name">
-                    Онлайн чат
+                    {t('chat.title')}
                     <div className="chat-header_name__online">
                         <i className="blink" />
                         {usersOnline !== null ? usersOnline.length : "0"}
@@ -203,12 +205,12 @@ const Chat = ({ user, enabled }) => {
                                                 <UserOnline nickname={el} />
                                             </div>
                                         ))
-                                        : 'Немає користувачів'}
+                                        : t('chat.noUsers')}
                                 </div>
                             }
                             trigger="click"
                         >
-                            <Button className="color-white small">Хто в чаті</Button>
+                            <Button className="color-white small">{t('chat.whoIsHere')}</Button>
                         </Popover>
                     </div>
                     <div className="chat-header_sub_rules">
@@ -221,7 +223,7 @@ const Chat = ({ user, enabled }) => {
                         className="color-grey small"
                         onClick={() => window.Layout.onCollapseChat(true)}
                     >
-                        Приховати
+                        {t('chat.hide')}
                     </Button>
                 </div>
             </div>
@@ -229,7 +231,6 @@ const Chat = ({ user, enabled }) => {
                 <ul className="chat-messages-list">
                     {chat.map((el, index) => (
                         <li key={"chat" + index} className="chat-messages-list_item">
-                            {/* <ProfileAvatar id={el.id} avatar={el.avatar} unix={el.time} /> */}
                             <MessageBlock nickname={el.login} id={el.id} message={el.msg} />
                         </li>
                     ))}
@@ -247,8 +248,6 @@ const Chat = ({ user, enabled }) => {
                                     onChange={(e) => {
                                         setMsg(e.target.value);
                                     }}
-                                // disabled
-                                // value={"виключено чат"}
                                 />
                                 <Popover
                                     placement="topLeft"
@@ -284,7 +283,6 @@ const Chat = ({ user, enabled }) => {
                                     className="color-skyblue"
                                     onClick={(e) => submitMsg(e)}
                                     disabled={!login}
-                                // disabled={true}
                                 >
                                     <SendOutlined />
                                 </Button>
@@ -298,7 +296,7 @@ const Chat = ({ user, enabled }) => {
                                     height: "110px",
                                 }}
                             >
-                                Вас заблоковано в чаті
+                                {t('chat.banned')}
                             </div>
                         )}
                     </>

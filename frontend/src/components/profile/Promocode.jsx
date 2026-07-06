@@ -3,6 +3,7 @@ import {
  Form, Input, Button, Tooltip, Card,
 } from 'antd';
 import { connect } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { usePromocodeFetch } from '../../store/actions/user';
 import openNotification from '../mini/openNotification';
 
@@ -11,6 +12,7 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 const Promocode = (props) => {
+  const { t } = useTranslation();
   const onFinish = (values) => {
     // eslint-disable-next-line promise/catch-or-return
     props
@@ -20,24 +22,24 @@ const Promocode = (props) => {
       .then((data) => {
         // eslint-disable-next-line promise/always-return
         if (!data.balance) {
-          openNotification('error', 'Помилка', data.message);
+          openNotification('error', t('promocode.errorTitle'), data.message);
           return;
         }
-        openNotification('success', 'Промокод активовано', data.message);
+        openNotification('success', t('promocode.successTitle'), data.message);
       });
   };
 
   return (
     <Card
       type="inner"
-      title="Використати промокод"
+      title={t('promocode.cardTitle')}
       className="blockstyle-first"
       extra={(
         <Tooltip
           placement="top"
-          title="Беріть участь у роздачах від стрімерів або в групі CasesUA"
+          title={t('promocode.tooltip')}
         >
-          <span style={{ color: '#fff' }}>Де взяти?</span>
+          <span style={{ color: '#fff' }}>{t('promocode.whereToGet')}</span>
         </Tooltip>
       )}
     >
@@ -49,13 +51,13 @@ const Promocode = (props) => {
       >
         <Form.Item
           name="promocode"
-          rules={[{ required: true, message: 'Введіть промокод!' }]}
+          rules={[{ required: true, message: t('promocode.required') }]}
         >
-          <Input placeholder="Введіть код" style={{ minWidth: '200px' }} />
+          <Input placeholder={t('promocode.placeholder')} style={{ minWidth: '200px' }} />
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" className="color-green">
-            Відправити
+            {t('promocode.submit')}
           </Button>
         </Form.Item>
       </Form>

@@ -136,10 +136,32 @@ module.exports = class OpenCase {
 
         let collectionRareItems = this.case.ITEMS.filter((item) => item.rare === rariest);
         if (collectionRareItems.length === 0) {
-            // Fallback: If no items match the rolled rarity, pick any random item from this case
-            collectionRareItems = this.case.ITEMS;
+            const fallbackRare = this.getMostCommonRareWithItems();
+            console.warn(`[caseOpen] No items for rarity "${rariest}" in case "${this.case && this.case.id}"; falling back to "${fallbackRare}"`);
+            collectionRareItems = this.case.ITEMS.filter((item) => item.rare === fallbackRare);
+            if (collectionRareItems.length === 0) {
+                collectionRareItems = this.case.ITEMS;
+            }
         }
         return collectionRareItems[this.randomArrayIndex(collectionRareItems)];
+    }
+
+    getMostCommonRareWithItems() {
+        const chances = this.case.CHANCES;
+        const raresWithItems = new Set(this.case.ITEMS.map((item) => item.rare));
+
+        let best = null;
+        let bestWeight = -Infinity;
+        for (const key in chances) {
+            if (key === 'COLORS' || !raresWithItems.has(key)) {
+                continue;
+            }
+            if (chances[key] > bestWeight) {
+                bestWeight = chances[key];
+                best = key;
+            }
+        }
+        return best;
     }
 
     loadRaryTypes() {
@@ -192,7 +214,6 @@ module.exports = class OpenCase {
             return item.colors[0];
         }
 
-        // item config case
         let itemColors = JSON.parse(
             JSON.parse(this.allItems[item.id.toString()]).pricesInCredits
         );

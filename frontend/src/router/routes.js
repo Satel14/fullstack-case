@@ -10,6 +10,7 @@ import Registration from '../pages/Auth/Registration.jsx';
 import Promocode from '../pages/Promocode';
 import Profile from '../pages/Profile';
 import Deposit from '../pages/Deposit';
+import PaymentGateway from '../pages/PaymentGateway';
 import Settings from '../pages/Settings.jsx';
 import Top from '../pages/Top';
 import Faq from '../pages/Faq';
@@ -20,21 +21,24 @@ export default {
             path: '/settings',
             exact: true,
             layout: Layout,
-            breadcrumb: 'Промокоди',
             component: Promocode,
         },
         {
             path: '/deposit',
             exact: true,
             layout: Layout,
-            breadcrumb: 'Поповнити рахунок',
             component: Deposit,
+        },
+        {
+            path: '/payment',
+            exact: true,
+            layout: Layout,
+            component: PaymentGateway,
         },
         {
             path: '/Settings',
             exact: true,
             layout: Layout,
-            breadcrumb: 'Налаштування',
             component: Settings,
         },
     ],
@@ -43,81 +47,69 @@ export default {
             path: '/',
             layout: Layout,
             component: Cases,
-            breadcrumb: 'Головна',
             exact: true,
         },
         {
             path: '/login',
             layout: Layout,
             component: Login,
-            breadcrumb: 'Авторизація',
             exact: true,
         },
         {
             path: '/registration',
             layout: Layout,
             component: Registration,
-            breadcrumb: 'Registration',
             exact: true,
         },
         {
             path: '/404',
             layout: Layout,
             component: ErrorPage,
-            breadcrumb: 'Сторінка не знайдена',
             exact: true,
         },
         {
             path: '/article/:id',
             layout: Layout,
-            breadcrumb: 'Стаття',
             component: Article,
         },
         {
             path: '/article',
             exact: true,
             layout: Layout,
-            breadcrumb: 'Кейси',
             component: () => <Redirect to="/404"/>,
         },
         {
             path: '/case/:id',
             layout: Layout,
-            breadcrumb: 'Кейс',
             component: Case,
         },
         {
             path: '/case',
             exact: true,
             layout: Layout,
-            breadcrumb: 'Кейси',
             component: () => <Redirect to="/"/>,
         },
         {
             path: '/profile/:id',
             layout: Layout,
-            breadcrumb: 'Профіль',
             component: Profile,
         },
         {
             path: '/profile',
             exact: true,
             layout: Layout,
-            breadcrumb: 'Профіль',
             component: () => <Redirect to="/404"/>,
         },
         {
             path: '/top',
             exact: true,
             layout: Layout,
-            breadcrumb: 'ТОП 50 гравців',
             component: Top,
         },
         {
             path: '/faq',
             exact: true,
             layout: Layout,
-            breadcrumb: 'FAQ',
             component: Faq,
         },
     ],

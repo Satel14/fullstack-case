@@ -5,10 +5,8 @@ const allColors = [
     ITEMS.COLORS.PAINTED,
 ];
 
-// Available item IDs from database (from bomj case - only IDs that exist)
 const availableItemIds = [74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89];
 
-// Default case configuration template
 const createDefaultCase = (seed = 0, count = 12) => {
     const items = [];
     const rarities = [
@@ -20,7 +18,6 @@ const createDefaultCase = (seed = 0, count = 12) => {
     ];
 
     for (let i = 0; i < count; i++) {
-        // Use available IDs cyclically
         const itemIdIndex = (seed + i) % availableItemIds.length;
         items.push({
             id: availableItemIds[itemIdIndex],

@@ -50,7 +50,6 @@ class RouterLayout extends Component {
     render() {
 
         const { user } = this.props;
-        console.log(user);
         if (isAuthorized(user)) {
             if (roles.BANNED === user.role) {
                 return <Banned/>;
@@ -65,7 +64,6 @@ class RouterLayout extends Component {
                                 key={`public-${route.path}`}
                                 path={route.path}
                                 exact={route.exact}
-                                breadcrumb={route.breadcrumb}
                                 component={(props) => (
                                     // eslint-disable-next-line react/jsx-props-no-spreading
                                     <route.component {...props} />

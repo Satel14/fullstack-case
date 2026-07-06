@@ -18,11 +18,14 @@ module.exports.getCaseById = async (id) => {
     }
 }
 
-module.exports.addUsedCount = async (id) => {
+module.exports.addUsedCount = async (id, options = {}) => {
     try {
-        await Case.increment('case_openedCount', {where : {
-            case_id: id
-            }})
+        await Case.increment('case_openedCount', {
+            where: {
+                case_id: id
+            },
+            ...options,
+        })
         return;
     } catch (e) {
         throw Error(e.message)

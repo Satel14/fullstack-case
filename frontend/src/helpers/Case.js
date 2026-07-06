@@ -1,12 +1,19 @@
 import { itemColors } from '../data/itemConfig';
 
-const renderItemProp = (item, color = null) => {
-    let name; let type; let rare; let
-        painted;
-
+const renderItemProp = (item, color = null, t = null) => {
     if (!item) {
         return '';
     }
+
+    const L = t
+        ? {
+            name: t('item.name'), type: t('item.type'), rarity: t('item.rarity'), color: t('item.color'),
+        }
+        : {
+            name: 'Назва', type: 'Тип', rarity: 'Рідкість', color: 'Колір',
+        };
+
+    let name; let type; let rare; let painted;
 
     if (item.name) {
         name = item.name;
@@ -22,48 +29,15 @@ const renderItemProp = (item, color = null) => {
         painted = item.item_colors;
     }
 
-    if (item.item_name) {
-        name = item.item_name;
-        type = item.item_type;
-        rare = item.item_rare;
-        painted = item.item_colors;
-    }
-
     if (painted !== '[]') {
-        return (
-            `Название: ${
-                name
-            }, Тип: ${
-                type
-            }, Рарность: ${
-                rare
-            }, Цвет: ${
-                painted}`
-        );
+        return `${L.name}: ${name}, ${L.type}: ${type}, ${L.rarity}: ${rare}, ${L.color}: ${painted}`;
     }
 
     if (color) {
-        return (
-            `Название: ${
-                name
-            }, Тип: ${
-                type
-            }, Рарность: ${
-                rare
-            }, Цвет: ${
-                color}`
-        );
+        return `${L.name}: ${name}, ${L.type}: ${type}, ${L.rarity}: ${rare}, ${L.color}: ${color}`;
     }
 
-    return (
-        `Название: ${
-            name
-        }, Тип: ${
-            type
-        }, Рарность: ${
-            rare
-        }`
-    );
+    return `${L.name}: ${name}, ${L.type}: ${type}, ${L.rarity}: ${rare}`;
 };
 const getColor = (paint) => {
     let color;

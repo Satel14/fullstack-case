@@ -1,0 +1,322 @@
+{
+    "common": {
+        "language": "Language",
+        "whatIsThis": "What is this?",
+        "error": "Error",
+        "serverError": "A server error occurred",
+        "discount": "Discount",
+        "case": "Case"
+    },
+    "item": {
+        "name": "Name",
+        "type": "Type",
+        "rarity": "Rarity",
+        "color": "Color"
+    },
+    "menu": {
+        "cases": "Cases",
+        "topPlayers": "Top players",
+        "bonus": "Bonuses",
+        "faq": "FAQ",
+        "moreMoney": "More money",
+        "login": "Log in"
+    },
+    "header": {
+        "deposit": "Top up",
+        "chat": "Chat",
+        "profile": "My profile",
+        "depositAccount": "Top up balance",
+        "settings": "Settings",
+        "promocode": "Enter promocode",
+        "logout": "Log out",
+        "stats": {
+            "openedCases": "Cases opened",
+            "users": "Users",
+            "withdrawnItems": "Items withdrawn",
+            "online": "Online"
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "Authorization",
+            "loginLabel": "Login",
+            "loginRequired": "Enter your login!",
+            "minChars": "Minimum 6 characters",
+            "passwordLabel": "Password",
+            "passwordRequired": "Enter your password!",
+            "usernamePlaceholder": "Username",
+            "passwordPlaceholder": "password",
+            "remember": "Remember me",
+            "submit": "Log in",
+            "or": "or",
+            "registerLink": "Sign up",
+            "errorTitle": "Error",
+            "errorWrong": "Invalid credentials",
+            "successTitle": "Signed in",
+            "welcome": "Welcome to the site, {{name}}!"
+        },
+        "register": {
+            "title": "Registration",
+            "loginLabel": "Login",
+            "loginRequired": "Choose a login",
+            "passwordLabel": "Password",
+            "passwordRequired": "Choose a password",
+            "confirmLabel": "Confirm password",
+            "confirmRequired": "Repeat the password",
+            "confirmMismatch": "Passwords do not match",
+            "emailLabel": "E-mail",
+            "emailInvalid": "Invalid email",
+            "emailRequired": "Enter your email",
+            "chooseAvatar": "Choose an avatar",
+            "agreementRequired": "Check the box",
+            "agreementPre": "I agree with",
+            "agreementLink": "the site rules",
+            "submit": "Sign up",
+            "errorTitle": "Error",
+            "successTitle": "Signed in",
+            "welcome": "Welcome to the site, {{name}}!"
+        },
+        "forgot": {
+            "trigger": "Forgot password",
+            "modalTitle": "Recover password",
+            "ok": "Recover",
+            "cancel": "Close",
+            "emailLabel": "Email",
+            "emailInvalid": "Invalid email",
+            "emailRequired": "Enter your email",
+            "successTitle": "Success",
+            "errorTitle": "Error"
+        }
+    },
+    "error": {
+        "notFound": "Page not found"
+    },
+    "banned": {
+        "message": "This account is banned on the site!",
+        "logout": "Log out of account"
+    },
+    "faq": {
+        "title": "FAQ",
+        "subtitle": "questions and answers",
+        "q1": {
+            "question": "How do I start using the site?",
+            "answer": "Click \"Log in\", sign in and return to the home page. After signing in, your profile, deposit and case opening become available."
+        },
+        "q2": {
+            "question": "How do I top up my balance?",
+            "answer": "Go to the \"Top up\" page and choose an amount. If the payment is not credited within an hour, contact support."
+        },
+        "q3": {
+            "question": "What if an item didn't appear in my inventory?",
+            "answer": "Refresh the page and check your inventory history. If the problem persists, write to support with your ID and the time you opened the case."
+        },
+        "q4": {
+            "question": "How do I contact support?",
+            "answer": "Write to us at {{email}}. Include the details of the problem: login, time of the event and, if possible, a screenshot."
+        },
+        "q5": {
+            "question": "Can I use promocodes?",
+            "answer": "Yes, promocodes can be entered in the profile settings. After activation the bonus is credited automatically."
+        }
+    },
+    "deposit": {
+        "title": "Top up",
+        "subtitle": "balance",
+        "tabTopUp": "Top up",
+        "tabHistory": "Top-up history",
+        "amountLabel": "ENTER AMOUNT (UAH)",
+        "submit": "Top up balance",
+        "info": "To top up your balance you will be redirected to the payment system's site. The balance is credited instantly, but if that doesn't happen within an hour, email us at {{email}} with the detailed payment information.",
+        "promocodeBtn": "Use a promocode to top up",
+        "historyEmpty": "No top-ups yet.",
+        "invalidTitle": "Invalid amount",
+        "invalidText": "Enter a whole number from {{min}} to {{max}} UAH.",
+        "historyAmount": "+{{amount}} UAH"
+    },
+    "payment": {
+        "title": "Payment",
+        "subtitle": "payment system",
+        "amount": "Payment of {{amount}} UAH",
+        "note": "This is a demo payment page. No real money is charged.",
+        "pay": "Pay",
+        "cancel": "Cancel",
+        "successTitle": "Payment successful",
+        "successText": "Balance topped up by {{amount}} UAH.",
+        "errorTitle": "Error",
+        "errorText": "Failed to top up the balance.",
+        "cancelTitle": "Payment cancelled",
+        "cancelText": "No money was charged."
+    },
+    "settings": {
+        "title": "Profile settings",
+        "login": "Login",
+        "email": "Email",
+        "balance": "Balance",
+        "topUp": "Top up",
+        "resetLabel": "Reset profile",
+        "resetBtn": "Reset",
+        "changeAvatar": "Change avatar",
+        "inventoryHistory": "Inventory history"
+    },
+    "profile": {
+        "title": "Profile",
+        "favoriteCase": "Favorite case",
+        "noCase": "No case selected",
+        "openedCases": "Cases opened",
+        "uniqueCases": "Unique cases",
+        "bestDrop": "Best drop",
+        "noDrop": "No drop yet",
+        "player": "Player",
+        "noHistory": "This user has no opening history yet.",
+        "roles": {
+            "youtuber": "YouTuber",
+            "streamer": "Streamer",
+            "admin": "Administrator",
+            "banned": "Banned",
+            "chatBanned": "Chat banned",
+            "user": "User"
+        }
+    },
+    "promocode": {
+        "pageTitle": "Promocodes",
+        "cardTitle": "Use a promocode",
+        "tooltip": "Take part in giveaways from streamers or in the CasesUA group",
+        "whereToGet": "Where to get?",
+        "required": "Enter a promocode!",
+        "placeholder": "Enter the code",
+        "submit": "Send",
+        "errorTitle": "Error",
+        "successTitle": "Promocode activated",
+        "failed": "Failed to activate the promocode"
+    },
+    "receiveInfo": {
+        "cardTitle": "Item withdrawal information",
+        "tooltip": "Leave a link to your Steam or EpicID and a convenient time. This information will be sent to traders.",
+        "placeholder": "Enter your Steam or EpicId",
+        "save": "Save",
+        "emptyError": "Don't leave the field empty",
+        "errorTitle": "Error",
+        "savedTitle": "Saved"
+    },
+    "sendMoney": {
+        "modalTitle": "Send money to {{nickname}}",
+        "transfer": "Transfer",
+        "close": "Close",
+        "amountLabel": "Amount",
+        "amountRequired": "Enter the amount!",
+        "trigger": "Send money",
+        "successTitle": "Money sent",
+        "failTitle": "Failed"
+    },
+    "cases": {
+        "searchPlaceholder": "Case name",
+        "onlyDiscount": "Discounts only",
+        "reset": "Reset",
+        "foundTitle": "Found",
+        "casesWord": "Cases",
+        "allTitle": "All"
+    },
+    "top": {
+        "heading": "TOP 50 PLAYERS",
+        "nickname": "Nickname",
+        "openedCases": "Cases opened",
+        "registered": "Registered",
+        "empty": "No ranking data yet.",
+        "loadMore": "LOAD MORE",
+        "playerFallback": "Player #{{n}}"
+    },
+    "rules": {
+        "trigger": "Rules",
+        "title": "CHAT RULES",
+        "close": "Close",
+        "r1": "Using a name or links leading to a third-party site in your nickname is forbidden.",
+        "r2": "Advertising Youtube / Twitch / Discord channels is forbidden.",
+        "r3": "Insulting other chat / site participants is forbidden.",
+        "r4": "Mentioning payment details for the purpose of begging is forbidden.",
+        "r5": "Distributing URL links and promo codes is forbidden (except Administration and Moderators).",
+        "r6": "Spamming the chat with one-character messages is forbidden.",
+        "r7": "Every site/chat participant must treat all participants with respect, without exception."
+    },
+    "case": {
+        "contents": "Case contents",
+        "openedCount": "Times opened:"
+    },
+    "inventory": {
+        "item": "Item",
+        "name": "Name",
+        "statusCol": "Status",
+        "time": "Time",
+        "now": "Now",
+        "loadMore": "Load more",
+        "status": {
+            "inventory": "In inventory",
+            "received": "Item withdrawn",
+            "waitingtrade": "Withdrawal pending",
+            "money": "Exchanged for money"
+        }
+    },
+    "chat": {
+        "title": "Online chat",
+        "whoIsHere": "Who's here",
+        "noUsers": "No users",
+        "hide": "Hide",
+        "banned": "You are banned from the chat",
+        "notAuthorized": "You are not authorized",
+        "writeMessage": "Write a message"
+    },
+    "openCase": {
+        "open": "Open",
+        "openBlocks": "Open by blocks",
+        "fast": "Fast",
+        "opening": "Opening",
+        "caseFallback": "Case",
+        "tryAgain": "Try again",
+        "goBack": "Go back",
+        "sellFor": "Sell for {{price}} cred.",
+        "sellAllFor": "Sell all for {{sum}} cred.",
+        "sold": "Item sold",
+        "allSold": "All items sold",
+        "sellErrorTitle": "Sell error",
+        "sellErrorText": "Failed to sell the item",
+        "limitReached": "This case has reached its opening limit. It can no longer be opened!",
+        "limitExceededTitle": "Limit exceeded",
+        "limitExceededText": "You can open only {{remaining}} more",
+        "authOrFunds": "You are not authorized or have insufficient funds",
+        "authRequired": "To open a case you need to sign in",
+        "authorize": "Sign in"
+    },
+    "footer": {
+        "about": "Open CS2/CS:GO cases on transparent terms with an action history in your profile.",
+        "recaptcha": "This site is protected by reCAPTCHA; Google's Privacy Policy and Terms of Service also apply.",
+        "agreement": "User Agreement",
+        "rules": "Service Rules",
+        "reviews": "User Reviews"
+    },
+    "article": {
+        "loading": "Article",
+        "notFound": "Article not found",
+        "notFoundText": "The page you opened is unavailable or has been deleted.",
+        "goFaq": "Go to the FAQ or return to the home page.",
+        "openFaq": "Open FAQ",
+        "published": "Published",
+        "updated": "Updated"
+    },
+    "itemOptions": {
+        "needTradeInfo": "Specify your Steam or Epic details in profile settings.",
+        "withdrawRequested": "Withdrawal requested",
+        "withdrawText": "A trader will add you within 24 hours and hand over the item.",
+        "pick": "Select an item to interact with",
+        "sellFor": "Sell for",
+        "withdraw": "Withdraw item"
+    },
+    "time": {
+        "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+        "someday": "a long time ago",
+        "ago": "{{value}} ago",
+        "days_one": "{{count}} day",
+        "days_other": "{{count}} days",
+        "hours_one": "{{count}} hour",
+        "hours_other": "{{count}} hours",
+        "minutes": "{{count}} min"
+    }
+}

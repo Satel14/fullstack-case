@@ -3,13 +3,13 @@ import { Tooltip, Button } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import map from 'lodash/map';
 import { connect } from 'react-redux';
+import { withTranslation } from 'react-i18next';
 import Loader from '../mini/Loader';
 import { itemInfoFetch } from '../../store/actions/itemCache';
 import { renderItemProp } from '../../helpers/Case';
 import { timeLeft } from '../../helpers/Time';
 import ItemColor from '../mini/ItemColor';
 import { getStorageLastItemsByUserId } from '../../api/all/storage';
-import { inventoryStatus } from '../../data/inventory';
 
 const mapStateToProps = (state) => ({
   itemCache: state.itemCache,
@@ -113,6 +113,7 @@ class InventoryHistory extends React.Component {
 
   render() {
     const { fetching, openCaseHistory, loadMoreButton } = this.state;
+    const { t } = this.props;
     return (
       <div className="profilepage">
         {fetching ? (
@@ -123,10 +124,10 @@ class InventoryHistory extends React.Component {
               <table>
                 <thead>
                   <tr>
-                    <th>Предмет</th>
-                    <th>Назва</th>
-                    <th>Статус</th>
-                    <th>Час</th>
+                    <th>{t('inventory.item')}</th>
+                    <th>{t('inventory.name')}</th>
+                    <th>{t('inventory.statusCol')}</th>
+                    <th>{t('inventory.time')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -138,6 +139,7 @@ class InventoryHistory extends React.Component {
                             title={renderItemProp(
                               this.getShortInfoItem(item.storage_itemId, null),
                               item.storage_color,
+                              this.props.t,
                             )}
                           >
                             <div
@@ -176,13 +178,13 @@ class InventoryHistory extends React.Component {
                           </div>
                         </td>
 
-                        <td>{inventoryStatus[item.storage_status]}</td>
+                        <td>{t(`inventory.status.${item.storage_status}`)}</td>
 
                         <td>
                           {timeLeft(item.created_at) ? (
                             <>{timeLeft(item.created_at)}</>
                           ) : (
-                            <>Зараз</>
+                            <>{t('inventory.now')}</>
                           )}
                         </td>
                       </tr>
@@ -199,7 +201,7 @@ class InventoryHistory extends React.Component {
                   className="color-green"
                   onClick={() => this.loadMore()}
                 >
-                  Завантажити ще
+                  {t('inventory.loadMore')}
                 </Button>
               </div>
             )}
@@ -210,4 +212,4 @@ class InventoryHistory extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(InventoryHistory);
+export default connect(mapStateToProps, mapDispatchToProps)(withTranslation()(InventoryHistory));

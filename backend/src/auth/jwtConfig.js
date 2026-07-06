@@ -3,5 +3,5 @@ require('dotenv').config()
 
 module.exports = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: 'JnPpTgWWFY0ITKkhHg4STU4oUawN1gMv',
+    secretOrKey: process.env.JWT_SECRET || 'insecure-dev-secret-set-JWT_SECRET-in-env',
 };

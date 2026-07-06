@@ -99,17 +99,7 @@ export const updateBalance = (balance) => async (dispatch) => {
 };
 
 
-// export const saveUserSettings = (params, updateData) => async (dispatch, getState) => {
-//     const { user } = getState();
-//     const copy = { ...user.user };
-//     copy[param] = updateData;
-//
-//     dispatchEvent({ type: UPDATE_USER_SETTINGS, payload: copy });
-// };
 
-// export const addUserFromLayout = (user) => async (dispatch) => {
-//     dispatch({ type: ADD_USER, payload: user[0] });
-// };
 
 export const updateProfileField = (fieldReduxName, fieldData) => (dispatch) => {
     // eslint-disable-next-line promise/catch-or-return

@@ -7,6 +7,7 @@ import {
     Card,
 } from 'antd';
 import { connect } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { usePromocodeFetch } from '../store/actions/user';
 import openNotification from '../components/mini/openNotification';
 
@@ -15,6 +16,7 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 const Promocode = (props) => {
+    const { t } = useTranslation();
     const onFinish = (values) => {
         props
             .usePromocodeFetch({
@@ -22,29 +24,29 @@ const Promocode = (props) => {
             })
             .then((data) => {
                 if (!data.balance) {
-                    openNotification('error', 'Помилка', data.message);
+                    openNotification('error', t('promocode.errorTitle'), data.message);
                     return;
                 }
-                openNotification('success', 'Промокод активовано', data.message);
+                openNotification('success', t('promocode.successTitle'), data.message);
             })
             .catch(() => {
-                openNotification('error', 'Помилка', 'Не вдалося активувати промокод');
+                openNotification('error', t('promocode.errorTitle'), t('promocode.failed'));
             });
     };
 
     return (
         <div className="promocodepage">
-            <h1 className="title">Промокоди</h1>
+            <h1 className="title">{t('promocode.pageTitle')}</h1>
             <Card
                 type="inner"
-                title="Використати промокод"
+                title={t('promocode.cardTitle')}
                 className="blockstyle-first"
                 extra={(
                     <Tooltip
                         placement="top"
-                        title="Беріть участь у роздачах від стрімерів або в групі CasesUA"
+                        title={t('promocode.tooltip')}
                     >
-                        <a href="#">Де взяти?</a>
+                        <a href="#">{t('promocode.whereToGet')}</a>
                     </Tooltip>
                 )}
             >
@@ -56,14 +58,14 @@ const Promocode = (props) => {
                 >
                     <Form.Item
                         name="promocode"
-                        rules={[{ required: true, message: 'Введіть промокод!' }]}
+                        rules={[{ required: true, message: t('promocode.required') }]}
                         style={{ flex: 1 }}
                     >
-                        <Input placeholder="Введіть код" style={{ minWidth: '200px' }} />
+                        <Input placeholder={t('promocode.placeholder')} style={{ minWidth: '200px' }} />
                     </Form.Item>
                     <Form.Item>
                         <Button type="primary" htmlType="submit" className="color-green">
-                            Відправити
+                            {t('promocode.submit')}
                         </Button>
                     </Form.Item>
                 </Form>

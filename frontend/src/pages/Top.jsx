@@ -3,6 +3,7 @@ import { Button } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { withTranslation } from 'react-i18next';
 import { timeConverterDDMMYY } from '../helpers/Time';
 import Loader from '../components/mini/Loader';
 import { getStorageTop } from '../api/all/storage';
@@ -92,13 +93,13 @@ class Top extends Component {
 
     renderRows() {
         const { items } = this.state;
-        const { user } = this.props;
+        const { user, t } = this.props;
 
         return items.map((item, index) => {
             const playerInfo = item?.info || {};
             const playerId = Number(playerInfo.user_id || 0);
             const avatarId = Number(playerInfo.user_avatar || 1);
-            const playerName = playerInfo.user_login || `Гравець #${index + 1}`;
+            const playerName = playerInfo.user_login || t('top.playerFallback', { n: index + 1 });
             const registeredAt = playerInfo.created_at ? timeConverterDDMMYY(playerInfo.created_at) : '-';
             const count = Number(item?.count || 0);
             const isCurrentUser = Number(user?.id) === playerId;
@@ -137,6 +138,7 @@ class Top extends Component {
         const {
             items, fetching, loadMoreButton, loadingMore,
         } = this.state;
+        const { t } = this.props;
 
         return (
             <div className="toppage">
@@ -146,7 +148,7 @@ class Top extends Component {
                     <>
                         <div className="toppage-heading">
                             <span className="toppage-heading__line" />
-                            <h1>ТОП 50 ГРАВЦІВ</h1>
+                            <h1>{t('top.heading')}</h1>
                             <span className="toppage-heading__line" />
                         </div>
 
@@ -156,9 +158,9 @@ class Top extends Component {
                                     <tr>
                                         <th className="rank">#</th>
                                         <th className="avatar-col" aria-label="avatar" />
-                                        <th>Нікнейм</th>
-                                        <th className="center">Відкрито кейсів</th>
-                                        <th className="center">Зареєстрований</th>
+                                        <th>{t('top.nickname')}</th>
+                                        <th className="center">{t('top.openedCases')}</th>
+                                        <th className="center">{t('top.registered')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>{this.renderRows()}</tbody>
@@ -167,7 +169,7 @@ class Top extends Component {
 
                         {!items.length && (
                             <div className="toppage-empty">
-                                Поки що немає даних для рейтингу.
+                                {t('top.empty')}
                             </div>
                         )}
 
@@ -180,7 +182,7 @@ class Top extends Component {
                                     loading={loadingMore}
                                     onClick={() => this.loadMore()}
                                 >
-                                    ЗАВАНТАЖИТИ ЩЕ
+                                    {t('top.loadMore')}
                                 </Button>
                             </div>
                         )}
@@ -191,4 +193,4 @@ class Top extends Component {
     }
 }
 
-export default connect(mapStateToProps, null)(Top);
+export default connect(mapStateToProps, null)(withTranslation()(Top));

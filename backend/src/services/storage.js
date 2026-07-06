@@ -1,7 +1,7 @@
 const Storage = require('../models/storage');
 const MESSAGE = require('../constant/responseMessages');
 
-module.exports.addItem = async (userId, itemId, itemColor, caseId) => {
+module.exports.addItem = async (userId, itemId, itemColor, caseId, options = {}) => {
     try {
         const item = {
             storage_userId: userId,
@@ -10,7 +10,7 @@ module.exports.addItem = async (userId, itemId, itemColor, caseId) => {
             storage_caseId: caseId,
             storage_status: 'inventory',
         };
-        const storageId = await Storage.create(item).then((data) => data.dataValues.storage_id);
+        const storageId = await Storage.create(item, options).then((data) => data.dataValues.storage_id);
         return storageId;
     } catch (e) {
         throw Error(e.message);

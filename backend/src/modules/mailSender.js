@@ -1,14 +1,12 @@
-const nodemailer = require('nodemailer');
-const emailOptions = require('../config/email');
-
 const { Resend } = require('resend');
 
-const resend = new Resend(process.env.RESEND_API_KEY || 're_4zhginK1_Jgfj3wYJ4fq2z6BqzuGKNAjW');
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM = process.env.RESEND_FROM || 'caseUA <onboarding@resend.dev>';
 
 module.exports = {
     userRegistered(mailTo, data) {
         resend.emails.send({
-            from: 'caseUA <onboarding@resend.dev>',
+            from: FROM,
             to: mailTo,
             subject: 'Успішна реєстрація на сайті',
             html: `<h1>Вітаємо на caseUA!</h1>
@@ -20,7 +18,7 @@ module.exports = {
     },
     forgotPassword(mailTo, data) {
         resend.emails.send({
-            from: 'caseUA <onboarding@resend.dev>',
+            from: FROM,
             to: mailTo,
             subject: 'Відновлення доступу',
             html: `<h1>Відновлення пароля</h1>

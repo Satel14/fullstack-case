@@ -2,6 +2,7 @@ import React from 'react';
 import { Menu } from 'antd';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { withTranslation } from 'react-i18next';
 import {
     QuestionCircleOutlined,
     BarChartOutlined,
@@ -12,6 +13,7 @@ import {
 } from '@ant-design/icons';
 
 import Socials from './mini/Socials';
+import LanguageSwitcher from './LanguageSwitcher';
 import { isAuthorized } from '../helpers/Player';
 
 const mapStateToProps = (state) => ({
@@ -25,31 +27,31 @@ class MenuLayoutSlider extends React.Component {
     }
 
     getMenuItems = () => {
-        const { user } = this.props;
+        const { user, t } = this.props;
         const defaultMenu = [
             {
                 key: 'cases',
-                label: <Link to="/">Кейси</Link>,
+                label: <Link to="/">{t('menu.cases')}</Link>,
                 icon: <CodeSandboxOutlined />,
             },
             {
                 key: 'topplayers',
-                label: <Link to="/top">Топ гравців</Link>,
+                label: <Link to="/top">{t('menu.topPlayers')}</Link>,
                 icon: <BarChartOutlined />,
             },
             {
                 key: 'bonus',
-                label: <Link to="/bonus">Бонуси</Link>,
+                label: <Link to="/bonus">{t('menu.bonus')}</Link>,
                 icon: <GiftOutlined />,
             },
             {
                 key: 'faq',
-                label: <Link to="/faq">FAQ</Link>,
+                label: <Link to="/faq">{t('menu.faq')}</Link>,
                 icon: <QuestionCircleOutlined />,
             },
             {
                 key: 'moneynotenough',
-                label: <Link to="/article/8">Ще грошей</Link>,
+                label: <Link to="/article/8">{t('menu.moreMoney')}</Link>,
                 icon: <TagsOutlined />,
             },
         ];
@@ -57,7 +59,7 @@ class MenuLayoutSlider extends React.Component {
         if (!isAuthorized(user)) {
             defaultMenu.push({
                 key: '6',
-                label: <Link to="/login">Увійти</Link>,
+                label: <Link to="/login">{t('menu.login')}</Link>,
                 icon: <UserOutlined />,
             });
         }
@@ -75,6 +77,8 @@ class MenuLayoutSlider extends React.Component {
                     items={this.getMenuItems()}
                 />
 
+                <LanguageSwitcher />
+
                 <div className="custom social">
                     <Socials />
                 </div>
@@ -83,4 +87,4 @@ class MenuLayoutSlider extends React.Component {
     }
 }
 
-export default connect(mapStateToProps, null)(MenuLayoutSlider);
+export default connect(mapStateToProps, null)(withTranslation()(MenuLayoutSlider));

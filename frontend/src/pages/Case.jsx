@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { withTranslation } from 'react-i18next';
 import { Tooltip } from 'antd';
 import map from 'lodash/map';
 import Fade from 'react-reveal/Fade';
 import { itemInfoFetch } from '../store/actions/itemCache';
 import { getCaseById } from '../api/all/cases';
 import { renderItemProp } from '../helpers/Case';
+import { wearRank, wearColor } from '../helpers/rarity';
 import Loader from '../components/mini/Loader';
 import OpenCase from '../components/modules/OpenCase';
 
@@ -65,6 +67,25 @@ class Case extends Component {
         return '';
     }
 
+    getSortedItems() {
+        const { caseCollection } = this.state;
+        const items = (caseCollection && caseCollection.ITEMS) ? caseCollection.ITEMS : [];
+
+        // Sort ascending by wear rarity (Battle-Scarred = most common first → Factory
+        // New = rarest last); ties broken alphabetically. Wear comes from the async
+        // itemCache, so the order settles as the cache fills.
+        return [...items].sort((a, b) => {
+            const rankDiff = wearRank(this.getShortInfoItem(a, 'item_rare'))
+                - wearRank(this.getShortInfoItem(b, 'item_rare'));
+            if (rankDiff !== 0) {
+                return rankDiff;
+            }
+            const nameA = this.getShortInfoItem(a, 'item_name') || '';
+            const nameB = this.getShortInfoItem(b, 'item_name') || '';
+            return nameA.localeCompare(nameB);
+        });
+    }
+
     async getData() {
         this.setState({ fetching: true });
         const { id } = this.state;
@@ -109,6 +130,7 @@ class Case extends Component {
 
     render() {
         const { caseCollection, caseData, fetching } = this.state;
+        const { t } = this.props;
         return (
             <div className="casepage">
                 {fetching ? (
@@ -120,30 +142,32 @@ class Case extends Component {
                         </div>
 
                         <span className="casepage-title-second">
-                            Вміст кейсу
+                            {t('case.contents')}
                             <i>
-                                Кількість відкритих:
+                                {t('case.openedCount')}
                                 {' '}
                                 {caseData.case_openedCount}
                             </i>
                         </span>
                         <div className="casepage-itemlist more">
-                            {caseCollection && caseCollection.ITEMS && map(caseCollection.ITEMS, (item, i) => (
+                            {map(this.getSortedItems(), (item, i) => (
                                 <Tooltip
                                     placement="bottom"
-                                    title={renderItemProp(this.getShortInfoItem(item))}
+                                    title={renderItemProp(this.getShortInfoItem(item), null, t)}
                                     key={`itemlist${item.id}`}
                                 >
                                     <Fade delay={i * 50}>
                                         <div
                                             className={`casepage-itemlist_item rc-${this.getShortInfoItem(item, 'item_rare')}`}
-                                            style={{
-                                                backgroundImage: `url(${this.getImagePath(item)})`,
-                                                backgroundSize: 'contain',
-                                                backgroundPosition: 'center',
-                                                backgroundRepeat: 'no-repeat',
-                                            }}
+                                            style={{ '--rarity': wearColor(this.getShortInfoItem(item, 'item_rare')) }}
                                         >
+                                            <i className="casepage-itemlist_item__wear">
+                                                {this.getShortInfoItem(item, 'item_rare')}
+                                            </i>
+                                            <div
+                                                className="casepage-itemlist_item__img"
+                                                style={{ backgroundImage: `url(${this.getImagePath(item)})` }}
+                                            />
                                             <span>{this.getShortInfoItem(item, 'item_name')}</span>
                                         </div>
                                     </Fade>
@@ -157,4 +181,4 @@ class Case extends Component {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Case);
+export default connect(mapStateToProps, mapDispatchToProps)(withTranslation()(Case));

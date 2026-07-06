@@ -3,9 +3,10 @@ const jwt = require('jsonwebtoken');
 const message = require('./../constant/responseMessages');
 const jwtOptions = require('./jwtConfig');
 const Encrypt = require('../modules/Encrypt')
+const { authLimiter } = require('../middleware/rateLimiters');
 
 module.exports = (app) => {
-    app.post('/api/profile/login', async (req, res) => {
+    app.post('/api/profile/login', authLimiter, async (req, res) => {
         const { login, password } = req.body;
         if (!login && !password) {
             res.status(401).json({ message: message.AUTH.EMPTY_DATA })

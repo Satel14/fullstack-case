@@ -1,23 +1,25 @@
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 const Users = require('../models/user');
 const jwtOptions = require('./jwtConfig');
 const message = require('../constant/responseMessages');
 const Encrypt = require('../modules/Encrypt');
 const mailSender = require('../modules/mailSender');
+const { authLimiter } = require('../middleware/rateLimiters');
 
 module.exports = (app) => {
-    app.post('/api/profile/register', async (req, res) => {
+    app.post('/api/profile/register', authLimiter, async (req, res) => {
         const {
             login, password, email, avatar,
         } = req.body;
 
-        if (!login && !password && !email && !avatar) {
+        if (!login || !password || !email) {
             res.status(401).json({ message: message.AUTH.EMPTY_DATA });
             return;
         }
 
         const user = await Users.findOne({
-            where: { $or: [{user_login: login}, {user_email: email}] },
+            where: { [Op.or]: [{ user_login: login }, { user_email: email }] },
         }).then((user) => user);
 
         if (user) {

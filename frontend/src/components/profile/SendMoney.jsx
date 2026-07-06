@@ -3,8 +3,9 @@ import {
  Button, Modal, Form, InputNumber,
 } from 'antd';
 import { DollarCircleOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { sendMoneyForUser } from '../../api/all/profile';
-import openNotification from '../mini/Notification';
+import openNotification from '../mini/openNotification';
 
 const CollectionCreateForm = ({
   visible,
@@ -12,13 +13,14 @@ const CollectionCreateForm = ({
   onCancel,
   nickname,
 }) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   return (
     <Modal
       visible={visible}
-      title={`Отправить деньги игроку ${nickname}`}
-      okText="Перевести"
-      cancelText="Закрыть"
+      title={t('sendMoney.modalTitle', { nickname })}
+      okText={t('sendMoney.transfer')}
+      cancelText={t('sendMoney.close')}
       onCancel={onCancel}
       onOk={() => {
         form
@@ -42,11 +44,11 @@ const CollectionCreateForm = ({
       >
         <Form.Item
           name="moneycount"
-          label="Количество денег"
+          label={t('sendMoney.amountLabel')}
           rules={[
             {
               required: true,
-              message: 'Введите сумму!',
+              message: t('sendMoney.amountRequired'),
             },
           ]}
         >
@@ -58,6 +60,7 @@ const CollectionCreateForm = ({
 };
 
 const SendMoney = (props) => {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
 
   const onCreate = async (values) => {
@@ -66,11 +69,13 @@ const SendMoney = (props) => {
       money_count: values.moneycount,
     }).then((result) => {
       if (result.sended === true) {
-        openNotification('success', 'Деньги отправлены', result.message);
+        openNotification('success', t('sendMoney.successTitle'), result.message);
         setVisible(false);
-        window.HeaderSecond.changeBalance(result.balance);
+        if (window.HeaderSecond) {
+          window.HeaderSecond.changeBalance(result.balance);
+        }
       } else {
-        openNotification('error', 'Не получилось', result.message);
+        openNotification('error', t('sendMoney.failTitle'), result.message);
       }
       return null;
     });
@@ -86,7 +91,7 @@ const SendMoney = (props) => {
           setVisible(true);
         }}
       >
-        Перевести деньги
+        {t('sendMoney.trigger')}
       </Button>
       <CollectionCreateForm
         visible={visible}

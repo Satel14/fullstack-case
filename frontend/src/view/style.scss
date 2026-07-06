@@ -107,7 +107,6 @@
 
 body {
     font-family: "Muller Regular";
-    //background: url("img/background.jpg");
     background-color: #0f121e;
     background-attachment: fixed;
     background-size: 100%;
@@ -127,7 +126,7 @@ body {
     color: #fff;
 }
 
-/* Custom Scrollbar */
+
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -156,7 +155,7 @@ body {
     background: #161b29;
 }
 
-/* Firefox scrollbar */
+
 * {
     scrollbar-width: thin;
     scrollbar-color: #2442af #161b29;
@@ -671,7 +670,6 @@ p {
     top: 50%;
     transform: translate(-50%, -50%);
 
-    // background-image: url("./img/");
     &:after {
         display: block;
         position: absolute;
@@ -747,25 +745,6 @@ p {
     font-size: 30px !important;
     color: #fff;
 
-    //&::before {
-    //    background-color: #00a0ff;
-    //    border-radius: 500px;
-    //    bottom: -5px;
-    //    content: "";
-    //    height: 10px;
-    //    left: 0;
-    //    position: absolute;
-    //    width: 10px;
-    //}
-    //&.title::after {
-    //    border-bottom: 1px solid #00a0ff;
-    //    bottom: -1px;
-    //    content: "";
-    //    height: 0;
-    //    left: 0;
-    //    position: absolute;
-    //    width: 65px;
-    //}
 }
 
 .profilepage {
@@ -1410,44 +1389,85 @@ blockquote {
     }
 
     &-itemlist {
-        display: flex;
-        flex-flow: row wrap;
-        justify-content: center;
-        margin: 0 -3px;
-
-        &::after {
-            content: "";
-            flex: auto;
-        }
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 12px;
 
         &_item {
-            height: 115px;
-            width: 115px;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: contain;
             position: relative;
-            margin: 3px;
-            border: 1px #00a0ff3d solid;
-            width: 130px;
-            height: 130px;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border-radius: 8px;
+            border: 1px solid color-mix(in srgb, var(--rarity, #00a0ff) 26%, #2a3350);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            background:
+                radial-gradient(125% 80% at 50% 122%,
+                    color-mix(in srgb, var(--rarity, #00a0ff) 78%, transparent) 0%,
+                    color-mix(in srgb, var(--rarity, #00a0ff) 30%, transparent) 32%,
+                    transparent 64%),
+                linear-gradient(180deg, #1a1f30 0%, #0d1019 100%);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+
+            &::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 2;
+                height: 3px;
+                background: var(--rarity, #00a0ff);
+                box-shadow: 0 0 10px color-mix(in srgb, var(--rarity, #00a0ff) 70%, transparent);
+            }
 
             &:hover {
                 cursor: pointer;
+                transform: translateY(-3px);
+                border-color: color-mix(in srgb, var(--rarity, #00a0ff) 60%, transparent);
+                box-shadow: 0 8px 22px color-mix(in srgb, var(--rarity, #00a0ff) 45%, transparent),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            }
+
+            &__wear {
+                position: absolute;
+                top: 7px;
+                left: 9px;
+                z-index: 2;
+                max-width: calc(100% - 18px);
+                font-style: normal;
+                font-size: 9px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+                color: var(--rarity, #00a0ff);
+                text-shadow: 0 0 8px color-mix(in srgb, var(--rarity, #00a0ff) 55%, transparent);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            &__img {
+                position: absolute;
+                inset: 20px 10px 22px;
+                background-size: contain;
+                background-position: center;
+                background-repeat: no-repeat;
+                filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.5));
             }
 
             span {
                 position: absolute;
                 bottom: 0;
                 left: 0;
-                background: #0000008a;
+                z-index: 1;
+                background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.72));
                 font-size: 12px;
                 width: 100%;
                 text-align: center;
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
-                padding: 0 4px;
+                padding: 6px 4px 5px;
             }
         }
     }
@@ -2124,11 +2144,141 @@ footer {
         padding: 40px;
     }
 
+    .depositpage-list {
+        max-width: 520px;
+        margin: 0 auto;
+    }
+
+    .depositpage-list__payment {
+        background: $backgroundColor3;
+        border: 1px solid #262e43;
+        border-radius: 8px;
+        padding: 22px 22px 26px;
+        box-shadow: 0 12px 30px rgba(0, 5, 18, 0.4), inset 0 0 0 1px rgba(77, 128, 216, 0.12);
+
+        .ant-form-item-label>label {
+            color: #8fb6e8 !important;
+            font-size: 12px;
+            letter-spacing: 0.6px;
+        }
+
+        .ant-btn {
+            width: 100%;
+            margin-top: 6px;
+        }
+    }
+
     .depositpage-list__paymentlist {
         color: rgba(255, 255, 255, 0.85);
         font-size: 14px;
         line-height: 1.6;
         margin-top: 20px;
+        text-align: center;
+    }
+
+    .depositpage-history {
+        border: 1px solid #262e43;
+        border-radius: 8px;
+        overflow: hidden;
+        background: $backgroundColor3;
+
+        &__item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            font-family: "Roboto Regular";
+            font-size: 14px;
+            color: #adb0b9;
+            border-top: 1px solid #22262f;
+
+            &:first-child {
+                border-top: 0;
+            }
+
+            span:last-child {
+                font-family: "Roboto Bold";
+                color: #40f3a9;
+                text-shadow: 0 0 8px rgba(64, 243, 169, 0.25);
+            }
+        }
+    }
+}
+
+.paymentpage {
+    .paymentpage-card {
+        max-width: 440px;
+        margin: 30px auto 0;
+        padding: 30px 26px;
+        text-align: center;
+        border-radius: 10px;
+        border: 1px solid rgba(77, 128, 216, 0.4);
+        background: linear-gradient(180deg, rgba(8, 20, 47, 0.92), rgba(3, 16, 37, 0.95));
+        box-shadow: 0 15px 35px rgba(0, 5, 18, 0.45), inset 0 0 0 1px rgba(77, 128, 216, 0.16);
+
+        &__icon svg {
+            font-size: 42px;
+            color: #00a0ff;
+            filter: drop-shadow(0 0 10px rgba(0, 160, 255, 0.45));
+        }
+
+        &__amount {
+            margin: 16px 0 8px;
+            font-family: "Roboto Bold";
+            font-size: 26px;
+            letter-spacing: 0.6px;
+            color: #8fd7ff;
+            text-shadow: 0 0 14px rgba(58, 158, 255, 0.45);
+        }
+
+        &__note {
+            margin-bottom: 24px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: rgba(200, 225, 255, 0.7);
+        }
+
+        &__actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+
+            .ant-btn {
+                min-width: 140px;
+            }
+        }
+    }
+}
+
+.language-switcher {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 0;
+
+    &__btn {
+        min-width: 40px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-family: "Roboto Slab";
+        letter-spacing: 0.5px;
+        color: #9ca4bf;
+        background: transparent;
+        border: 1px solid #2a3350;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+            color: #fff;
+            border-color: #00a0ff;
+        }
+
+        &.is-active {
+            color: #fff;
+            background: #4763bf;
+            border-color: #4763bf;
+        }
     }
 }
 
@@ -2383,7 +2533,7 @@ footer {
     }
 }
 
-/* Global Ant Design Popover Fixes for Dark Theme */
+
 .ant-popover {
     .ant-popover-inner {
         background-color: #1a1e29;
@@ -2453,7 +2603,7 @@ footer {
     }
 }
 
-/* Block Opening – Flip Card Grid */
+
 .opencase-blocklist {
     display: flex;
     flex-wrap: wrap;
@@ -2512,7 +2662,7 @@ footer {
         overflow: hidden;
     }
 
-    /* Opened State */
+    
     &.opened {
         cursor: default;
 

@@ -15,6 +15,7 @@ import {
 } from '@ant-design/icons';
 import map from 'lodash/map';
 import { connect } from 'react-redux';
+import { withTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { isAuthorized } from '../../helpers/Player';
 import { openCaseById } from '../../api/all/cases';
@@ -74,10 +75,8 @@ const mapStateToProps = (state) => ({
     itemCache: state.itemCache,
     modules: state.modules,
 });
-// react/sort-comp
 const calculatePositionForLine = (winner) => {
-    const widthOneBlock = 140; // 140px (130px width + 10px margin/border)
-    // Container center offset + half item width
+    const widthOneBlock = 140;
     const containerCenter = 380;
     const resultLeftPixel = -widthOneBlock * (winner.winIndex - 1)
         + containerCenter
@@ -185,9 +184,11 @@ class OpenCase extends Component {
         try {
             const result = await sellItemByStorageId(storageId);
             if (result.status === 200) {
-                window.HeaderSecond.changeBalance(result.balance);
+                if (window.HeaderSecond) {
+                    window.HeaderSecond.changeBalance(result.balance);
+                }
                 if (notify) {
-                    openNotification('success', 'Предмет продано');
+                    openNotification('success', this.props.t('openCase.sold'));
                 }
                 delete prices[i];
                 this.setState({
@@ -196,11 +197,11 @@ class OpenCase extends Component {
                 return;
             }
             if (notify) {
-                openNotification('error', 'Помилка продажу', result.message || 'Не вдалося продати предмет');
+                openNotification('error', this.props.t('openCase.sellErrorTitle'), result.message || this.props.t('openCase.sellErrorText'));
             }
         } catch (e) {
             if (notify) {
-                openNotification('error', 'Помилка', 'Не вдалося продати предмет');
+                openNotification('error', this.props.t('common.error'), this.props.t('openCase.sellErrorText'));
             }
         }
     }
@@ -225,7 +226,7 @@ class OpenCase extends Component {
                 });
                 openNotification(
                     'error',
-                    'У цього кейса досяг ліміт відкриття. Цей кейс більше не можна відрити!',
+                    this.props.t('openCase.limitReached'),
                 );
                 return false;
             }
@@ -240,8 +241,8 @@ class OpenCase extends Component {
                 });
                 openNotification(
                     'error',
-                    'Перевищено ліміт',
-                    `Можна відкрити ще тільки ${remaining}`,
+                    this.props.t('openCase.limitExceededTitle'),
+                    this.props.t('openCase.limitExceededText', { remaining }),
                 );
                 return false;
             }
@@ -251,7 +252,7 @@ class OpenCase extends Component {
             data.case_id,
             requestCount,
         ).then((res) => res).catch((err) => {
-            openNotification('error', 'Помилка', 'Ви не авторизовані або недостатньо коштів');
+            openNotification('error', this.props.t('common.error'), this.props.t('openCase.authOrFunds'));
             this.setState({
                 loading: false,
                 processWorking: false,
@@ -262,7 +263,7 @@ class OpenCase extends Component {
         if (!result) return false;
 
         if (!result.balance && result.balance !== 0) {
-            openNotification('error', 'Помилка', result.message);
+            openNotification('error', this.props.t('common.error'), result.message);
             this.setState({
                 loading: false,
                 processWorking: false,
@@ -438,12 +439,12 @@ class OpenCase extends Component {
         }
 
         await Promise.all(promises);
-        openNotification('success', 'Всі предмети продано');
+        openNotification('success', this.props.t('openCase.allSold'));
     }
 
     renderBlock() {
         const massive = [];
-        const max = 22; // full 22
+        const max = 22;
         const randomItemsList = this.state.randomItemsList && this.state.randomItemsList[0];
 
         const newMassive = [];
@@ -518,7 +519,7 @@ class OpenCase extends Component {
             loading,
             openCount,
         } = this.state;
-        const { data, user } = this.props;
+        const { data, user, t } = this.props;
 
         return (
             <>
@@ -555,7 +556,7 @@ class OpenCase extends Component {
                                             className="color-purple"
                                             loading={loading}
                                         >
-                                            Відкрити
+                                            {t('openCase.open')}
                                         </Button>
                                         {openCount === '1' && (
                                             <Button
@@ -566,7 +567,7 @@ class OpenCase extends Component {
                                                 className="color-red"
                                                 loading={loading}
                                             >
-                                                Відкрити блоками
+                                                {t('openCase.openBlocks')}
                                             </Button>
                                         )}
                                         <Button
@@ -577,7 +578,7 @@ class OpenCase extends Component {
                                             className="color-orange"
                                             loading={loading}
                                         >
-                                            Швидко
+                                            {t('openCase.fast')}
                                         </Button>
                                     </div>
                                 </div>
@@ -613,7 +614,7 @@ class OpenCase extends Component {
                                                         onClick={() => this.sellItem(w.storageId, i)}
                                                         style={{ marginTop: 8 }}
                                                     >
-                                                        Продати за {this.state.prices[i]} кред.
+                                                        {t('openCase.sellFor', { price: this.state.prices[i] })}
                                                     </Button>
                                                 )}
                                             </div>
@@ -625,7 +626,7 @@ class OpenCase extends Component {
                                                 size="large"
                                                 onClick={() => this.getBack()}
                                             >
-                                                Спробувати ще раз
+                                                {t('openCase.tryAgain')}
                                             </Button>
                                             <Button
                                                 className="buttons-back"
@@ -635,7 +636,7 @@ class OpenCase extends Component {
                                                 danger
                                                 onClick={() => window.history.back()}
                                             >
-                                                Повернутися назад
+                                                {t('openCase.goBack')}
                                             </Button>
                                             {this.state.prices && this.state.prices.length > 1 && this.getSummAll() && (
                                                 <Button
@@ -645,7 +646,7 @@ class OpenCase extends Component {
                                                     size="large"
                                                     onClick={() => this.sellItemAll()}
                                                 >
-                                                    Продати все за {this.getSummAll()} кред.
+                                                    {t('openCase.sellAllFor', { sum: this.getSummAll() })}
                                                 </Button>
                                             )}
                                         </div>
@@ -654,9 +655,9 @@ class OpenCase extends Component {
                                     <>
                                         <Zoom left>
                                             <div className="opencase-titlecrate">
-                                                Відкриття
+                                                {t('openCase.opening')}
                                                 {' '}
-                                                <span>{data.case_title || 'Кейс'}</span>
+                                                <span>{data.case_title || t('openCase.caseFallback')}</span>
                                             </div>
                                         </Zoom>
                                         <Zoom right>
@@ -728,7 +729,7 @@ class OpenCase extends Component {
                         </div>
                         <div className="alert-case-auth">
                             <Alert
-                                message="Щоб відкрити кейс потрібно пройти авторизацію"
+                                message={t('openCase.authRequired')}
                                 type="error"
                                 showIcon
                             />
@@ -742,7 +743,7 @@ class OpenCase extends Component {
                                 icon={<ThunderboltOutlined />}
                                 className="color-red"
                             >
-                                Авторизуватися
+                                {t('openCase.authorize')}
                             </Button>
                         </Link>
                     </>
@@ -752,6 +753,6 @@ class OpenCase extends Component {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(OpenCase);
+export default connect(mapStateToProps, mapDispatchToProps)(withTranslation()(OpenCase));
 
 

@@ -1,8 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Button, Tooltip } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 function H2Component({ title, subTitle, help }) {
+    const { t } = useTranslation();
     return (
         <div className="title-a">
             <span className="title-a__1" />
@@ -19,7 +21,7 @@ function H2Component({ title, subTitle, help }) {
                     type="text"
                     className="title-a__buttonhelp"
                     >
-                        Що це?
+                        {t('common.whatIsThis')}
                     </Button>
                 </Tooltip>
                 )}

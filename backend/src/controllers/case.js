@@ -8,6 +8,7 @@ const BalanceHistoryEnum = require("../constant/enums/balance").BalanceHistory;
 const StorageService = require('../services/storage');
 const allCases = require('../constant/cases/_all')
 const { getIo } = require('../socket/chat');
+const sequelize = require('../config/db');
 
 module.exports.openCaseById = async (req, res) => {
     try {
@@ -62,48 +63,59 @@ module.exports.openCaseById = async (req, res) => {
         }
 
         const arrResultCase = [];
-        const arrPromises = [];
 
-        for (let index = 0; index < count; index++) {
-            console.log('[DEBUG] Opening case iteration', index);
-            const resultCase = await new CaseOpen().openCase(id);
-            console.log('[DEBUG] Case opened, winner:', resultCase?.winner?.item?.name);
-            arrPromises.push([
-                await CaseService.addUsedCount(id),
-                await UserService.decrementBalance(priceCase, user_id),
+        await sequelize.transaction(async (t) => {
+            const lockedBalance = await UserService.getBalanceByUserId(user_id, {
+                transaction: t,
+                lock: t.LOCK.UPDATE,
+            });
+            if (lockedBalance < priceCase * count) {
+                const err = new Error(MESSAGE.CASE.NOT_HAVE_MONEY);
+                err.code = 'NOT_HAVE_MONEY';
+                throw err;
+            }
+
+            for (let index = 0; index < count; index++) {
+                console.log('[DEBUG] Opening case iteration', index);
+                const resultCase = await new CaseOpen().openCase(id);
+                console.log('[DEBUG] Case opened, winner:', resultCase?.winner?.item?.name);
+
+                await CaseService.addUsedCount(id, { transaction: t });
+                await UserService.decrementBalance(priceCase, user_id, { transaction: t });
                 await BalanceHistoryService.addBalanceChange(
                     user_id,
                     BalanceHistoryEnum.OPEN_CASE,
-                    -priceCase
-                )
-            ])
+                    -priceCase,
+                    '',
+                    { transaction: t },
+                );
 
-            const storageId = await StorageService.addItem(
-                user_id,
-                resultCase.winner.item.id,
-                resultCase.winner.item.color,
-                resultCase.caseId
-            );
+                const storageId = await StorageService.addItem(
+                    user_id,
+                    resultCase.winner.item.id,
+                    resultCase.winner.item.color,
+                    resultCase.caseId,
+                    { transaction: t },
+                );
 
-            resultCase.winner.storageId = storageId;
+                resultCase.winner.storageId = storageId;
+                arrResultCase.push(resultCase);
+            }
+        });
 
-            const io = getIo();
-            if (io) {
-                // Determine item rare (this logic mimics frontend getShortInfoItem if needed, or we just send what we have)
+        const io = getIo();
+        if (io) {
+            arrResultCase.forEach((resultCase) => {
                 io.emit('new-drop', {
-                    storage_id: storageId,
+                    storage_id: resultCase.winner.storageId,
                     storage_itemId: resultCase.winner.item.id,
                     storage_userId: user_id,
                     storage_caseId: resultCase.caseId,
                     storage_color: resultCase.winner.item.color,
                 });
-            }
-
-            arrResultCase.push(resultCase);
+            });
         }
 
-        await Promise.all(arrResultCase);
-        await Promise.all(arrPromises);
         console.log('[DEBUG] All done, getting updated case and balance');
 
         const updatedCase = await CaseService.getCaseById(id);
@@ -121,6 +133,11 @@ module.exports.openCaseById = async (req, res) => {
         });
     } catch (e) {
         console.error('[DEBUG] openCaseById error:', e);
+        if (e && e.code === 'NOT_HAVE_MONEY') {
+            return res.status(200).json({
+                status: 200, message: MESSAGE.CASE.NOT_HAVE_MONEY,
+            })
+        }
         return res.status(400).json({
             status: 400, message: e.message
         })
