@@ -9,6 +9,10 @@ const StorageService = require('../services/storage');
 const allCases = require('../constant/cases/_all')
 const { getIo } = require('../socket/chat');
 const sequelize = require('../config/db');
+const PFService = require('../services/provablyFair');
+const { deriveWinner } = require('../modules/provablyFair');
+const RedisManager = require('../redis/manager');
+const ITEM_HASH = 'item_hash';
 
 module.exports.openCaseById = async (req, res) => {
     try {
@@ -65,6 +69,9 @@ module.exports.openCaseById = async (req, res) => {
 
         const arrResultCase = [];
 
+        const caseDef = allCases[id];
+        const itemHash = await RedisManager.getAllDataHashWithKey(ITEM_HASH);
+
         await sequelize.transaction(async (t) => {
             const lockedBalance = await UserService.getBalanceByUserId(user_id, {
                 transaction: t,
@@ -76,9 +83,16 @@ module.exports.openCaseById = async (req, res) => {
                 throw err;
             }
 
+            const seed = await PFService.ensureActiveSeed(user_id, {
+                transaction: t,
+                lock: t.LOCK.UPDATE,
+            });
+            let nonce = seed.pf_nonce;
+
             for (let index = 0; index < count; index++) {
                 console.log('[DEBUG] Opening case iteration', index);
-                const resultCase = await new CaseOpen().openCase(id);
+                const winner = deriveWinner(seed.pf_serverSeed, seed.pf_clientSeed, nonce, caseDef, itemHash);
+                const resultCase = await new CaseOpen().openCase(id, winner);
                 console.log('[DEBUG] Case opened, winner:', resultCase?.winner?.item?.name);
 
                 await CaseService.addUsedCount(id, { transaction: t });
@@ -99,9 +113,27 @@ module.exports.openCaseById = async (req, res) => {
                     { transaction: t },
                 );
 
+                await PFService.recordOpen(
+                    {
+                        userId: user_id,
+                        caseId: id,
+                        seedId: seed.pf_id,
+                        storageId,
+                        serverSeedHash: seed.pf_serverSeedHash,
+                        clientSeed: seed.pf_clientSeed,
+                        nonce,
+                        resultItemId: resultCase.winner.item.id,
+                        resultColor: resultCase.winner.item.color,
+                    },
+                    { transaction: t },
+                );
+
+                nonce += 1;
                 resultCase.winner.storageId = storageId;
                 arrResultCase.push(resultCase);
             }
+
+            await PFService.bumpNonce(seed.pf_id, nonce, { transaction: t });
         });
 
         const io = getIo();

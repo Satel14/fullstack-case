@@ -13,15 +13,14 @@ module.exports = class OpenCase {
 
     allItems;
 
-    async openCase(caseId) {
+    async openCase(caseId, winner) {
         this.case = allCases[caseId];
 
         const chances = this.case.CHANCES;
         const arrChances = [];
         for (let key in chances) {
             if (key !== 'COLORS') {
-                let el = chances[key];
-                arrChances.push(el);
+                arrChances.push(chances[key]);
             }
         }
 
@@ -31,36 +30,35 @@ module.exports = class OpenCase {
         this.loadRaryTypes();
         const results = this.getRandomArrayWithWinner();
         const { resultOfRoulette, winIndex } = results;
-        const resultWithItem = [];
 
+        // Cosmetic strip: every slot is a random item (animation only).
+        const newMassiveForSend = [];
         for (let index = 0; index < resultOfRoulette.length; index++) {
-            let item = this.getItemForIndex(resultOfRoulette[index]);
-
-            resultWithItem.push({
-                ...item,
-                color: this.getPaintedRandom(item),
-            });
-        }
-
-        let newMassiveForSend = [];
-
-        resultWithItem.forEach((currentItem) => {
-            let { id, color } = currentItem;
-            let itemCache = JSON.parse(this.allItems[id]);
-
-            let element = {
+            const item = this.getItemForIndex(resultOfRoulette[index]);
+            const itemCache = JSON.parse(this.allItems[item.id]);
+            newMassiveForSend.push({
                 name: itemCache.name,
                 type: itemCache.type,
                 rare: itemCache.rare,
-                color,
-                id
-            };
-            newMassiveForSend.push(element);
-        })
+                color: this.getPaintedRandom(item),
+                id: item.id,
+            });
+        }
+
+        // Override the winning slot with the provably-fair result.
+        const winnerCache = JSON.parse(this.allItems[winner.itemId.toString()]);
+        const winnerElement = {
+            name: winnerCache.name,
+            type: winnerCache.type,
+            rare: winnerCache.rare,
+            color: winner.color,
+            id: winner.itemId,
+        };
+        newMassiveForSend[winIndex - 1] = winnerElement;
 
         return {
             resultWithItem: newMassiveForSend,
-            winner: { winIndex: winIndex, item: newMassiveForSend[winIndex - 1] },
+            winner: { winIndex, item: winnerElement },
             caseId,
         };
     }
