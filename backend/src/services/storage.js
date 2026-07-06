@@ -90,7 +90,7 @@ module.exports.getStorageById = async (userId, status) => {
             order: [['storage_id', 'DESC']],
             where: {
                 storage_userId: userId,
-                status,
+                storage_status: status,
             },
         });
 
