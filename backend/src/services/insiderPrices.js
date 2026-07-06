@@ -1,7 +1,5 @@
 const InsiderPrices = require("../models/insiderPrices");
 
-// todo getItemColors (user on case random)
-
 module.exports.getAllItems = async () => {
     try {
         const itemPrices = await InsiderPrices.findAll({

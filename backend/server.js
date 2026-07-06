@@ -13,7 +13,6 @@ app.use(bodyParser.json());
 
 app.use(compression());
 routes(app);
-// Initialize models to allow sync
 require('./src/models/article');
 require('./src/models/balanceHistory');
 require('./src/models/bonusHistory');
@@ -36,7 +35,6 @@ sequelize.sync().then(() => {
 
     require('./src/socket/chat')(server);
 
-    // Load initial data into Redis only after database is ready
     const RedisManager = require('./src/redis/manager');
     RedisManager.initialRedisState().catch(console.error);
 }).catch(err => {

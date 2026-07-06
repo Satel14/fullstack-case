@@ -1,5 +1,4 @@
 module.exports = (app) => {
-    // Authorization/Registration
     require("./src/auth/login")(app);
     require("./src/auth/register")(app);
     require("./src/auth/profile")(app);

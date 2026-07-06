@@ -15,6 +15,6 @@ module.exports.getSiteStats = async (req, res) => {
             },
         });
     } catch (e) {
-        return res.status(200).json({ status: 200, message: e.message});
+        return res.status(500).json({ status: 500, message: e.message});
     }
 }

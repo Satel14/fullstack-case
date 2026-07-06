@@ -30,7 +30,7 @@ module.exports.getProfileStorage = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: items });
     } catch (e) {
-        return res.status(200).json({ status: 200, message: e.message });
+        return res.status(500).json({ status: 500, message: e.message });
     }
 };
 
@@ -55,10 +55,9 @@ module.exports.receiveItemByStorageId = async (req, res) => {
         const { user_receiveInfo } = await UserService.getUserFullInfoById(user_id);
         await StorageService.setStorageExtraDataById(id, user_receiveInfo);
 
-        // todo Добавить нотификацию вывода в дискорд закрытый канал или телега
         return res.status(200).json({ status: 200 });
     } catch (e) {
-        return res.status(200).json({ status: 200, message: e.message });
+        return res.status(500).json({ status: 500, message: e.message });
     }
 };
 
@@ -168,7 +167,7 @@ module.exports.getStorageItemsCountByUserId = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: result });
     } catch (e) {
-        return res.status(200).json({ status: 200, message: e.message });
+        return res.status(500).json({ status: 500, message: e.message });
     }
 };
 
@@ -180,7 +179,7 @@ module.exports.getStorageLastItems = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: items });
     } catch (e) {
-        return res.status(200).json({ status: 200, message: e.message });
+        return res.status(500).json({ status: 500, message: e.message });
     }
 };
 
@@ -217,7 +216,7 @@ module.exports.getStorageLastItemsWithUserInfo = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: items, userList, caseList });
     } catch (e) {
-        return res.status(200).json({ status: 200, message: e.message });
+        return res.status(500).json({ status: 500, message: e.message });
     }
 };
 
@@ -235,7 +234,7 @@ module.exports.getStorageLastItemsByUserId = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: items });
     } catch (e) {
-        return res.status(200).json({ status: 200, message: e.message });
+        return res.status(500).json({ status: 500, message: e.message });
     }
 };
 
@@ -280,7 +279,7 @@ module.exports.getStorageTop = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: topPage });
     } catch (e) {
-        return res.status(200).json({ status: 200, message: e.message });
+        return res.status(500).json({ status: 500, message: e.message });
     }
 };
 
@@ -325,7 +324,7 @@ module.exports.getFavoriteCaseByUserId = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: caseInfo });
     } catch (e) {
-        return res.status(200).json({ status: 200, message: e.message });
+        return res.status(500).json({ status: 500, message: e.message });
     }
 };
 

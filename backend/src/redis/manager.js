@@ -29,9 +29,7 @@ const getAllDataHashWithKey = (key) => {
 }
 
 async function initialRedisState() {
-    // Clean
     await cleanDataHashWithKey(ITEM_HASH);
-    // Load Prices to state
     const promises = [];
     const itemPricesArray = await InsiderPricesService.getAllItems();
     const items = await ItemService.getAllItems();

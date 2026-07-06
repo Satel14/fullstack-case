@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const User = require("../models/user");
 const MESSAGE = require("../constant/responseMessages");
 
@@ -14,7 +15,6 @@ const EDITABLE_FOR_USER_FIELDS = [
     "user_avatar",
     "user_receiveInfo",
 ];
-// const ALL_FIELDS = PUBLIC_FIELDS.concat(PRIVATE_FIELDS);
 
 module.exports.getUserById = async (id) => {
     try {
@@ -51,7 +51,7 @@ module.exports.getOnlineUsers = async () => {
             attributes: PUBLIC_FIELDS,
             order: [["updated_at", "DESC"]],
             where: {
-                updated_at: { $gt: fiveMinutesAgo },
+                updated_at: { [Op.gt]: fiveMinutesAgo },
             },
         });
 
@@ -95,10 +95,11 @@ module.exports.editUser = async (fields, id) => {
     }
 };
 
-module.exports.getBalanceByUserId = async (id) => {
+module.exports.getBalanceByUserId = async (id, options = {}) => {
     try {
         const balance = await User.findByPk(id, {
             attributes: ["user_balance"],
+            ...options,
         });
         return balance.dataValues.user_balance;
     } catch (e) {
@@ -106,11 +107,12 @@ module.exports.getBalanceByUserId = async (id) => {
     }
 };
 
-module.exports.incrementBalance = async (value, id) => {
+module.exports.incrementBalance = async (value, id, options = {}) => {
     try {
         await User.increment("user_balance", {
             by: value,
             where: { user_id: id },
+            ...options,
         }).then((result) => result);
         return true;
     } catch (e) {
@@ -144,11 +146,12 @@ module.exports.resetRank = async (id) => {
     }
 };
 
-module.exports.incrementRank = async (value, id) => {
+module.exports.incrementRank = async (value, id, options = {}) => {
     try {
         await User.increment("user_rank", {
             by: value,
             where: { user_id: id },
+            ...options,
         }).then((result) => result);
         return true;
     } catch (e) {
@@ -156,11 +159,12 @@ module.exports.incrementRank = async (value, id) => {
     }
 };
 
-module.exports.decrementBalance = async (value, id) => {
+module.exports.decrementBalance = async (value, id, options = {}) => {
     try {
         await User.decrement("user_balance", {
             by: value,
             where: { user_id: id },
+            ...options,
         }).then((result) => result);
         return true;
     } catch (e) {

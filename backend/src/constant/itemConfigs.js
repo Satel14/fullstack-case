@@ -1,5 +1,4 @@
 module.exports = {
-    // Rarity chances
     CHANCES: {
         'Consumer Grade': 79.92,
         'Industrial Grade': 15.98,
@@ -10,7 +9,6 @@ module.exports = {
         'Contraband': 0.001,
     },
     
-    // Weapon types
     TYPE: {
         KNIFE: 'knife',
         PISTOLS: 'pistols',
@@ -21,7 +19,6 @@ module.exports = {
         MACHINE_GUNS: 'machine guns',
     },
     
-    // Item quality/wear
     RARITY: {
         FACTORY_NEW: 'Factory New',
         MINIMAL_WEAR: 'Minimal wear',
@@ -30,7 +27,6 @@ module.exports = {
         BATTLE_SCARRED: 'Battle Scarred'
     },
     
-    // Skin rarity grades
     GRADE: {
         CONSUMER_GRADE: 'Consumer Grade',
         INDUSTRIAL_GRADE: 'Industrial Grade',
@@ -41,7 +37,6 @@ module.exports = {
         CONTRABAND: 'Contraband'
     },
     
-    // Grade colors (hex codes)
     GRADE_COLORS: {
         'Consumer Grade': '#B0C3D9',
         'Industrial Grade': '#5E98D9',
