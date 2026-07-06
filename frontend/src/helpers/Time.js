@@ -1,53 +1,36 @@
-const months = ['Січня', 'Лютого', 'Березня', 'Квітня', 'Травня', 'Червня', 'Липня', 'Серпня', 'Вересня', 'Жовтня', 'Листопада', 'Грудня'];
+import i18n from '../i18n';
 
-function timeConverterDDMMYY(unix) {
-    const dateUnix = Date.parse(unix);
-    const a = new Date(dateUnix);
-    const year = a.getFullYear();
-    const month = months[a.getMonth()];
-    const date = a.getDate();
-    const time = `${date} ${month} ${year}`;
-    return time;
+export function timeConverterDDMMYY(unix) {
+    const a = new Date(Date.parse(unix));
+    const months = i18n.t('time.months', { returnObjects: true });
+    const month = Array.isArray(months) ? months[a.getMonth()] : '';
+    return `${a.getDate()} ${month} ${a.getFullYear()}`;
 }
 
-function timeLeft(unix) {
-    const dateUnix = Date.parse(unix);
-    const lastDate = parseInt(dateUnix, 10) / 1000;
-
+export function timeLeft(unix) {
+    const lastDate = parseInt(Date.parse(unix), 10) / 1000;
     const todayDate = Math.floor(Date.now() / 1000);
-    const timeLeftDate = todayDate - lastDate;
+    const diff = todayDate - lastDate;
 
     const minuteSeconds = 60;
     const hourSeconds = 3600;
     const daySeconds = 86400;
     const monthSeconds = 2592000;
 
-    let text = '';
-
-    if (monthSeconds < timeLeftDate) {
-        text = 'коли-небудь';
-    } else if (daySeconds < timeLeftDate) {
-        const days = Math.floor(timeLeftDate / daySeconds);
-        if (days === 1) {
-            text = '1 день';
-        } else if (days < 5) {
-            text = `${days} дня`;
-        } else if (days >= 5) {
-            text = `${days} днів`;
-        }
-    } else if (hourSeconds < timeLeftDate) {
-        text = `${Math.floor(timeLeftDate / hourSeconds)} годин`;
-    } else if (minuteSeconds < timeLeftDate) {
-        text = `${Math.floor(timeLeftDate / minuteSeconds)} хв`;
+    if (monthSeconds < diff) {
+        return i18n.t('time.someday');
     }
-    if (text === '') {
+
+    let text = '';
+    if (daySeconds < diff) {
+        text = i18n.t('time.days', { count: Math.floor(diff / daySeconds) });
+    } else if (hourSeconds < diff) {
+        text = i18n.t('time.hours', { count: Math.floor(diff / hourSeconds) });
+    } else if (minuteSeconds < diff) {
+        text = i18n.t('time.minutes', { count: Math.floor(diff / minuteSeconds) });
+    } else {
         return null;
     }
 
-    return `${text} назад`;
+    return i18n.t('time.ago', { value: text });
 }
-
-module.exports = {
-    timeConverterDDMMYY,
-    timeLeft,
-};

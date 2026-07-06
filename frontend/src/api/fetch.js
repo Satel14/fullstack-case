@@ -1,6 +1,7 @@
 import { API_URL } from './config'
 import { getToken } from './token'
 import openNotification from '../components/mini/openNotification';
+import i18n from '../i18n';
 
 const getHeaders = async () => {
     const token = await getToken()
@@ -27,7 +28,7 @@ export const post = async (destination, body, notificationErr = false) => {
         return result.json();
     }
     if (notificationErr) {
-        openNotification('error', 'Помилка', 'Відбулась помилка на сервері')
+        openNotification('error', i18n.t('common.error'), i18n.t('common.serverError'))
     }
 
     // eslint-disable-next-line no-throw-literal
@@ -47,7 +48,7 @@ export const put = async (destination, body, notificationErr = false) => {
     }
 
     if (notificationErr) {
-        openNotification('error', 'Помилка', 'Сталася помилка на сервері');
+        openNotification('error', i18n.t('common.error'), i18n.t('common.serverError'));
     }
 
     // eslint-disable-next-line no-throw-literal
@@ -55,12 +56,10 @@ export const put = async (destination, body, notificationErr = false) => {
 };
 export const get = async (destination) => {
     const headers = await getHeaders();
-    // console.log(`${API_URL}${destination}`, 'full fetch URL');
     const result = await fetch(`${API_URL}${destination}`, {
         method: "GET",
         headers,
     });
-    // console.log(result, 'result');
     if (result.ok) {
         return result.json()
     }
