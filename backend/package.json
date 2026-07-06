@@ -30,6 +30,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "test:pf": "node --test test/provablyFair.test.js",
     "start": "node server.js",
     "start-watch": "nodemon server.js --inspect=0.0.0.0:9299",
     "start-dev": "set NODE_ENV=development&& nodemon server.js",
