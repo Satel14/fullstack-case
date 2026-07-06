@@ -7,9 +7,9 @@ const ItemService = require("./../services/item");
 const ITEM_HASH = "item_hash";
 
 
-const addDataHashWithKey = async (key, id, data) => {
-    client.hmset(key, id, data);
-}
+const addDataHashWithKey = (key, id, data) => new Promise((resolve, reject) => {
+    client.hmset(key, id, data, (err, reply) => (err ? reject(err) : resolve(reply)));
+});
 
 const setDataHashWithKey = async (key, data) => {
     client.hmset(key, data);
@@ -23,7 +23,8 @@ const cleanDataHashWithKey = async (key) => {
 const getAllDataHashWithKey = (key) => {
     return new Promise((resv, rej) => {
         client.hgetall(key, (err, reply) => {
-            resv(reply);
+            if (err) return rej(err);
+            return resv(reply);
         })
     })
 }
@@ -53,7 +54,7 @@ async function initialRedisState() {
         }
 
         promises.push(
-            await addDataHashWithKey(
+            addDataHashWithKey(
                 ITEM_HASH,
                 element.item_itemId,
                 JSON.stringify({
