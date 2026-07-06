@@ -10,7 +10,9 @@ module.exports.usePromocode = async (code, userId, options = {}) => {
             throw new Error(MESSAGE.PROMOCODE.NOT_EXIST);
         }
         const promo = data.dataValues;
-        const usedIds = JSON.parse(promo.promo_used_ids);
+        const usedIds = Array.isArray(promo.promo_used_ids)
+            ? promo.promo_used_ids
+            : JSON.parse(promo.promo_used_ids || '[]');
         if (usedIds.length >= promo.promo_limit) {
             throw new Error(MESSAGE.PROMOCODE.LIMIT_MAX);
         }
@@ -38,7 +40,9 @@ module.exports.deleteUsedPromocodesOfUser = async (userId) => {
             let promo = element.dataValues;
             let code = promo.promo_code;
 
-            const usedIds = JSON.parse(promo.promo_used_ids);
+            const usedIds = Array.isArray(promo.promo_used_ids)
+            ? promo.promo_used_ids
+            : JSON.parse(promo.promo_used_ids || '[]');
             if (usedIds.includes(userId)) {
                 let filtered = usedIds.filter((id)=> id !== userId);
                 promises.push(
