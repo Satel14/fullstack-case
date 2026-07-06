@@ -14,8 +14,6 @@ const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
 const MESSAGE = require('../constant/responseMessages');
 const sequelize = require('../config/db');
 
-const _ = require('lodash');
-
 function jsonParser(blob) {
     let parsed = JSON.parse(blob);
     if (typeof parsed === 'string') parsed = jsonParser(parsed);
@@ -274,37 +272,25 @@ module.exports.getStorageTop = async (req, res) => {
         }
 
         const { limit, offset } = req.params;
-        const parsedLimit = Math.max(Number(limit) || 0, 0);
+        const CAP = 50;
         const parsedOffset = Math.max(Number(offset) || 0, 0);
+        const parsedLimit = Math.max(Number(limit) || 0, 0);
+        // Leaderboard is capped at the top CAP users, then paginated within it.
+        const effectiveLimit = parsedOffset >= CAP ? 0 : Math.min(parsedLimit, CAP - parsedOffset);
 
-        const storages = await StorageService.getStorageAllItems();
-        const counterByUserId = {};
+        const top = effectiveLimit > 0
+            ? await StorageService.getTopUsersByItemCount(effectiveLimit, parsedOffset)
+            : [];
 
-        for (const key in storages) {
-            const storage = storages[key];
-            const userId = Number(storage.storage_userId || 0);
-            if (!userId) {
-                continue;
-            }
-            counterByUserId[userId] = (counterByUserId[userId] || 0) + 1;
-        }
-
-        const topRaw = await Promise.all(
-            Object.keys(counterByUserId).map(async (userId) => {
-                const numericUserId = Number(userId);
-                const info = await UserService.getUserById(numericUserId).catch(() => null);
-                return {
-                    userId: numericUserId,
-                    count: counterByUserId[userId],
-                    info,
-                };
-            }),
+        const data = await Promise.all(
+            top.map(async (row) => ({
+                userId: row.userId,
+                count: row.count,
+                info: await UserService.getUserById(row.userId).catch(() => null),
+            })),
         );
 
-        const rankedTop = _.orderBy(topRaw, ['count'], ['desc']).slice(0, 50);
-        const topPage = rankedTop.slice(parsedOffset, parsedOffset + parsedLimit);
-
-        return res.status(200).json({ status: 200, data: topPage });
+        return res.status(200).json({ status: 200, data });
     } catch (e) {
         return res.status(500).json({ status: 500, message: e.message });
     }

@@ -1,5 +1,32 @@
 const Storage = require('../models/storage');
 const MESSAGE = require('../constant/responseMessages');
+const { Op } = require('sequelize');
+
+module.exports.getTopUsersByItemCount = async (limit, offset) => {
+    try {
+        const rows = await Storage.findAll({
+            attributes: [
+                'storage_userId',
+                [Storage.sequelize.literal('COUNT(*)'), 'count'],
+            ],
+            where: {
+                storage_userId: { [Op.ne]: null },
+            },
+            group: ['storage_userId'],
+            order: [[Storage.sequelize.literal('count'), 'DESC']],
+            limit,
+            offset,
+            raw: true,
+        });
+
+        return rows.map((r) => ({
+            userId: Number(r.storage_userId != null ? r.storage_userId : r.userId),
+            count: Number(r.count),
+        }));
+    } catch (e) {
+        throw Error(e.message);
+    }
+};
 
 module.exports.addItem = async (userId, itemId, itemColor, caseId, options = {}) => {
     try {
