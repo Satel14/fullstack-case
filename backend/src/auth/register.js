@@ -31,14 +31,23 @@ module.exports = (app) => {
 
         const now = new Date();
 
-        await Users.create({
-            user_login: login,
-            user_password: passwordHash,
-            user_email: email,
-            user_avatar: avatar,
-            created_at: now,
-            updated_at: now,
-        });
+        try {
+            await Users.create({
+                user_login: login,
+                user_password: passwordHash,
+                user_email: email,
+                user_avatar: avatar,
+                created_at: now,
+                updated_at: now,
+            });
+        } catch (e) {
+            if (e && e.name === 'SequelizeUniqueConstraintError') {
+                res.status(401).json({ message: message.AUTH.USER_IS_EXIST });
+                return;
+            }
+            res.status(500).json({ message: e.message });
+            return;
+        }
 
         mailSender.userRegistered(email, { login });
 

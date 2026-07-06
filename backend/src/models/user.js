@@ -13,6 +13,7 @@ module.exports = sequelize.define(
         user_login: {
             field: "login",
             type: Sequelize.STRING,
+            unique: true,
         },
         user_password: {
             field: "password",
@@ -20,7 +21,8 @@ module.exports = sequelize.define(
         },
         user_email: {
             field: "email",
-            type: Sequelize.TEXT,
+            type: Sequelize.STRING,
+            unique: true,
         },
         user_avatar: {
             field: "avatar",
