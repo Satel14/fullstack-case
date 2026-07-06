@@ -5,6 +5,7 @@ const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
 const UserService = require('../services/user');
 const BalanceHistoryService = require('../services/balanceHistory');
 const MESSAGE = require('../constant/responseMessages');
+const sequelize = require('../config/db');
 
 module.exports.getBonusListOfUser = async (req, res) => {
     try {
@@ -41,12 +42,24 @@ module.exports.activateBonus = async (req, res) => {
         }
 
         const bonusBalance = json[bonusId].bonus;
-        await UserService.incrementBalance(bonusBalance, user_id);
-        await BalanceHistoryService.addBalanceChange(
-            user_id, BalanceHistoryEnum.BONUS, bonusBalance,
-        );
 
-        await BonusHistoryService.addBonusHistory(user_id, bonusId);
+        try {
+            await sequelize.transaction(async (t) => {
+                // Insert the claim row FIRST; the UNIQUE(userId, bonusId) index
+                // rejects a concurrent duplicate, closing the double-spend race.
+                await BonusHistoryService.addBonusHistory(user_id, bonusId, { transaction: t });
+                await UserService.incrementBalance(bonusBalance, user_id, { transaction: t });
+                await BalanceHistoryService.addBalanceChange(
+                    user_id, BalanceHistoryEnum.BONUS, bonusBalance, '', { transaction: t },
+                );
+            });
+        } catch (e) {
+            if (e && (e.name === 'SequelizeUniqueConstraintError' || (e.original && e.original.code === 'ER_DUP_ENTRY'))) {
+                return res.status(400).json({ status: 200, message: MESSAGE.BONUS.ALREADY_USED });
+            }
+            throw e;
+        }
+
         return res.status(200).json({ status: 200 });
     } catch (e) {
         return res.status(400).json({ status: 400, message: e.message });
