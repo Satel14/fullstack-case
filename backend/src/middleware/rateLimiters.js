@@ -32,6 +32,14 @@ const depositLimiter = rateLimit({
     message: { status: 429, message: 'Забагато спроб поповнення. Зачекайте трохи.' },
 });
 
+const resetLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: 429, message: 'Забагато скидань профілю. Зачекайте трохи.' },
+});
+
 module.exports = {
-    authLimiter, caseOpenLimiter, onlineLimiter, depositLimiter,
+    authLimiter, caseOpenLimiter, onlineLimiter, depositLimiter, resetLimiter,
 };

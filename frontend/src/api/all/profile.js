@@ -5,7 +5,7 @@ const editProfile = (fields) => put('/profile/edit', {
 }, true);
 
 const profileIsOnline = () => put('/profile/online', {});
-const resetProfile = () => get('/profile/reset', {});
+const resetProfile = () => post('/profile/reset', {});
 
 const sendMoneyForUser = (fields) => put('/profile/sendmoney', {
     ...fields,
