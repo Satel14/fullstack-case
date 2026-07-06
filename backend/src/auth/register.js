@@ -37,6 +37,8 @@ module.exports = (app) => {
                 user_password: passwordHash,
                 user_email: email,
                 user_avatar: avatar,
+                user_balance: 0,
+                user_rank: 0,
                 created_at: now,
                 updated_at: now,
             });
