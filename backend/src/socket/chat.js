@@ -46,12 +46,13 @@ module.exports = function (server) {
         const { id } = socket.client;
 
         socket.on('user connected', async () => {
-            console.log('анонім підключився +++');
-
-            io.emit('user-on', Array.from(usersConnected.keys()));
-            const lastMessages = await ChatService.get();
-            io.emit('chat messages', lastMessages);
-            return;
+            try {
+                io.emit('user-on', Array.from(usersConnected.keys()));
+                const lastMessages = await ChatService.get();
+                io.emit('chat messages', lastMessages);
+            } catch (e) {
+                console.error('[chat] user connected error:', e.message);
+            }
         });
 
         socket.on('new-user', async () => {
@@ -74,16 +75,20 @@ module.exports = function (server) {
                 return;
             }
 
-            const messageObj = {
-                login: socket.userInfo.login,
-                msg,
-                id: socket.userInfo.id,
-                avatar: socket.userInfo.avatar,
-                time: Math.round(Date.now() / 1000),
-            }
+            try {
+                const messageObj = {
+                    login: socket.userInfo.login,
+                    msg,
+                    id: socket.userInfo.id,
+                    avatar: socket.userInfo.avatar,
+                    time: Math.round(Date.now() / 1000),
+                }
 
-            await ChatService.add(messageObj);
-            socket.broadcast.emit("chat message", messageObj);
+                await ChatService.add(messageObj);
+                socket.broadcast.emit("chat message", messageObj);
+            } catch (e) {
+                console.error('[chat] chat message error:', e.message);
+            }
         })
 
         socket.on('disconnect', () => {
