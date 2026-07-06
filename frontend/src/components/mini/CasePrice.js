@@ -3,10 +3,8 @@ import { Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
 
 const checkPrice = (data) => {
-    if (parseInt(data.case_discount, 10) !== 0) {
-        return true;
-    }
-    return false;
+    const discount = parseInt(data.case_discount, 10);
+    return Number.isFinite(discount) && discount > 0;
 };
 
 const getSummPrice = (price, openCount) => {
