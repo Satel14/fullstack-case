@@ -12,6 +12,7 @@ const BalanceHistoryService = require('../services/balanceHistory');
 const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
 
 const MESSAGE = require('../constant/responseMessages');
+const sequelize = require('../config/db');
 
 const _ = require('lodash');
 
@@ -135,12 +136,24 @@ module.exports.sellItemByStorageId = async (req, res) => {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
         }
 
-        await UserService.incrementBalance(actualPrice, user_id);
-        await BalanceHistoryService.addBalanceChange(
-            user_id, BalanceHistoryEnum.SELL_ITEM, actualPrice,
-        );
+        await sequelize.transaction(async (t) => {
+            const locked = await StorageService.getStorageInfoById(user_id, id, 'inventory', {
+                transaction: t,
+                lock: t.LOCK.UPDATE,
+            });
 
-        await StorageService.setStorageStatusById(id, 'money');
+            if (!locked) {
+                const err = new Error(MESSAGE.ITEM.NOT_EXIST);
+                err.code = 'NOT_SELLABLE';
+                throw err;
+            }
+
+            await StorageService.setStorageStatusById(id, 'money', { transaction: t });
+            await UserService.incrementBalance(actualPrice, user_id, { transaction: t });
+            await BalanceHistoryService.addBalanceChange(
+                user_id, BalanceHistoryEnum.SELL_ITEM, actualPrice, '', { transaction: t },
+            );
+        });
 
         const actualBalance = await UserService.getBalanceByUserId(user_id);
 
@@ -149,6 +162,9 @@ module.exports.sellItemByStorageId = async (req, res) => {
         return res.status(200).json({ status: 200, balance: actualBalance });
     } catch (e) {
         console.error('[SELL] ERROR:', e.message, e.stack);
+        if (e && e.code === 'NOT_SELLABLE') {
+            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
+        }
         return res.status(500).json({ status: 500, message: e.message });
     }
 };
