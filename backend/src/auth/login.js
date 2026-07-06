@@ -42,7 +42,6 @@ module.exports = (app) => {
             const token = jwt.sign(payload, jwtOptions.secretOrKey, jwtOptions.signOptions);
             const { user_password, ...safeUser } = user.dataValues;
             return res.status(200).json({
-                message: 'ok',
                 jwt: token,
                 user: safeUser,
             });
