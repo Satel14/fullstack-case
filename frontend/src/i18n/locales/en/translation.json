@@ -341,6 +341,10 @@
         "compute": "Compute",
         "computed": "Computed result",
         "algorithm": "Algorithm",
-        "badge": "Provably Fair"
+        "badge": "Provably Fair",
+        "serverSeedPlaceholder": "server seed",
+        "clientSeedPlaceholder": "client seed",
+        "noncePlaceholder": "nonce",
+        "caseIdPlaceholder": "case ID"
     }
 }

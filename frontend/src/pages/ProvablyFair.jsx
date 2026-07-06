@@ -82,6 +82,7 @@ const ProvablyFair = () => {
     return (
         <div className="provablyfairpage">
             <h2>{t('provablyFair.title')}</h2>
+            <h3>{t('provablyFair.algorithm')}</h3>
             <p>{t('provablyFair.intro')}</p>
 
             <h3>{t('provablyFair.currentSeeds')}</h3>
@@ -101,10 +102,10 @@ const ProvablyFair = () => {
             <Table rowKey="id" dataSource={history} columns={columns} pagination={false} />
 
             <h3>{t('provablyFair.calculator')}</h3>
-            <Input placeholder="server seed" value={calc.serverSeed} onChange={(e) => setCalc({ ...calc, serverSeed: e.target.value })} />
-            <Input placeholder="client seed" value={calc.clientSeed} onChange={(e) => setCalc({ ...calc, clientSeed: e.target.value })} />
-            <Input placeholder="nonce" value={calc.nonce} onChange={(e) => setCalc({ ...calc, nonce: e.target.value })} />
-            <Input placeholder="caseId" value={calc.caseId} onChange={(e) => setCalc({ ...calc, caseId: e.target.value })} />
+            <Input placeholder={t('provablyFair.serverSeedPlaceholder')} value={calc.serverSeed} onChange={(e) => setCalc({ ...calc, serverSeed: e.target.value })} />
+            <Input placeholder={t('provablyFair.clientSeedPlaceholder')} value={calc.clientSeed} onChange={(e) => setCalc({ ...calc, clientSeed: e.target.value })} />
+            <Input placeholder={t('provablyFair.noncePlaceholder')} value={calc.nonce} onChange={(e) => setCalc({ ...calc, nonce: e.target.value })} />
+            <Input placeholder={t('provablyFair.caseIdPlaceholder')} value={calc.caseId} onChange={(e) => setCalc({ ...calc, caseId: e.target.value })} />
             <Button onClick={onCompute}>{t('provablyFair.compute')}</Button>
             {calcResult && (
                 <div>{t('provablyFair.computed')}: {calcResult.itemId} / {calcResult.color} ({calcResult.rarity})</div>

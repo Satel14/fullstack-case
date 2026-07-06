@@ -343,6 +343,10 @@
         "compute": "Обчислити",
         "computed": "Результат обчислення",
         "algorithm": "Алгоритм",
-        "badge": "Чесна гра"
+        "badge": "Чесна гра",
+        "serverSeedPlaceholder": "server seed",
+        "clientSeedPlaceholder": "client seed",
+        "noncePlaceholder": "nonce",
+        "caseIdPlaceholder": "ID кейсу"
     }
 }
