@@ -13,7 +13,10 @@ module.exports.getTopUsersByItemCount = async (limit, offset) => {
                 storage_userId: { [Op.ne]: null },
             },
             group: ['storage_userId'],
-            order: [[Storage.sequelize.literal('count'), 'DESC']],
+            order: [
+                [Storage.sequelize.literal('count'), 'DESC'],
+                ['storage_userId', 'ASC'],
+            ],
             limit,
             offset,
             raw: true,
@@ -48,7 +51,7 @@ module.exports.getStorageLastItemsByUserId = async (id, limit, offset) => {
     try {
         const storageItems = await Storage.findAll({
             order: [['storage_id', 'DESC']],
-            limit: Math.min(Math.max(parseInt(limit, 10) || 0, 0), 100),
+            limit: parseInt(limit, 10),
             offset: parseInt(offset, 10),
             where: {
                 storage_userId: id,
