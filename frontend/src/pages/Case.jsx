@@ -91,7 +91,13 @@ class Case extends Component {
         const { id } = this.state;
         const { history } = this.props;
 
-        const caseData = await getCaseById(id).then((data) => data);
+        let caseData;
+        try {
+            caseData = await getCaseById(id);
+        } catch (e) {
+            history.push('/404');
+            return;
+        }
 
         if (!caseData) {
             history.push('/404');
