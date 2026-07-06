@@ -70,24 +70,34 @@ const Chat = ({ user, enabled }) => {
 
     useEffect(() => {
         if (!enabled) {
-            socket.disconnect();
-            socket.off();
-            return;
+            return undefined;
         }
 
-        socket.connect();
-        socket.on("connect", () => {
+        const onConnect = () => {
             socket.emit("user connected");
             if (login) {
                 socket.emit('new-user', login);
             }
-        });
-        socket.on("chat messages", (chatOld) => {
+        };
+        const onChatMessages = (chatOld) => {
             setChat(chatOld);
-        })
-        socket.on("user-on", (list) => {
+        };
+        const onUsersOn = (list) => {
             setUsersOnline(list);
-        })
+        };
+
+        socket.connect();
+        socket.on("connect", onConnect);
+        socket.on("chat messages", onChatMessages);
+        socket.on("user-on", onUsersOn);
+
+        // Remove only OUR listeners on cleanup — never socket.off() (no-arg) or
+        // socket.disconnect(), which would also kill HeaderThird's shared 'new-drop' feed.
+        return () => {
+            socket.off("connect", onConnect);
+            socket.off("chat messages", onChatMessages);
+            socket.off("user-on", onUsersOn);
+        };
     }, [enabled]);
 
     useEffect(() => {
