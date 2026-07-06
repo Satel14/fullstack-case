@@ -112,19 +112,22 @@ module.exports = class OpenCase {
     }
 
     getItemForIndex(index) {
+        let cumulative = 0;
         let rariest;
 
-        let arrOfChance = Object.keys(this.case.CHANCES);
-        const lowestChance = this.case.CHANCES[arrOfChance[0]];
-
-        if (lowestChance <= index) {
-            rariest = arrOfChance[0];
-        } else {
-            for (let key in this.case.CHANCES) {
-                if (index <= this.case.CHANCES[key]) {
-                    rariest = key;
-                }
+        for (let key in this.case.CHANCES) {
+            if (key === 'COLORS') {
+                continue;
             }
+            cumulative += this.case.CHANCES[key];
+            if (index <= cumulative) {
+                rariest = key;
+                break;
+            }
+        }
+
+        if (!rariest) {
+            rariest = this.getMostCommonRareWithItems();
         }
         return this.getRandomItemWithRareParam(rariest);
     }
