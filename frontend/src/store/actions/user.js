@@ -32,7 +32,12 @@ export const getProfileFetch = () => (dispatch) => {
             .then((resp) => resp.json())
             // eslint-disable-next-line promise/always-return
             .then((data) => {
-                dispatch(loginUser(data.user));
+                if (data && data.user) {
+                    dispatch(loginUser(data.user));
+                } else {
+                    localStorage.removeItem('token');
+                    dispatch(logoutUser());
+                }
             });
     }
 
