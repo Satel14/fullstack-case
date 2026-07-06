@@ -1,5 +1,4 @@
 const crypto = require('crypto');
-const { Op } = require('sequelize');
 const ProvablyFairSeed = require('../models/provablyFairSeed');
 const CaseOpenRecord = require('../models/caseOpenRecord');
 const { sha256 } = require('../modules/provablyFair');
@@ -20,7 +19,7 @@ async function createActiveSeed(userId, clientSeed, options = {}) {
             pf_userId: userId,
             pf_serverSeed: serverSeed,
             pf_serverSeedHash: sha256(serverSeed),
-            pf_clientSeed: clientSeed || newClientSeed(),
+            pf_clientSeed: clientSeed ?? newClientSeed(),
             pf_nonce: 0,
             pf_status: 'active',
             pf_created_at: new Date(),
@@ -30,8 +29,13 @@ async function createActiveSeed(userId, clientSeed, options = {}) {
 }
 
 module.exports.ensureActiveSeed = async (userId, options = {}) => {
+    // Always select the NEWEST active seed deterministically so a rare
+    // duplicate-active row (e.g. two concurrent first-time GETs) becomes a
+    // benign orphan that is never chosen, and getState + the open flow always
+    // agree on which seed is in effect.
     let seed = await ProvablyFairSeed.findOne({
         where: { pf_userId: userId, pf_status: 'active' },
+        order: [['pf_id', 'DESC']],
         ...options,
     });
     if (!seed) {
@@ -110,8 +114,8 @@ module.exports.recordOpen = async (data, options = {}) => {
 };
 
 module.exports.getHistory = async (userId, limit, offset) => {
-    const safeLimit = Math.min(parseInt(limit, 10) || 50, HISTORY_MAX_LIMIT);
-    const safeOffset = parseInt(offset, 10) || 0;
+    const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 50, HISTORY_MAX_LIMIT));
+    const safeOffset = Math.max(0, parseInt(offset, 10) || 0);
 
     const rows = await CaseOpenRecord.findAll({
         where: { co_userId: userId },
