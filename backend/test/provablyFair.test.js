@@ -99,3 +99,17 @@ test('single-color item returns its only color', () => {
     const w = pf.deriveWinner('server', 'client', 3, CASE_DEF, ITEM_HASH);
     assert.strictEqual(w.color, ITEM_CONFIG.COLORS.DEFAULT);
 });
+
+test('deriveWinner keeps default when only one painted color exists, even with painted-favoring weights', () => {
+    const oneColor = {
+        id: 'onecolor',
+        CHANCES: { FN: 100, COLORS: { DEFAULT: 0, PAINTED: 100, LIST: { red: 100 } } },
+        ITEMS: [{ id: 11, rare: 'FN', colors: ['default', 'red'] }],
+    };
+    const hash = { 11: JSON.stringify({ name: 'y', type: 'pistol', rare: 'FN', pricesInCredits: JSON.stringify({ default: 10, red: 50 }) }) };
+    // Mirrors caseOpen.js getPaintedRandom: paint requires >1 painted colors.
+    for (let n = 0; n < 50; n++) {
+        const w = pf.deriveWinner('s', 'c', n, oneColor, hash);
+        assert.strictEqual(w.color, ITEM_CONFIG.COLORS.DEFAULT);
+    }
+});
