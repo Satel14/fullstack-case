@@ -41,5 +41,11 @@ module.exports = {
     },
     ARTICLE: {
         NOT_EXIST: 'Такої статті не існує'
-    }
+    },
+    PROVABLY_FAIR: {
+        SEED_UPDATED: 'Client seed оновлено',
+        ROTATED: 'Server seed оновлено',
+        CLIENT_SEED_INVALID: 'Некоректний client seed',
+        VERIFY_ERROR: 'Не вдалося перевірити результат',
+    },
 }
