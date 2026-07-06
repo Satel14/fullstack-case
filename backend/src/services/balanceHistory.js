@@ -6,7 +6,8 @@ module.exports.addBalanceChange = async (userId, type, change, extraData = '', o
             history_userId: userId,
             history_type: type,
             history_change: change,
-            history_extraData: extraData
+            history_extraData: extraData,
+            created_at: new Date(),
         };
         await BalanceHistory.create(item, options);
         return;
