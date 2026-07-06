@@ -318,5 +318,29 @@
         "hours_one": "{{count}} hour",
         "hours_other": "{{count}} hours",
         "minutes": "{{count}} min"
+    },
+    "provablyFair": {
+        "title": "Provably Fair",
+        "intro": "Every open is decided in advance by HMAC-SHA256(server seed, client seed:nonce). The server seed hash is published before the open and cannot be swapped.",
+        "currentSeeds": "Current seeds",
+        "serverSeedHash": "Server seed hash (commitment)",
+        "clientSeed": "Client seed",
+        "nonce": "Nonce",
+        "save": "Save",
+        "rotate": "Rotate server seed",
+        "rotateConfirm": "Rotating reveals the current server seed and starts a new one. Continue?",
+        "revealedServerSeed": "Revealed server seed",
+        "history": "Open history",
+        "case": "Case",
+        "result": "Result",
+        "status": "Status",
+        "verifiable": "Verifiable",
+        "awaitingRotate": "Awaiting rotate",
+        "verify": "Verify",
+        "calculator": "Verify calculator",
+        "compute": "Compute",
+        "computed": "Computed result",
+        "algorithm": "Algorithm",
+        "badge": "Provably Fair"
     }
 }

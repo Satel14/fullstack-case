@@ -14,6 +14,7 @@ import PaymentGateway from '../pages/PaymentGateway';
 import Settings from '../pages/Settings.jsx';
 import Top from '../pages/Top';
 import Faq from '../pages/Faq';
+import ProvablyFair from '../pages/ProvablyFair';
 
 export default {
     private: [
@@ -40,6 +41,12 @@ export default {
             exact: true,
             layout: Layout,
             component: Settings,
+        },
+        {
+            path: '/provably-fair',
+            exact: true,
+            layout: Layout,
+            component: ProvablyFair,
         },
     ],
     public: [

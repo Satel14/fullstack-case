@@ -6,6 +6,7 @@ import map from 'lodash/map';
 import Fade from 'react-reveal/Fade';
 import { itemInfoFetch } from '../store/actions/itemCache';
 import { getCaseById } from '../api/all/cases';
+import { getProvablyFairState } from '../api/all/provablyFair';
 import { renderItemProp } from '../helpers/Case';
 import { wearRank, wearColor } from '../helpers/rarity';
 import Loader from '../components/mini/Loader';
@@ -27,11 +28,13 @@ class Case extends Component {
             caseData: [],
             caseCollection: [],
             fetching: false,
+            serverSeedHash: null,
         };
     }
 
     async componentDidMount() {
         await this.getData();
+        await this.getProvablyFairInfo();
     }
 
     componentDidUpdate(prevProps) {
@@ -121,6 +124,15 @@ class Case extends Component {
         });
     }
 
+    async getProvablyFairInfo() {
+        try {
+            const res = await getProvablyFairState();
+            this.setState({ serverSeedHash: res.data.active.serverSeedHash });
+        } catch (e) {
+            // anonymous users get 401/403 here - render no badge
+        }
+    }
+
     addItemsToCache(arrayItemIds) {
         const { itemCache } = this.props;
         if (!itemCache || !arrayItemIds || arrayItemIds.length === 0) {
@@ -135,7 +147,9 @@ class Case extends Component {
     }
 
     render() {
-        const { caseCollection, caseData, fetching } = this.state;
+        const {
+            caseCollection, caseData, fetching, serverSeedHash,
+        } = this.state;
         const { t } = this.props;
         return (
             <div className="casepage">
@@ -146,6 +160,14 @@ class Case extends Component {
                         <div className="casepage-openbutton">
                             <OpenCase data={caseData} />
                         </div>
+
+                        {serverSeedHash && (
+                            <div className="casepage-provablyfair">
+                                <Tooltip title={serverSeedHash}>
+                                    <span>{t('provablyFair.badge')}</span>
+                                </Tooltip>
+                            </div>
+                        )}
 
                         <span className="casepage-title-second">
                             {t('case.contents')}

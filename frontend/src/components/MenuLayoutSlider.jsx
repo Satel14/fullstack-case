@@ -10,6 +10,7 @@ import {
     GiftOutlined,
     TagsOutlined,
     UserOutlined,
+    SafetyCertificateOutlined,
 } from '@ant-design/icons';
 
 import Socials from './mini/Socials';
@@ -55,6 +56,14 @@ class MenuLayoutSlider extends React.Component {
                 icon: <TagsOutlined />,
             },
         ];
+
+        if (isAuthorized(user)) {
+            defaultMenu.splice(2, 0, {
+                key: 'provablyfair',
+                label: <Link to="/provably-fair">{t('provablyFair.title')}</Link>,
+                icon: <SafetyCertificateOutlined />,
+            });
+        }
 
         if (!isAuthorized(user)) {
             defaultMenu.push({

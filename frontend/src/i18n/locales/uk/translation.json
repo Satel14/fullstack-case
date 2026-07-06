@@ -320,5 +320,29 @@
         "hours_few": "{{count}} години",
         "hours_many": "{{count}} годин",
         "minutes": "{{count}} хв"
+    },
+    "provablyFair": {
+        "title": "Чесна гра",
+        "intro": "Кожне відкриття визначається наперед за формулою HMAC-SHA256(server seed, client seed:nonce). Хеш server seed публікується до відкриття — його неможливо підмінити.",
+        "currentSeeds": "Поточні сіди",
+        "serverSeedHash": "Хеш server seed (зобов'язання)",
+        "clientSeed": "Client seed",
+        "nonce": "Nonce",
+        "save": "Зберегти",
+        "rotate": "Оновити server seed",
+        "rotateConfirm": "Оновлення розкриє поточний server seed і почне новий. Продовжити?",
+        "revealedServerSeed": "Розкритий server seed",
+        "history": "Історія відкриттів",
+        "case": "Кейс",
+        "result": "Результат",
+        "status": "Статус",
+        "verifiable": "Перевірний",
+        "awaitingRotate": "Очікує оновлення",
+        "verify": "Перевірити",
+        "calculator": "Калькулятор перевірки",
+        "compute": "Обчислити",
+        "computed": "Результат обчислення",
+        "algorithm": "Алгоритм",
+        "badge": "Чесна гра"
     }
 }
