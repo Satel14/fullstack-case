@@ -22,7 +22,7 @@ module.exports.get = async () => {
     try {
         let lastMessages = (await RedisManager.getAllDataHashWithKey("chat_hash")) || [];
 
-        if (Object.keys(lastMessages).length > 1) {
+        if (Object.keys(lastMessages).length >= 1) {
             lastMessages = normalizeChatMessagesFromRedis(lastMessages);
         }
 
