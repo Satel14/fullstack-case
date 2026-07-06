@@ -69,7 +69,7 @@ module.exports.getItemList = async (req, res) => {
                 ...element,
                 id: parseInt(key, 10),
                 pricesInCredits: normalizeColors(
-                    JSON.parse(JSON.parse(element.pricesInCredits))
+                    JSON.parse(element.pricesInCredits)
                 ),
             });
         }
