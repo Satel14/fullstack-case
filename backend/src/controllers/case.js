@@ -19,7 +19,8 @@ module.exports.openCaseById = async (req, res) => {
             return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
         }
         const { user_id } = req.user.profile;
-        const { id, count } = req.body;
+        const { id } = req.body;
+        const count = parseInt(req.body.count, 10);
         console.log('[DEBUG] user_id:', user_id, 'case_id:', id, 'count:', count);
         const caseById = await CaseService.getCaseById(id);
 
@@ -217,7 +218,7 @@ module.exports.validate = (method) => {
                     .exists().isString(),
                 body('count')
                     .exists()
-                    .isNumeric(),
+                    .isInt({ min: 1, max: 100 }),
             ];
         }
         default:

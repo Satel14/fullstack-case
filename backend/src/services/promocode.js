@@ -1,9 +1,10 @@
 const Promocode = require('../models/promocode');
 const MESSAGE = require('../constant/responseMessages');
 
-module.exports.usePromocode = async (code, userId) => {
+module.exports.usePromocode = async (code, userId, options = {}) => {
     try {
-        const data = await Promocode.findByPk(code);
+        const { transaction } = options;
+        const data = await Promocode.findByPk(code, options);
 
         if (!data) {
             throw new Error(MESSAGE.PROMOCODE.NOT_EXIST);
@@ -19,7 +20,7 @@ module.exports.usePromocode = async (code, userId) => {
         }
 
         usedIds.push(userId);
-        await Promocode.update({ promo_used_ids: usedIds }, { where: { promo_code: code } });
+        await Promocode.update({ promo_used_ids: usedIds }, { where: { promo_code: code }, transaction });
 
         return { bonus: promo.promo_bonus, description: promo.promo_description };
     } catch (e) {

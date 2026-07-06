@@ -91,7 +91,7 @@ class OpenCase extends Component {
         super(props);
         this.state = {
             openMethod: '',
-            randomItemList: [],
+            randomItemsList: [],
             winner: null,
             load: false,
             loadItem: false,
@@ -160,7 +160,7 @@ class OpenCase extends Component {
         this.setState({
             openMethod: '',
             load: false,
-            randomItemList: [],
+            randomItemsList: [],
             winner: null,
             loadIndex: null,
             loadItem: false,

@@ -90,7 +90,7 @@ module.exports.getStorageById = async (userId, status) => {
             order: [['storage_id', 'DESC']],
             where: {
                 storage_userId: userId,
-                status,
+                storage_status: status,
             },
         });
 
@@ -126,17 +126,19 @@ module.exports.setStorageExtraDataById = async (storage_id, storage_extraData) =
     }
 };
 
-module.exports.setStorageStatusById = async (storage_id, storage_status) => {
+module.exports.setStorageStatusById = async (storage_id, storage_status, options = {}) => {
     try {
+        const { transaction } = options;
         const storageItem = await Storage.findOne({
             where: {
                 storage_id,
             },
+            transaction,
         });
 
         if (!storageItem) throw new Error(MESSAGE.CASE.NOT_EXIST);
 
-        await Storage.update({ storage_status }, { where: { storage_id } });
+        await Storage.update({ storage_status }, { where: { storage_id }, transaction });
 
         return;
     } catch (e) {
@@ -157,7 +159,7 @@ module.exports.cleanStorageUser = async (userId) => {
     }
 };
 
-module.exports.getStorageInfoById = async (userId, id, status) => {
+module.exports.getStorageInfoById = async (userId, id, status, options = {}) => {
     try {
         const storageItem = await Storage.findOne({
             where: {
@@ -165,6 +167,7 @@ module.exports.getStorageInfoById = async (userId, id, status) => {
                 storage_status: status,
                 storage_id: id,
             },
+            ...options,
         });
 
         if (!storageItem) return null;

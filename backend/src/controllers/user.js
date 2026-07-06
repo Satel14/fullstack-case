@@ -51,13 +51,18 @@ module.exports.sendMoneyForUserByUserId = async (req, res) => {
             return res.status(422).json({ status: 422, sended: false, message: MESSAGE.USER.NOT_EXIST });
         }
 
-        const balance = await UserService.getBalanceByUserId(user_id);
-
-        if (amount > balance) {
-            return res.status(200).json({ status: 200, sended: false, message: MESSAGE.USER.MONEY_NOT_ENOUGH });
-        }
-
         await sequelize.transaction(async (t) => {
+            const lockedBalance = await UserService.getBalanceByUserId(user_id, {
+                transaction: t,
+                lock: t.LOCK.UPDATE,
+            });
+
+            if (amount > lockedBalance) {
+                const err = new Error(MESSAGE.USER.MONEY_NOT_ENOUGH);
+                err.code = 'MONEY_NOT_ENOUGH';
+                throw err;
+            }
+
             await UserService.incrementBalance(amount, userIdTo, { transaction: t });
             await UserService.decrementBalance(amount, user_id, { transaction: t });
 
@@ -69,9 +74,12 @@ module.exports.sendMoneyForUserByUserId = async (req, res) => {
             );
         });
 
-        const actualBalance = balance - amount;
+        const actualBalance = await UserService.getBalanceByUserId(user_id);
         return res.status(200).json({ status: 200, sended: true, balance: actualBalance });
     } catch (e) {
+        if (e && e.code === 'MONEY_NOT_ENOUGH') {
+            return res.status(200).json({ status: 200, sended: false, message: MESSAGE.USER.MONEY_NOT_ENOUGH });
+        }
         return res.status(400).json({ status: 400, message: e.message });
     }
 };
