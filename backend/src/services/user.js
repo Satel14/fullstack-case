@@ -127,7 +127,7 @@ module.exports.incrementBalance = async (value, id, options = {}) => {
 
 module.exports.resetBalance = async (id) => {
     try {
-        const defaultBalance = 1000;
+        const defaultBalance = 0;
         await User.update(
             { user_balance: defaultBalance },
             { where: { user_id: id } }
