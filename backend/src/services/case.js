@@ -48,7 +48,7 @@ module.exports.decrementLimit = async (id, count = 1) => {
 
 module.exports.unpublishCase = async (id) => {
     try {
-        Case.update({case_published: 0}, {where: {case_id: id}})
+        await Case.update({case_published: 0}, {where: {case_id: id}})
         return;
     } catch (e) {
         throw Error(e.message)
