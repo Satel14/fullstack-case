@@ -235,14 +235,14 @@ class Cases extends Component {
                                     20-49₴
                                 </Radio.Button>
                                 <Radio.Button
-                                value="hight"
+                                value="high"
                                 onClick={(e) => this.onClickRadio(e)}
                                 key="radio-price-50-99"
                                 >
                                     50-99₴
                                 </Radio.Button>
                                 <Radio.Button
-                                    value="superhight"
+                                    value="superhigh"
                                     onClick={(e) => this.onClickRadio(e)}
                                     key="radio-price-100+"
                                 >
