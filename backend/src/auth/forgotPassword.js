@@ -7,27 +7,30 @@ const { authLimiter } = require('../middleware/rateLimiters');
 
 module.exports = (app) => {
     app.post("/api/profile/forgotpassword", authLimiter, async (req, res) => {
-        const { email } = req.body;
+        try {
+            const { email } = req.body;
 
-        if (!email) {
-            res.status(200).json({ message: message.AUTH.EMPTY_DATA });
-            return;
-        }
-        const user = await Users.findOne({
-            where: {user_email: email},
-        }).then((user) => user);
-        if (user) {
-            const generatedPassword = Math.random().toString(36).slice(-8);
-            const passwordHash = await Encrypt.cryptPassword(generatedPassword);
-
-            await editUserPassword(email, passwordHash);
-
-            mailSender.forgotPassword(email, {
-                login: user.user_login,
-                password: generatedPassword
+            if (!email) {
+                return res.status(200).json({ message: message.AUTH.EMPTY_DATA });
+            }
+            const user = await Users.findOne({
+                where: {user_email: email},
             });
-        }
+            if (user) {
+                const generatedPassword = Math.random().toString(36).slice(-8);
+                const passwordHash = await Encrypt.cryptPassword(generatedPassword);
 
-        res.status(200).json({ message: message.AUTH.SUCCESS_PASSWORD_SEND , status: "sended"})
+                await editUserPassword(email, passwordHash);
+
+                mailSender.forgotPassword(email, {
+                    login: user.user_login,
+                    password: generatedPassword
+                });
+            }
+
+            return res.status(200).json({ message: message.AUTH.SUCCESS_PASSWORD_SEND, status: "sended" });
+        } catch (e) {
+            return res.status(500).json({ message: e.message });
+        }
     })
 }

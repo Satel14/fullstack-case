@@ -1,16 +1,13 @@
 const BonusHistory = require('../models/bonusHistory');
 
-module.exports.addBonusHistory = async (userId, bonusId) => {
-    try {
-        const item = {
-            userId,
-            bonusId,
-        };
-        await BonusHistory.create(item);
-        return;
-    } catch (e) {
-        throw Error(e.message);
-    }
+module.exports.addBonusHistory = async (userId, bonusId, options = {}) => {
+    const item = {
+        userId,
+        bonusId,
+    };
+    // No try/catch here: the original error (e.g. SequelizeUniqueConstraintError
+    // on a duplicate (userId, bonusId)) must propagate so the caller can map it.
+    await BonusHistory.create(item, options);
 };
 
 module.exports.cleanBonusHistory = async (userId) => {

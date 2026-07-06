@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const User = require("../models/user");
 const MESSAGE = require("../constant/responseMessages");
+const Encrypt = require("../modules/Encrypt");
 
 const PUBLIC_FIELDS = [
     "user_id",
@@ -88,7 +89,11 @@ module.exports.editUser = async (fields, id) => {
                 throw new Error(MESSAGE.USER.CANT_UPDATE_FIELD);
             }
         }
-        const user = await User.update(fields, { where: { user_id: id } });
+        const toUpdate = { ...fields };
+        if (toUpdate.user_password) {
+            toUpdate.user_password = await Encrypt.cryptPassword(toUpdate.user_password);
+        }
+        const user = await User.update(toUpdate, { where: { user_id: id } });
         return user;
     } catch (e) {
         throw Error(e.message);
@@ -122,7 +127,7 @@ module.exports.incrementBalance = async (value, id, options = {}) => {
 
 module.exports.resetBalance = async (id) => {
     try {
-        const defaultBalance = 1000;
+        const defaultBalance = 0;
         await User.update(
             { user_balance: defaultBalance },
             { where: { user_id: id } }

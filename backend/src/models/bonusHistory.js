@@ -8,6 +8,7 @@ module.exports = sequelize.define(
             field: 'id',
             type: Sequelize.INTEGER,
             primaryKey: true,
+            autoIncrement: true,
         },
         userId: {
             field: 'userId',
@@ -24,5 +25,8 @@ module.exports = sequelize.define(
     },
     {
         timestamps: false,
+        indexes: [
+            { unique: true, fields: ['userId', 'bonusId'] },
+        ],
     },
 );

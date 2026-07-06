@@ -110,31 +110,35 @@ const Chat = ({ user, enabled }) => {
 
     useEffect(() => {
         if (!enabled) {
-            return
+            return undefined;
         }
-        socket.on("chat message", ({ login, msg, id, avatar, time }) => {
-            let newList = chat;
-            if (chat.length > 150) {
-                newList = newList.slice(
-                    newList.length - 150,
-                    newList.length + 1
-                );
-            }
-            setChat([
-                ...newList,
-                {
-                    login,
-                    msg,
-                    id,
-                    avatar,
-                    time
-                }
-            ])
-        })
+        const handler = ({ login, msg, id, avatar, time }) => {
+            setChat((prev) => {
+                const base = prev.length > 150 ? prev.slice(prev.length - 150) : prev;
+                return [
+                    ...base,
+                    {
+                        login,
+                        msg,
+                        id,
+                        avatar,
+                        time
+                    }
+                ];
+            });
+        };
+        socket.on("chat message", handler);
+        return () => {
+            socket.off("chat message", handler);
+        };
+    }, [enabled])
 
+    useEffect(() => {
         const objDiv = document.getElementById("msg-scroll");
-        objDiv.scrollTop = objDiv.scrollHeight;
-    }, [chat, login, history, enabled])
+        if (objDiv) {
+            objDiv.scrollTop = objDiv.scrollHeight;
+        }
+    }, [chat])
 
     const submitMsg = (e) => {
         e.preventDefault();

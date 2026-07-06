@@ -56,25 +56,29 @@ class ItemOptions extends Component {
   async getPrice() {
     const { item } = this.props;
 
-    const itemPrice = await getItemPriceById(item.storage_itemId);
-    const prices = JSON.parse(itemPrice.prices);
-    let color = item.storage_color;
-    color = color.toLowerCase();
-    color = color.replace(' ', '');
+    try {
+      const itemPrice = await getItemPriceById(item.storage_itemId);
+      const prices = typeof itemPrice.prices === 'string'
+        ? JSON.parse(itemPrice.prices)
+        : itemPrice.prices;
+      let color = item.storage_color;
+      color = color.toLowerCase();
+      color = color.replace(' ', '');
 
-    const creditModule = this.props.modules && this.props.modules['uah-credit-rate'];
-    const creditToUah = creditModule ? creditModule.extraData : 1;
+      const creditModule = this.props.modules && this.props.modules['uah-credit-rate'];
+      const creditToUah = creditModule ? creditModule.extraData : 1;
 
-    let actualPrice = null;
-    if (prices) {
-      if (prices[color]) {
+      let actualPrice = null;
+      if (prices && prices[color]) {
         actualPrice = parseInt(prices[color] * creditToUah * 100, 10) / 100;
       }
-    }
 
-    this.setState({
-      actualPrice,
-    });
+      this.setState({
+        actualPrice,
+      });
+    } catch (e) {
+      this.setState({ actualPrice: null });
+    }
   }
 
   setEmpty() {
