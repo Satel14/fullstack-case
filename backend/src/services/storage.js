@@ -21,7 +21,7 @@ module.exports.getStorageLastItemsByUserId = async (id, limit, offset) => {
     try {
         const storageItems = await Storage.findAll({
             order: [['storage_id', 'DESC']],
-            limit: parseInt(limit, 10),
+            limit: Math.min(Math.max(parseInt(limit, 10) || 0, 0), 100),
             offset: parseInt(offset, 10),
             where: {
                 storage_userId: id,
@@ -67,7 +67,7 @@ module.exports.getStorageLastItems = async (limit) => {
         const storageItems = await Storage.findAll({
             attributes: ['storage_color', 'storage_itemId', 'storage_userId', 'storage_id', 'storage_caseId'],
             order: [['storage_id', 'DESC']],
-            limit: parseInt(limit, 10),
+            limit: Math.min(Math.max(parseInt(limit, 10) || 0, 0), 100),
         });
 
         if (!storageItems) throw new Error(MESSAGE.CASE.NOT_EXIST);
@@ -108,17 +108,19 @@ module.exports.getStorageById = async (userId, status) => {
     }
 };
 
-module.exports.setStorageExtraDataById = async (storage_id, storage_extraData) => {
+module.exports.setStorageExtraDataById = async (storage_id, storage_extraData, options = {}) => {
     try {
+        const { transaction } = options;
         const storageItem = await Storage.findOne({
             where: {
                 storage_id,
             },
+            transaction,
         });
 
         if (!storageItem) throw new Error(MESSAGE.CASE.NOT_EXIST);
 
-        await Storage.update({ storage_extraData }, { where: { storage_id } });
+        await Storage.update({ storage_extraData }, { where: { storage_id }, transaction });
 
         return;
     } catch (e) {

@@ -46,18 +46,29 @@ module.exports.receiveItemByStorageId = async (req, res) => {
         const { user_id } = req.user.profile;
         const { id } = req.params;
 
-        const storageItem = await StorageService.getStorageInfoById(user_id, id, 'inventory');
-
-        if (!storageItem) {
-            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
-        }
-
-        await StorageService.setStorageStatusById(id, 'waitingtrade');
         const { user_receiveInfo } = await UserService.getUserFullInfoById(user_id);
-        await StorageService.setStorageExtraDataById(id, user_receiveInfo);
+
+        await sequelize.transaction(async (t) => {
+            const locked = await StorageService.getStorageInfoById(user_id, id, 'inventory', {
+                transaction: t,
+                lock: t.LOCK.UPDATE,
+            });
+
+            if (!locked) {
+                const err = new Error(MESSAGE.ITEM.NOT_EXIST);
+                err.code = 'NOT_RECEIVABLE';
+                throw err;
+            }
+
+            await StorageService.setStorageStatusById(id, 'waitingtrade', { transaction: t });
+            await StorageService.setStorageExtraDataById(id, user_receiveInfo, { transaction: t });
+        });
 
         return res.status(200).json({ status: 200 });
     } catch (e) {
+        if (e && e.code === 'NOT_RECEIVABLE') {
+            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
+        }
         return res.status(500).json({ status: 500, message: e.message });
     }
 };
@@ -212,11 +223,11 @@ module.exports.getStorageLastItemsWithUserInfo = async (req, res) => {
             const element = items[key];
 
             if (!userList[element.storage_userId]) {
-                const userInfo = await UserService.getUserById(element.storage_userId);
+                const userInfo = await UserService.getUserById(element.storage_userId).catch(() => null);
                 userList[element.storage_userId] = userInfo;
             }
             if (!caseList[element.storage_caseId]) {
-                const caseInfo = await CaseService.getCaseById(element.storage_caseId);
+                const caseInfo = await CaseService.getCaseById(element.storage_caseId).catch(() => null);
                 caseList[element.storage_caseId] = caseInfo;
             }
         }
@@ -281,7 +292,7 @@ module.exports.getStorageTop = async (req, res) => {
         const topRaw = await Promise.all(
             Object.keys(counterByUserId).map(async (userId) => {
                 const numericUserId = Number(userId);
-                const info = await UserService.getUserById(numericUserId);
+                const info = await UserService.getUserById(numericUserId).catch(() => null);
                 return {
                     userId: numericUserId,
                     count: counterByUserId[userId],
