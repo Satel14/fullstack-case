@@ -20,7 +20,7 @@ module.exports = sequelize.define(
         },
         history_change: {
             field: 'balanceChange',
-            type: Sequelize.INTEGER,
+            type: Sequelize.DECIMAL(12, 2),
         },
         history_extraData: {
             field: 'extraData',
