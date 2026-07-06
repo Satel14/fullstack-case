@@ -3,6 +3,7 @@ import {
  Form, Input, Button, Card, Tooltip,
 } from 'antd';
 import { connect } from 'react-redux';
+import { withTranslation } from 'react-i18next';
 import { updateProfileField } from '../../store/actions/user';
 import openNotification from '../mini/openNotification';
 
@@ -16,29 +17,31 @@ const mapStateToProps = (state) => ({
 
 class ProfileReceiveInfo extends Component {
   onFinish(e) {
+    const { t } = this.props;
     if (!e.receiveInfo) {
-      openNotification('error', 'Помилка', 'Не залишайте поле пустим');
+      openNotification('error', t('receiveInfo.errorTitle'), t('receiveInfo.emptyError'));
       return;
     }
 
     this.props.updateProfileField('receiveInfo', e.receiveInfo);
-    openNotification('success', 'Збережено');
+    openNotification('success', t('receiveInfo.savedTitle'));
   }
 
   render() {
     const { receiveInfo } = this.props.user;
+    const { t } = this.props;
     return (
       <div>
         <Card
           type="inner"
-          title="Інформація для виводу предметів"
+          title={t('receiveInfo.cardTitle')}
           className="blockstyle-first receiveinfo"
           extra={(
             <Tooltip
               placement="top"
-              title="Залишіть посилання на Steam або EpicID та зручний час для вас. Ця інформація буде надіслана трейдерам."
+              title={t('receiveInfo.tooltip')}
             >
-              <span style={{ color: '#fff' }}>Що це?</span>
+              <span style={{ color: '#fff' }}>{t('common.whatIsThis')}</span>
             </Tooltip>
           )}
         >
@@ -50,7 +53,7 @@ class ProfileReceiveInfo extends Component {
           >
             <Form.Item name="receiveInfo">
               <Input.TextArea
-                placeholder="Вкажіть ваш Steam або EpicId"
+                placeholder={t('receiveInfo.placeholder')}
                 defaultValue={receiveInfo}
                 style={{ minHeight: '117px' }}
               />
@@ -58,7 +61,7 @@ class ProfileReceiveInfo extends Component {
 
             <Form.Item>
               <Button type="primary" htmlType="submit" className="color-green">
-                Зберегти
+                {t('receiveInfo.save')}
               </Button>
             </Form.Item>
           </Form>
@@ -68,4 +71,4 @@ class ProfileReceiveInfo extends Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProfileReceiveInfo);
+export default connect(mapStateToProps, mapDispatchToProps)(withTranslation()(ProfileReceiveInfo));

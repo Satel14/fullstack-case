@@ -1,7 +1,9 @@
 import React, {useState} from 'react';
 import {Modal, Button} from 'antd';
+import { useTranslation } from 'react-i18next';
 
 export const Rules = () => {
+    const { t } = useTranslation();
     const [isModalVisible, setModalVisible] = useState(false);
 
     const showModal = () => {
@@ -15,33 +17,22 @@ export const Rules = () => {
     return (
         <>
             <Button className="color-white small" onClick={showModal}>
-                Правила
+                {t('rules.trigger')}
             </Button>
             <Modal
-                title="ПРАВИЛА ЧАТУ"
+                title={t('rules.title')}
                 open={isModalVisible}
-                cancelText="Закрити"
+                cancelText={t('rules.close')}
                 okButtonProps={{ style: { display: 'none' } }}
                 onCancel={handleCancel}
             >
-                <p>
-                    — Заборонено використовувати в нікнеймі назву або посилання, що ведуть на
-                    сторонній сайт.
-                </p>
-                <p>- Заборонено рекламувати канали Youtube / Twitch / Discord.</p>
-                <p>- Заборонено ображати інших учасників чату / сайту.</p>
-                <p>
-                    - Заборонено згадування платіжних реквізитів з метою жебрацтва.
-                </p>
-                <p>
-                    - Заборонено розповсюджувати URL посилання та промо-коди (крім
-                    Адміністрації та Модераторів).
-                </p>
-                <p>- Заборонено спамити повідомлення в чат по одному символу.</p>.
-                <p>
-                    Будь-який учасник сайту/чату, повинен з повагою ставиться до всіх без
-                    винятку учасників.
-                </p>
+                <p>{`— ${t('rules.r1')}`}</p>
+                <p>{`- ${t('rules.r2')}`}</p>
+                <p>{`- ${t('rules.r3')}`}</p>
+                <p>{`- ${t('rules.r4')}`}</p>
+                <p>{`- ${t('rules.r5')}`}</p>
+                <p>{`- ${t('rules.r6')}`}</p>
+                <p>{t('rules.r7')}</p>
             </Modal>
         </>
     );

@@ -3,6 +3,7 @@ import Fade from 'react-reveal/Fade';
 import { Tabs, Tooltip } from 'antd';
 import { HistoryOutlined } from '@ant-design/icons';
 import { connect } from 'react-redux';
+import { withTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import Loader from '../components/mini/Loader';
 import { getUserById } from '../api/all/user';
@@ -12,41 +13,28 @@ import {
     getStorageLastItemsByUserId,
 } from '../api/all/storage';
 import { getItemInfoById } from '../api/all/item';
+import { rareRank } from '../helpers/rarity';
 
 const STORAGE_LOAD_LIMIT = 200;
-
-const RARE_RANK = {
-    consumergrade: 1,
-    industrialgrade: 2,
-    milspecgrade: 3,
-    restricted: 4,
-    classified: 5,
-    covert: 6,
-    contraband: 7,
-    exceedinglyrare: 8,
-};
 
 const mapStateToProps = (state) => ({
     user: state.user,
 });
 
-const normalizeRare = (rare) => String(rare || '').toLowerCase().replace(/[\s_-]/g, '');
-const rareRank = (rare) => RARE_RANK[normalizeRare(rare)] || 0;
-
-const getRoleLabel = (role) => {
+const roleKey = (role) => {
     switch (role) {
     case 2:
-        return 'Ютубер';
+        return 'youtuber';
     case 3:
-        return 'Стрімер';
+        return 'streamer';
     case 4:
-        return 'Адміністратор';
+        return 'admin';
     case -1:
-        return 'Заблоковано';
+        return 'banned';
     case -2:
-        return 'Чат заблоковано';
+        return 'chatBanned';
     default:
-        return 'Користувач';
+        return 'user';
     }
 };
 
@@ -212,31 +200,32 @@ class Profile extends Component {
             bestDrop,
             historyItems,
         } = this.state;
+        const { t } = this.props;
 
         const favoriteCaseId = favoriteCase?.case_id || null;
         const favoriteCaseImg = favoriteCase?.case_img || '';
-        const favoriteCaseName = favoriteCase?.case_title || 'Кейс не обрано';
+        const favoriteCaseName = favoriteCase?.case_title || t('profile.noCase');
 
-        const userName = profileUser?.user_login || this.props.user?.login || 'Гравець';
+        const userName = profileUser?.user_login || this.props.user?.login || t('profile.player');
         const userAvatar = profileUser?.user_avatar || this.props.user?.avatar || 1;
-        const userRole = getRoleLabel(profileUser?.user_role || this.props.user?.role);
+        const userRole = t(`profile.roles.${roleKey(profileUser?.user_role || this.props.user?.role)}`);
 
-        const bestDropName = bestDrop?.name || 'Ще немає дропу';
+        const bestDropName = bestDrop?.name || t('profile.noDrop');
         const bestDropImg = bestDrop?.imagePath ? encodeURI(bestDrop.imagePath) : '';
 
         return (
             <div className="profilepage">
-                <h1 className="title">Профіль</h1>
+                <h1 className="title">{t('profile.title')}</h1>
                 {fetching ? (
                     <Loader />
                 ) : (
                     <>
                         <div className="profilepage-firstblock">
                             <div className="profilepage-firstblock__favoritecase">
-                                <div className="profiletitle">Улюблений кейс</div>
+                                <div className="profiletitle">{t('profile.favoriteCase')}</div>
                                 {favoriteCaseId ? (
                                     <Link to={`/case/${favoriteCaseId}`}>
-                                        {favoriteCaseImg && <img src={favoriteCaseImg} alt="Кейс" />}
+                                        {favoriteCaseImg && <img src={favoriteCaseImg} alt={t('common.case')} />}
                                         <span>{favoriteCaseName}</span>
                                     </Link>
                                 ) : (
@@ -254,11 +243,11 @@ class Profile extends Component {
                                 />
                                 <div className="profilepage-firstblock__stats__info">
                                     <div>
-                                        Відкрито кейсів
+                                        {t('profile.openedCases')}
                                         <span>{openedCases}</span>
                                     </div>
                                     <div>
-                                        Унікальних кейсів
+                                        {t('profile.uniqueCases')}
                                         <span>{uniqueCases}</span>
                                     </div>
                                 </div>
@@ -266,7 +255,7 @@ class Profile extends Component {
                             </div>
 
                             <div className="profilepage-firstblock__bestdrop">
-                                <div className="profiletitle">Найкращий дроп</div>
+                                <div className="profiletitle">{t('profile.bestDrop')}</div>
                                 <div
                                     className="profilepage-firstblock__bestdrop__drop"
                                     style={{
@@ -312,7 +301,7 @@ class Profile extends Component {
                                                 )) : (
                                                     <Fade>
                                                         <div style={{ width: '100%', textAlign: 'center', opacity: 0.8 }}>
-                                                            У користувача ще немає історії відкриттів.
+                                                            {t('profile.noHistory')}
                                                         </div>
                                                     </Fade>
                                                 )}
@@ -329,4 +318,4 @@ class Profile extends Component {
     }
 }
 
-export default connect(mapStateToProps, null)(Profile);
+export default connect(mapStateToProps, null)(withTranslation()(Profile));

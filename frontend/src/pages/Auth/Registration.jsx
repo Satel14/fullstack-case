@@ -11,6 +11,7 @@ import {userPostRegisterFetch} from "../../store/actions/user";
 import {connect} from "react-redux";
 import capitalize from "lodash/capitalize";
 import openNotification from '../../components/mini/openNotification';
+import { useTranslation } from 'react-i18next';
 
 
 const formItemLayout = {
@@ -49,6 +50,7 @@ const mapDispatchToProps = (dispatch) => ({
     userPostRegisterFetch: (userInfo) => dispatch(userPostRegisterFetch(userInfo)),
 });
 const Registration = (props) => {
+    const { t } = useTranslation();
     const [form] = Form.useForm()
     const [avatar, setAvatar] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -64,17 +66,17 @@ const Registration = (props) => {
         }).then((errMessage) => {
             setLoading(false)
             if(errMessage) {
-                openNotification('error', 'Помилка', errMessage)
+                openNotification('error', t('auth.register.errorTitle'), errMessage)
                 return
             }
             props.history.push('/')
-            openNotification('success', 'Успішний вхід', 'Ласкаво просимо на сайт ' + capitalize(values.username) + '!')
+            openNotification('success', t('auth.register.successTitle'), t('auth.register.welcome', { name: capitalize(values.username) }))
         })
     }
 
     return (
         <div className="registrationpage">
-            <h1 className="title">Реєстрація</h1>
+            <h1 className="title">{t('auth.register.title')}</h1>
             <Form
                 {...formItemLayout}
                 form={form}
@@ -84,11 +86,11 @@ const Registration = (props) => {
             >
                 <Form.Item
                     name="username"
-                    label="Логін"
+                    label={t('auth.register.loginLabel')}
                     rules={[
                         {
                             required: true,
-                            message: "Придумайте логін",
+                            message: t('auth.register.loginRequired'),
                             whitespace: true,
                         }
                     ]}
@@ -98,11 +100,11 @@ const Registration = (props) => {
                 </Form.Item>
                 <Form.Item
                     name="password"
-                    label="Пароль"
+                    label={t('auth.register.passwordLabel')}
                     rules={[
                         {
                             required: true,
-                            message: "Придумайте пароль",
+                            message: t('auth.register.passwordRequired'),
                         }
                     ]}
                 >
@@ -110,20 +112,20 @@ const Registration = (props) => {
                 </Form.Item>
                 <Form.Item
                     name="confirm"
-                    label="Підтвердити пароль"
+                    label={t('auth.register.confirmLabel')}
                     dependencies={["password"]}
                     hasFeedback
                     rules={[
                         {
                             required: true,
-                            message: "Повторіть введений пароль",
+                            message: t('auth.register.confirmRequired'),
                         },
                         ({ getFieldValue }) => ({
                             validator(_, value) {
                                 if (!value || getFieldValue('password') === value) {
                                     return Promise.resolve()
                                 }
-                                return Promise.reject(new Error("Пароль не співпадає"))
+                                return Promise.reject(new Error(t('auth.register.confirmMismatch')))
                             }
                         })
                     ]}>
@@ -131,21 +133,21 @@ const Registration = (props) => {
                 </Form.Item>
                 <Form.Item
                     name="email"
-                    label="E-mail"
+                    label={t('auth.register.emailLabel')}
                     rules={[
                         {
                             type: "email",
-                            message: "Це не почта",
+                            message: t('auth.register.emailInvalid'),
                         },
                         {
                             required: true,
-                            message: "Введіть почту"
+                            message: t('auth.register.emailRequired')
                         }
                     ]}
                 >
                     <Input />
                 </Form.Item>
-                <Form.Item label="Виберіть аватарку">
+                <Form.Item label={t('auth.register.chooseAvatar')}>
                         <Radio.Group defaultValue={avatar} buttonStyle="solid">
                         {Images.map((item)=>(
                             <Radio.Button value={item.id} key={item.id} className="radio-avatar" onClick={() => setAvatar(item.id)}>
@@ -162,18 +164,18 @@ const Registration = (props) => {
                             validator: (_, value) =>
                                 value
                                     ? Promise.resolve()
-                                    : Promise.reject(new Error("Поставте галочку")),
+                                    : Promise.reject(new Error(t('auth.register.agreementRequired'))),
                         },
                     ]}
                     {...tailFormItemLayout}
                 >
                         <Checkbox>
-                            Я згідний з <a href="">правилами сайту</a>
+                            {t('auth.register.agreementPre')} <a href="">{t('auth.register.agreementLink')}</a>
                         </Checkbox>
                 </Form.Item>
                 <Form.Item {...tailFormItemLayout}>
                         <Button type="primary" htmlType="submit" loading={loading}>
-                            Зареєструватися
+                            {t('auth.register.submit')}
                         </Button>
                 </Form.Item>
             </Form>

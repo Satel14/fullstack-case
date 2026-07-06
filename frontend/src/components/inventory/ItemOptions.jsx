@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { withTranslation } from 'react-i18next';
 import { Button } from 'antd';
 import {
   DollarOutlined,
@@ -14,7 +16,7 @@ import openNotification from '../mini/openNotification';
 
 import { getItemPriceById } from '../../api/all/item';
 
-export default class ItemOptions extends Component {
+class ItemOptions extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -60,7 +62,8 @@ export default class ItemOptions extends Component {
     color = color.toLowerCase();
     color = color.replace(' ', '');
 
-    const creditToRub = this.props.modules['rub-credit-rate'].extraData;
+    const creditModule = this.props.modules && this.props.modules['uah-credit-rate'];
+    const creditToRub = creditModule ? creditModule.extraData : 1;
 
     let actualPrice = null;
     if (prices) {
@@ -78,7 +81,9 @@ export default class ItemOptions extends Component {
     this.setState({
       item: null,
     });
-    window.Inventory.setEmpty();
+    if (this.props.onClose) {
+      this.props.onClose();
+    }
   }
 
   async receiveItem() {
@@ -87,24 +92,26 @@ export default class ItemOptions extends Component {
     if (this.props.receiveInfo === '') {
       openNotification(
         'error',
-        'Сталася помилка',
-        'Вкажіть у налаштуваннях профілю дані вашого Steam або Epic.',
+        this.props.t('common.error'),
+        this.props.t('itemOptions.needTradeInfo'),
       );
       return;
     }
 
     const result = await receiveItemByStorageId(item.storage_id);
     if (result.status === 200) {
-      window.Inventory.deleteItem(item.storage_id);
+      if (this.props.onItemRemoved) {
+        this.props.onItemRemoved(item.storage_id);
+      }
       this.setEmpty();
       openNotification(
         'success',
-        'Залишено заявку на вивід',
-        'Трейдер додасть вас протягом 24 годин та віддасть предмет.',
+        this.props.t('itemOptions.withdrawRequested'),
+        this.props.t('itemOptions.withdrawText'),
       );
       return;
     }
-    openNotification('error', 'Сталася помилка');
+    openNotification('error', this.props.t('common.error'));
   }
 
   async sellItem() {
@@ -112,22 +119,27 @@ export default class ItemOptions extends Component {
 
     const result = await sellItemByStorageId(item.storage_id);
     if (result.status === 200) {
-      window.HeaderSecond.changeBalance(result.balance);
-      window.Inventory.deleteItem(item.storage_id);
+      if (window.HeaderSecond) {
+        window.HeaderSecond.changeBalance(result.balance);
+      }
+      if (this.props.onItemRemoved) {
+        this.props.onItemRemoved(item.storage_id);
+      }
       this.setEmpty();
-      openNotification('success', 'Предмет продано');
+      openNotification('success', this.props.t('openCase.sold'));
       return;
     }
-    openNotification('error', 'Сталася помилка');
+    openNotification('error', this.props.t('common.error'));
   }
 
   render() {
     const { item, actualPrice } = this.state;
+    const { t } = this.props;
 
     if (!item) {
       return (
         <div className="item-options-not-load">
-          Виберіть предмет для взаємодії
+          {t('itemOptions.pick')}
         </div>
       );
     }
@@ -161,11 +173,11 @@ export default class ItemOptions extends Component {
               className="color-green"
               onClick={() => this.sellItem()}
             >
-              Продати за
+              {t('itemOptions.sellFor')}
 {' '}
 {actualPrice}
 {' '}
-₽
+₴
             </Button>
           )}
           <Button
@@ -175,7 +187,7 @@ export default class ItemOptions extends Component {
             size="large"
             onClick={() => this.receiveItem()}
           >
-            Вивести предмет
+            {t('itemOptions.withdraw')}
           </Button>
 
           <Button
@@ -186,10 +198,16 @@ export default class ItemOptions extends Component {
             size="large"
             onClick={() => this.setEmpty()}
           >
-            Скасувати
+            {t('payment.cancel')}
           </Button>
         </div>
       </div>
     );
   }
 }
+
+const mapStateToProps = (state) => ({
+  modules: state.modules,
+});
+
+export default connect(mapStateToProps, null)(withTranslation()(ItemOptions));

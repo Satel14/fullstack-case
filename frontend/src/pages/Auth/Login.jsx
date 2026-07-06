@@ -8,12 +8,14 @@ import {userPostFetch} from "../../store/actions/user";
 import {connect} from "react-redux";
 import openNotification from '../../components/mini/openNotification';
 import capitalize from 'lodash/capitalize';
+import { useTranslation } from 'react-i18next';
 
 
 const mapDispatchToProps = (dispatch) => ({
     userPostFetch: (userInfo) => dispatch(userPostFetch(userInfo)),
 });
 const Login = (props) => {
+    const { t } = useTranslation();
 
     const [loading, setLoading] = useState(false);
     const onFinish = (values) => {
@@ -25,20 +27,20 @@ const Login = (props) => {
             .then((errMessage) => {
                 setLoading(false);
                 if (errMessage) {
-                    openNotification("error", "Помилка", "Дані не вірні");
+                    openNotification("error", t('auth.login.errorTitle'), t('auth.login.errorWrong'));
                     return;
                 }
                 props.history.push("/");
                 openNotification(
                     "success",
-                    "Успішний вхід",
-                    "Ласкаво просимо на сайт" + capitalize(values.username) + "!"
+                    t('auth.login.successTitle'),
+                    t('auth.login.welcome', { name: capitalize(values.username) })
                 );
             });
     };
     return (
         <div className='loginpage'>
-            <h1 className='title'>Авторизація</h1>
+            <h1 className='title'>{t('auth.login.title')}</h1>
             <Form
                 name="normal_login"
                 className='login-form'
@@ -48,33 +50,33 @@ const Login = (props) => {
             >
                 <Form.Item
                     name="username"
-                    label="Логін"
+                    label={t('auth.login.loginLabel')}
                     rules={[
-                        { required: true, message: "Введіть ваш логін!" },
-                        { min: 6, message: 'Мінімум 6 символів'}
+                        { required: true, message: t('auth.login.loginRequired') },
+                        { min: 6, message: t('auth.login.minChars')}
                     ]}
                 >
                     <Input
                         prefix={<UserOutlined className='site-form-item-icon' />}
-                        placeholder="Username" />
+                        placeholder={t('auth.login.usernamePlaceholder')} />
                 </Form.Item>
                 <Form.Item
                     name="password"
-                    label="Пароль"
+                    label={t('auth.login.passwordLabel')}
                     rules={[
-                        { required: true, message: "Введіть ваш пароль!" },
-                        { min: 6, message: 'Мінімум 6 символів'}
+                        { required: true, message: t('auth.login.passwordRequired') },
+                        { min: 6, message: t('auth.login.minChars')}
                     ]}
                 >
                     <Input
                         prefix={<LockOutlined className='site-form-item-icon' />}
-                        placeholder="password"
+                        placeholder={t('auth.login.passwordPlaceholder')}
                         type='password'
                     />
                 </Form.Item>
                 <Form.Item style={{ marginBottom: "10px" }}>
                     <Form.Item name='remember' valuePropName="checked" noStyle>
-                        <Checkbox>Запам'ятати мене</Checkbox>
+                        <Checkbox>{t('auth.login.remember')}</Checkbox>
                     </Form.Item>
                     <ForgotPassword />
                 </Form.Item>
@@ -86,13 +88,10 @@ const Login = (props) => {
                         loading={loading}
                         style={{ marginRight: "10px"}}
                     >
-                        Увійти
+                        {t('auth.login.submit')}
                     </Button>
-                    або
-                    <Link to='/registration'>Зареєстуватися</Link>
-                </Form.Item>
-                <Form.Item>
-                    <ForgotPassword/>
+                    {t('auth.login.or')}
+                    <Link to='/registration'>{t('auth.login.registerLink')}</Link>
                 </Form.Item>
             </Form>
         </div>

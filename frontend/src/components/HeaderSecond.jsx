@@ -5,6 +5,7 @@ import { DollarOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons
 import { Link } from 'react-router-dom';
 import CountUp from 'react-countup';
 import { connect } from 'react-redux';
+import { withTranslation } from 'react-i18next';
 import { isAuthorized } from '../helpers/Player';
 import { logoutProfile } from '../store/actions/user';
 import { API_URL } from '../api/config';
@@ -99,33 +100,33 @@ class HeaderSecond extends React.Component {
     }
 
     render() {
-        const { user } = this.props;
+        const { user, t } = this.props;
         const { chatButton, onlineUser, stats } = this.state;
         const profileMenuItems = [
             {
                 key: '7',
                 icon: <UserOutlined />,
-                label: <Link to={`/profile/${user.id}`}>Мій профіль</Link>,
+                label: <Link to={`/profile/${user.id}`}>{t('header.profile')}</Link>,
             },
             {
                 key: '15deposit',
                 icon: <DollarOutlined />,
-                label: <Link to="/deposit">Поповнити рахунок</Link>,
+                label: <Link to="/deposit">{t('header.depositAccount')}</Link>,
             },
             {
                 key: '15',
                 icon: <SettingOutlined />,
-                label: <Link to="/settings">Налаштування</Link>,
+                label: <Link to="/settings">{t('header.settings')}</Link>,
             },
             {
                 key: '8',
                 icon: <UserOutlined />,
-                label: <Link to="/settings">Ввести промокод</Link>,
+                label: <Link to="/settings">{t('header.promocode')}</Link>,
             },
             {
                 key: 'logout',
                 icon: <UserOutlined />,
-                label: 'Вийти',
+                label: t('header.logout'),
                 onClick: () => this.props.logoutUser(),
             },
         ];
@@ -139,7 +140,7 @@ class HeaderSecond extends React.Component {
                             <i>
                                 <CountUp start={stats.openedCasesOld} end={stats.openedCases} />
                             </i>
-                            <span>Відкрито кейсів</span>
+                            <span>{t('header.stats.openedCases')}</span>
                         </div>
                     </div>
 
@@ -149,7 +150,7 @@ class HeaderSecond extends React.Component {
                             <i>
                                 <CountUp start={stats.userCountsOld} end={stats.userCounts} />
                             </i>
-                            <span>Користувачів</span>
+                            <span>{t('header.stats.users')}</span>
                         </div>
                     </div>
 
@@ -159,7 +160,7 @@ class HeaderSecond extends React.Component {
                             <i>
                                 <CountUp start={stats.receivedItemsOld} end={stats.receivedItems} />
                             </i>
-                            <span>Виведено предметів</span>
+                            <span>{t('header.stats.withdrawnItems')}</span>
                         </div>
                     </div>
 
@@ -170,7 +171,7 @@ class HeaderSecond extends React.Component {
                                 <CountUp start={onlineUser.old} end={onlineUser.new + 1} />
                             </i>
                             <Tooltip placement="bottom" title={this.renderUserList()}>
-                                <span>Онлайн</span>
+                                <span>{t('header.stats.online')}</span>
                             </Tooltip>
                         </div>
                     </div>
@@ -183,14 +184,14 @@ class HeaderSecond extends React.Component {
                             style={{ marginRight: '15px' }}
                             onClick={() => window.Layout.onCollapseChat(false)}
                         >
-                            Чат
+                            {t('header.chat')}
                         </Button>
                     )}
                     {isAuthorized(user) && (
                         <>
                             <Link to="/deposit">
                                 <Button size="small" className="color-pink">
-                                    Поповнити
+                                    {t('header.deposit')}
                                 </Button>
                             </Link>
                             <div className="headersecond-profile">
@@ -222,4 +223,4 @@ class HeaderSecond extends React.Component {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(HeaderSecond);
+export default connect(mapStateToProps, mapDispatchToProps)(withTranslation()(HeaderSecond));
