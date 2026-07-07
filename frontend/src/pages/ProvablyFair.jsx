@@ -84,6 +84,7 @@ const ProvablyFair = () => {
             <h2>{t('provablyFair.title')}</h2>
             <h3>{t('provablyFair.algorithm')}</h3>
             <p>{t('provablyFair.intro')}</p>
+            <p>{t('provablyFair.colorNote')}</p>
 
             <h3>{t('provablyFair.currentSeeds')}</h3>
             <div>{t('provablyFair.serverSeedHash')}: <code>{state.active.serverSeedHash}</code></div>

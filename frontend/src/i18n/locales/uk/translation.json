@@ -347,6 +347,7 @@
         "serverSeedPlaceholder": "server seed",
         "clientSeedPlaceholder": "client seed",
         "noncePlaceholder": "nonce",
-        "caseIdPlaceholder": "ID кейсу"
+        "caseIdPlaceholder": "ID кейсу",
+        "colorNote": "Рідкість і предмет однозначно відтворюються з сідів. Колір — довідковий: він залежить від поточних цін і може відрізнятися при повторній перевірці, якщо ціни змінювались."
     }
 }

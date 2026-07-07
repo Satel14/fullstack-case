@@ -345,6 +345,7 @@
         "serverSeedPlaceholder": "server seed",
         "clientSeedPlaceholder": "client seed",
         "noncePlaceholder": "nonce",
-        "caseIdPlaceholder": "case ID"
+        "caseIdPlaceholder": "case ID",
+        "colorNote": "Rarity and item are fully reproducible from the seeds. Color is advisory: it depends on current prices and may differ on re-verification if prices changed."
     }
 }
