@@ -46,7 +46,11 @@ module.exports = class OpenCase {
         }
 
         // Override the winning slot with the provably-fair result.
-        const winnerCache = JSON.parse(this.allItems[winner.itemId.toString()]);
+        const winnerRaw = this.allItems[winner.itemId.toString()];
+        if (!winnerRaw) {
+            throw new Error(`Provably-fair winner item ${winner.itemId} missing from item cache`);
+        }
+        const winnerCache = JSON.parse(winnerRaw);
         const winnerElement = {
             name: winnerCache.name,
             type: winnerCache.type,
