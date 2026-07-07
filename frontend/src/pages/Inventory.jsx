@@ -136,7 +136,7 @@ const Inventory = ({
         <div key={row.storage_id} className="inventorypage-card">
             <div
                 className="inventorypage-card__img"
-                style={{ backgroundImage: `url(/img/items/${row.storage_itemId}.webp)` }}
+                style={{ backgroundImage: info(row.storage_itemId, 'item_imagePath') ? `url(${encodeURI(info(row.storage_itemId, 'item_imagePath'))})` : 'none' }}
             >
                 <ItemColor color={row.storage_color} />
             </div>

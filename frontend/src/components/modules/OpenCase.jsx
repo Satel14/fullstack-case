@@ -247,15 +247,17 @@ class OpenCase extends Component {
                 }
                 delete prices[i];
                 this.setState((prev) => ({ prices, sold: [...prev.sold, i] }));
-                return;
+                return true;
             }
             if (notify) {
                 openNotification('error', this.props.t('openCase.sellErrorTitle'), result.message || this.props.t('openCase.sellErrorText'));
             }
+            return false;
         } catch (e) {
             if (notify) {
                 openNotification('error', this.props.t('common.error'), this.props.t('openCase.sellErrorText'));
             }
+            return false;
         }
     }
 
@@ -484,21 +486,24 @@ class OpenCase extends Component {
     }
 
     async sellItemAll() {
-        const { winner } = this.state;
-        const storageIds = [];
-
-        for (const key in winner) {
-            storageIds.push(winner[key].storageId);
+        const { winner, sold } = this.state;
+        let failed = 0;
+        for (let index = 0; index < winner.length; index++) {
+            if (sold.includes(index)) {
+                // eslint-disable-next-line no-continue
+                continue;
+            }
+            // eslint-disable-next-line no-await-in-loop
+            const ok = await this.sellItem(winner[index].storageId, index, false);
+            if (!ok) {
+                failed += 1;
+            }
         }
-
-        const promises = [];
-        for (let index = 0; index < storageIds.length; index++) {
-            const element = storageIds[index];
-            promises.push(await this.sellItem(element, index, false));
+        if (failed) {
+            openNotification('error', this.props.t('openCase.sellErrorTitle'), this.props.t('openCase.sellErrorText'));
+        } else {
+            openNotification('success', this.props.t('openCase.allSold'));
         }
-
-        await Promise.all(promises);
-        openNotification('success', this.props.t('openCase.allSold'));
     }
 
     renderBlock() {
