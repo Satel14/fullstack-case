@@ -113,6 +113,7 @@ class OpenCase extends Component {
             winner: null,
             positions: [],
             recenter: false,
+            sold: [],
             load: false,
             loadItem: false,
             loadIndex: null,
@@ -215,6 +216,7 @@ class OpenCase extends Component {
             winner: null,
             positions: [],
             recenter: false,
+            sold: [],
             loadIndex: null,
             loadItem: false,
             loadAll: false,
@@ -244,9 +246,7 @@ class OpenCase extends Component {
                     openNotification('success', this.props.t('openCase.sold'));
                 }
                 delete prices[i];
-                this.setState({
-                    prices,
-                });
+                this.setState((prev) => ({ prices, sold: [...prev.sold, i] }));
                 return;
             }
             if (notify) {
@@ -648,8 +648,11 @@ class OpenCase extends Component {
                             <div className="opencase">
                                 {loadItem ? (
                                     <div className="opencase-result">
-                                        {winner && winner.map((w, i) => (
-                                            <div key={`winner-${i}`} className="opencase-result__item">
+                                        <div className="opencase-result__items">
+                                        {winner && winner.map((w, i) => {
+                                            const isSold = this.state.sold.includes(i);
+                                            return (
+                                            <div key={`winner-${i}`} className={`opencase-result__item${isSold ? ' selled' : ''}`}>
                                                 <div
                                                     className="opencase-result__img"
                                                     style={{
@@ -664,7 +667,9 @@ class OpenCase extends Component {
                                                 <span>
                                                     {w.item.rare} {w.item.type}
                                                 </span>
-                                                {this.state.prices && this.state.prices[i] && (
+                                                {isSold ? (
+                                                    <div className="opencase-result__sold-label">{t('inventory.soldLabel')}</div>
+                                                ) : (this.state.prices && this.state.prices[i] && (
                                                     <Button
                                                         type="primary"
                                                         icon={<DollarOutlined />}
@@ -675,9 +680,11 @@ class OpenCase extends Component {
                                                     >
                                                         {t('openCase.sellFor', { price: this.state.prices[i] })}
                                                     </Button>
-                                                )}
+                                                ))}
                                             </div>
-                                        ))}
+                                            );
+                                        })}
+                                        </div>
                                         <div className="opencase-result__buttons">
                                             <Button
                                                 type="primary"
