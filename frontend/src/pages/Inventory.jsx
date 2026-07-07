@@ -107,19 +107,28 @@ const Inventory = ({
         }
         setSelling(true);
         const rows = [...active];
+        let failed = 0;
         for (let i = 0; i < rows.length; i++) {
             try {
                 // eslint-disable-next-line no-await-in-loop
                 const res = await sellItemByStorageId(rows[i].storage_id);
-                if (res.status === 200 && window.HeaderSecond) {
-                    window.HeaderSecond.changeBalance(res.balance);
+                if (res.status === 200) {
+                    if (window.HeaderSecond) {
+                        window.HeaderSecond.changeBalance(res.balance);
+                    }
+                } else {
+                    failed += 1;
                 }
             } catch (e) {
-                // continue selling the rest
+                failed += 1;
             }
         }
         setSelling(false);
-        openNotification('success', t('openCase.allSold'));
+        if (failed) {
+            openNotification('error', t('openCase.sellErrorTitle'), t('openCase.sellErrorText'));
+        } else {
+            openNotification('success', t('openCase.allSold'));
+        }
         await load();
     };
 
