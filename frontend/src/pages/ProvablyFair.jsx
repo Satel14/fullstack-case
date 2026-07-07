@@ -54,12 +54,25 @@ const ProvablyFair = () => {
     const onCompute = async () => {
         setCalcError(null);
         setCalcResult(null);
+
+        const nonceInt = parseInt(calc.nonce, 10);
+        const incomplete = !calc.serverSeed.trim()
+            || !calc.clientSeed.trim()
+            || !calc.caseId.trim()
+            || Number.isNaN(nonceInt)
+            || nonceInt < 0;
+        if (incomplete) {
+            // Guard client-side so we never fire a request that would 422.
+            setCalcError(t('provablyFair.verifyFailed'));
+            return;
+        }
+
         try {
             const res = await verifyOpen({
-                serverSeed: calc.serverSeed,
-                clientSeed: calc.clientSeed,
-                nonce: parseInt(calc.nonce, 10),
-                caseId: calc.caseId,
+                serverSeed: calc.serverSeed.trim(),
+                clientSeed: calc.clientSeed.trim(),
+                nonce: nonceInt,
+                caseId: calc.caseId.trim(),
             });
             setCalcResult(res.data);
         } catch (e) {
