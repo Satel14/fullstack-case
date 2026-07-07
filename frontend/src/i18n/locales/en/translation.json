@@ -253,7 +253,15 @@
             "received": "Item withdrawn",
             "waitingtrade": "Withdrawal pending",
             "money": "Exchanged for money"
-        }
+        },
+        "title": "Inventory",
+        "active": "Active",
+        "sold": "Sold",
+        "sell": "Sell",
+        "sellAll": "Sell all",
+        "emptyActive": "No items to sell",
+        "emptySold": "Nothing sold yet",
+        "soldLabel": "Sold"
     },
     "chat": {
         "title": "Online chat",
