@@ -24,6 +24,7 @@ import { getItemPriceById } from '../../api/all/item';
 import openNotification from '../mini/openNotification';
 import { itemInfoFetch } from '../../store/actions/itemCache';
 import ItemColor from '../mini/ItemColor';
+import { computeItemPriceUAH } from '../../helpers/price';
 
 const delayAnimation = 4;
 
@@ -332,20 +333,9 @@ class OpenCase extends Component {
                 // eslint-disable-next-line no-await-in-loop
                 const itemPrice = await getItemPriceById(element.winner.item.id);
                 const prices = typeof itemPrice.prices === 'string' ? JSON.parse(itemPrice.prices) : itemPrice.prices;
-                let { color } = element.winner.item;
-                color = color.toLowerCase();
-                color = color.replace(' ', '');
-
                 const moduleRate = this.props.modules && this.props.modules['uah-credit-rate'];
                 const creditToUAH = moduleRate ? moduleRate.extraData : 1;
-
-                let actualPrice = null;
-                if (prices) {
-                    if (prices[color]) {
-                        actualPrice = parseInt(prices[color] * creditToUAH * 100, 10) / 100;
-                    }
-                }
-                actualPricesD.push(actualPrice);
+                actualPricesD.push(computeItemPriceUAH(prices, element.winner.item.color, creditToUAH));
             } catch (priceErr) {
                 console.error('Price calculation error:', priceErr);
                 actualPricesD.push(null);
