@@ -773,15 +773,7 @@ class OpenCase extends Component {
                                                                 <div
                                                                     key={`scroll-item-${listIndex}-${i}`}
                                                                     className={`casepage-itemlist_item rc-${item.rare}`}
-                                                                    style={{
-                                                                        backgroundImage: `url(${this.getImagePath(item.id)})`,
-                                                                        backgroundSize: 'contain',
-                                                                        backgroundPosition: 'center',
-                                                                        backgroundRepeat: 'no-repeat',
-                                                                        height: '110px',
-                                                                        width: '130px',
-                                                                        margin: '0 5px'
-                                                                    }}
+                                                                    style={{ backgroundImage: `url(${this.getImagePath(item.id)})` }}
                                                                 >
                                                                     <span>{item.name}</span>
                                                                     <ItemColor color={item.color} />
