@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { Tooltip } from 'antd';
 import map from 'lodash/map';
 import Fade from 'react-reveal/Fade';
@@ -164,7 +165,7 @@ class Case extends Component {
                         {serverSeedHash && (
                             <div className="casepage-provablyfair">
                                 <Tooltip title={serverSeedHash}>
-                                    <span>{t('provablyFair.badge')}</span>
+                                    <Link to="/provably-fair">{t('provablyFair.badge')}</Link>
                                 </Tooltip>
                             </div>
                         )}

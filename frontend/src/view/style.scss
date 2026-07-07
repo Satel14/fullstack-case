@@ -2603,6 +2603,114 @@ footer {
     }
 }
 
+.casepage-provablyfair {
+    text-align: center;
+    margin: 8px auto 4px;
+
+    a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 14px;
+        border: 1px solid #2f7d5b;
+        border-radius: 20px;
+        background: rgba(47, 125, 91, 0.12);
+        color: #4cd08a;
+        font-size: 12px;
+        font-family: "Roboto Bold";
+        letter-spacing: 0.3px;
+        transition: all 0.2s ease;
+
+        &::before {
+            content: "\2713"; // check mark
+        }
+
+        &:hover {
+            background: rgba(47, 125, 91, 0.22);
+            color: #6ee7a8;
+        }
+    }
+}
+
+.provablyfairpage {
+    max-width: 980px;
+    margin: 0 auto;
+    color: #adb0b9;
+
+    h2 {
+        color: #fff;
+        font-family: "Roboto Bold";
+        margin-bottom: 6px;
+    }
+
+    h3 {
+        color: #fff;
+        font-family: "Roboto Bold";
+        margin: 22px 0 10px;
+        font-size: 16px;
+    }
+
+    p {
+        line-height: 1.65;
+        max-width: 760px;
+    }
+
+    code {
+        display: inline-block;
+        background: #0f1421;
+        border: 1px solid #2a3350;
+        border-radius: 4px;
+        padding: 2px 8px;
+        color: #7fc7ff;
+        font-size: 12px;
+        word-break: break-all;
+    }
+
+    > div {
+        margin-bottom: 10px;
+    }
+
+    .ant-input {
+        max-width: 420px;
+        margin: 0 8px 8px 0;
+        background: #0f1421;
+        border: 1px solid #2a3350;
+        color: #fff;
+
+        &::placeholder {
+            color: #5b647a;
+        }
+    }
+
+    .ant-btn {
+        margin-bottom: 8px;
+    }
+
+    .ant-table {
+        background: rgba(16, 19, 30, 0.85);
+        border: 1px solid #262e43;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 6px;
+    }
+
+    .ant-table-thead > tr > th {
+        background: #131725;
+        color: #fff;
+        border-bottom: 1px solid #2a3350;
+    }
+
+    .ant-table-tbody > tr > td {
+        background: transparent;
+        color: #adb0b9;
+        border-bottom: 1px solid #1c2333;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+        background: #131725;
+    }
+}
+
 
 .opencase-blocklist {
     display: flex;
