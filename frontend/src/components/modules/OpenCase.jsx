@@ -27,6 +27,8 @@ import ItemColor from '../mini/ItemColor';
 
 const delayAnimation = 4;
 
+const recenterDuration = 0.6;
+
 const moveHorizontally = (left) => keyframes`
   0% {
     transform: translateX(140px)
@@ -38,14 +40,28 @@ const moveHorizontally = (left) => keyframes`
     transform: translateX(${left}px)
   }
 `;
+const recenterTo = (from, to) => keyframes`
+  0% {
+    transform: translateX(${from}px)
+  }
+  100% {
+    transform: translateX(${to}px)
+  }
+`;
 const ShadowOverlay = styled.div`
   display: flex;
   flex-direction: row;
   width: max-content;
-  transform: translateX(${(p) => (p.load ? p.left : 140)}px);
+  transform: translateX(${(p) => {
+      if (p.recenter) return p.center;
+      return p.load ? p.spin : 140;
+  }}px);
   animation-timing-function: ease;
-  animation: ${(p) => (p.load ? moveHorizontally(p.left) : 'none')}
-    ${delayAnimation}s ease;
+  animation: ${(p) => {
+      if (p.recenter) return recenterTo(p.spin, p.center);
+      return p.load ? moveHorizontally(p.spin) : 'none';
+  }}
+    ${(p) => (p.recenter ? recenterDuration : delayAnimation)}s ease;
   animation-fill-mode: forwards;
 `;
 
@@ -75,15 +91,17 @@ const mapStateToProps = (state) => ({
     itemCache: state.itemCache,
     modules: state.modules,
 });
-const calculatePositionForLine = (winner) => {
+const calculatePositions = (winner) => {
     const widthOneBlock = 140;
     const containerCenter = 380;
-    const resultLeftPixel = -widthOneBlock * (winner.winIndex - 1)
+    const base = -widthOneBlock * (winner.winIndex - 1)
         + containerCenter
-        + winner.winIndex
-        - randomInteger(5, widthOneBlock - 15);
+        + winner.winIndex;
 
-    return resultLeftPixel;
+    return {
+        spin: base - randomInteger(5, widthOneBlock - 15),
+        center: base - widthOneBlock / 2,
+    };
 };
 
 class OpenCase extends Component {
@@ -93,6 +111,8 @@ class OpenCase extends Component {
             openMethod: '',
             randomItemsList: [],
             winner: null,
+            positions: [],
+            recenter: false,
             load: false,
             loadItem: false,
             loadIndex: null,
@@ -162,6 +182,8 @@ class OpenCase extends Component {
             load: false,
             randomItemsList: [],
             winner: null,
+            positions: [],
+            recenter: false,
             loadIndex: null,
             loadItem: false,
             loadAll: false,
@@ -311,6 +333,8 @@ class OpenCase extends Component {
         this.setState({
             randomItemsList: randomList,
             winner: winnerList,
+            positions: winnerList.map((w) => calculatePositions(w)),
+            recenter: false,
             prices: actualPricesD,
         });
 
@@ -360,7 +384,11 @@ class OpenCase extends Component {
         this.setState({
             openMethod: 'scroll',
             load: true,
+            recenter: false,
         });
+        setTimeout(() => {
+            this.setState({ recenter: true });
+        }, delayAnimation * 1000);
         setTimeout(() => {
             this.setState({
                 loadItem: true,
@@ -683,14 +711,18 @@ class OpenCase extends Component {
                                                     </Fade>
                                                 )}
 
-                                                {winner && this.state.randomItemsList && this.state.randomItemsList.map((randomList, listIndex) => (
+                                                {winner && this.state.randomItemsList && this.state.randomItemsList.map((randomList, listIndex) => {
+                                                    const pos = this.state.positions[listIndex] || { spin: 140, center: 140 };
+                                                    return (
                                                     <div key={`case-block-${listIndex}`} className="opencase-block">
                                                         <div className="line-overlay" />
 
                                                         <ShadowOverlay
                                                             className="shadow-overlay"
                                                             load={this.state.openMethod === 'scroll'}
-                                                            left={calculatePositionForLine(winner[listIndex])}
+                                                            recenter={this.state.recenter}
+                                                            spin={pos.spin}
+                                                            center={pos.center}
                                                         >
                                                             {randomList.map((item, i) => (
                                                                 <div
@@ -712,7 +744,8 @@ class OpenCase extends Component {
                                                             ))}
                                                         </ShadowOverlay>
                                                     </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </>
                                         )}
                                     </>
