@@ -11,6 +11,7 @@ import {
     TagsOutlined,
     UserOutlined,
     SafetyCertificateOutlined,
+    AppstoreOutlined,
 } from '@ant-design/icons';
 
 import Socials from './mini/Socials';
@@ -62,6 +63,12 @@ class MenuLayoutSlider extends React.Component {
                 key: 'provablyfair',
                 label: <Link to="/provably-fair">{t('provablyFair.title')}</Link>,
                 icon: <SafetyCertificateOutlined />,
+            });
+
+            defaultMenu.splice(3, 0, {
+                key: 'inventory',
+                label: <Link to="/inventory">{t('inventory.title')}</Link>,
+                icon: <AppstoreOutlined />,
             });
         }
 

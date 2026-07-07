@@ -15,6 +15,7 @@ import Settings from '../pages/Settings.jsx';
 import Top from '../pages/Top';
 import Faq from '../pages/Faq';
 import ProvablyFair from '../pages/ProvablyFair';
+import Inventory from '../pages/Inventory';
 
 export default {
     private: [
@@ -47,6 +48,12 @@ export default {
             exact: true,
             layout: Layout,
             component: ProvablyFair,
+        },
+        {
+            path: '/inventory',
+            exact: true,
+            layout: Layout,
+            component: Inventory,
         },
     ],
     public: [
