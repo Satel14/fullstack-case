@@ -16,6 +16,7 @@ const ProvablyFair = () => {
     const [history, setHistory] = useState([]);
     const [calc, setCalc] = useState({ serverSeed: '', clientSeed: '', nonce: '', caseId: '' });
     const [calcResult, setCalcResult] = useState(null);
+    const [calcError, setCalcError] = useState(null);
 
     const load = async () => {
         const res = await getProvablyFairState();
@@ -28,25 +29,42 @@ const ProvablyFair = () => {
     useEffect(() => { load(); }, []);
 
     const onSaveClientSeed = async () => {
-        await apiSetClientSeed(clientSeedInput);
-        await load();
+        try {
+            await apiSetClientSeed(clientSeedInput);
+            await load();
+        } catch (e) {
+            // error toast is shown by the api layer
+        }
     };
 
     const onRotate = () => {
         Modal.confirm({
             content: t('provablyFair.rotateConfirm'),
-            onOk: async () => { await apiRotateSeed(); await load(); },
+            onOk: async () => {
+                try {
+                    await apiRotateSeed();
+                    await load();
+                } catch (e) {
+                    // error toast is shown by the api layer
+                }
+            },
         });
     };
 
     const onCompute = async () => {
-        const res = await verifyOpen({
-            serverSeed: calc.serverSeed,
-            clientSeed: calc.clientSeed,
-            nonce: parseInt(calc.nonce, 10),
-            caseId: calc.caseId,
-        });
-        setCalcResult(res.data);
+        setCalcError(null);
+        setCalcResult(null);
+        try {
+            const res = await verifyOpen({
+                serverSeed: calc.serverSeed,
+                clientSeed: calc.clientSeed,
+                nonce: parseInt(calc.nonce, 10),
+                caseId: calc.caseId,
+            });
+            setCalcResult(res.data);
+        } catch (e) {
+            setCalcError(t('provablyFair.verifyFailed'));
+        }
     };
 
     const onVerifyRow = (row) => {
@@ -96,7 +114,10 @@ const ProvablyFair = () => {
             </div>
             <Button danger onClick={onRotate}>{t('provablyFair.rotate')}</Button>
             {state.previous && (
-                <div>{t('provablyFair.revealedServerSeed')}: <code>{state.previous.serverSeed}</code></div>
+                <div>
+                    {t('provablyFair.revealedServerSeed')}: <code>{state.previous.serverSeed}</code>
+                    <div className="provablyfair-note">{t('provablyFair.revealedServerSeedNote')}</div>
+                </div>
             )}
 
             <h3>{t('provablyFair.history')}</h3>
@@ -111,6 +132,7 @@ const ProvablyFair = () => {
             {calcResult && (
                 <div>{t('provablyFair.computed')}: {calcResult.itemId} / {calcResult.color} ({calcResult.rarity})</div>
             )}
+            {calcError && <div className="provablyfair-error">{calcError}</div>}
         </div>
     );
 };
