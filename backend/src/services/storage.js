@@ -114,25 +114,23 @@ module.exports.getStorageLastItems = async (limit) => {
     }
 };
 
-module.exports.getStorageById = async (userId, status) => {
+module.exports.getStorageById = async (userId, status, options = {}) => {
     try {
+        const MAX_LIMIT = 200;
+        const limit = Math.min(Math.max(parseInt(options.limit, 10) || 100, 1), MAX_LIMIT);
+        const offset = Math.max(parseInt(options.offset, 10) || 0, 0);
+
         const storageItems = await Storage.findAll({
             order: [['storage_id', 'DESC']],
             where: {
                 storage_userId: userId,
                 storage_status: status,
             },
+            limit,
+            offset,
         });
 
-        if (!storageItems) throw new Error(MESSAGE.CASE.NOT_EXIST);
-
-        const items = [];
-        // eslint-disable-next-line lodash/prefer-lodash-method
-        storageItems.forEach((element) => {
-            items.push(element.dataValues);
-        });
-
-        return items;
+        return storageItems.map((element) => element.dataValues);
     } catch (e) {
         throw Error(e.message);
     }

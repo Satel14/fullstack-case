@@ -23,9 +23,13 @@ function jsonParser(blob) {
 module.exports.getProfileStorage = async (req, res) => {
     try {
         const { user_id } = req.user.profile;
-        const { status } = req.body;
+        const { status, limit, offset } = req.body;
 
-        const items = await StorageService.getStorageById(user_id, status);
+        if (!status) {
+            return res.status(200).json({ status: 200, data: [] });
+        }
+
+        const items = await StorageService.getStorageById(user_id, status, { limit, offset });
 
         return res.status(200).json({ status: 200, data: items });
     } catch (e) {
