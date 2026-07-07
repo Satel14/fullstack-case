@@ -91,18 +91,17 @@ const mapStateToProps = (state) => ({
     itemCache: state.itemCache,
     modules: state.modules,
 });
-const calculatePositions = (winner) => {
-    const widthOneBlock = 140;
-    const containerCenter = 380;
-    const base = -widthOneBlock * (winner.winIndex - 1)
-        + containerCenter
-        + winner.winIndex;
+const WIDTH_ONE_BLOCK = 140;
 
+const computePositions = (winnerList, blockWidth) => winnerList.map((winner) => {
+    const center = blockWidth / 2
+        - WIDTH_ONE_BLOCK * (winner.winIndex - 1)
+        - WIDTH_ONE_BLOCK / 2;
     return {
-        spin: base - randomInteger(5, widthOneBlock - 15),
-        center: base - widthOneBlock / 2,
+        spin: center + randomInteger(-55, 55),
+        center,
     };
-};
+});
 
 class OpenCase extends Component {
     constructor(props) {
@@ -126,6 +125,35 @@ class OpenCase extends Component {
         this.openScrollMethod = this.openScrollMethod.bind(this);
         this.getBack = this.getBack.bind(this);
         this.getLoginPage = this.getLoginPage.bind(this);
+
+        this.blockRef = React.createRef();
+        this.timers = [];
+        this.rafId = null;
+        this._mounted = false;
+    }
+
+    componentDidMount() {
+        this._mounted = true;
+    }
+
+    componentWillUnmount() {
+        this._mounted = false;
+        this.clearTimers();
+    }
+
+    clearTimers() {
+        this.timers.forEach((id) => clearTimeout(id));
+        this.timers = [];
+        if (this.rafId) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
+        }
+    }
+
+    safeSetState(patch) {
+        if (this._mounted) {
+            this.setState(patch);
+        }
     }
 
     getShortInfoItem(id, fieldName) {
@@ -154,6 +182,7 @@ class OpenCase extends Component {
             return;
         }
 
+        this.clearTimers();
         this.setState({
             processWorking: true,
             loading: true,
@@ -165,18 +194,19 @@ class OpenCase extends Component {
             return;
         }
 
-        setTimeout(() => {
-            this.setState({
+        this.timers.push(setTimeout(() => {
+            this.safeSetState({
                 load: true,
                 openMethod: '',
                 loadItem: true,
                 processWorking: false,
                 loading: false,
             });
-        });
+        }));
     }
 
     getBack() {
+        this.clearTimers();
         this.setState({
             openMethod: '',
             load: false,
@@ -333,8 +363,6 @@ class OpenCase extends Component {
         this.setState({
             randomItemsList: randomList,
             winner: winnerList,
-            positions: winnerList.map((w) => calculatePositions(w)),
-            recenter: false,
             prices: actualPricesD,
         });
 
@@ -371,6 +399,7 @@ class OpenCase extends Component {
             return;
         }
 
+        this.clearTimers();
         this.setState({
             processWorking: true,
             loading: true,
@@ -381,22 +410,33 @@ class OpenCase extends Component {
         if (!result) {
             return;
         }
+
         this.setState({
-            openMethod: 'scroll',
             load: true,
             recenter: false,
+            positions: [],
         });
-        setTimeout(() => {
-            this.setState({ recenter: true });
-        }, delayAnimation * 1000);
-        setTimeout(() => {
-            this.setState({
+
+        this.rafId = requestAnimationFrame(() => {
+            const blockWidth = this.blockRef.current ? this.blockRef.current.offsetWidth : 800;
+            this.safeSetState({
+                positions: computePositions(this.state.winner, blockWidth),
+                openMethod: 'scroll',
+            });
+        });
+
+        this.timers.push(setTimeout(() => {
+            this.safeSetState({ recenter: true });
+        }, delayAnimation * 1000));
+
+        this.timers.push(setTimeout(() => {
+            this.safeSetState({
                 loadItem: true,
                 openMethod: '',
                 processWorking: false,
                 loading: false,
             });
-        }, delayAnimation * 1000 + 2000);
+        }, delayAnimation * 1000 + 2000));
     }
 
     async openBlockMethod(index = null) {
@@ -405,6 +445,7 @@ class OpenCase extends Component {
             return;
         }
 
+        this.clearTimers();
         this.setState({
             openMethod: 'block',
             load: true,
@@ -435,21 +476,21 @@ class OpenCase extends Component {
             loadIndex: index,
         });
 
-        setTimeout(() => {
-            this.setState({
+        this.timers.push(setTimeout(() => {
+            this.safeSetState({
                 loadAll: true,
             });
-        }, 1000);
+        }, 1000));
 
-        setTimeout(() => {
-            this.setState({
+        this.timers.push(setTimeout(() => {
+            this.safeSetState({
                 openMethod: '',
                 loadItem: true,
                 clicked: false,
                 processWorking: false,
                 loading: false,
             });
-        }, 3000);
+        }, 3000));
     }
 
     async sellItemAll() {
@@ -714,7 +755,11 @@ class OpenCase extends Component {
                                                 {winner && this.state.randomItemsList && this.state.randomItemsList.map((randomList, listIndex) => {
                                                     const pos = this.state.positions[listIndex] || { spin: 140, center: 140 };
                                                     return (
-                                                    <div key={`case-block-${listIndex}`} className="opencase-block">
+                                                    <div
+                                                        key={`case-block-${listIndex}`}
+                                                        className="opencase-block"
+                                                        ref={listIndex === 0 ? this.blockRef : null}
+                                                    >
                                                         <div className="line-overlay" />
 
                                                         <ShadowOverlay
