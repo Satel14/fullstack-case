@@ -31,3 +31,4 @@ CLAUDE.md
 
 # Local Redis Windows binaries (Redis runs in its own container in prod)
 backend/redis/
+docs/
