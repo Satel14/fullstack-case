@@ -26,3 +26,18 @@ export const wearColor = (rare) => WEAR_COLORS[normalizeRare(rare)] || DEFAULT_C
 
 // Alias kept for Profile best-drop ranking.
 export const rareRank = wearRank;
+
+const GRADE_TIERS = [
+    { max: 50, name: 'Consumer', color: '#B0C3D9' },
+    { max: 150, name: 'Industrial', color: '#5E98D9' },
+    { max: 600, name: 'Mil-Spec', color: '#4B69FF' },
+    { max: 2500, name: 'Restricted', color: '#8847FF' },
+    { max: 10000, name: 'Classified', color: '#D32CE6' },
+    { max: 50000, name: 'Covert', color: '#EB4B4B' },
+    { max: Infinity, name: 'Gold', color: '#E4AE39' },
+];
+
+export const valueGrade = (priceUAH) => {
+    const p = Number(priceUAH) || 0;
+    return GRADE_TIERS.find((t) => p < t.max) || GRADE_TIERS[GRADE_TIERS.length - 1];
+};
