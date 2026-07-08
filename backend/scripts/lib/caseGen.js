@@ -69,7 +69,7 @@ const generateCase = ({ archetype, pool, rng }) => {
         let candidates = available.filter((p) => inBand(p.evValue, band));
         if (candidates.length < bucket.count) {
             const center = (band[0] + band[1]) / 2;
-            const windowSize = Math.max(bucket.count * 3, bucket.count);
+            const windowSize = bucket.count * 3;
             candidates = available
                 .slice()
                 .sort((a, b) => Math.abs(a.evValue - center) - Math.abs(b.evValue - center))

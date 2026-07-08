@@ -48,15 +48,19 @@ test('is deterministic for the same seed', () => {
   assert.equal(a.price, b.price);
 });
 
-test('extreme value outliers never leak into a case (proximity window honored)', () => {
+test('band-widening excludes far value outliers (fails if window slice is reverted)', () => {
   const pool = [];
   for (let i = 1; i <= 200; i++) pool.push({ itemId: i, isKnife: false, evValue: 1 + (i % 50) * 40 });
   for (let i = 201; i <= 220; i++) pool.push({ itemId: i, isKnife: true, evValue: 800 + (i % 20) * 200 });
-  const OUTLIER = 999;
-  pool.push({ itemId: OUTLIER, isKnife: false, evValue: 10000000 });
-  for (let s = 0; s < 30; s++) {
-    const c = generateCase({ archetype: 'budget', pool, rng: makeRng(`seed${s}`) });
-    assert.ok(!c.ids.includes(OUTLIER), `outlier leaked with seed ${s}`);
+  const OUTLIERS = [];
+  for (let i = 900; i < 1000; i++) {
+    pool.push({ itemId: i, isKnife: false, evValue: 10000000 });
+    OUTLIERS.push(i);
+  }
+  for (let s = 0; s < 20; s++) {
+    const c = generateCase({ archetype: 'budget', pool, rng: makeRng(`out${s}`) });
+    const leaked = c.ids.filter((id) => OUTLIERS.includes(id));
+    assert.deepEqual(leaked, [], `outliers leaked ${leaked} (seed ${s})`);
   }
 });
 
