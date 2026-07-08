@@ -95,7 +95,7 @@ function pickColor(caseDef, item, itemHash, f2, f3) {
     const cached = itemHash[item.id.toString()];
     if (!cached) return ITEM_CONFIG.COLORS.DEFAULT;
     const itemColors = normalizeColors(caseDef, JSON.parse(JSON.parse(cached).pricesInCredits));
-    if (Object.keys(itemColors).length <= 1) return ITEM_CONFIG.COLORS.DEFAULT;
+    if (Object.keys(itemColors).length === 0) return ITEM_CONFIG.COLORS.DEFAULT;
 
     const paintMax = caseDef.CHANCES.COLORS.DEFAULT + caseDef.CHANCES.COLORS.PAINTED;
     const paintRoll = Math.floor(f2 * paintMax);

@@ -100,16 +100,31 @@ test('single-color item returns its only color', () => {
     assert.strictEqual(w.color, ITEM_CONFIG.COLORS.DEFAULT);
 });
 
-test('deriveWinner keeps default when only one painted color exists, even with painted-favoring weights', () => {
+test('deriveWinner can pick the sole painted color when the paint roll lands in the painted band', () => {
     const oneColor = {
         id: 'onecolor',
         CHANCES: { FN: 100, COLORS: { DEFAULT: 0, PAINTED: 100, LIST: { red: 100 } } },
         ITEMS: [{ id: 11, rare: 'FN', colors: ['default', 'red'] }],
     };
     const hash = { 11: JSON.stringify({ name: 'y', type: 'pistol', rare: 'FN', pricesInCredits: JSON.stringify({ default: 10, red: 50 }) }) };
-    // Mirrors caseOpen.js getPaintedRandom: paint requires >1 painted colors.
     for (let n = 0; n < 50; n++) {
         const w = pf.deriveWinner('s', 'c', n, oneColor, hash);
-        assert.strictEqual(w.color, ITEM_CONFIG.COLORS.DEFAULT);
+        assert.strictEqual(w.color, 'red');
     }
+});
+
+test('deriveWinner paints a single painted color at ~PAINTED/(DEFAULT+PAINTED)', () => {
+    const case9010 = {
+        id: 'c9010',
+        CHANCES: { FN: 100, COLORS: { DEFAULT: 90, PAINTED: 10, LIST: { red: 100 } } },
+        ITEMS: [{ id: 12, rare: 'FN', colors: ['default', 'red'] }],
+    };
+    const hash = { 12: JSON.stringify({ name: 'z', type: 'pistol', rare: 'FN', pricesInCredits: JSON.stringify({ default: 10, red: 50 }) }) };
+    let painted = 0;
+    const N = 100000;
+    for (let n = 0; n < N; n++) {
+        if (pf.deriveWinner('paint-server', 'paint-client', n, case9010, hash).color === 'red') painted++;
+    }
+    const freq = painted / N;
+    assert.ok(Math.abs(freq - 0.10) < 0.01, `painted freq ${freq}, expected ~0.10`);
 });

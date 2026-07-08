@@ -226,7 +226,7 @@ module.exports = class OpenCase {
         itemColors = this.normalizeColors(itemColors);
         const countColors = Object.keys(itemColors).length;
 
-        if (countColors > 1) {
+        if (countColors >= 1) {
             const max =
                 this.case.CHANCES.COLORS.DEFAULT + this.case.CHANCES.COLORS.PAINTED;
             const getRandomIsPainted = this.randomInteger(0, max);
