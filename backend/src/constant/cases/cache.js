@@ -7,11 +7,11 @@ const allColors = [
 
 module.exports = {
     CHANCES: {
-        [ITEMS_CONFIG.RARITY.FACTORY_NEW]: 30,
-        [ITEMS_CONFIG.RARITY.MINIMAL_WEAR]: 30,
-        [ITEMS_CONFIG.RARITY.FIELD_TESTED]: 20,
-        [ITEMS_CONFIG.RARITY.WELL_WORN]: 15,
-        [ITEMS_CONFIG.RARITY.BATTLE_SCARRED]: 5,
+        [ITEMS_CONFIG.RARITY.FACTORY_NEW]: 55,
+        [ITEMS_CONFIG.RARITY.MINIMAL_WEAR]: 28,
+        [ITEMS_CONFIG.RARITY.FIELD_TESTED]: 12,
+        [ITEMS_CONFIG.RARITY.WELL_WORN]: 4,
+        [ITEMS_CONFIG.RARITY.BATTLE_SCARRED]: 1,
         COLORS: {
             DEFAULT: 90,
             PAINTED: 10,
@@ -22,20 +22,21 @@ module.exports = {
         },
     },
     ITEMS: [
-
-    { id: 1019, rare: ITEMS_CONFIG.RARITY.FACTORY_NEW, colors: allColors },
-    { id: 1004, rare: ITEMS_CONFIG.RARITY.FACTORY_NEW, colors: allColors },
-    { id: 827, rare: ITEMS_CONFIG.RARITY.FACTORY_NEW, colors: allColors },
-    { id: 1487, rare: ITEMS_CONFIG.RARITY.FACTORY_NEW, colors: allColors },
-    { id: 1370, rare: ITEMS_CONFIG.RARITY.MINIMAL_WEAR, colors: allColors },
-    { id: 653, rare: ITEMS_CONFIG.RARITY.MINIMAL_WEAR, colors: allColors },
-    { id: 1303, rare: ITEMS_CONFIG.RARITY.MINIMAL_WEAR, colors: allColors },
-    { id: 601, rare: ITEMS_CONFIG.RARITY.MINIMAL_WEAR, colors: allColors },
-    { id: 955, rare: ITEMS_CONFIG.RARITY.FIELD_TESTED, colors: allColors },
-    { id: 1164, rare: ITEMS_CONFIG.RARITY.FIELD_TESTED, colors: allColors },
-    { id: 40, rare: ITEMS_CONFIG.RARITY.FIELD_TESTED, colors: allColors },
-    { id: 1552, rare: ITEMS_CONFIG.RARITY.WELL_WORN, colors: allColors },
-    { id: 718, rare: ITEMS_CONFIG.RARITY.WELL_WORN, colors: allColors }
-
-    ]
+    { id: 1616, rare: ITEMS_CONFIG.RARITY.FACTORY_NEW, colors: allColors },
+    { id: 1516, rare: ITEMS_CONFIG.RARITY.FACTORY_NEW, colors: allColors },
+    { id: 771, rare: ITEMS_CONFIG.RARITY.FACTORY_NEW, colors: allColors },
+    { id: 869, rare: ITEMS_CONFIG.RARITY.FACTORY_NEW, colors: allColors },
+    { id: 821, rare: ITEMS_CONFIG.RARITY.FACTORY_NEW, colors: allColors },
+    { id: 805, rare: ITEMS_CONFIG.RARITY.FACTORY_NEW, colors: allColors },
+    { id: 693, rare: ITEMS_CONFIG.RARITY.MINIMAL_WEAR, colors: allColors },
+    { id: 1725, rare: ITEMS_CONFIG.RARITY.MINIMAL_WEAR, colors: allColors },
+    { id: 1614, rare: ITEMS_CONFIG.RARITY.MINIMAL_WEAR, colors: allColors },
+    { id: 1257, rare: ITEMS_CONFIG.RARITY.MINIMAL_WEAR, colors: allColors },
+    { id: 910, rare: ITEMS_CONFIG.RARITY.FIELD_TESTED, colors: allColors },
+    { id: 497, rare: ITEMS_CONFIG.RARITY.FIELD_TESTED, colors: allColors },
+    { id: 1150, rare: ITEMS_CONFIG.RARITY.FIELD_TESTED, colors: allColors },
+    { id: 1234, rare: ITEMS_CONFIG.RARITY.WELL_WORN, colors: allColors },
+    { id: 651, rare: ITEMS_CONFIG.RARITY.WELL_WORN, colors: allColors },
+    { id: 207, rare: ITEMS_CONFIG.RARITY.BATTLE_SCARRED, colors: allColors },
+    ],
 };
