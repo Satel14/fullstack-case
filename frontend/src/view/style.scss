@@ -900,8 +900,9 @@ p {
 
         &__item {
             box-sizing: border-box;
-            width: 160px;
+            width: 180px;
             padding: 12px;
+            overflow: hidden;
             border-radius: 10px;
             border: 1px solid #262e43;
             background: linear-gradient(180deg, #161a29 0%, #10131e 100%);
@@ -921,6 +922,13 @@ p {
                 color: #adb0b9;
                 line-height: 1.3;
                 margin: 3px 0 8px;
+            }
+
+            .ant-btn {
+                width: 100%;
+                margin-top: 8px;
+                padding: 0 6px;
+                font-size: 12px;
             }
         }
 
