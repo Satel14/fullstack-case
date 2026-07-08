@@ -37,3 +37,13 @@ test('a different wear of the same skin is used when the exact wear is missing',
   assert.equal(e.matched, true);
   assert.equal(e.default, 480);
 });
+
+test('painted is clamped to at least the default price', () => {
+  const idx = new Map([
+    ['AK-47 | Redline (Field-Tested)', 10],
+    ['StatTrak™ AK-47 | Redline (Field-Tested)', 4],
+  ]);
+  const e = buildPriceEntry(redline, idx, rate);
+  assert.equal(e.default, 400);
+  assert.equal(e.painted, 400);
+});

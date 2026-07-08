@@ -29,11 +29,10 @@ const buildPriceEntry = (item, marketIndex, rate) => {
     const stUSD = marketIndex.get(`StatTrak™ ${hash}`);
     const paintedUSD = stUSD != null ? stUSD : defUSD * STATTRAK_MULT;
 
-    return {
-        default: toUAH(defUSD, rate),
-        painted: toUAH(paintedUSD, rate),
-        matched,
-    };
+    const defaultUAH = toUAH(defUSD, rate);
+    const paintedUAH = Math.max(defaultUAH, toUAH(paintedUSD, rate));
+
+    return { default: defaultUAH, painted: paintedUAH, matched };
 };
 
 module.exports = { buildPriceEntry, toUAH, STATTRAK_MULT };
