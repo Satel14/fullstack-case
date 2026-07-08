@@ -2,6 +2,9 @@ const Category = require('../src/models/category');
 const Case = require('../src/models/case');
 const sequelize = require('../src/config/db');
 const allCases = require('../src/constant/cases/_all');
+const path = require('path');
+const casePricesPath = path.join(__dirname, 'data', 'casePrices.json');
+const casePrices = require('fs').existsSync(casePricesPath) ? require(casePricesPath) : {};
 
 async function seedCases() {
     try {
@@ -71,19 +74,14 @@ async function seedCases() {
         // Insert all cases from config
         let count = 0;
         for (const [caseId, caseConfig] of Object.entries(allCases)) {
-            // Check if it's a function (like createDefaultCase)
             let actualConfig = caseConfig;
-            if (typeof caseConfig === 'function') {
-                // Skipping dynamic cases for now, or we can just create a basic entry
-                continue;
-            }
 
             try {
                 const imgFilename = imageMap[caseId] || `${caseId}.png`;
                 await Case.upsert({
                     case_id: caseId,
                     case_title: actualConfig.name || caseId.toUpperCase(),
-                    case_price: actualConfig.price || 100,
+                    case_price: casePrices[caseId] != null ? casePrices[caseId] : (actualConfig.price || 100),
                     case_categoryId: actualConfig.type === 'souvenir' ? 3 : 1,
                     case_published: 1,
                     case_img: `/img/case/${imgFilename}`,
