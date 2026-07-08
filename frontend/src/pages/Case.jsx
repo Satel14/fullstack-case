@@ -8,7 +8,7 @@ import Fade from 'react-reveal/Fade';
 import { itemInfoFetch } from '../store/actions/itemCache';
 import { getCaseById } from '../api/all/cases';
 import { getProvablyFairState } from '../api/all/provablyFair';
-import { renderItemProp, itemDropChance } from '../helpers/Case';
+import { renderItemProp } from '../helpers/Case';
 import { wearRank, valueGrade } from '../helpers/rarity';
 import { computeItemPriceUAH } from '../helpers/price';
 import { marketUrl } from '../helpers/market';
@@ -151,7 +151,7 @@ class Case extends Component {
 
     render() {
         const {
-            caseCollection, caseData, fetching, serverSeedHash,
+            caseData, fetching, serverSeedHash,
         } = this.state;
         const { t } = this.props;
         return (
@@ -186,7 +186,6 @@ class Case extends Component {
                                 const type = this.getShortInfoItem(item, 'item_type');
                                 const price = this.getItemPrice(item);
                                 const grade = valueGrade(price);
-                                const chance = itemDropChance(caseCollection, item);
                                 return (
                                     <Tooltip
                                         placement="bottom"
@@ -201,23 +200,19 @@ class Case extends Component {
                                                 rel="noopener noreferrer"
                                                 style={{ '--rarity': grade.color }}
                                             >
-                                                {chance != null && (
-                                                    <i className="casepage-itemlist_item__chance">
-                                                        {chance.toFixed(chance < 1 ? 2 : 1)}
-                                                        %
-                                                    </i>
-                                                )}
                                                 <div
                                                     className="casepage-itemlist_item__img"
                                                     style={{ backgroundImage: `url(${this.getImagePath(item)})` }}
                                                 />
-                                                <span>{name}</span>
-                                                {price > 0 && (
-                                                    <b className="casepage-itemlist_item__price">
-                                                        {price}
-                                                        {' ₴'}
-                                                    </b>
-                                                )}
+                                                <div className="casepage-itemlist_item__footer">
+                                                    <div className="casepage-itemlist_item__name">{name}</div>
+                                                    {price > 0 && (
+                                                        <b className="casepage-itemlist_item__price">
+                                                            {price}
+                                                            {' ₴'}
+                                                        </b>
+                                                    )}
+                                                </div>
                                             </a>
                                         </Fade>
                                     </Tooltip>

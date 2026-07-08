@@ -1572,33 +1572,38 @@ blockquote {
 
             &__img {
                 position: absolute;
-                inset: 20px 10px 22px;
+                inset: 14px 10px 46px;
                 background-size: contain;
                 background-position: center;
                 background-repeat: no-repeat;
                 filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.5));
             }
 
-            &__chance {
+            &__footer {
                 position: absolute;
-                top: 7px;
-                right: 9px;
+                left: 0;
+                right: 0;
+                bottom: 0;
                 z-index: 2;
-                font-style: normal;
-                font-size: 10px;
-                font-weight: 700;
-                color: var(--rarity, #00a0ff);
-                text-shadow: 0 0 8px color-mix(in srgb, var(--rarity, #00a0ff) 55%, transparent);
+                display: flex;
+                flex-direction: column;
+                gap: 1px;
+                padding: 16px 8px 7px;
+                background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.85) 60%);
+            }
+
+            &__name {
+                font-size: 12px;
+                color: #fff;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             &__price {
-                position: absolute;
-                bottom: 4px;
-                right: 6px;
-                z-index: 3;
-                font-size: 12px;
+                font-size: 13px;
                 font-weight: 700;
-                color: #fff;
+                color: var(--rarity, #fff);
                 text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
             }
 
@@ -1614,7 +1619,7 @@ blockquote {
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
-                padding: 6px 42px 5px 4px;
+                padding: 6px 4px 5px;
             }
         }
     }
