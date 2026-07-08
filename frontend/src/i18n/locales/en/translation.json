@@ -239,7 +239,9 @@
     },
     "case": {
         "contents": "Case contents",
-        "openedCount": "Times opened:"
+        "openedCount": "Times opened:",
+        "price": "Price",
+        "chance": "Chance"
     },
     "inventory": {
         "item": "Item",

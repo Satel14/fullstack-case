@@ -8,8 +8,10 @@ import Fade from 'react-reveal/Fade';
 import { itemInfoFetch } from '../store/actions/itemCache';
 import { getCaseById } from '../api/all/cases';
 import { getProvablyFairState } from '../api/all/provablyFair';
-import { renderItemProp } from '../helpers/Case';
-import { wearRank, wearColor } from '../helpers/rarity';
+import { renderItemProp, itemDropChance } from '../helpers/Case';
+import { wearRank, valueGrade } from '../helpers/rarity';
+import { computeItemPriceUAH } from '../helpers/price';
+import { marketUrl } from '../helpers/market';
 import Loader from '../components/mini/Loader';
 import OpenCase from '../components/modules/OpenCase';
 
@@ -71,22 +73,22 @@ class Case extends Component {
         return '';
     }
 
+    getItemPrice(item) {
+        const prices = this.getShortInfoItem(item, 'pricesInCredits');
+        return computeItemPriceUAH(prices, 'default') || 0;
+    }
+
     getSortedItems() {
         const { caseCollection } = this.state;
         const items = (caseCollection && caseCollection.ITEMS) ? caseCollection.ITEMS : [];
 
-        // Sort ascending by wear rarity (Battle-Scarred = most common first → Factory
-        // New = rarest last); ties broken alphabetically. Wear comes from the async
-        // itemCache, so the order settles as the cache fills.
         return [...items].sort((a, b) => {
-            const rankDiff = wearRank(this.getShortInfoItem(a, 'item_rare'))
-                - wearRank(this.getShortInfoItem(b, 'item_rare'));
-            if (rankDiff !== 0) {
-                return rankDiff;
+            const priceDiff = this.getItemPrice(b) - this.getItemPrice(a);
+            if (priceDiff !== 0) {
+                return priceDiff;
             }
-            const nameA = this.getShortInfoItem(a, 'item_name') || '';
-            const nameB = this.getShortInfoItem(b, 'item_name') || '';
-            return nameA.localeCompare(nameB);
+            return wearRank(this.getShortInfoItem(b, 'item_rare'))
+                - wearRank(this.getShortInfoItem(a, 'item_rare'));
         });
     }
 
@@ -179,29 +181,48 @@ class Case extends Component {
                             </i>
                         </span>
                         <div className="casepage-itemlist more">
-                            {map(this.getSortedItems(), (item, i) => (
-                                <Tooltip
-                                    placement="bottom"
-                                    title={renderItemProp(this.getShortInfoItem(item), null, t)}
-                                    key={`itemlist${item.id}`}
-                                >
-                                    <Fade delay={i * 50}>
-                                        <div
-                                            className={`casepage-itemlist_item rc-${this.getShortInfoItem(item, 'item_rare')}`}
-                                            style={{ '--rarity': wearColor(this.getShortInfoItem(item, 'item_rare')) }}
-                                        >
-                                            <i className="casepage-itemlist_item__wear">
-                                                {this.getShortInfoItem(item, 'item_rare')}
-                                            </i>
-                                            <div
-                                                className="casepage-itemlist_item__img"
-                                                style={{ backgroundImage: `url(${this.getImagePath(item)})` }}
-                                            />
-                                            <span>{this.getShortInfoItem(item, 'item_name')}</span>
-                                        </div>
-                                    </Fade>
-                                </Tooltip>
-                            ))}
+                            {map(this.getSortedItems(), (item, i) => {
+                                const name = this.getShortInfoItem(item, 'item_name');
+                                const type = this.getShortInfoItem(item, 'item_type');
+                                const price = this.getItemPrice(item);
+                                const grade = valueGrade(price);
+                                const chance = itemDropChance(caseCollection, item);
+                                return (
+                                    <Tooltip
+                                        placement="bottom"
+                                        title={renderItemProp(this.getShortInfoItem(item), null, t)}
+                                        key={`itemlist${item.id}`}
+                                    >
+                                        <Fade delay={i * 50}>
+                                            <a
+                                                className="casepage-itemlist_item"
+                                                href={marketUrl(name, type === 'knife')}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                style={{ '--rarity': grade.color }}
+                                            >
+                                                {chance != null && (
+                                                    <i className="casepage-itemlist_item__chance">
+                                                        {chance.toFixed(chance < 1 ? 2 : 1)}
+                                                        %
+                                                    </i>
+                                                )}
+                                                <div
+                                                    className="casepage-itemlist_item__img"
+                                                    style={{ backgroundImage: `url(${this.getImagePath(item)})` }}
+                                                />
+                                                <span>{name}</span>
+                                                {price > 0 && (
+                                                    <b className="casepage-itemlist_item__price">
+                                                        {price}
+                                                        {' ₴'}
+                                                    </b>
+                                                )}
+                                            </a>
+                                        </Fade>
+                                    </Tooltip>
+                                );
+                            })}
                         </div>
                     </>
                 )}

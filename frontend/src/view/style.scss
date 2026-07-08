@@ -1597,6 +1597,29 @@ blockquote {
                 filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.5));
             }
 
+            &__chance {
+                position: absolute;
+                top: 7px;
+                right: 9px;
+                z-index: 2;
+                font-style: normal;
+                font-size: 10px;
+                font-weight: 700;
+                color: var(--rarity, #00a0ff);
+                text-shadow: 0 0 8px color-mix(in srgb, var(--rarity, #00a0ff) 55%, transparent);
+            }
+
+            &__price {
+                position: absolute;
+                bottom: 4px;
+                right: 6px;
+                z-index: 3;
+                font-size: 12px;
+                font-weight: 700;
+                color: #fff;
+                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+            }
+
             span {
                 position: absolute;
                 bottom: 0;
@@ -1609,7 +1632,7 @@ blockquote {
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
-                padding: 6px 4px 5px;
+                padding: 6px 42px 5px 4px;
             }
         }
     }

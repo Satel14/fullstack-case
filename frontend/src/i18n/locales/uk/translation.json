@@ -239,7 +239,9 @@
     },
     "case": {
         "contents": "Вміст кейсу",
-        "openedCount": "Кількість відкритих:"
+        "openedCount": "Кількість відкритих:",
+        "price": "Ціна",
+        "chance": "Шанс"
     },
     "inventory": {
         "item": "Предмет",
