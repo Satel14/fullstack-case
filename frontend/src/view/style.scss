@@ -1570,24 +1570,6 @@ blockquote {
                     inset 0 1px 0 rgba(255, 255, 255, 0.06);
             }
 
-            &__wear {
-                position: absolute;
-                top: 7px;
-                left: 9px;
-                z-index: 2;
-                max-width: calc(100% - 18px);
-                font-style: normal;
-                font-size: 9px;
-                font-weight: 700;
-                letter-spacing: 0.5px;
-                text-transform: uppercase;
-                color: var(--rarity, #00a0ff);
-                text-shadow: 0 0 8px color-mix(in srgb, var(--rarity, #00a0ff) 55%, transparent);
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
             &__img {
                 position: absolute;
                 inset: 20px 10px 22px;
