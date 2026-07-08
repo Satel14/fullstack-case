@@ -21,16 +21,19 @@ const enumerateItems = (basePath = IMAGES_PATH) => {
     let itemId = 1;
 
     const categories = fs.readdirSync(basePath, { withFileTypes: true })
-        .filter((d) => d.isDirectory());
+        .filter((d) => d.isDirectory())
+        .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
     for (const category of categories) {
         const categoryPath = path.join(basePath, category.name);
         const weaponTypes = fs.readdirSync(categoryPath, { withFileTypes: true })
-            .filter((d) => d.isDirectory());
+            .filter((d) => d.isDirectory())
+            .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
         for (const weaponType of weaponTypes) {
             const weaponPath = path.join(categoryPath, weaponType.name);
-            const skins = fs.readdirSync(weaponPath).filter((f) => f.endsWith('.png'));
+            const skins = fs.readdirSync(weaponPath).filter((f) => f.endsWith('.png'))
+                .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 
             for (let i = 0; i < skins.length; i++) {
                 const skinName = skins[i].replace('.png', '');

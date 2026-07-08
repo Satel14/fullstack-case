@@ -84,7 +84,7 @@ const main = () => {
     const pool = Object.entries(priceMap).map(([itemId, p]) => ({
         itemId: Number(itemId),
         isKnife: p.type === 'knife',
-        evValue: 0.9 * p.default + 0.1 * p.painted,
+        evValue: p.default,
     }));
 
     const casePrices = {};
