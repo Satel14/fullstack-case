@@ -63,13 +63,17 @@ const generateCase = ({ archetype, pool, rng }) => {
         CHANCES[bucket.key] = bucket.weight;
         const band = bands[bi];
         const wantKnife = bi === BUCKETS.length - 1;
-        const typed = pool.filter((p) => (wantKnife ? p.isKnife : !p.isKnife));
-        let candidates = typed.filter((p) => inBand(p.evValue, band));
+        const available = pool.filter(
+            (p) => (wantKnife ? p.isKnife : !p.isKnife) && !usedIds.has(p.itemId),
+        );
+        let candidates = available.filter((p) => inBand(p.evValue, band));
         if (candidates.length < bucket.count) {
             const center = (band[0] + band[1]) / 2;
-            candidates = typed.slice().sort(
-                (a, b) => Math.abs(a.evValue - center) - Math.abs(b.evValue - center),
-            );
+            const windowSize = Math.max(bucket.count * 3, bucket.count);
+            candidates = available
+                .slice()
+                .sort((a, b) => Math.abs(a.evValue - center) - Math.abs(b.evValue - center))
+                .slice(0, windowSize);
         }
         pickN(candidates, bucket.count, rng, usedIds).forEach((c) => {
             OUT.push({ id: c.itemId, rare: bucket.key, colors: [ITEMS.COLORS.DEFAULT, ITEMS.COLORS.PAINTED] });
