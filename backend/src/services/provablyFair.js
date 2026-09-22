@@ -37,8 +37,6 @@ const findActiveSeed = (userId, options) => ProvablyFairSeed.findOne({
 const isUniqueViolation = (e) => e && (e.name === 'SequelizeUniqueConstraintError'
     || (e.parent && e.parent.code === 'ER_DUP_ENTRY'));
 
-// The unique index on activeUserId allows one active seed per user; losing the
-// creation race just means another request created it first.
 module.exports.ensureActiveSeed = async (userId, options = {}) => {
     const seed = await findActiveSeed(userId, options);
     if (seed) {

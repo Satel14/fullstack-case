@@ -105,7 +105,6 @@ function pickColor(table, item, f2, f3) {
     return ITEM_CONFIG.COLORS.DEFAULT;
 }
 
-// Everything a draw depends on, frozen at open time so a later price or case change cannot alter it.
 function buildDrawTable(caseDef, itemHash) {
     const prices = {};
     for (const item of caseDef.ITEMS) {
