@@ -38,6 +38,8 @@ const DOWN_EFFECTS = {
         + 'still uses that type, so revert only after those rows are gone',
     '20260922000600-password-resets.js':
         'drops the password_resets table, so every outstanding password reset link stops working',
+    '20260922000700-case-open-draw-table.js':
+        'drops case_opens.drawTable, so no open recorded since can be verified against the case as it was',
 };
 
 const EXPECTED_COLUMNS = [

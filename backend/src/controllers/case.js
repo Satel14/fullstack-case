@@ -10,7 +10,7 @@ const allCases = require('../constant/cases/_all')
 const { getIo } = require('../socket/chat');
 const sequelize = require('../config/db');
 const PFService = require('../services/provablyFair');
-const { deriveWinner } = require('../modules/provablyFair');
+const { buildDrawTable, deriveFromTable } = require('../modules/provablyFair');
 const RedisManager = require('../redis/manager');
 const ITEM_HASH = 'item_hash';
 
@@ -79,6 +79,8 @@ module.exports.openCaseById = async (req, res) => {
 
         const caseDef = allCases[id];
         const itemHash = await RedisManager.getAllDataHashWithKey(ITEM_HASH);
+        const drawTable = buildDrawTable(caseDef, itemHash);
+        const drawTableJson = JSON.stringify(drawTable);
 
         await sequelize.transaction(async (t) => {
             const lockedBalance = await UserService.getBalanceByUserId(user_id, {
@@ -99,7 +101,7 @@ module.exports.openCaseById = async (req, res) => {
 
             for (let index = 0; index < count; index++) {
                 console.log('[DEBUG] Opening case iteration', index);
-                const winner = deriveWinner(seed.pf_serverSeed, seed.pf_clientSeed, nonce, caseDef, itemHash);
+                const winner = deriveFromTable(seed.pf_serverSeed, seed.pf_clientSeed, nonce, drawTable);
                 const resultCase = await new CaseOpen().openCase(id, winner);
                 console.log('[DEBUG] Case opened, winner:', resultCase?.winner?.item?.name);
 
@@ -132,6 +134,7 @@ module.exports.openCaseById = async (req, res) => {
                         nonce,
                         resultItemId: resultCase.winner.item.id,
                         resultColor: resultCase.winner.item.color,
+                        drawTable: drawTableJson,
                     },
                     { transaction: t },
                 );

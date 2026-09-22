@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const ProvablyFairSeed = require('../models/provablyFairSeed');
 const CaseOpenRecord = require('../models/caseOpenRecord');
+const sequelize = require('../config/db');
 const { sha256 } = require('../modules/provablyFair');
 
 const HISTORY_MAX_LIMIT = 200;
@@ -107,6 +108,7 @@ module.exports.recordOpen = async (data, options = {}) => {
             co_nonce: data.nonce,
             co_resultItemId: data.resultItemId,
             co_resultColor: data.resultColor,
+            co_drawTable: data.drawTable,
             co_created_at: new Date(),
         },
         options,
@@ -118,6 +120,10 @@ module.exports.getHistory = async (userId, limit, offset) => {
     const safeOffset = Math.max(0, parseInt(offset, 10) || 0);
 
     const rows = await CaseOpenRecord.findAll({
+        attributes: {
+            exclude: ['co_drawTable'],
+            include: [[sequelize.literal('drawTable IS NOT NULL'), 'hasSnapshot']],
+        },
         where: { co_userId: userId },
         order: [['co_id', 'DESC']],
         limit: safeLimit,
@@ -142,6 +148,7 @@ module.exports.getHistory = async (userId, limit, offset) => {
         resultColor: r.co_resultColor,
         created_at: r.co_created_at,
         revealedServerSeed: revealedById[r.co_seedId] || null,
+        hasSnapshot: Boolean(Number(r.get('hasSnapshot'))),
     }));
 };
 

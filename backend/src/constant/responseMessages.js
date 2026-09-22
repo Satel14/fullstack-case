@@ -52,6 +52,8 @@ module.exports = {
         ROTATED: 'Server seed оновлено',
         CLIENT_SEED_INVALID: 'Некоректний client seed',
         VERIFY_ERROR: 'Не вдалося перевірити результат',
+        OPEN_NOT_FOUND: 'Такого відкриття не існує',
+        NO_SNAPSHOT: 'Це відкриття зроблене до того, як сайт почав зберігати склад кейса, тож перевірити його неможливо',
     },
     ADMIN: {
         ERROR: 'Помилка адміністрування',

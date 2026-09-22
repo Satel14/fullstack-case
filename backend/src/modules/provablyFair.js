@@ -89,28 +89,49 @@ function pickPaintedColor(colorWeights, f3) {
     return Object.keys(colorWeights)[Object.keys(colorWeights).length - 1];
 }
 
-function pickColor(caseDef, item, itemHash, f2, f3) {
+function pickColor(table, item, f2, f3) {
     if (item.colors.length === 1) return item.colors[0];
 
-    const cached = itemHash[item.id.toString()];
-    if (!cached) return ITEM_CONFIG.COLORS.DEFAULT;
-    const itemColors = normalizeColors(caseDef, JSON.parse(JSON.parse(cached).pricesInCredits));
+    const prices = table.PRICES[item.id];
+    if (!prices) return ITEM_CONFIG.COLORS.DEFAULT;
+    const itemColors = normalizeColors(table, prices);
     if (Object.keys(itemColors).length === 0) return ITEM_CONFIG.COLORS.DEFAULT;
 
-    const paintMax = caseDef.CHANCES.COLORS.DEFAULT + caseDef.CHANCES.COLORS.PAINTED;
+    const paintMax = table.CHANCES.COLORS.DEFAULT + table.CHANCES.COLORS.PAINTED;
     const paintRoll = Math.floor(f2 * paintMax);
-    if (paintRoll >= caseDef.CHANCES.COLORS.DEFAULT) {
+    if (paintRoll >= table.CHANCES.COLORS.DEFAULT) {
         return pickPaintedColor(itemColors, f3);
     }
     return ITEM_CONFIG.COLORS.DEFAULT;
 }
 
-function deriveWinner(serverSeed, clientSeed, nonce, caseDef, itemHash) {
+// Everything a draw depends on, frozen at open time so a later price or case change cannot alter it.
+function buildDrawTable(caseDef, itemHash) {
+    const prices = {};
+    for (const item of caseDef.ITEMS) {
+        if (item.colors.length === 1) continue;
+        const cached = itemHash[item.id.toString()];
+        prices[item.id] = cached ? JSON.parse(JSON.parse(cached).pricesInCredits) : null;
+    }
+    return {
+        CHANCES: caseDef.CHANCES,
+        ITEMS: caseDef.ITEMS.map(({ id, rare, colors }) => ({ id, rare, colors })),
+        PRICES: prices,
+    };
+}
+
+function deriveFromTable(serverSeed, clientSeed, nonce, table) {
     const [f0, f1, f2, f3] = floatsFromDigest(hmacDigest(serverSeed, clientSeed, nonce), 4);
-    const rarity = pickRarity(caseDef, f0);
-    const { item, resolvedRare } = pickItem(caseDef, rarity, f1);
-    const color = pickColor(caseDef, item, itemHash, f2, f3);
+    const rarity = pickRarity(table, f0);
+    const { item, resolvedRare } = pickItem(table, rarity, f1);
+    const color = pickColor(table, item, f2, f3);
     return { rarity: resolvedRare, itemId: item.id, color };
 }
 
-module.exports = { sha256, hmacDigest, floatsFromDigest, deriveWinner };
+function deriveWinner(serverSeed, clientSeed, nonce, caseDef, itemHash) {
+    return deriveFromTable(serverSeed, clientSeed, nonce, buildDrawTable(caseDef, itemHash));
+}
+
+module.exports = {
+    sha256, hmacDigest, floatsFromDigest, buildDrawTable, deriveFromTable, deriveWinner,
+};

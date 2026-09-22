@@ -14,6 +14,7 @@ module.exports = sequelize.define(
         co_nonce: { field: 'nonce', type: Sequelize.INTEGER },
         co_resultItemId: { field: 'resultItemId', type: Sequelize.INTEGER },
         co_resultColor: { field: 'resultColor', type: Sequelize.STRING },
+        co_drawTable: { field: 'drawTable', type: Sequelize.TEXT },
         co_created_at: { field: 'created_at', type: Sequelize.DATE },
     },
     { timestamps: false },

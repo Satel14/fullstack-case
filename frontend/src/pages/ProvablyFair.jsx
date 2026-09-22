@@ -14,7 +14,9 @@ const ProvablyFair = () => {
     const [state, setState] = useState(null);
     const [clientSeedInput, setClientSeedInput] = useState('');
     const [history, setHistory] = useState([]);
-    const [calc, setCalc] = useState({ serverSeed: '', clientSeed: '', nonce: '', caseId: '' });
+    const [calc, setCalc] = useState({
+        serverSeed: '', clientSeed: '', nonce: '', caseId: '', openId: null,
+    });
     const [calcResult, setCalcResult] = useState(null);
     const [calcError, setCalcError] = useState(null);
 
@@ -58,7 +60,7 @@ const ProvablyFair = () => {
         const nonceInt = parseInt(calc.nonce, 10);
         const incomplete = !calc.serverSeed.trim()
             || !calc.clientSeed.trim()
-            || !calc.caseId.trim()
+            || (!calc.openId && !calc.caseId.trim())
             || Number.isNaN(nonceInt)
             || nonceInt < 0;
         if (incomplete) {
@@ -68,12 +70,16 @@ const ProvablyFair = () => {
         }
 
         try {
-            const res = await verifyOpen({
+            const payload = {
                 serverSeed: calc.serverSeed.trim(),
                 clientSeed: calc.clientSeed.trim(),
                 nonce: nonceInt,
                 caseId: calc.caseId.trim(),
-            });
+            };
+            if (calc.openId) {
+                payload.openId = calc.openId;
+            }
+            const res = await verifyOpen(payload);
             setCalcResult(res.data);
         } catch (e) {
             setCalcError(t('provablyFair.verifyFailed'));
@@ -86,6 +92,7 @@ const ProvablyFair = () => {
             clientSeed: row.clientSeed,
             nonce: String(row.nonce),
             caseId: row.caseId,
+            openId: row.id,
         });
         setCalcResult(null);
     };
@@ -98,13 +105,18 @@ const ProvablyFair = () => {
         { title: t('provablyFair.result'), render: (_, r) => `${r.resultItemId} / ${r.resultColor}` },
         {
             title: t('provablyFair.status'),
-            render: (_, r) => (r.revealedServerSeed
-                ? <Tag color="green">{t('provablyFair.verifiable')}</Tag>
-                : <Tag>{t('provablyFair.awaitingRotate')}</Tag>),
+            render: (_, r) => {
+                if (!r.hasSnapshot) {
+                    return <Tag title={t('provablyFair.legacyNote')}>{t('provablyFair.legacy')}</Tag>;
+                }
+                return r.revealedServerSeed
+                    ? <Tag color="green">{t('provablyFair.verifiable')}</Tag>
+                    : <Tag>{t('provablyFair.awaitingRotate')}</Tag>;
+            },
         },
         {
             title: '',
-            render: (_, r) => (r.revealedServerSeed
+            render: (_, r) => (r.revealedServerSeed && r.hasSnapshot
                 ? <Button size="small" onClick={() => onVerifyRow(r)}>{t('provablyFair.verify')}</Button>
                 : null),
         },
@@ -140,10 +152,20 @@ const ProvablyFair = () => {
             <Input placeholder={t('provablyFair.serverSeedPlaceholder')} value={calc.serverSeed} onChange={(e) => setCalc({ ...calc, serverSeed: e.target.value })} />
             <Input placeholder={t('provablyFair.clientSeedPlaceholder')} value={calc.clientSeed} onChange={(e) => setCalc({ ...calc, clientSeed: e.target.value })} />
             <Input placeholder={t('provablyFair.noncePlaceholder')} value={calc.nonce} onChange={(e) => setCalc({ ...calc, nonce: e.target.value })} />
-            <Input placeholder={t('provablyFair.caseIdPlaceholder')} value={calc.caseId} onChange={(e) => setCalc({ ...calc, caseId: e.target.value })} />
+            <Input placeholder={t('provablyFair.caseIdPlaceholder')} value={calc.caseId} onChange={(e) => setCalc({ ...calc, caseId: e.target.value, openId: null })} />
             <Button onClick={onCompute}>{t('provablyFair.compute')}</Button>
             {calcResult && (
                 <div>{t('provablyFair.computed')}: {calcResult.itemId} / {calcResult.color} ({calcResult.rarity})</div>
+            )}
+            {calcResult && calcResult.source === 'snapshot' && (
+                <>
+                    <div className={calcResult.seedMatches ? 'provablyfair-ok' : 'provablyfair-error'}>
+                        {t(calcResult.seedMatches ? 'provablyFair.seedMatches' : 'provablyFair.seedMismatch')}
+                    </div>
+                    <div className={calcResult.matchesRecord ? 'provablyfair-ok' : 'provablyfair-error'}>
+                        {t(calcResult.matchesRecord ? 'provablyFair.matchesRecord' : 'provablyFair.mismatchRecord')}
+                    </div>
+                </>
             )}
             {calcError && <div className="provablyfair-error">{calcError}</div>}
         </div>

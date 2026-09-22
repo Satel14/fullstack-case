@@ -128,3 +128,44 @@ test('deriveWinner paints a single painted color at ~PAINTED/(DEFAULT+PAINTED)',
     const freq = painted / N;
     assert.ok(Math.abs(freq - 0.10) < 0.01, `painted freq ${freq}, expected ~0.10`);
 });
+
+const GOLDEN = require('./fixtures/provablyFair-golden.json');
+
+const goldenMismatches = (derive) => GOLDEN.vectors.filter(([s, c, n, caseId, rarity, itemId, color]) => {
+    const w = derive(s, c, n, caseId);
+    return w.rarity !== rarity || w.itemId !== itemId || w.color !== color;
+});
+
+test('deriveWinner reproduces every frozen golden vector', () => {
+    const bad = goldenMismatches((s, c, n, caseId) => pf.deriveWinner(s, c, n, GOLDEN.cases[caseId], GOLDEN.itemHash));
+    assert.strictEqual(bad.length, 0, `first mismatch: ${JSON.stringify(bad[0])}`);
+});
+
+test('a draw table stored as JSON reproduces every golden vector', () => {
+    const tables = {};
+    for (const caseId of Object.keys(GOLDEN.cases)) {
+        tables[caseId] = JSON.parse(JSON.stringify(pf.buildDrawTable(GOLDEN.cases[caseId], GOLDEN.itemHash)));
+    }
+    const bad = goldenMismatches((s, c, n, caseId) => pf.deriveFromTable(s, c, n, tables[caseId]));
+    assert.strictEqual(bad.length, 0, `first mismatch: ${JSON.stringify(bad[0])}`);
+});
+
+test('a draw table is unaffected by later price and case changes', () => {
+    const caseDef = JSON.parse(JSON.stringify(GOLDEN.cases.dust2));
+    const itemHash = { ...GOLDEN.itemHash };
+    const table = JSON.parse(JSON.stringify(pf.buildDrawTable(caseDef, itemHash)));
+    const before = GOLDEN.vectors
+        .filter((v) => v[3] === 'dust2')
+        .map(([s, c, n]) => pf.deriveFromTable(s, c, n, table));
+
+    caseDef.ITEMS.reverse();
+    caseDef.CHANCES.COLORS.PAINTED = 90;
+    for (const id of Object.keys(itemHash)) {
+        itemHash[id] = JSON.stringify({ pricesInCredits: JSON.stringify({ default: 1, painted: 0 }) });
+    }
+
+    const after = GOLDEN.vectors
+        .filter((v) => v[3] === 'dust2')
+        .map(([s, c, n]) => pf.deriveFromTable(s, c, n, table));
+    assert.deepStrictEqual(after, before);
+});

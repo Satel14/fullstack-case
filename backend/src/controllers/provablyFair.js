@@ -1,6 +1,7 @@
 const { body, check, validationResult } = require('express-validator');
 const PFService = require('../services/provablyFair');
-const { deriveWinner } = require('../modules/provablyFair');
+const { deriveWinner, deriveFromTable, sha256 } = require('../modules/provablyFair');
+const CaseOpenRecord = require('../models/caseOpenRecord');
 const RedisManager = require('../redis/manager');
 const allCases = require('../constant/cases/_all');
 const MESSAGE = require('../constant/responseMessages');
@@ -59,14 +60,37 @@ module.exports.verify = async (req, res) => {
         if (!errors.isEmpty()) {
             return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
         }
-        const { serverSeed, clientSeed, nonce, caseId } = req.body;
+        const { serverSeed, clientSeed, openId, caseId } = req.body;
+        const nonce = parseInt(req.body.nonce, 10);
+
+        if (openId !== undefined && openId !== null && openId !== '') {
+            const record = await CaseOpenRecord.findByPk(openId);
+            if (!record) {
+                return res.status(422).json({ status: 422, message: MESSAGE.PROVABLY_FAIR.OPEN_NOT_FOUND });
+            }
+            if (!record.co_drawTable) {
+                return res.status(422).json({ status: 422, message: MESSAGE.PROVABLY_FAIR.NO_SNAPSHOT });
+            }
+            const result = deriveFromTable(serverSeed, clientSeed, nonce, JSON.parse(record.co_drawTable));
+            return res.status(200).json({
+                status: 200,
+                data: {
+                    ...result,
+                    source: 'snapshot',
+                    caseId: record.co_caseId,
+                    seedMatches: sha256(serverSeed) === record.co_serverSeedHash,
+                    matchesRecord: result.itemId === record.co_resultItemId && result.color === record.co_resultColor,
+                },
+            });
+        }
+
         const caseDef = allCases[caseId];
         if (!caseDef) {
             return res.status(422).json({ status: 422, message: MESSAGE.CASE.NOT_EXIST });
         }
         const itemHash = await RedisManager.getAllDataHashWithKey(ITEM_HASH);
-        const result = deriveWinner(serverSeed, clientSeed, parseInt(nonce, 10), caseDef, itemHash);
-        return res.status(200).json({ status: 200, data: result });
+        const result = deriveWinner(serverSeed, clientSeed, nonce, caseDef, itemHash);
+        return res.status(200).json({ status: 200, data: { ...result, source: 'current' } });
     } catch (e) {
         return res.status(400).json({ status: 400, message: MESSAGE.PROVABLY_FAIR.VERIFY_ERROR });
     }
@@ -81,7 +105,8 @@ module.exports.validate = (method) => {
                 body('serverSeed').exists().isString().isLength({ min: 1, max: 128 }),
                 body('clientSeed').exists().isString().isLength({ min: 1, max: 64 }),
                 body('nonce').exists().isInt({ min: 0 }),
-                body('caseId').exists().isString(),
+                body('openId').optional({ nullable: true }).isInt({ min: 1 }),
+                body('caseId').if(body('openId').not().exists()).exists().isString(),
             ];
         default:
             return [];
