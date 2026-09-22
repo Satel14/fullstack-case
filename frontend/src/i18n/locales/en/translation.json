@@ -376,6 +376,16 @@
             "opened": "Opened",
             "published": "Published",
             "saved": "Case saved"
+        },
+        "users": {
+            "id": "Id",
+            "login": "Login",
+            "email": "Email",
+            "balance": "Balance",
+            "role": "Role",
+            "searchPlaceholder": "Search by login or email",
+            "roleChanged": "Role changed",
+            "roleChangedReason": "Role changed from the admin panel"
         }
     }
 }

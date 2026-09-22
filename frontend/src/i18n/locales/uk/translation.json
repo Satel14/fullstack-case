@@ -378,6 +378,16 @@
             "opened": "Відкрито",
             "published": "Опубліковано",
             "saved": "Кейс збережено"
+        },
+        "users": {
+            "id": "Ід",
+            "login": "Логін",
+            "email": "Пошта",
+            "balance": "Баланс",
+            "role": "Роль",
+            "searchPlaceholder": "Пошук за логіном або поштою",
+            "roleChanged": "Роль змінено",
+            "roleChangedReason": "Зміна ролі через адмінпанель"
         }
     }
 }
