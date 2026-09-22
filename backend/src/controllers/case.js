@@ -36,6 +36,14 @@ module.exports.openCaseById = async (req, res) => {
         }
         console.log('[DEBUG] Case found:', caseById.case_id);
 
+        if (Number(caseById.case_published) !== 1) {
+            console.log('[DEBUG] Case is not published');
+            return res.status(422).json({
+                status: 422,
+                message: MESSAGE.CASE.NOT_PUBLISHED,
+            });
+        }
+
         if (caseById.case_openLimit !== -1) {
             const openedCount = Number(caseById.case_openedCount || 0);
             const maxLimit = Number(caseById.case_openLimit || 0);

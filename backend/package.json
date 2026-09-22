@@ -23,6 +23,7 @@
     "resend": "^6.9.2",
     "sequelize": "^6.6.2",
     "socket.io": "^4.2.0",
+    "umzug": "^3.8.3",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -31,11 +32,17 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:pf": "node --test test/provablyFair.test.js",
+    "test:integration": "node --test --test-concurrency=1 \"test/*.test.js\"",
     "start": "node server.js",
     "start-watch": "nodemon server.js --inspect=0.0.0.0:9299",
     "start-dev": "set NODE_ENV=development&& nodemon server.js",
     "redis": "redis-server",
-    "seed": "node scripts/seedItemsFromImages.js"
+    "seed": "node scripts/seedItemsFromImages.js",
+    "migrate": "node scripts/migrate.js up",
+    "migrate:status": "node scripts/migrate.js status",
+    "migrate:undo": "node scripts/migrate.js down",
+    "migrate:baseline": "node scripts/migrate.js baseline-mark",
+    "grant-admin": "node scripts/grantAdmin.js"
   },
   "author": "",
   "license": "ISC"

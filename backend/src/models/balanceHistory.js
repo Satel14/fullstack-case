@@ -16,7 +16,7 @@ module.exports = sequelize.define(
         },
         history_type: {
             field: 'type',
-            type: Sequelize.ENUM('payment', 'promocode', 'sellitem', 'opencase', 'bonus', 'sendmoney'),
+            type: Sequelize.ENUM('payment', 'promocode', 'sellitem', 'opencase', 'bonus', 'sendmoney', 'admin_adjust'),
         },
         history_change: {
             field: 'balanceChange',

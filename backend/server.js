@@ -27,11 +27,12 @@ require('./src/models/storage');
 require('./src/models/user');
 require('./src/models/provablyFairSeed');
 require('./src/models/caseOpenRecord');
+require('./src/models/adminAction');
 
 const sequelize = require('./src/config/db');
+const { assertMigrationsApplied } = require('./src/db/migrator');
 
-sequelize.sync().then(() => {
-    console.log('Database synchronized');
+assertMigrationsApplied(sequelize).then(() => {
     const server = app.listen(config.port, () =>
         console.log(`Listening on port ${config.port}`)
     );
@@ -40,8 +41,9 @@ sequelize.sync().then(() => {
 
     const RedisManager = require('./src/redis/manager');
     RedisManager.initialRedisState().catch(console.error);
-}).catch(err => {
-    console.error('Failed to sync database:', err);
+}).catch((err) => {
+    console.error(err.message);
+    process.exit(1);
 });
 
 if (process.env.CI) {

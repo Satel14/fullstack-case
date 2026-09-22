@@ -72,15 +72,12 @@ module.exports.getAllCategories = async () => {
     }
 }
 
-module.exports.getAllCases = async () => {
+module.exports.getAllCases = async (includeUnpublished = false) => {
     try {
         const cases = await Case.findAll({
             order: [['case_price', 'DESC']],
-            where: {
-                case_published: 1,
-            },
+            ...(includeUnpublished ? {} : { where: { case_published: 1 } }),
         });
-
 
         if (!cases) throw new Error(MESSAGE.CASE.ERROR);
 
@@ -89,3 +86,21 @@ module.exports.getAllCases = async () => {
         throw Error(e.message);
     }
 };
+
+const EDITABLE_CASE_FIELDS = ['case_price', 'case_discount', 'case_published', 'case_openLimit', 'case_title'];
+
+module.exports.updateCaseFields = async (id, fields, options = {}) => {
+    const payload = {};
+    for (const key of EDITABLE_CASE_FIELDS) {
+        if (fields[key] !== undefined) {
+            payload[key] = fields[key];
+        }
+    }
+    if (Object.keys(payload).length === 0) {
+        return Case.findOne({ where: { case_id: id }, ...options });
+    }
+    await Case.update(payload, { where: { case_id: id }, ...options });
+    return Case.findOne({ where: { case_id: id }, ...options });
+};
+
+module.exports.EDITABLE_CASE_FIELDS = EDITABLE_CASE_FIELDS;

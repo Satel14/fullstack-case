@@ -17,6 +17,7 @@ module.exports = {
         ERROR: 'Помилка кейсів',
         ERROR_CATEGORY: 'Помилка категорії',
         NOT_EXIST: 'Такий кейс не існує',
+        NOT_PUBLISHED: 'Кейс недоступний для відкриття',
         NOT_HAVE_MONEY: 'Недостатньо грошей',
         LIMIT_EXCEEDED: 'Перевищено ліміт відкриттів кейсу'
     },
@@ -47,5 +48,16 @@ module.exports = {
         ROTATED: 'Server seed оновлено',
         CLIENT_SEED_INVALID: 'Некоректний client seed',
         VERIFY_ERROR: 'Не вдалося перевірити результат',
+    },
+    ADMIN: {
+        ERROR: 'Помилка адміністрування',
+        NOT_ADMIN: 'Ви не авторизовані',
+        BANNED: 'Ваш акаунт заблоковано',
+        REASON_REQUIRED: 'Вкажіть причину',
+        SELF_FORBIDDEN: 'Не можна змінювати власний акаунт',
+        NEGATIVE_BALANCE: 'Баланс не може бути відʼємним',
+        ROLE_INVALID: 'Невідома роль',
+        ROLE_ADMIN_FORBIDDEN: 'Роль адміністратора призначається лише через CLI',
+        USER_NOT_EXIST: 'Такого користувача не існує',
     },
 }

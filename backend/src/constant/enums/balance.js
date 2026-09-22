@@ -5,4 +5,5 @@ module.exports.BalanceHistory = {
     OPEN_CASE: 'opencase',
     BONUS: 'bonus',
     SEND_MONEY: 'sendmoney',
+    ADMIN_ADJUST: 'admin_adjust',
 };

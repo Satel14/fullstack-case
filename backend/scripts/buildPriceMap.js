@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { enumerateItems } = require('./lib/enumerateItems');
 const { buildPriceEntry } = require('./lib/priceEntry');
+const { assertMigrationsApplied } = require('../src/db/migrator');
 
 const DATA_DIR = path.join(__dirname, 'data');
 const MARKET_FILE = path.join(DATA_DIR, 'market-usd.json');
@@ -33,7 +34,7 @@ const upsertPrices = async (priceMap) => {
         console.warn(`⚠ DB not reachable (${e.message}); skipping insiderPrices upsert. priceMap.json is still written.`);
         return;
     }
-    await sequelize.sync();
+    await assertMigrationsApplied(sequelize);
     let n = 0;
     for (const id of Object.keys(priceMap)) {
         const p = priceMap[id];
