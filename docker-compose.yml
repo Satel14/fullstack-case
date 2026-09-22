@@ -1,15 +1,8 @@
-# problems with mysql connect
-
-x-common-variables: &common-variables
-  MYSQL_USER: fullstack
-  MYSQL_PASSWORD: 1234
+x-database: &database
   MYSQL_DATABASE: case
-  MYSQL_PORT: 3306
-  MYSQL_HOST_IP: mysql-db
-  SERVER_PORT: 3003
-  JWT_SECRET_KEY: asf4ASGiuh8xc735unjk
+  MYSQL_USER: fullstack
+  MYSQL_PASSWORD: "1234"
 
-version: "3.8"
 services:
   nginx:
     restart: always
@@ -24,26 +17,26 @@ services:
       - public
       - private
 
-
   redis:
     image: redis:alpine
     container_name: redis
     ports:
       - "6379:6379"
     networks:
-        - private
+      - private
 
   mysql-db:
-    image: mariadb:10.3
+    image: mysql:8.0
     container_name: fullstack-case
     environment:
-      <<: *common-variables
+      <<: *database
       MYSQL_ROOT_PASSWORD: root
     ports:
-      - "3307:3307"
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
     networks:
       - private
-      - public
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
@@ -54,25 +47,25 @@ services:
 
   backend:
     build:
-      args:
-        - NODE_ENV=production
       context: backend
     command: sh -c "npm run migrate && npm start"
     restart: on-failure
     container_name: fullstack_case_backend
     environment:
-      <<: *common-variables
       NODE_ENV: production
+      SERVER_PORT: 3003
+      MYSQL_HOST_IP: mysql-db
+      DB_PORT: 3306
+      PROD_DB_NAME: case
+      PROD_DB_USER: fullstack
+      PROD_DB_PASS: "1234"
+      REDIS_HOST: redis
+      JWT_SECRET: asf4ASGiuh8xc735unjk
+      CLIENT_ORIGIN: http://localhost:3009
     ports:
       - "3003:3003"
     volumes:
-      - ./backend/src:/code/src:ro
-      - ./backend/migrations:/code/migrations:ro
-      - ./backend/scripts:/code/scripts:ro
-      - ./backend/package.json:/code/package.json
-      - ./backend/package-lock.json:/code/package-lock.json
       - ./frontend/public:/frontend/public:ro
-      - back-notused:/opt/app/node_modules
     networks:
       - private
     depends_on:
@@ -82,17 +75,13 @@ services:
         condition: service_healthy
 
   frontend:
-    stdin_open: true
     restart: unless-stopped
     container_name: fullstack_case_frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - 3033:3033
-    volumes:
-      - '/app/node_modules'
-      - .:/app
+      - "3033:3033"
     networks:
       - public
     depends_on:
@@ -100,9 +89,8 @@ services:
 
 networks:
   public:
-      driver: bridge
+    driver: bridge
   private:
 
 volumes:
-  back-notused:
-
+  mysql-data:

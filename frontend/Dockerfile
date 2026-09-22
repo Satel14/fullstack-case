@@ -1,10 +1,10 @@
-FROM node:14 as build
+FROM node:22 AS build
 
 WORKDIR /app
 
-COPY ./package.json ./
+COPY package.json package-lock.json ./
 
-RUN npm install
+RUN npm ci --legacy-peer-deps
 # RUN npm install node-sass --force
 
 COPY . .
