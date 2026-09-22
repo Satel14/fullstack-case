@@ -9,6 +9,7 @@ import roles from '../../enum/role';
 import { default as socket } from '../../api/all/ws';
 import smiles from '../../data/smiles';
 import { Rules } from './Rules';
+import { getProfileFetch } from '../../store/actions/user';
 
 function TextFilter(value) {
     if (!value) {
@@ -59,7 +60,13 @@ const MessageBlock = ({ message, id, nickname }) => (
     </div>
 );
 
-const Chat = ({ user, enabled }) => {
+const CHAT_REJECTIONS = {
+    banned: 'chat.banned',
+    unauthorized: 'chat.notAuthorized',
+    empty: 'chat.writeMessage',
+};
+
+export const Chat = ({ user, enabled, refreshProfile }) => {
     const { t } = useTranslation();
     const { id, avatar, role, login } = user;
     const [usersOnline, setUsersOnline] = useState([]);
@@ -165,33 +172,30 @@ const Chat = ({ user, enabled }) => {
             return;
         }
 
-        socket.emit("chat message", {
+        const outgoing = {
             login,
             msg,
             id,
             avatar,
             time: Math.round(Date.now() / 1000)
-        })
+        };
 
-        let newList = chat;
-        if (chat.length > 150) {
-            newList = newList.slice(
-                newList.length - 150,
-                newList.length + 1
-            );
-        }
-
-        setChat([
-            ...newList,
-            {
-                login,
-                msg,
-                id,
-                avatar,
-                time: Math.round(Date.now() / 1000)
+        socket.emit("chat message", outgoing, (response) => {
+            if (response && response.ok) {
+                setChat((current) => [
+                    ...(current.length > 150 ? current.slice(current.length - 150) : current),
+                    outgoing,
+                ]);
+                setMsg("");
+                return;
             }
-        ])
-        setMsg("");
+
+            const reason = response && response.reason;
+            message.error(t(CHAT_REJECTIONS[reason] || 'common.serverError'));
+            if (reason === 'banned') {
+                refreshProfile();
+            }
+        });
     }
 
     return (
@@ -324,4 +328,8 @@ const mapStateToProps = (state) => ({
     user: state.user,
 });
 
-export default connect(mapStateToProps, null)(Chat);
+const mapDispatchToProps = (dispatch) => ({
+    refreshProfile: () => dispatch(getProfileFetch()),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Chat);

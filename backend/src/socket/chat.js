@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const ChatService = require("../services/chat")
 const jwtOptions = require('../auth/jwtConfig');
 const UserService = require('../services/user');
+const { postChatMessage } = require('./chatMessage');
 
 let ioInstance = null;
 
@@ -67,27 +68,22 @@ module.exports = function (server) {
             return;
         });
 
-        socket.on("chat message", async ({ msg }) => {
-            if (!socket.userInfo) {
-                return;
-            }
-            if (!msg || !String(msg).trim()) {
-                return;
-            }
+        socket.on("chat message", async (payload, ack) => {
+            const reply = typeof ack === 'function' ? ack : () => {};
 
             try {
-                const messageObj = {
-                    login: socket.userInfo.login,
-                    msg,
-                    id: socket.userInfo.id,
-                    avatar: socket.userInfo.avatar,
-                    time: Math.round(Date.now() / 1000),
-                }
+                const result = await postChatMessage(socket.userInfo, payload && payload.msg, {
+                    findUser: UserService.getUserById,
+                    saveMessage: ChatService.add,
+                });
 
-                await ChatService.add(messageObj);
-                socket.broadcast.emit("chat message", messageObj);
+                if (result.ok) {
+                    socket.broadcast.emit("chat message", result.message);
+                }
+                reply({ ok: result.ok, reason: result.reason });
             } catch (e) {
                 console.error('[chat] chat message error:', e.message);
+                reply({ ok: false, reason: 'error' });
             }
         })
 
