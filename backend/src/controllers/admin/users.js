@@ -21,6 +21,11 @@ module.exports.list = async (req, res) => {
 
 module.exports.setRole = async (req, res) => {
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
+        }
+
         const targetId = parseInt(req.params.id, 10);
         const role = parseInt(req.body.role, 10);
         const adminId = req.user.profile.user_id;
