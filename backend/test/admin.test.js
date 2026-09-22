@@ -103,17 +103,47 @@ test('admin_adjust is removed cleanly when nothing uses it', async () => {
     assert.match(type[0].Type, /sendmoney/);
 });
 
+test('AdminActionService.list returns a malformed payload as raw text instead of throwing', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const AdminActionService = require('../src/services/adminAction');
+
+    await sequelize.query(
+        "INSERT INTO admin_actions (adminId, action, targetType, targetId, payload, reason, created_at) VALUES (1, 'test_action', 'user', '42', 'not-json{', 'test', NOW())",
+    );
+    await AdminActionService.record({
+        adminId: 1, action: 'test_action_2', targetType: 'user', targetId: '43', payload: { ok: true },
+    });
+
+    const rows = await AdminActionService.list({});
+    assert.strictEqual(rows.length, 2);
+
+    const broken = rows.find((r) => r.action === 'test_action');
+    const clean = rows.find((r) => r.action === 'test_action_2');
+    assert.strictEqual(broken.payload, 'not-json{');
+    assert.deepStrictEqual(clean.payload, { ok: true });
+});
+
+const collectRoutes = (stack, prefix = '') => stack.flatMap((layer) => {
+    if (layer.route) {
+        return [{
+            path: prefix + layer.route.path,
+            guards: layer.route.stack.map((s) => s.name),
+        }];
+    }
+    if (layer.handle && layer.handle.stack) {
+        return collectRoutes(layer.handle.stack, prefix);
+    }
+    return [];
+});
+
 test('every /api/admin route carries authenticate and adminOnly', () => {
     const express = require('express');
     const app = express();
     require('../src/routes/admin')(app);
 
-    const adminRoutes = app._router.stack
-        .filter((layer) => layer.route && layer.route.path.startsWith('/api/admin'))
-        .map((layer) => ({
-            path: layer.route.path,
-            guards: layer.route.stack.map((s) => s.name),
-        }));
+    const adminRoutes = collectRoutes(app._router.stack)
+        .filter((route) => route.path.startsWith('/api/admin'));
 
     assert.ok(adminRoutes.length > 0, 'no /api/admin routes are registered');
 

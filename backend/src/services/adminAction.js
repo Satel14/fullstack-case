@@ -17,6 +17,17 @@ module.exports.record = async (data, options = {}) => {
     );
 };
 
+const parsePayload = (raw) => {
+    if (!raw) {
+        return null;
+    }
+    try {
+        return JSON.parse(raw);
+    } catch (e) {
+        return raw;
+    }
+};
+
 module.exports.list = async ({ limit, offset } = {}) => {
     const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 50, MAX_LIMIT));
     const safeOffset = Math.max(0, parseInt(offset, 10) || 0);
@@ -33,7 +44,7 @@ module.exports.list = async ({ limit, offset } = {}) => {
         action: r.admin_action,
         targetType: r.admin_targetType,
         targetId: r.admin_targetId,
-        payload: r.admin_payload ? JSON.parse(r.admin_payload) : null,
+        payload: parsePayload(r.admin_payload),
         reason: r.admin_reason,
         created_at: r.created_at,
     }));
