@@ -76,3 +76,37 @@ test('fractional currency survives a round trip', async () => {
     assert.strictEqual(Number(rows[0].balance), 12.5);
     assert.strictEqual(Number(rows[0].rank), 0.123456);
 });
+
+test('login and email are unique after migration', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+
+    const [email] = await sequelize.query("SHOW COLUMNS FROM users WHERE Field = 'email'");
+    assert.match(email[0].Type, /varchar\(255\)/i);
+
+    const isDuplicateEntry = (e) => e.name === 'SequelizeUniqueConstraintError'
+        && /Duplicate entry/i.test(e.parent?.message ?? '');
+
+    await sequelize.query("INSERT INTO users (login, email, role) VALUES ('dup', 'dup@e.ua', 1)");
+    await assert.rejects(
+        () => sequelize.query("INSERT INTO users (login, email, role) VALUES ('dup', 'other@e.ua', 1)"),
+        isDuplicateEntry,
+    );
+    await assert.rejects(
+        () => sequelize.query("INSERT INTO users (login, email, role) VALUES ('other', 'dup@e.ua', 1)"),
+        isDuplicateEntry,
+    );
+});
+
+test('uniqueness migration refuses to run when duplicates exist', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const { createMigrator } = require('../src/db/migrator');
+    const migrator = createMigrator(sequelize, { quiet: true });
+
+    await migrator.down();
+    await sequelize.query("INSERT INTO users (login, email, role) VALUES ('same', 'a@e.ua', 1)");
+    await sequelize.query("INSERT INTO users (login, email, role) VALUES ('same', 'b@e.ua', 1)");
+
+    await assert.rejects(() => migrator.up(), /duplicate login/i);
+});
