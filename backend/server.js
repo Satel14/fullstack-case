@@ -27,6 +27,7 @@ require('./src/models/storage');
 require('./src/models/user');
 require('./src/models/provablyFairSeed');
 require('./src/models/caseOpenRecord');
+require('./src/models/adminAction');
 
 const sequelize = require('./src/config/db');
 const { assertMigrationsApplied } = require('./src/db/migrator');

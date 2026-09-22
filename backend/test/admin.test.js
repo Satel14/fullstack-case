@@ -50,3 +50,26 @@ test('notBanned rejects a banned user and passes everyone else', async () => {
         assert.strictEqual(passed.blocked, false, `role ${role} should pass`);
     }
 });
+
+test('admin_actions table and admin_adjust enum value exist', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+
+    const [cols] = await sequelize.query('SHOW COLUMNS FROM admin_actions');
+    const byField = Object.fromEntries(cols.map((c) => [c.Field, c]));
+    assert.match(byField.id.Extra, /auto_increment/i);
+    assert.match(byField.adminId.Type, /int/i);
+    assert.match(byField.action.Type, /varchar\(64\)/i);
+    assert.match(byField.targetType.Type, /varchar\(32\)/i);
+    assert.match(byField.targetId.Type, /varchar\(64\)/i);
+    assert.match(byField.payload.Type, /text/i);
+    assert.match(byField.reason.Type, /varchar\(255\)/i);
+
+    const [idx] = await sequelize.query('SHOW INDEX FROM admin_actions');
+    const names = new Set(idx.map((i) => i.Key_name));
+    assert.ok(names.has('admin_actions_admin_id_created_at'));
+    assert.ok(names.has('admin_actions_target_type_target_id'));
+
+    const [type] = await sequelize.query("SHOW COLUMNS FROM balance_history WHERE Field = 'type'");
+    assert.match(type[0].Type, /admin_adjust/);
+});
