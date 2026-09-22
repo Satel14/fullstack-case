@@ -21,8 +21,7 @@ test('assertMigrationsApplied rejects and names what is pending', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
     const migrator = createMigrator(sequelize, { quiet: true });
-    await migrator.down();
-    await migrator.down();
+    await migrator.down({ to: '20260922000200-user-unique.js' });
 
     await assert.rejects(
         () => assertMigrationsApplied(sequelize),

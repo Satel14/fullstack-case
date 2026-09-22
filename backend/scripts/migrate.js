@@ -31,6 +31,11 @@ const DOWN_EFFECTS = {
     '20260922000300-bonus-history-parity.js':
         'removes AUTO_INCREMENT from bonus_history.id and drops the unique index on (userId, bonusId), '
         + 'reopening the double-claim race on bonuses',
+    '20260922000400-admin-actions.js':
+        'drops the admin_actions table and the entire admin audit trail with it',
+    '20260922000500-balance-admin-adjust.js':
+        'removes admin_adjust from the balance_history.type ENUM — it refuses while any balance_history row '
+        + 'still uses that type, so revert only after those rows are gone',
 };
 
 const EXPECTED_COLUMNS = [

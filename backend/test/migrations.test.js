@@ -17,6 +17,7 @@ test('migrations create every expected table', async () => {
     const tables = rows.map((r) => String(Object.values(r)[0]).toLowerCase()).sort();
 
     assert.deepStrictEqual(tables, [
+        'admin_actions',
         'articles',
         'balance_history',
         'bonus_history',
@@ -104,8 +105,7 @@ test('uniqueness migration refuses to run when duplicates exist', async () => {
     const { createMigrator } = require('../src/db/migrator');
     const migrator = createMigrator(sequelize, { quiet: true });
 
-    await migrator.down();
-    await migrator.down();
+    await migrator.down({ to: '20260922000200-user-unique.js' });
     await sequelize.query("INSERT INTO users (login, email, role) VALUES ('same', 'a@e.ua', 1)");
     await sequelize.query("INSERT INTO users (login, email, role) VALUES ('same', 'b@e.ua', 1)");
 
@@ -118,8 +118,7 @@ test('uniqueness migration tolerates several NULL emails', async () => {
     const { createMigrator } = require('../src/db/migrator');
     const migrator = createMigrator(sequelize, { quiet: true });
 
-    await migrator.down();
-    await migrator.down();
+    await migrator.down({ to: '20260922000200-user-unique.js' });
     await sequelize.query("INSERT INTO users (login, email, role) VALUES ('a', NULL, 1)");
     await sequelize.query("INSERT INTO users (login, email, role) VALUES ('b', NULL, 1)");
     await sequelize.query("INSERT INTO users (login, email, role) VALUES ('c', NULL, 1)");

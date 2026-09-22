@@ -97,6 +97,9 @@ test('baseline-mark is a no-op when the baseline is already recorded', async () 
 test('down refuses an ordinary revert without --yes and names what it would do', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
+    await sequelize.query(
+        "DELETE FROM SequelizeMeta WHERE name > '20260922000300-bonus-history-parity.js'",
+    );
 
     const { code, output } = runCli(['down']);
 
@@ -112,8 +115,7 @@ test('down warns that reverting money-precision rounds every stored amount away'
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
     await sequelize.query(
-        'DELETE FROM SequelizeMeta WHERE name IN (\'20260922000200-user-unique.js\', '
-        + '\'20260922000300-bonus-history-parity.js\')',
+        "DELETE FROM SequelizeMeta WHERE name > '20260922000100-money-precision.js'",
     );
 
     const { code, output } = runCli(['down']);
@@ -126,10 +128,14 @@ test('down warns that reverting money-precision rounds every stored amount away'
 test('down reverts an ordinary migration once --yes is passed', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
+    await sequelize.query(
+        "DELETE FROM SequelizeMeta WHERE name > '20260922000300-bonus-history-parity.js'",
+    );
 
     const { code, output } = runCli(['down', '--yes']);
 
     assert.strictEqual(code, 0);
+    assert.match(output, /Target migration: 20260922000300-bonus-history-parity\.js/);
     assert.match(output, /Reverted 1 migration\(s\)/);
 
     const [meta] = await sequelize.query('SELECT name FROM SequelizeMeta');
