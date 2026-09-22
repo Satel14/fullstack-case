@@ -299,3 +299,32 @@ test('role change rejects unknown roles, the administrator role, and self-target
     const journal = await require('../src/services/adminAction').list({});
     assert.strictEqual(journal[0].action, 'user.role');
 });
+
+test('setRole rejects malformed input through its validator chain', async () => {
+    const UsersController = require('../src/controllers/admin/users');
+    const { validationResult } = require('express-validator');
+
+    const runChain = async (params, body) => {
+        const req = { params, body, user: { profile: { user_id: 1 } } };
+        for (const validator of UsersController.validate('setRole')) {
+            await validator.run(req);
+        }
+        return req;
+    };
+
+    const bad = await runChain({ id: 'abc' }, { role: 'xyz' });
+    assert.ok(!validationResult(bad).isEmpty());
+
+    const badResult = await new Promise((resolve) => {
+        const res = {
+            statusCode: null,
+            status(c) { this.statusCode = c; return this; },
+            json(payload) { resolve({ code: this.statusCode, payload }); },
+        };
+        UsersController.setRole(bad, res);
+    });
+    assert.strictEqual(badResult.code, 422);
+
+    const good = await runChain({ id: '2' }, { role: 1 });
+    assert.ok(validationResult(good).isEmpty());
+});
