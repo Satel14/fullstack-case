@@ -16,7 +16,9 @@ module.exports = {
         );
         if (Number(rows[0].n) > 0) {
             throw new Error(
-                `Cannot remove admin_adjust: ${rows[0].n} balance_history row(s) still use it`,
+                `Cannot remove admin_adjust: ${rows[0].n} balance_history row(s) still use it. `
+                + 'Stop the application before reverting — this check is not atomic, and a row written '
+                + 'during the revert would be silently invalidated.',
             );
         }
         await queryInterface.changeColumn('balance_history', 'type', {
