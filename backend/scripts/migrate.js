@@ -40,6 +40,9 @@ const DOWN_EFFECTS = {
         'drops the password_resets table, so every outstanding password reset link stops working',
     '20260922000700-case-open-draw-table.js':
         'drops case_opens.drawTable, so no open recorded since can be verified against the case as it was',
+    '20260922000800-one-active-seed.js':
+        'drops the one-active-seed-per-user index, so concurrent requests can again create duplicate active seeds; '
+        + 'duplicates it revealed while converging stay revealed',
 };
 
 const EXPECTED_COLUMNS = [

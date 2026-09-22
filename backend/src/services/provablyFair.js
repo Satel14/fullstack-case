@@ -29,20 +29,29 @@ async function createActiveSeed(userId, clientSeed, options = {}) {
     );
 }
 
+const findActiveSeed = (userId, options) => ProvablyFairSeed.findOne({
+    where: { pf_userId: userId, pf_status: 'active' },
+    ...options,
+});
+
+const isUniqueViolation = (e) => e && (e.name === 'SequelizeUniqueConstraintError'
+    || (e.parent && e.parent.code === 'ER_DUP_ENTRY'));
+
+// The unique index on activeUserId allows one active seed per user; losing the
+// creation race just means another request created it first.
 module.exports.ensureActiveSeed = async (userId, options = {}) => {
-    // Always select the NEWEST active seed deterministically so a rare
-    // duplicate-active row (e.g. two concurrent first-time GETs) becomes a
-    // benign orphan that is never chosen, and getState + the open flow always
-    // agree on which seed is in effect.
-    let seed = await ProvablyFairSeed.findOne({
-        where: { pf_userId: userId, pf_status: 'active' },
-        order: [['pf_id', 'DESC']],
-        ...options,
-    });
-    if (!seed) {
-        seed = await createActiveSeed(userId, null, options);
+    const seed = await findActiveSeed(userId, options);
+    if (seed) {
+        return seed;
     }
-    return seed;
+    try {
+        return await createActiveSeed(userId, null, options);
+    } catch (e) {
+        if (!isUniqueViolation(e)) {
+            throw e;
+        }
+        return findActiveSeed(userId, options);
+    }
 };
 
 module.exports.getState = async (userId) => {
@@ -74,20 +83,20 @@ module.exports.setClientSeed = async (userId, clientSeed) => {
     return { clientSeed: active.pf_clientSeed };
 };
 
-module.exports.rotateSeed = async (userId) => {
-    const active = await module.exports.ensureActiveSeed(userId);
+module.exports.rotateSeed = async (userId) => sequelize.transaction(async (t) => {
+    const active = await module.exports.ensureActiveSeed(userId, { transaction: t, lock: t.LOCK.UPDATE });
     const carriedClientSeed = active.pf_clientSeed;
     active.pf_status = 'revealed';
     active.pf_revealed_at = new Date();
-    await active.save();
-    const next = await createActiveSeed(userId, carriedClientSeed);
+    await active.save({ transaction: t });
+    const next = await createActiveSeed(userId, carriedClientSeed, { transaction: t });
     return {
         revealedServerSeed: active.pf_serverSeed,
         serverSeedHash: next.pf_serverSeedHash,
         clientSeed: next.pf_clientSeed,
         nonce: next.pf_nonce,
     };
-};
+});
 
 module.exports.bumpNonce = async (seedId, nextNonce, options = {}) => {
     await ProvablyFairSeed.update(
