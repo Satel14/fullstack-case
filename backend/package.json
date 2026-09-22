@@ -41,7 +41,8 @@
     "migrate": "node scripts/migrate.js up",
     "migrate:status": "node scripts/migrate.js status",
     "migrate:undo": "node scripts/migrate.js down",
-    "migrate:baseline": "node scripts/migrate.js baseline-mark"
+    "migrate:baseline": "node scripts/migrate.js baseline-mark",
+    "grant-admin": "node scripts/grantAdmin.js"
   },
   "author": "",
   "license": "ISC"

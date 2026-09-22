@@ -460,3 +460,26 @@ test('adjustBalance rejects malformed input through its validator chain', async 
     const good = await runChain({ id: '2' }, { delta: 25, reason: 'ok' });
     assert.ok(validationResult(good).isEmpty());
 });
+
+test('grantAdmin promotes by login, is idempotent, and journals', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await makeUser(sequelize, { login: 'futureboss' });
+
+    const { execFileSync } = require('node:child_process');
+    const path = require('node:path');
+    const script = path.join(__dirname, '..', 'scripts', 'grantAdmin.js');
+    const env = { ...process.env, DB_NAME: 'case_test' };
+
+    const first = execFileSync('node', [script, 'futureboss'], { env, encoding: 'utf8' });
+    assert.match(first, /is now an administrator/);
+
+    const [rows] = await sequelize.query("SELECT role FROM users WHERE login = 'futureboss'");
+    assert.strictEqual(Number(rows[0].role), ROLES.ADMINISTRATOR);
+
+    const second = execFileSync('node', [script, 'futureboss'], { env, encoding: 'utf8' });
+    assert.match(second, /already an administrator/);
+
+    const journal = await require('../src/services/adminAction').list({});
+    assert.strictEqual(journal.filter((j) => j.action === 'user.grantAdmin').length, 1);
+});
