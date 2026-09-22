@@ -1,7 +1,6 @@
 const { Op } = require("sequelize");
 const User = require("../models/user");
 const MESSAGE = require("../constant/responseMessages");
-const Encrypt = require("../modules/Encrypt");
 
 const PUBLIC_FIELDS = [
     "user_id",
@@ -12,7 +11,6 @@ const PUBLIC_FIELDS = [
 ];
 const PRIVATE_FIELDS = ["user_balance", "user_email", "user_password"];
 const EDITABLE_FOR_USER_FIELDS = [
-    "user_password",
     "user_avatar",
     "user_receiveInfo",
 ];
@@ -69,18 +67,6 @@ module.exports.getOnlineUsers = async () => {
     }
 };
 
-module.exports.editUserPassword = async (email, newPasswordHash) => {
-    try {
-        const user = await User.update(
-            { user_password: newPasswordHash },
-            { where: { user_email: email } }
-        );
-        return user;
-    } catch (e) {
-        throw Error(e.message);
-    }
-};
-
 module.exports.editUser = async (fields, id) => {
     try {
     // eslint-disable-next-line no-restricted-syntax
@@ -89,11 +75,7 @@ module.exports.editUser = async (fields, id) => {
                 throw new Error(MESSAGE.USER.CANT_UPDATE_FIELD);
             }
         }
-        const toUpdate = { ...fields };
-        if (toUpdate.user_password) {
-            toUpdate.user_password = await Encrypt.cryptPassword(toUpdate.user_password);
-        }
-        const user = await User.update(toUpdate, { where: { user_id: id } });
+        const user = await User.update({ ...fields }, { where: { user_id: id } });
         return user;
     } catch (e) {
         throw Error(e.message);

@@ -43,6 +43,8 @@ const DOWN_EFFECTS = {
     '20260922000800-one-active-seed.js':
         'drops the one-active-seed-per-user index, so concurrent requests can again create duplicate active seeds; '
         + 'duplicates it revealed while converging stay revealed',
+    '20260922000900-user-token-version.js':
+        'drops users.tokenVersion, so a password reset stops signing out the sessions opened before it',
 };
 
 const EXPECTED_COLUMNS = [

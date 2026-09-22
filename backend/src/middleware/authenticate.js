@@ -1,7 +1,7 @@
 const passport = require("passport")
 const MESSAGE = require("./../constant/responseMessages")
 const jwtOptions = require('../auth/jwtConfig');
-const Users = require('../models/user');
+const { sessionUser } = require('../auth/token');
 const JwtStrategy = require('passport-jwt').Strategy;
 
 module.exports = {
@@ -31,15 +31,12 @@ passport.use(
     new JwtStrategy(jwtOptions, (async (jwt_payload, next) => {
         console.log('[AUTH DEBUG] JWT strategy, payload:', jwt_payload);
         try {
-            const profile = await Users.findOne({
-                where: { user_id: jwt_payload.id },
-                attributes: ['user_login', 'user_id', 'user_balance', 'user_avatar', 'user_email', 'user_receiveInfo', 'user_role'],
-            });
+            const profile = await sessionUser(jwt_payload.id, jwt_payload.ver);
 
             console.log('[AUTH DEBUG] DB result:', !!profile);
             if (profile) {
                 next(null, {
-                    profile: profile.dataValues,
+                    profile,
                 });
             } else {
                 next(null, false);

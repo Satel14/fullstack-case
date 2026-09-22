@@ -182,7 +182,6 @@ module.exports.validate = (method) => {
         case 'editUser': {
             return [
                 body('user_avatar').isNumeric().optional({ nullable: true }),
-                body('user_password').isString().optional({ nullable: true }),
             ];
         }
         case 'sendMoneyForUser': {

@@ -1,7 +1,5 @@
-const jwt = require('jsonwebtoken');
 const ChatService = require("../services/chat")
-const jwtOptions = require('../auth/jwtConfig');
-const UserService = require('../services/user');
+const { userFromToken, sessionUser, tokenVersionOf } = require('../auth/token');
 const { postChatMessage } = require('./chatMessage');
 
 let ioInstance = null;
@@ -26,14 +24,14 @@ module.exports = function (server) {
         }
 
         try {
-            const payload = jwt.verify(token, jwtOptions.secretOrKey);
-            const user = await UserService.getUserById(payload.id);
-            socket.userInfo = {
+            const user = await userFromToken(token);
+            socket.userInfo = user ? {
                 id: user.user_id,
                 login: user.user_login,
                 avatar: user.user_avatar,
                 role: user.user_role,
-            };
+                ver: tokenVersionOf(token),
+            } : null;
         } catch (e) {
             socket.userInfo = null;
         }
@@ -73,7 +71,7 @@ module.exports = function (server) {
 
             try {
                 const result = await postChatMessage(socket.userInfo, payload && payload.msg, {
-                    findUser: UserService.getUserById,
+                    findUser: (id) => sessionUser(id, socket.userInfo.ver),
                     saveMessage: ChatService.add,
                 });
 

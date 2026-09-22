@@ -39,7 +39,7 @@ module.exports.resetPassword = async (token, passwordHash) => {
         }
 
         await User.update(
-            { user_password: passwordHash },
+            { user_password: passwordHash, user_tokenVersion: sequelize.literal('tokenVersion + 1') },
             { where: { user_id: reset.reset_userId }, transaction: t },
         );
         await PasswordReset.update(

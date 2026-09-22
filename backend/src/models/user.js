@@ -42,6 +42,11 @@ module.exports = sequelize.define(
             field: "receiveInfo",
             type: Sequelize.TEXT,
         },
+        user_tokenVersion: {
+            field: "tokenVersion",
+            type: Sequelize.INTEGER,
+            defaultValue: 0,
+        },
         user_role: {
             field: "role",
             type: Sequelize.INTEGER,

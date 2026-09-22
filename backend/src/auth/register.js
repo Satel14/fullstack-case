@@ -1,7 +1,6 @@
-const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const Users = require('../models/user');
-const jwtOptions = require('./jwtConfig');
+const { signToken, withoutVersion } = require('./token');
 const message = require('../constant/responseMessages');
 const Encrypt = require('../modules/Encrypt');
 const mailSender = require('../modules/mailSender');
@@ -52,14 +51,13 @@ module.exports = (app) => {
 
             const profile = await Users.findOne({
                 where: { user_login: login },
-                attributes: ['user_id', 'user_login', 'user_balance', 'user_avatar', 'user_email', 'user_receiveInfo', 'user_role'],
+                attributes: ['user_id', 'user_login', 'user_balance', 'user_avatar', 'user_email', 'user_receiveInfo', 'user_role', 'user_tokenVersion'],
             });
 
-            const payload = { id: profile.dataValues.user_id };
-            const token = jwt.sign(payload, jwtOptions.secretOrKey, jwtOptions.signOptions);
+            const token = signToken(profile);
             return res.status(200).json({
                 jwt: token,
-                user: profile.dataValues,
+                user: withoutVersion(profile.dataValues),
             });
         } catch (e) {
             return res.status(500).json({ message: e.message });
