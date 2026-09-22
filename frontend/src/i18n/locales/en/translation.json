@@ -358,5 +358,60 @@
         "colorNote": "Rarity and item are fully reproducible from the seeds. Color is advisory: it depends on current prices and may differ on re-verification if prices changed.",
         "revealedServerSeedNote": "Previous seed — for verifying past opens (not the active one).",
         "verifyFailed": "Verification failed. Fill all fields correctly and make sure the case ID exists."
+    },
+    "admin": {
+        "title": "Admin panel",
+        "tabs": {
+            "cases": "Cases",
+            "users": "Users",
+            "journal": "Action log"
+        },
+        "save": "Save",
+        "cases": {
+            "id": "Id",
+            "name": "Title",
+            "price": "Price",
+            "discount": "Discount",
+            "openLimit": "Open limit",
+            "opened": "Opened",
+            "published": "Published",
+            "saved": "Case saved",
+            "loadFailed": "Could not load the cases"
+        },
+        "users": {
+            "id": "Id",
+            "login": "Login",
+            "email": "Email",
+            "balance": "Balance",
+            "role": "Role",
+            "searchPlaceholder": "Search by login or email",
+            "roleChanged": "Role changed",
+            "loadFailed": "Could not load the users"
+        },
+        "balance": {
+            "action": "Balance",
+            "title": "Balance correction",
+            "delta": "Amount (+ or -)",
+            "reason": "Reason",
+            "review": "Review",
+            "confirm": "Confirm",
+            "confirmTitle": "Confirm the correction",
+            "done": "Balance updated",
+            "newBalance": "{{login}}: new balance {{balance}}",
+            "failed": "Balance was not changed",
+            "deltaInvalid": "Enter a non-zero amount no larger than 1000000, with at most two decimals (comma or dot)",
+            "reasonRequired": "Enter a reason"
+        },
+        "journal": {
+            "when": "When",
+            "admin": "Admin",
+            "action": "Action",
+            "target": "Target",
+            "reason": "Reason",
+            "payload": "Details",
+            "empty": "No records",
+            "loadFailed": "Could not load the action log",
+            "loadFailedHint": "The list is empty because loading failed, not because no actions were recorded"
+        }
     }
 }

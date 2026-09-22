@@ -39,7 +39,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "lint": "eslint",
+    "lint": "eslint --ext .js,.jsx",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -61,6 +61,10 @@
     ]
   },
   "devDependencies": {
+    "@babel/eslint-parser": "7.22.11",
+    "@babel/preset-env": "7.22.10",
+    "@babel/preset-react": "7.22.5",
+    "@babel/preset-typescript": "7.22.11",
     "@types/lodash": "^4.14.168",
     "@types/react": "^17.0.3",
     "@types/react-router-dom": "^5.1.7",

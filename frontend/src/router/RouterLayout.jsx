@@ -5,6 +5,7 @@ import routes from './routes';
 import Layout from '../Layout.jsx';
 import { connect } from 'react-redux';
 import { isAuthorized } from '../helpers/Player';
+import { isAdmin } from '../helpers/permissions';
 import Banned from '../components/Banned';
 import ErrorPage from '../pages/ErrorPage';
 import { getProfileFetch } from '../store/actions/user';
@@ -79,6 +80,22 @@ class RouterLayout extends Component {
                                         path={route.path}
                                         exact={route.exact}
                                         breadcrumb={route.breadcrumb}
+                                        component={(props) => (
+                                            // eslint-disable-next-line react/jsx-props-no-spreading
+                                            <route.component {...props} />
+                                        )}
+                                    />
+                                ))}
+                            </>
+                        )}
+
+                        {isAdmin(user) && (
+                            <>
+                                {map(routes.admin, (route) => (
+                                    <Route
+                                        key={`admin-${route.path}`}
+                                        path={route.path}
+                                        exact={route.exact}
                                         component={(props) => (
                                             // eslint-disable-next-line react/jsx-props-no-spreading
                                             <route.component {...props} />

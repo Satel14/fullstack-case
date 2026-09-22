@@ -16,6 +16,7 @@ import Top from '../pages/Top';
 import Faq from '../pages/Faq';
 import ProvablyFair from '../pages/ProvablyFair';
 import Inventory from '../pages/Inventory';
+import Admin from '../pages/Admin';
 
 export default {
     private: [
@@ -54,6 +55,14 @@ export default {
             exact: true,
             layout: Layout,
             component: Inventory,
+        },
+    ],
+    admin: [
+        {
+            path: '/admin',
+            exact: true,
+            layout: Layout,
+            component: Admin,
         },
     ],
     public: [
