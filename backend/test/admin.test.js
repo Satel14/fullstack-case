@@ -102,3 +102,36 @@ test('admin_adjust is removed cleanly when nothing uses it', async () => {
     assert.doesNotMatch(type[0].Type, /admin_adjust/);
     assert.match(type[0].Type, /sendmoney/);
 });
+
+test('every /api/admin route carries authenticate and adminOnly', () => {
+    const express = require('express');
+    const app = express();
+    require('../src/routes/admin')(app);
+
+    const adminRoutes = app._router.stack
+        .filter((layer) => layer.route && layer.route.path.startsWith('/api/admin'))
+        .map((layer) => ({
+            path: layer.route.path,
+            guards: layer.route.stack.map((s) => s.name),
+        }));
+
+    assert.ok(adminRoutes.length > 0, 'no /api/admin routes are registered');
+
+    for (const route of adminRoutes) {
+        assert.ok(
+            route.guards.includes('authenticate'),
+            `${route.path} is missing authenticate (guards: ${route.guards.join(', ')})`,
+        );
+        assert.ok(
+            route.guards.includes('adminOnly'),
+            `${route.path} is missing adminOnly (guards: ${route.guards.join(', ')})`,
+        );
+    }
+});
+
+test('the admin router is mounted in routes.js', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const source = fs.readFileSync(path.join(__dirname, '..', 'routes.js'), 'utf8');
+    assert.match(source, /require\(["'].\/src\/routes\/admin["']\)\(app\)/);
+});

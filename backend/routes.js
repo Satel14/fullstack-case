@@ -14,5 +14,5 @@ module.exports = (app) => {
     require("./src/routes/module")(app);
     require("./src/routes/bonusHistory")(app);
     require("./src/routes/provablyFair")(app);
+    require("./src/routes/admin")(app);
   };
-  

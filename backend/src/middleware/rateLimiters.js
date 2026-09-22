@@ -48,6 +48,14 @@ const bonusLimiter = rateLimit({
     message: { status: 429, message: 'Забагато спроб. Зачекайте трохи.' },
 });
 
+const adminLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: 429, message: 'Забагато запитів. Зачекайте трохи.' },
+});
+
 module.exports = {
-    authLimiter, caseOpenLimiter, onlineLimiter, depositLimiter, resetLimiter, bonusLimiter,
+    authLimiter, caseOpenLimiter, onlineLimiter, depositLimiter, resetLimiter, bonusLimiter, adminLimiter,
 };
