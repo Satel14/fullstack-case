@@ -185,3 +185,28 @@ module.exports.getCountOfAllUsers = async () => {
         throw Error(e.message);
     }
 };
+
+const ADMIN_LIST_ATTRIBUTES = ["user_id", "user_login", "user_email", "user_balance", "user_rank", "user_role", "user_avatar", "created_at"];
+
+module.exports.getUsersPaged = async ({ search, limit, offset } = {}) => {
+    const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 50, 200));
+    const safeOffset = Math.max(0, parseInt(offset, 10) || 0);
+
+    const where = search
+        ? { [Op.or]: [{ user_login: { [Op.like]: `%${search}%` } }, { user_email: { [Op.like]: `%${search}%` } }] }
+        : undefined;
+
+    const result = await User.findAndCountAll({
+        where,
+        attributes: ADMIN_LIST_ATTRIBUTES,
+        order: [["user_id", "DESC"]],
+        limit: safeLimit,
+        offset: safeOffset,
+    });
+
+    return { rows: result.rows.map((r) => r.dataValues), count: result.count };
+};
+
+module.exports.setRole = async (id, role, options = {}) => {
+    await User.update({ user_role: role }, { where: { user_id: id }, ...options });
+};

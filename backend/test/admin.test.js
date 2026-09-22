@@ -242,3 +242,60 @@ test('getAllCases filters unpublished by default and includes them on request', 
     const all = await CaseService.getAllCases(true);
     assert.deepStrictEqual(all.map((c) => c.case_id).sort(), ['pub', 'unpub']);
 });
+
+test('user search is paged and never returns password hashes', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await makeUser(sequelize, { login: 'alpha' });
+    await makeUser(sequelize, { login: 'beta' });
+    await makeUser(sequelize, { login: 'alphabet' });
+
+    const UserService = require('../src/services/user');
+
+    const all = await UserService.getUsersPaged({ limit: 10, offset: 0 });
+    assert.strictEqual(all.count, 3);
+    assert.ok(all.rows.every((r) => r.user_password === undefined));
+
+    const filtered = await UserService.getUsersPaged({ search: 'alpha', limit: 10, offset: 0 });
+    assert.strictEqual(filtered.count, 2);
+
+    const paged = await UserService.getUsersPaged({ limit: 1, offset: 0 });
+    assert.strictEqual(paged.rows.length, 1);
+    assert.strictEqual(paged.count, 3);
+});
+
+test('role change rejects unknown roles, the administrator role, and self-targeting', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await makeUser(sequelize, { login: 'boss', role: ROLES.ADMINISTRATOR });
+    await makeUser(sequelize, { login: 'victim' });
+
+    const UsersController = require('../src/controllers/admin/users');
+    const call = (params, body, adminId) => new Promise((resolve) => {
+        const req = { params, body, user: { profile: { user_id: adminId } } };
+        const res = {
+            statusCode: null,
+            status(c) { this.statusCode = c; return this; },
+            json(payload) { resolve({ code: this.statusCode, payload }); },
+        };
+        UsersController.setRole(req, res);
+    });
+
+    const unknown = await call({ id: '2' }, { role: 77 }, 1);
+    assert.strictEqual(unknown.code, 422);
+
+    const toAdmin = await call({ id: '2' }, { role: ROLES.ADMINISTRATOR }, 1);
+    assert.strictEqual(toAdmin.code, 422);
+
+    const self = await call({ id: '1' }, { role: ROLES.BANNED }, 1);
+    assert.strictEqual(self.code, 422);
+
+    const ok = await call({ id: '2' }, { role: ROLES.BANNED }, 1);
+    assert.strictEqual(ok.code, 200);
+
+    const [rows] = await sequelize.query("SELECT role FROM users WHERE login = 'victim'");
+    assert.strictEqual(Number(rows[0].role), ROLES.BANNED);
+
+    const journal = await require('../src/services/adminAction').list({});
+    assert.strictEqual(journal[0].action, 'user.role');
+});
