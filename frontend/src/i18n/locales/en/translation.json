@@ -365,6 +365,17 @@
             "cases": "Cases",
             "users": "Users",
             "journal": "Action log"
+        },
+        "save": "Save",
+        "cases": {
+            "id": "Id",
+            "name": "Title",
+            "price": "Price",
+            "discount": "Discount",
+            "openLimit": "Open limit",
+            "opened": "Opened",
+            "published": "Published",
+            "saved": "Case saved"
         }
     }
 }
