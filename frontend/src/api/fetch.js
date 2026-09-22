@@ -15,6 +15,13 @@ const getHeaders = async () => {
     return headers;
 }
 
+const endSessionIfRevoked = (result, headers) => {
+    if (result.status === 401 && headers.Authorization) {
+        localStorage.removeItem('token');
+        window.location.href = '/';
+    }
+};
+
 const errorPayload = async (result) => {
     try {
         const body = await result.json();
@@ -37,6 +44,7 @@ export const post = async (destination, body, notificationErr = false) => {
     if (result.ok) {
         return result.json();
     }
+    endSessionIfRevoked(result, headers);
     if (notificationErr) {
         openNotification('error', i18n.t('common.error'), i18n.t('common.serverError'))
     }
@@ -56,6 +64,7 @@ export const put = async (destination, body, notificationErr = false) => {
     if (result.ok) {
         return result.json();
     }
+    endSessionIfRevoked(result, headers);
 
     if (notificationErr) {
         openNotification('error', i18n.t('common.error'), i18n.t('common.serverError'));
@@ -73,6 +82,7 @@ export const get = async (destination) => {
     if (result.ok) {
         return result.json()
     }
+    endSessionIfRevoked(result, headers);
     // eslint-disable-next-line no-throw-literal
     throw { error: result.status };
 };

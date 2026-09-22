@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { message, Button, Popover } from 'antd';
@@ -12,6 +12,7 @@ import { Rules } from './Rules';
 import { getProfileFetch } from '../../store/actions/user';
 
 const MAX_MESSAGE_LENGTH = 500;
+const ACK_TIMEOUT_MS = 8000;
 
 const escapeHtml = (text) => text
     .replace(/&/g, '&amp;')
@@ -84,6 +85,9 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
     const [chat, setChat] = useState([]);
     const [msg, setMsg] = useState("");
     const [visible, setVisible] = useState(false);
+    const pendingAck = useRef(null);
+
+    useEffect(() => () => clearTimeout(pendingAck.current), []);
     const history = useHistory();
 
     useEffect(() => {
@@ -183,6 +187,15 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             return;
         }
 
+        if (pendingAck.current) {
+            return;
+        }
+        if (!socket.connected) {
+            message.error(t('chat.disconnected'));
+            socket.connect();
+            return;
+        }
+
         const outgoing = {
             login,
             msg,
@@ -191,7 +204,18 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             time: Math.round(Date.now() / 1000)
         };
 
+        pendingAck.current = setTimeout(() => {
+            pendingAck.current = null;
+            message.error(t('common.serverError'));
+        }, ACK_TIMEOUT_MS);
+
         socket.emit("chat message", outgoing, (response) => {
+            if (!pendingAck.current) {
+                return;
+            }
+            clearTimeout(pendingAck.current);
+            pendingAck.current = null;
+
             if (response && response.ok) {
                 setChat((current) => [
                     ...(current.length > 150 ? current.slice(current.length - 150) : current),

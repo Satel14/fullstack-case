@@ -5,7 +5,6 @@ const WS_URL = process.env.REACT_APP_WS_URL || 'http://localhost:3003';
 const ws = io(WS_URL, {
     transports: ["websocket"],
     withCredentials: true,
-    reconnection: false,
     auth: (cb) => {
         let token = null;
         try {
@@ -16,5 +15,10 @@ const ws = io(WS_URL, {
         cb({ token });
     },
 });
+
+export const reconnectSocket = () => {
+    ws.disconnect();
+    ws.connect();
+};
 
 export default ws;

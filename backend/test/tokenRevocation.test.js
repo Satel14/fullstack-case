@@ -66,7 +66,7 @@ test('a login token works until the password is reset, and a fresh login works a
 
     const stale = await authenticateWith(before.payload.jwt);
     assert.strictEqual(stale.accepted, false);
-    assert.strictEqual(stale.code, 403);
+    assert.strictEqual(stale.code, 401, 'a revoked session must read as unauthenticated, not forbidden');
 
     const after = await login('brand-new-1');
     assert.strictEqual((await authenticateWith(after.payload.jwt)).accepted, true);

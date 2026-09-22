@@ -8,6 +8,7 @@ import { API_URL } from '../../api/config';
 import userFields from '../config/userFields';
 import { editProfile } from '../../api/all/profile';
 import { usePromocode } from '../../api/all/other';
+import { reconnectSocket } from '../../api/all/ws';
 
 const loginUser = (user) => ({
     type: LOGIN_USER,
@@ -59,6 +60,7 @@ export const userPostFetch = (body) => (dispatch) => fetch(`${API_URL}/profile/l
         }
         localStorage.setItem('token', data.jwt);
         dispatch(loginUser(data.user));
+        reconnectSocket();
         return false;
     });
 
@@ -87,6 +89,7 @@ export const userPostRegisterFetch = (body) => (dispatch) => fetch(`${API_URL}/p
 
         localStorage.setItem('token', data.jwt);
         dispatch(loginUser(data.user));
+        reconnectSocket();
 
         return false;
     });

@@ -16,7 +16,7 @@ module.exports = {
             }
 
             if (!user) {
-                res.status(403).json({ message: MESSAGE.AUTH.NOT_AUTHORIZED });
+                res.status(401).json({ message: MESSAGE.AUTH.NOT_AUTHORIZED });
                 return;
             }
 

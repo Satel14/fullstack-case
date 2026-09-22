@@ -286,7 +286,8 @@
         "banned": "You are banned from the chat",
         "notAuthorized": "You are not authorized",
         "writeMessage": "Write a message",
-        "tooLong": "The message is too long (500 characters at most)"
+        "tooLong": "The message is too long (500 characters at most)",
+        "disconnected": "Not connected to the chat. Try again in a moment"
     },
     "openCase": {
         "open": "Open",

@@ -43,6 +43,7 @@ const serverReplies = (response) => {
 };
 
 beforeEach(() => {
+    socket.connected = true;
     socket.emit.mockReset();
     jest.spyOn(message, 'error').mockImplementation(() => {});
 });
@@ -125,4 +126,32 @@ test('smileys and image links still render after escaping', () => {
 
     expect(document.querySelector('.chat-messages img[src="https://example.com/cat.png"]')).not.toBeNull();
     expect(document.querySelectorAll('.chat-messages img').length).toBe(2);
+});
+
+test('sending while the socket is down reports it instead of queueing the message', () => {
+    socket.connected = false;
+    socket.emit.mockReset();
+
+    const { input } = send('hello there');
+
+    expect(socket.emit).not.toHaveBeenCalled();
+    expect(message.error).toHaveBeenCalledWith('chat.disconnected');
+    expect(input.value).toBe('hello there');
+});
+
+test('a message the server never acknowledges is reported, and cannot be sent twice meanwhile', () => {
+    jest.useFakeTimers();
+    try {
+        socket.emit.mockImplementation(() => {});
+
+        const { input } = send('hello there');
+        fireEvent.submit(input.closest('form'));
+        expect(socket.emit).toHaveBeenCalledTimes(1);
+
+        act(() => { jest.advanceTimersByTime(10000); });
+        expect(message.error).toHaveBeenCalledWith('common.serverError');
+        expect(screen.queryByText('hello there')).toBeNull();
+    } finally {
+        jest.useRealTimers();
+    }
 });
