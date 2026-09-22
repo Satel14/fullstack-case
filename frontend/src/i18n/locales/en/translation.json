@@ -375,7 +375,8 @@
             "openLimit": "Open limit",
             "opened": "Opened",
             "published": "Published",
-            "saved": "Case saved"
+            "saved": "Case saved",
+            "loadFailed": "Could not load the cases"
         },
         "users": {
             "id": "Id",
@@ -385,16 +386,21 @@
             "role": "Role",
             "searchPlaceholder": "Search by login or email",
             "roleChanged": "Role changed",
-            "roleChangedReason": "Role changed from the admin panel"
+            "loadFailed": "Could not load the users"
         },
         "balance": {
             "action": "Balance",
             "title": "Balance correction",
-            "delta": "Amount (+ or −)",
+            "delta": "Amount (+ or -)",
             "reason": "Reason",
             "review": "Review",
             "confirm": "Confirm",
-            "confirmTitle": "Confirm the correction"
+            "confirmTitle": "Confirm the correction",
+            "done": "Balance updated",
+            "newBalance": "{{login}}: new balance {{balance}}",
+            "failed": "Balance was not changed",
+            "deltaInvalid": "Enter a non-zero amount no larger than 1000000, with at most two decimals (comma or dot)",
+            "reasonRequired": "Enter a reason"
         },
         "journal": {
             "when": "When",
@@ -402,7 +408,10 @@
             "action": "Action",
             "target": "Target",
             "reason": "Reason",
-            "payload": "Details"
+            "payload": "Details",
+            "empty": "No records",
+            "loadFailed": "Could not load the action log",
+            "loadFailedHint": "The list is empty because loading failed, not because no actions were recorded"
         }
     }
 }

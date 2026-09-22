@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Input, Select, Button, Space } from 'antd';
+import { Table, Input, Select, Button, Space, Alert } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import { getAdminUsers, setUserRole } from '../../api/all/admin';
@@ -29,10 +29,12 @@ const UsersTab = ({ user }) => {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(false);
+    const [failed, setFailed] = useState(false);
     const [balanceTarget, setBalanceTarget] = useState(null);
 
     const load = async (nextPage = page, nextSearch = search) => {
         setLoading(true);
+        setFailed(false);
         try {
             const res = await getAdminUsers({
                 search: nextSearch,
@@ -44,6 +46,7 @@ const UsersTab = ({ user }) => {
         } catch (e) {
             setUsers([]);
             setCount(0);
+            setFailed(true);
         } finally {
             setLoading(false);
         }
@@ -59,7 +62,7 @@ const UsersTab = ({ user }) => {
 
     const onChangeRole = async (row, role) => {
         try {
-            await setUserRole(row.user_id, role, t('admin.users.roleChangedReason'));
+            await setUserRole(row.user_id, role);
             openNotification('success', t('admin.users.roleChanged'), row.user_login);
             await load();
         } catch (e) {
@@ -123,12 +126,20 @@ const UsersTab = ({ user }) => {
                 onSearch={onSearch}
                 style={{ maxWidth: 320 }}
             />
+            {failed && (
+                <Alert
+                    type="error"
+                    showIcon
+                    message={t('admin.users.loadFailed')}
+                />
+            )}
             <Table
                 rowKey="user_id"
                 dataSource={users}
                 columns={columns}
                 loading={loading}
                 size="small"
+                locale={failed ? { emptyText: t('admin.users.loadFailed') } : undefined}
                 pagination={{
                     current: page,
                     pageSize: PAGE_SIZE,

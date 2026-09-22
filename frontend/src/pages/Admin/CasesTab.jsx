@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, InputNumber, Switch, Button, Input } from 'antd';
+import { Table, InputNumber, Switch, Button, Input, Alert, Space } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { getAdminCases, updateAdminCase } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
@@ -8,17 +8,20 @@ const CasesTab = () => {
     const { t } = useTranslation();
     const [cases, setCases] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [failed, setFailed] = useState(false);
     const [edits, setEdits] = useState({});
     const [saving, setSaving] = useState(null);
 
     const load = async () => {
         setLoading(true);
+        setFailed(false);
         try {
             const res = await getAdminCases();
             setCases(res.data || []);
             setEdits({});
         } catch (e) {
             setCases([]);
+            setFailed(true);
         } finally {
             setLoading(false);
         }
@@ -77,6 +80,7 @@ const CasesTab = () => {
             render: (row) => (
                 <InputNumber
                     min={0}
+                    precision={0}
                     value={editValue(row, 'case_price')}
                     onChange={(value) => setEdit(row.case_id, 'case_price', value)}
                 />
@@ -88,6 +92,7 @@ const CasesTab = () => {
             render: (row) => (
                 <InputNumber
                     min={0}
+                    precision={0}
                     value={editValue(row, 'case_discount')}
                     onChange={(value) => setEdit(row.case_id, 'case_discount', value)}
                 />
@@ -99,6 +104,7 @@ const CasesTab = () => {
             render: (row) => (
                 <InputNumber
                     min={-1}
+                    precision={0}
                     value={editValue(row, 'case_openLimit')}
                     onChange={(value) => setEdit(row.case_id, 'case_openLimit', value)}
                 />
@@ -133,14 +139,24 @@ const CasesTab = () => {
     ];
 
     return (
-        <Table
-            rowKey="case_id"
-            dataSource={cases}
-            columns={columns}
-            loading={loading}
-            pagination={{ pageSize: 20 }}
-            size="small"
-        />
+        <Space direction="vertical" style={{ width: '100%' }}>
+            {failed && (
+                <Alert
+                    type="error"
+                    showIcon
+                    message={t('admin.cases.loadFailed')}
+                />
+            )}
+            <Table
+                rowKey="case_id"
+                dataSource={cases}
+                columns={columns}
+                loading={loading}
+                locale={failed ? { emptyText: t('admin.cases.loadFailed') } : undefined}
+                pagination={{ pageSize: 20 }}
+                size="small"
+            />
+        </Space>
     );
 };
 
