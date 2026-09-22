@@ -2,7 +2,8 @@
     "env": {
         "browser": true,
         "es2021": true,
-        "node": true
+        "node": true,
+        "jest": true
     },
     "extends": [
         "eslint:recommended",
@@ -11,12 +12,17 @@
         "airbnb",
         "plugin:promise/recommended"
     ],
+    "parser": "@babel/eslint-parser",
     "parserOptions": {
+        "requireConfigFile": false,
+        "babelOptions": {
+            "presets": ["@babel/preset-env", "@babel/preset-react"]
+        },
         "ecmaFeatures": {
             "jsx": true,
             "tsx": true
         },
-        "ecmaVersion": 12,
+        "ecmaVersion": 2022,
         "sourceType": "module"
     },
     "plugins": [
