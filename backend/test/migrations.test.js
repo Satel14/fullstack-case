@@ -53,3 +53,26 @@ test('baseline snapshots the schema including its current defects', async () => 
     const [history] = await sequelize.query("SHOW COLUMNS FROM balance_history WHERE Field = 'balanceChange'");
     assert.match(history[0].Type, /int/i);
 });
+
+test('money columns end up with full precision', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+
+    const [users] = await sequelize.query("SHOW COLUMNS FROM users WHERE Field IN ('balance', 'rank')");
+    const byField = Object.fromEntries(users.map((c) => [c.Field, c]));
+    assert.match(byField.balance.Type, /decimal\(12,2\)/i);
+    assert.match(byField.rank.Type, /decimal\(16,6\)/i);
+
+    const [history] = await sequelize.query("SHOW COLUMNS FROM balance_history WHERE Field = 'balanceChange'");
+    assert.match(history[0].Type, /decimal\(12,2\)/i);
+});
+
+test('fractional currency survives a round trip', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await sequelize.query("INSERT INTO users (login, email, balance, `rank`, role) VALUES ('kopiyka', 'k@e.ua', 12.50, 0.123456, 1)");
+    const [rows] = await sequelize.query("SELECT balance, `rank` FROM users WHERE login = 'kopiyka'");
+
+    assert.strictEqual(Number(rows[0].balance), 12.5);
+    assert.strictEqual(Number(rows[0].rank), 0.123456);
+});
