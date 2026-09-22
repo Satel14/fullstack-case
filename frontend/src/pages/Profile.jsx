@@ -14,6 +14,7 @@ import {
 } from '../api/all/storage';
 import { getItemInfoById } from '../api/all/item';
 import { rareRank } from '../helpers/rarity';
+import roles from '../enum/role';
 
 const STORAGE_LOAD_LIMIT = 200;
 
@@ -21,22 +22,17 @@ const mapStateToProps = (state) => ({
     user: state.user,
 });
 
-const roleKey = (role) => {
-    switch (role) {
-    case 2:
-        return 'youtuber';
-    case 3:
-        return 'streamer';
-    case 4:
-        return 'admin';
-    case -1:
-        return 'banned';
-    case -2:
-        return 'chatBanned';
-    default:
-        return 'user';
-    }
+const ROLE_KEYS = {
+    [roles.YOUTUBER]: 'youtuber',
+    [roles.STREAMER]: 'streamer',
+    [roles.FAMOUS]: 'famous',
+    [roles.ADMINISTRATOR]: 'admin',
+    [roles.BANNED]: 'banned',
+    [roles.BANNED_CHAT]: 'chatBanned',
+    [roles.NORMAL]: 'user',
 };
+
+const roleKey = (role) => ROLE_KEYS[Number(role)] || 'user';
 
 const buildItemInfoMap = (itemIds, responses) => {
     const result = {};

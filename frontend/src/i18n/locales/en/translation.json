@@ -171,6 +171,7 @@
         "roles": {
             "youtuber": "YouTuber",
             "streamer": "Streamer",
+            "famous": "Public figure",
             "admin": "Administrator",
             "banned": "Banned",
             "chatBanned": "Chat banned",
