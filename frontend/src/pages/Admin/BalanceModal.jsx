@@ -7,20 +7,15 @@ import { adjustUserBalance } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
 
 const MAX_DELTA = 1000000;
+const DELTA_FORMAT = /^[+-]?\d+([.,]\d{1,2})?$/;
 
 const parseDelta = (raw) => {
-    const normalised = String(raw).trim().replace(',', '.');
-    if (normalised === '') {
+    const trimmed = String(raw).trim();
+    if (!DELTA_FORMAT.test(trimmed)) {
         return null;
     }
-    const value = Number(normalised);
-    if (!Number.isFinite(value) || value === 0) {
-        return null;
-    }
-    if (Math.abs(value) > MAX_DELTA) {
-        return null;
-    }
-    if (Math.round(value * 100) / 100 !== value) {
+    const value = Number(trimmed.replace(',', '.'));
+    if (value === 0 || Math.abs(value) > MAX_DELTA) {
         return null;
     }
     return value;

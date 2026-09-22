@@ -78,6 +78,25 @@ test('a comma decimal is accepted and sent as a dot decimal', async () => {
     await waitFor(() => expect(adjustUserBalance).toHaveBeenCalledWith(2, 1.5, 'причина'));
 });
 
+test('an amount with a thousands separator or in a non-decimal notation is refused', () => {
+    render(<BalanceModal user={target} visible onClose={() => {}} onDone={() => {}} />);
+
+    fireEvent.change(screen.getByLabelText('admin.balance.reason'), { target: { value: 'причина' } });
+    const review = screen.getByRole('button', { name: 'admin.balance.review' });
+    const delta = screen.getByLabelText('admin.balance.delta');
+
+    for (const value of ['1,000', '1.000', '-2,500', '1,000.50', '1 000', '1e3', '0x10', '.5', '5.', '--5']) {
+        fireEvent.change(delta, { target: { value } });
+        expect(review).toBeDisabled();
+        expect(screen.getByText('admin.balance.deltaInvalid')).toBeInTheDocument();
+    }
+
+    for (const value of ['1000', '+10', '-3,25', ' 12.5 ', '0,01']) {
+        fireEvent.change(delta, { target: { value } });
+        expect(review).not.toBeDisabled();
+    }
+});
+
 test('an unusable amount is explained instead of only greying the button', () => {
     render(<BalanceModal user={target} visible onClose={() => {}} onDone={() => {}} />);
 
