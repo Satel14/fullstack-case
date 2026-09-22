@@ -35,6 +35,7 @@ async function seedDatabase() {
         console.log(`\n✅ Seeded ${successCount}/${items.length} items. Prices come from buildPriceMap.js.`);
     } catch (error) {
         console.error('\n❌ Error seeding items:', error);
+        process.exitCode = 1;
     } finally {
         await sequelize.close();
     }

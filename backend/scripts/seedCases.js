@@ -100,6 +100,7 @@ async function seedCases() {
         console.log('✅ Cases seeded successfully!');
     } catch (error) {
         console.error('❌ Error seeding cases:', error);
+        process.exitCode = 1;
     } finally {
         await sequelize.close();
     }

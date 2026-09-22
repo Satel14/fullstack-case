@@ -19,6 +19,20 @@ const EXPECTED_TABLES = [
     'users',
 ];
 
+const DOWN_EFFECTS = {
+    '20260922000000-baseline.js': `drops all ${EXPECTED_TABLES.length} tables and every row in them`,
+    '20260922000100-money-precision.js':
+        'narrows users.balance back to DECIMAL(10,0), users.rank back to DECIMAL(10,0) and '
+        + 'balance_history.balanceChange back to INTEGER — MySQL rounds every stored amount to a whole '
+        + 'number without warning, so 12.50 becomes 13 and the kopiyky are gone for good',
+    '20260922000200-user-unique.js':
+        'drops the unique indexes on users.login and users.email and widens email back to TEXT, '
+        + 'reopening duplicate registrations',
+    '20260922000300-bonus-history-parity.js':
+        'removes AUTO_INCREMENT from bonus_history.id and drops the unique index on (userId, bonusId), '
+        + 'reopening the double-claim race on bonuses',
+};
+
 const EXPECTED_COLUMNS = [
     { table: 'users', column: 'balance' },
     { table: 'users', column: 'rank' },
@@ -86,7 +100,7 @@ const baselineMark = async (migrator) => {
     console.log('Done. Now run "npm run migrate up".');
 };
 
-const down = async (migrator, forceDropAll) => {
+const down = async (migrator, { forceDropAll, confirmed }) => {
     const executed = await migrator.executed();
     if (executed.length === 0) {
         console.log('Nothing to revert.');
@@ -94,12 +108,23 @@ const down = async (migrator, forceDropAll) => {
     }
 
     const target = executed[executed.length - 1];
-    console.log(`About to revert: ${target.name}`);
+    const effect = DOWN_EFFECTS[target.name] || 'reverts the schema changes it applied';
+    console.log(`Target migration: ${target.name}`);
+    console.log(`Reverting it ${effect}.`);
 
-    if (target.name === BASELINE && !forceDropAll) {
+    if (target.name === BASELINE) {
+        if (!forceDropAll) {
+            throw new Error(
+                `Refusing to revert ${BASELINE}: this drops all ${EXPECTED_TABLES.length} tables and every row `
+                + 'in them. Run "npm run migrate:undo -- --force-drop-all" to confirm you intend to destroy the '
+                + 'entire schema and its data. The "--" is required; without it npm swallows the flag.',
+            );
+        }
+    } else if (!confirmed) {
         throw new Error(
-            `Refusing to revert ${BASELINE}: this drops all ${EXPECTED_TABLES.length} tables and every row in them. `
-            + 'Pass --force-drop-all to confirm you intend to destroy the entire schema and its data.',
+            `Refusing to revert ${target.name} without confirmation: it ${effect}. `
+            + 'Run "npm run migrate:undo -- --yes" if that is what you intend. '
+            + 'The "--" is required; without it npm swallows the flag.',
         );
     }
 
@@ -110,6 +135,7 @@ const down = async (migrator, forceDropAll) => {
 const main = async () => {
     const command = process.argv[2] || 'status';
     const forceDropAll = process.argv.includes('--force-drop-all');
+    const confirmed = process.argv.includes('--yes');
     const migrator = createMigrator(sequelize);
 
     try {
@@ -117,13 +143,15 @@ const main = async () => {
             const applied = await migrator.up();
             console.log(applied.length ? `Applied ${applied.length} migration(s).` : 'Nothing to apply.');
         } else if (command === 'down') {
-            await down(migrator, forceDropAll);
+            await down(migrator, { forceDropAll, confirmed });
         } else if (command === 'status') {
             await status(migrator);
         } else if (command === 'baseline-mark') {
             await baselineMark(migrator);
         } else {
-            console.error(`Unknown command "${command}". Use: up | down | status | baseline-mark`);
+            console.error(
+                `Unknown command "${command}". Use: up | down [--yes | --force-drop-all] | status | baseline-mark`,
+            );
             process.exitCode = 1;
         }
     } catch (e) {

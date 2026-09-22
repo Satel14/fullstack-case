@@ -2,7 +2,8 @@ const { DataTypes } = require('sequelize');
 
 const assertNoDuplicates = async (queryInterface, column) => {
     const [rows] = await queryInterface.sequelize.query(
-        `SELECT \`${column}\` AS value, COUNT(*) AS n FROM users GROUP BY \`${column}\` HAVING n > 1`,
+        `SELECT \`${column}\` AS value, COUNT(*) AS n FROM users `
+        + `WHERE \`${column}\` IS NOT NULL GROUP BY \`${column}\` HAVING n > 1`,
     );
     if (rows.length > 0) {
         const values = rows.map((r) => `${r.value} (${r.n})`).join(', ');
