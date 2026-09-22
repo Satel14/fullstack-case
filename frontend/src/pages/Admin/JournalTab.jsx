@@ -35,6 +35,8 @@ const JournalTab = () => {
 
     useEffect(() => { load(1); }, []);
 
+    const total = (page - 1) * PAGE_SIZE + rows.length + (rows.length === PAGE_SIZE ? 1 : 0);
+
     const columns = [
         { title: t('admin.journal.when'), dataIndex: 'created_at', key: 'created_at' },
         { title: t('admin.journal.admin'), dataIndex: 'adminId', key: 'adminId' },
@@ -66,6 +68,8 @@ const JournalTab = () => {
             pagination={{
                 current: page,
                 pageSize: PAGE_SIZE,
+                total,
+                showSizeChanger: false,
                 onChange: (next) => { setPage(next); load(next); },
             }}
         />
