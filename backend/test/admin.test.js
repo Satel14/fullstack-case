@@ -51,6 +51,38 @@ test('notBanned rejects a banned user and passes everyone else', async () => {
     }
 });
 
+test('adminOnly blocks every non-administrator role and passes only the administrator', async () => {
+    const { adminOnly } = require('../src/middleware/adminOnly');
+    const MESSAGE = require('../src/constant/responseMessages');
+
+    const call = (profile) => new Promise((resolve) => {
+        const req = { user: profile === undefined ? undefined : { profile } };
+        const res = {
+            statusCode: null,
+            body: null,
+            status(code) { this.statusCode = code; return this; },
+            json(payload) { this.body = payload; resolve({ blocked: true, res: this }); },
+        };
+        adminOnly(req, res, () => resolve({ blocked: false, res }));
+    });
+
+    for (const role of [ROLES.NORMAL, ROLES.FAMOUS, ROLES.BANNED]) {
+        const rejected = await call({ user_role: role });
+        assert.strictEqual(rejected.blocked, true, `role ${role} must never reach an admin handler`);
+        assert.strictEqual(rejected.res.statusCode, 403, `role ${role} must be rejected with 403`);
+        assert.strictEqual(rejected.res.body.message, MESSAGE.ADMIN.NOT_ADMIN);
+        assert.strictEqual(rejected.res.body.status, 403);
+    }
+
+    const admin = await call({ user_role: ROLES.ADMINISTRATOR });
+    assert.strictEqual(admin.blocked, false, 'the administrator role must pass through');
+
+    const anonymous = await call(undefined);
+    assert.strictEqual(anonymous.blocked, true, 'an unauthenticated request must never reach an admin handler');
+    assert.strictEqual(anonymous.res.statusCode, 403);
+    assert.strictEqual(anonymous.res.body.message, MESSAGE.ADMIN.NOT_ADMIN);
+});
+
 test('admin_actions table and admin_adjust enum value exist', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
@@ -186,6 +218,54 @@ test('the admin router is mounted in routes.js', () => {
     assert.match(source, /require\(["'].\/src\/routes\/admin["']\)\(app\)/);
 });
 
+const MONEY_ROUTES = [
+    ['case.js', 'post', '/api/case/open'],
+    ['storage.js', 'put', '/api/storage/sell/:id'],
+    ['storage.js', 'put', '/api/storage/receive/:id'],
+    ['user.js', 'put', '/api/profile/sendmoney'],
+    ['user.js', 'post', '/api/profile/deposit'],
+    ['user.js', 'post', '/api/profile/reset'],
+    ['promocode.js', 'put', '/api/promocode/use'],
+    ['bonusHistory.js', 'post', '/api/bonus/activate'],
+];
+
+test('every money route keeps notBanned after authenticate', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+
+    const sources = new Map();
+    const readRouteFile = (file) => {
+        if (!sources.has(file)) {
+            sources.set(file, fs.readFileSync(path.join(__dirname, '..', 'src', 'routes', file), 'utf8'));
+        }
+        return sources.get(file);
+    };
+
+    for (const [file, method, routePath] of MONEY_ROUTES) {
+        const source = readRouteFile(file);
+
+        assert.match(
+            source,
+            /const\s*\{\s*notBanned\s*\}\s*=\s*require\(['"]\.\.\/middleware\/adminOnly['"]\)/,
+            `${file} no longer imports notBanned`,
+        );
+
+        const registration = new RegExp(`app\\.${method}\\(\\s*['"\`]${routePath}['"\`][^\\n]*`);
+        const [line] = source.match(registration) || [];
+        assert.ok(line, `${file}: no ${method.toUpperCase()} ${routePath} registration found`);
+
+        const authAt = line.indexOf('authenticate');
+        const notBannedAt = line.indexOf('notBanned');
+
+        assert.ok(authAt !== -1, `${method.toUpperCase()} ${routePath} is missing authenticate: ${line}`);
+        assert.ok(notBannedAt !== -1, `${method.toUpperCase()} ${routePath} is missing notBanned: ${line}`);
+        assert.ok(
+            notBannedAt > authAt,
+            `${method.toUpperCase()} ${routePath} must list notBanned after authenticate: ${line}`,
+        );
+    }
+});
+
 test('case update writes the case and journals the change', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
@@ -212,6 +292,49 @@ test('case update writes the case and journals the change', async () => {
     assert.strictEqual(journal[0].action, 'case.update');
     assert.strictEqual(journal[0].targetId, 't1');
     assert.deepStrictEqual(journal[0].payload.after, { price: 250 });
+});
+
+test('a failed journal insert rolls back the case update', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await makeUser(sequelize, { login: 'boss', role: ROLES.ADMINISTRATOR });
+
+    await sequelize.query(
+        "INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) VALUES ('t9', 'T', 100, 0, 1, 1, 0, 'weapon', -1)",
+    );
+
+    const AdminActionService = require('../src/services/adminAction');
+    const original = AdminActionService.record;
+    AdminActionService.record = async () => { throw new Error('journal down'); };
+
+    let code;
+    try {
+        const CasesController = require('../src/controllers/admin/cases');
+        code = await new Promise((resolve) => {
+            const req = {
+                params: { id: 't9' },
+                body: { case_price: 250, case_published: 0 },
+                user: { profile: { user_id: 1 } },
+            };
+            const res = {
+                statusCode: null,
+                status(c) { this.statusCode = c; return this; },
+                json() { resolve(this.statusCode); },
+            };
+            CasesController.update(req, res);
+        });
+    } finally {
+        AdminActionService.record = original;
+    }
+
+    assert.strictEqual(code, 400);
+
+    const [rows] = await sequelize.query("SELECT price, published FROM cases WHERE id = 't9'");
+    assert.strictEqual(Number(rows[0].price), 100);
+    assert.strictEqual(Number(rows[0].published), 1);
+
+    const [journal] = await sequelize.query('SELECT COUNT(*) AS n FROM admin_actions');
+    assert.strictEqual(Number(journal[0].n), 0);
 });
 
 test('case update ignores fields that are not editable', async () => {
@@ -298,6 +421,41 @@ test('role change rejects unknown roles, the administrator role, and self-target
 
     const journal = await require('../src/services/adminAction').list({});
     assert.strictEqual(journal[0].action, 'user.role');
+});
+
+test('a failed journal insert rolls back the role change', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await makeUser(sequelize, { login: 'boss', role: ROLES.ADMINISTRATOR });
+    await makeUser(sequelize, { login: 'victim' });
+
+    const AdminActionService = require('../src/services/adminAction');
+    const original = AdminActionService.record;
+    AdminActionService.record = async () => { throw new Error('journal down'); };
+
+    let code;
+    try {
+        const UsersController = require('../src/controllers/admin/users');
+        code = await new Promise((resolve) => {
+            const req = { params: { id: '2' }, body: { role: ROLES.BANNED }, user: { profile: { user_id: 1 } } };
+            const res = {
+                statusCode: null,
+                status(c) { this.statusCode = c; return this; },
+                json() { resolve(this.statusCode); },
+            };
+            UsersController.setRole(req, res);
+        });
+    } finally {
+        AdminActionService.record = original;
+    }
+
+    assert.strictEqual(code, 400);
+
+    const [rows] = await sequelize.query("SELECT role FROM users WHERE login = 'victim'");
+    assert.strictEqual(Number(rows[0].role), ROLES.NORMAL);
+
+    const [journal] = await sequelize.query('SELECT COUNT(*) AS n FROM admin_actions');
+    assert.strictEqual(Number(journal[0].n), 0);
 });
 
 test('setRole rejects malformed input through its validator chain', async () => {
@@ -482,4 +640,51 @@ test('grantAdmin promotes by login, is idempotent, and journals', async () => {
 
     const journal = await require('../src/services/adminAction').list({});
     assert.strictEqual(journal.filter((j) => j.action === 'user.grantAdmin').length, 1);
+});
+
+test('an unpublished case cannot be opened', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await makeUser(sequelize, { login: 'player', balance: 10000 });
+
+    await sequelize.query(
+        "INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) VALUES "
+        + "('offline', 'O', 100, 0, 1, 0, 0, 'weapon', -1), ('online', 'N', 100, 0, 1, 1, 5, 'weapon', 5)",
+    );
+
+    const managerPath = require.resolve('../src/redis/manager');
+    require.cache[managerPath] = {
+        id: managerPath,
+        filename: managerPath,
+        loaded: true,
+        exports: { getAllDataHashWithKey: async () => ({}) },
+    };
+
+    const CaseController = require('../src/controllers/case');
+    const MESSAGE = require('../src/constant/responseMessages');
+
+    const open = (id) => new Promise((resolve) => {
+        const req = { body: { id, count: 1 }, user: { profile: { user_id: 1 } } };
+        const res = {
+            statusCode: null,
+            status(c) { this.statusCode = c; return this; },
+            json(payload) { resolve({ code: this.statusCode, payload }); },
+        };
+        CaseController.openCaseById(req, res);
+    });
+
+    const offline = await open('offline');
+    assert.strictEqual(offline.code, 422);
+    assert.strictEqual(offline.payload.message, MESSAGE.CASE.NOT_PUBLISHED);
+
+    const online = await open('online');
+    assert.strictEqual(online.code, 422);
+    assert.strictEqual(
+        online.payload.message,
+        MESSAGE.CASE.LIMIT_EXCEEDED,
+        'a published case must get past the publication gate and be judged on its open limit',
+    );
+
+    const [balance] = await sequelize.query("SELECT balance FROM users WHERE login = 'player'");
+    assert.strictEqual(Number(balance[0].balance), 10000);
 });
