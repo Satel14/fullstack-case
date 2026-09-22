@@ -2,6 +2,8 @@ const redis = require('redis');
 const redisHost = process.env.REDIS_HOST || (process.env.NODE_ENV === 'production' ? 'redis' : 'localhost');
 const redisPort = Number(process.env.REDIS_PORT) || 6379;
 const RETRY_MAX_DELAY_MS = 5000;
+const CACHE_RELOAD_RETRY_MS = 5000;
+const LARGEST_TIMER_MS = 2147483647;
 
 const retryStrategy = ({ attempt, error }) => {
     if (attempt === 1) {
@@ -10,13 +12,17 @@ const retryStrategy = ({ attempt, error }) => {
     return Math.min(attempt * 200, RETRY_MAX_DELAY_MS);
 };
 
-const client = redis.createClient(redisPort, redisHost, {
+const clientOptions = {
     enable_offline_queue: false,
     retry_strategy: retryStrategy,
-});
+    connect_timeout: LARGEST_TIMER_MS,
+};
+
+const client = redis.createClient(redisPort, redisHost, clientOptions);
 
 const InsiderPricesService = require("./../services/insiderPrices");
 const ItemService = require("./../services/item");
+const { buildItemHash } = require("./itemHash");
 const ITEM_HASH = "item_hash";
 
 
@@ -43,45 +49,17 @@ const getAllDataHashWithKey = (key) => {
 }
 
 async function initialRedisState() {
-    await cleanDataHashWithKey(ITEM_HASH);
-    const promises = [];
     const itemPricesArray = await InsiderPricesService.getAllItems();
     const items = await ItemService.getAllItems();
+    const hash = buildItemHash(items, itemPricesArray);
 
-    for (const key in items) {
-        const element = items[key];
-
-        if (!element.item_name) {
-            continue;
-        }
-
-        const findedPrice = itemPricesArray.find(
-            (v) => v.name === element.item_name
-        );
-
-        if (
-            !findedPrice ||
-            !Object.hasOwnProperty.call(findedPrice, "pricesInCredits")
-        ) {
-            continue;
-        }
-
-        promises.push(
-            addDataHashWithKey(
-                ITEM_HASH,
-                element.item_itemId,
-                JSON.stringify({
-                    name: element.item_name,
-                    rare: element.item_rare,
-                    type: element.item_type,
-                    item_imagePath: element.item_imagePath,
-                    pricesInCredits: findedPrice.pricesInCredits,
-                })
-            )
-        );
+    const transaction = client.multi().del(ITEM_HASH);
+    if (Object.keys(hash).length > 0) {
+        transaction.hmset(ITEM_HASH, hash);
     }
-
-    await Promise.all(promises);
+    await new Promise((resolve, reject) => {
+        transaction.exec((err, replies) => (err ? reject(err) : resolve(replies)));
+    });
     console.log("[Redis] Items Loaded");
 }
 
@@ -94,7 +72,14 @@ client.on("error", (err) => {
 });
 
 function startItemCacheSync() {
-    const load = () => initialRedisState().catch((e) => console.error('[Redis] Items not loaded:', e.message));
+    let retryTimer = null;
+    const load = () => {
+        clearTimeout(retryTimer);
+        initialRedisState().catch((e) => {
+            console.error(`[Redis] Items not loaded, retrying in ${CACHE_RELOAD_RETRY_MS / 1000}s:`, e.message);
+            retryTimer = setTimeout(load, CACHE_RELOAD_RETRY_MS);
+        });
+    };
     client.on("ready", load);
     if (client.ready) {
         load();
@@ -108,4 +93,5 @@ module.exports = {
     cleanDataHashWithKey,
     initialRedisState,
     startItemCacheSync,
+    clientOptions,
 };
