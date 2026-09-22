@@ -63,3 +63,20 @@ test('the mail sender loads and reports itself disabled without an API key', () 
         process.env.RESEND_API_KEY = savedKey;
     }
 });
+
+test('user-controlled values are escaped in the email HTML', () => {
+    const { passwordResetEmail, welcomeEmail } = require('../src/modules/mailSender');
+    const login = '<a href="https://evil.example">claim your prize</a>';
+
+    const reset = passwordResetEmail({
+        login,
+        link: 'http://localhost:3000/reset-password?token=abc&x="><script>',
+        minutes: 30,
+    });
+    assert.ok(!reset.html.includes('<a href="https://evil.example">'), reset.html);
+    assert.ok(reset.html.includes('&lt;a href=&quot;https://evil.example&quot;&gt;'));
+    assert.ok(!reset.html.includes('"><script>'));
+    assert.ok(reset.html.includes('token=abc&amp;x='));
+
+    assert.ok(!welcomeEmail({ login }).html.includes('<a href="https://evil.example">'));
+});

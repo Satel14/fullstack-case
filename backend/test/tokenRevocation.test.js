@@ -110,3 +110,37 @@ test('the profile edit endpoint can no longer change the password', async () => 
     const [[after]] = await sequelize.query("SELECT password FROM users WHERE login = 'player'");
     assert.strictEqual(after.password, before.password);
 });
+
+test('login and registration refuse credentials that are not plain strings', async () => {
+    const sequelize = await setup();
+    const MESSAGE = require('../src/constant/responseMessages');
+    const handlers = {};
+    const app = { post: (path, ...chain) => { handlers[path] = chain[chain.length - 1]; } };
+    require('../src/auth/login')(app);
+    require('../src/auth/register')(app);
+    const call = (path, body) => new Promise((resolve) => {
+        const res = {
+            statusCode: 200,
+            status(code) { this.statusCode = code; return this; },
+            json(payload) { resolve({ code: this.statusCode, payload }); },
+        };
+        handlers[path]({ body }, res);
+    });
+
+    for (const body of [
+        { login: ['player', 'other'], password: 'secret123' },
+        { login: { like: '%' }, password: 'secret123' },
+        { login: 'player', password: ['secret123'] },
+    ]) {
+        const result = await call('/api/profile/login', body);
+        assert.strictEqual(result.code, 401, JSON.stringify(body));
+        assert.strictEqual(result.payload.message, MESSAGE.AUTH.EMPTY_DATA);
+    }
+
+    const registered = await call('/api/profile/register', {
+        login: 'newbie1', password: 'secret123', email: ['a@e.ua', 'b@e.ua'],
+    });
+    assert.strictEqual(registered.code, 401);
+    const [[count]] = await sequelize.query("SELECT COUNT(*) AS n FROM users WHERE login = 'newbie1'");
+    assert.strictEqual(Number(count.n), 0);
+});

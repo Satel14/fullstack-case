@@ -13,7 +13,7 @@ module.exports = (app) => {
                 login, password, email, avatar,
             } = req.body;
 
-            if (!login || !password || !email) {
+            if ([login, password, email].some((value) => typeof value !== 'string' || !value)) {
                 return res.status(401).json({ message: message.AUTH.EMPTY_DATA });
             }
 

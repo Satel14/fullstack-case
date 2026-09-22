@@ -18,17 +18,17 @@ module.exports = (app) => {
         try {
             const { email } = req.body;
 
-            if (!email) {
+            if (typeof email !== 'string' || !email.trim()) {
                 return res.status(200).json({ message: message.AUTH.EMPTY_DATA });
             }
             if (!mailSender.isEnabled()) {
                 return res.status(503).json({ message: message.AUTH.PASSWORD_RESET_UNAVAILABLE });
             }
 
-            const user = await Users.findOne({ where: { user_email: email } });
+            const user = await Users.findOne({ where: { user_email: email.trim() } });
             if (user) {
                 const token = await PasswordResetService.issueToken(user.user_id);
-                mailSender.passwordResetLink(email, {
+                mailSender.passwordResetLink(user.user_email, {
                     login: user.user_login,
                     link: `${CLIENT_ORIGIN}/reset-password?token=${token}`,
                     minutes: PasswordResetService.TOKEN_TTL_MS / 60000,

@@ -8,7 +8,7 @@ module.exports = (app) => {
     app.post('/api/profile/login', authLimiter, async (req, res) => {
         try {
             const { login, password } = req.body;
-            if (!login || !password) {
+            if (typeof login !== 'string' || typeof password !== 'string' || !login || !password) {
                 return res.status(401).json({ message: message.AUTH.EMPTY_DATA });
             }
             const user = await Users.findOne({

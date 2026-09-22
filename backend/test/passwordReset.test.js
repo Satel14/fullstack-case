@@ -179,3 +179,36 @@ test('a malformed token or an out-of-range password is refused before the token 
 
     assert.notStrictEqual(await storedPassword(sequelize), hash);
 });
+
+test('a reset request that is not a single email address is refused without issuing anything', async () => {
+    const { sequelize } = await setup();
+    const MESSAGE = require('../src/constant/responseMessages');
+
+    await withMail(async (sent) => {
+        for (const email of [['player@e.ua', 'attacker@evil.ua'], { $like: '%' }, { like: '%' }, 42, '   ']) {
+            const result = await call(routes()['/api/profile/forgotpassword'], { email });
+            assert.strictEqual(result.payload.message, MESSAGE.AUTH.EMPTY_DATA, `email ${JSON.stringify(email)}`);
+        }
+        assert.deepStrictEqual(sent, []);
+    });
+
+    const [rows] = await sequelize.query('SELECT COUNT(*) AS n FROM password_resets');
+    assert.strictEqual(Number(rows[0].n), 0);
+});
+
+test('the reset link goes to the stored address, never to the address typed in the request', async () => {
+    await setup();
+
+    await withMail(async (sent) => {
+        await call(routes()['/api/profile/forgotpassword'], { email: '  PLAYER@E.UA ' });
+        assert.strictEqual(sent.length, 1);
+        assert.strictEqual(sent[0].to, 'player@e.ua');
+    });
+});
+
+test('string operator aliases are not interpreted in queries', async () => {
+    await setup();
+    const Users = require('../src/models/user');
+
+    await assert.rejects(() => Users.findOne({ where: { user_login: { $like: '%' } } }));
+});
