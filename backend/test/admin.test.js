@@ -469,7 +469,7 @@ test('grantAdmin promotes by login, is idempotent, and journals', async () => {
     const { execFileSync } = require('node:child_process');
     const path = require('node:path');
     const script = path.join(__dirname, '..', 'scripts', 'grantAdmin.js');
-    const env = { ...process.env, DB_NAME: 'case_test' };
+    const env = { ...process.env, NODE_ENV: 'development', DB_NAME: 'case_test' };
 
     const first = execFileSync('node', [script, 'futureboss'], { env, encoding: 'utf8' });
     assert.match(first, /is now an administrator/);
