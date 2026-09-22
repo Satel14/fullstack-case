@@ -91,7 +91,7 @@
             "title": "New password",
             "passwordLabel": "New password",
             "passwordRequired": "Enter a new password",
-            "passwordLength": "The password must be 6 to 72 characters long",
+            "passwordLength": "The password must be at least 6 characters and at most 72 bytes: up to 72 Latin or 36 Cyrillic letters",
             "confirmLabel": "Repeat the password",
             "confirmRequired": "Repeat the password",
             "mismatch": "The passwords do not match",

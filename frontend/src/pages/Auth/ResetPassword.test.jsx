@@ -89,3 +89,23 @@ test('a refused link reports the server message and stays on the page', async ()
     expect(screen.queryByText('login page')).toBeNull();
     expect(screen.getByLabelText('auth.reset.passwordLabel')).toBeInTheDocument();
 });
+
+test('a password over 72 bytes is refused before the server, even when it is under 72 letters', async () => {
+    renderAt(`/reset-password?token=${TOKEN}`);
+    const cyrillic = 'пароль'.repeat(7);
+
+    fill(cyrillic, cyrillic);
+
+    await waitFor(() => expect(screen.getByText('auth.reset.passwordLength')).toBeInTheDocument());
+    expect(resetPassword).not.toHaveBeenCalled();
+});
+
+test('a Cyrillic password within 72 bytes is accepted', async () => {
+    resetPassword.mockResolvedValue({ status: 200, message: 'changed' });
+    renderAt(`/reset-password?token=${TOKEN}`);
+    const cyrillic = 'пароль'.repeat(6);
+
+    fill(cyrillic, cyrillic);
+
+    await waitFor(() => expect(resetPassword).toHaveBeenCalledWith(TOKEN, cyrillic));
+});

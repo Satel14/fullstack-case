@@ -7,7 +7,17 @@ import { resetPassword } from '../../api/all/user';
 import openNotification from '../../components/mini/openNotification';
 
 const PASSWORD_MIN = 6;
-const PASSWORD_MAX = 72;
+const PASSWORD_MAX_BYTES = 72;
+
+const utf8Length = (value) => {
+    try {
+        return encodeURIComponent(value).replace(/%[0-9A-F]{2}/gi, '_').length;
+    } catch (e) {
+        return Infinity;
+    }
+};
+
+const acceptablePassword = (value) => value.length >= PASSWORD_MIN && utf8Length(value) <= PASSWORD_MAX_BYTES;
 
 const ResetPassword = () => {
     const { t } = useTranslation();
@@ -46,7 +56,11 @@ const ResetPassword = () => {
                     label={t('auth.reset.passwordLabel')}
                     rules={[
                         { required: true, message: t('auth.reset.passwordRequired') },
-                        { min: PASSWORD_MIN, max: PASSWORD_MAX, message: t('auth.reset.passwordLength') },
+                        {
+                            validator: (_, value) => (!value || acceptablePassword(value)
+                                ? Promise.resolve()
+                                : Promise.reject(new Error(t('auth.reset.passwordLength')))),
+                        },
                     ]}
                 >
                     <Input.Password prefix={<LockOutlined className="site-form-item-icon" />} />
