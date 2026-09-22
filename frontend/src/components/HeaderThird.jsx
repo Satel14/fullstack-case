@@ -7,7 +7,7 @@ import { withTranslation } from 'react-i18next';
 import { renderItemProp } from '../helpers/Case';
 import ItemColor from './mini/ItemColor';
 import { getStorageLastItemsWithUserInfo } from '../api/all/storage';
-import { itemInfoFetch } from '../store/actions/itemCache';
+import { itemInfoFetch, addItemsToCache } from '../store/actions/itemCache';
 import { default as socket } from '../api/all/ws';
 
 const { Header } = Layout;
@@ -44,6 +44,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => ({
     fetchItemInfo: (id) => dispatch(itemInfoFetch(id)),
+    cacheItems: (itemList) => dispatch(addItemsToCache(itemList)),
 });
 
 class HeaderThird extends React.Component {
@@ -66,6 +67,7 @@ class HeaderThird extends React.Component {
                     caseList: result.caseList || {},
                 });
 
+                this.props.cacheItems(result.itemList);
                 if (result.data) {
                     for (const item of result.data) {
                         this.props.fetchItemInfo(item.storage_itemId);

@@ -1,28 +1,44 @@
 import { ADD_ITEMS_CACHE } from '../types';
 import { getItemInfoById } from '../../api/all/item';
 
-// eslint-disable-next-line import/prefer-default-export
-export const itemInfoFetch = (id) => async (dispatch, getState) => {
+const pending = new Map();
+
+const placeholderItem = (id) => ({
+    item_itemId: id,
+    item_name: `Item ${id}`,
+    item_rare: 'Factory New',
+    item_type: 'Unknown',
+});
+
+export const addItemsToCache = (itemList) => (dispatch) => {
+    Object.entries(itemList || {}).forEach(([id, itemInfo]) => {
+        if (itemInfo) {
+            dispatch({ type: ADD_ITEMS_CACHE, payloadKey: id, payloadData: itemInfo });
+        }
+    });
+};
+
+export const itemInfoFetch = (id) => (dispatch, getState) => {
     const { itemCache } = getState();
 
     if (itemCache[id]) {
-        return itemCache[id];
+        return Promise.resolve(itemCache[id]);
+    }
+    if (pending.has(id)) {
+        return pending.get(id);
     }
 
-    try {
-        const itemInfo = await getItemInfoById(id).then((result) => result.data);
+    const request = getItemInfoById(id)
+        .then((result) => result.data)
+        .catch(() => placeholderItem(id))
+        .then((itemInfo) => {
+            dispatch({ type: ADD_ITEMS_CACHE, payloadKey: id, payloadData: itemInfo });
+            return itemInfo;
+        })
+        .finally(() => {
+            pending.delete(id);
+        });
 
-        dispatch({ type: ADD_ITEMS_CACHE, payloadKey: id, payloadData: itemInfo });
-        return itemInfo;
-    } catch (error) {
-        const placeholderItem = {
-            item_itemId: id,
-            item_name: `Item ${id}`,
-            item_rare: 'Factory New',
-            item_type: 'Unknown',
-        };
-
-        dispatch({ type: ADD_ITEMS_CACHE, payloadKey: id, payloadData: placeholderItem });
-        return placeholderItem;
-    }
+    pending.set(id, request);
+    return request;
 };

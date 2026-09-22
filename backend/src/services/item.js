@@ -1,5 +1,6 @@
 const Item = require("../models/item");
 const MESSAGE = require("../constant/responseMessages");
+const InsiderService = require("./insiderPrices");
 
 module.exports.getItemById = async (itemId) => {
     try {
@@ -13,6 +14,18 @@ module.exports.getItemById = async (itemId) => {
     } catch (e) {
         throw Error(e.message);
     }
+};
+
+module.exports.getItemWithPrices = async (itemId) => {
+    const itemInfo = await module.exports.getItemById(itemId);
+
+    let pricesInCredits = null;
+    const prices = await InsiderService.getItemPrice(itemInfo.item_name);
+    if (prices && prices.pricesInCredits) {
+        pricesInCredits = JSON.parse(prices.pricesInCredits);
+    }
+
+    return { ...itemInfo, pricesInCredits };
 };
 
 module.exports.getAllItems = async () => {

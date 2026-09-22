@@ -219,10 +219,14 @@ module.exports.getStorageLastItemsWithUserInfo = async (req, res) => {
 
         const userList = {};
         const caseList = {};
-
+        const itemList = {};
 
         for (const key in items) {
             const element = items[key];
+
+            if (!itemList[element.storage_itemId]) {
+                itemList[element.storage_itemId] = await ItemService.getItemWithPrices(element.storage_itemId).catch(() => null);
+            }
 
             if (!userList[element.storage_userId]) {
                 const userInfo = await UserService.getUserById(element.storage_userId).catch(() => null);
@@ -243,7 +247,7 @@ module.exports.getStorageLastItemsWithUserInfo = async (req, res) => {
 
         await Promise.all(promises);
 
-        return res.status(200).json({ status: 200, data: items, userList, caseList });
+        return res.status(200).json({ status: 200, data: items, userList, caseList, itemList });
     } catch (e) {
         return res.status(500).json({ status: 500, message: e.message });
     }

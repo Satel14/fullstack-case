@@ -17,18 +17,9 @@ module.exports.getItemById = async (req, res) => {
         }
 
         const { id } = req.params;
-        const itemInfo = await ItemService.getItemById(id);
+        const data = await ItemService.getItemWithPrices(id);
 
-        let pricesInCredits = null;
-        const prices = await InsiderService.getItemPrice(itemInfo.item_name);
-        if (prices && prices.pricesInCredits) {
-            pricesInCredits = JSON.parse(prices.pricesInCredits);
-        }
-
-        return res.status(200).json({
-            status: 200,
-            data: { ...itemInfo, pricesInCredits },
-        });
+        return res.status(200).json({ status: 200, data });
     } catch (e) {
         return res.status(400).json({ status: 400, message: e.message });
     }
