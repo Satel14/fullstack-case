@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Input, Button, Alert } from 'antd';
+import {
+    Modal, Input, Button, Alert, Typography,
+} from 'antd';
 import { useTranslation } from 'react-i18next';
 import { adjustUserBalance } from '../../api/all/admin';
+import openNotification from '../../components/mini/openNotification';
 
 const MAX_DELTA = 1000000;
 
 const parseDelta = (raw) => {
-    const value = Number(raw);
+    const normalised = String(raw).trim().replace(',', '.');
+    if (normalised === '') {
+        return null;
+    }
+    const value = Number(normalised);
     if (!Number.isFinite(value) || value === 0) {
         return null;
     }
@@ -37,13 +44,27 @@ const BalanceModal = ({ user, visible, onClose, onDone }) => {
     const parsedDelta = parseDelta(delta);
     const trimmedReason = reason.trim();
     const ready = parsedDelta !== null && trimmedReason.length > 0;
+    const deltaInvalid = delta.trim().length > 0 && parsedDelta === null;
+    const reasonInvalid = reason.length > 0 && trimmedReason.length === 0;
 
     const submit = async () => {
         setSubmitting(true);
         try {
-            await adjustUserBalance(user.user_id, parsedDelta, trimmedReason);
+            const res = await adjustUserBalance(user.user_id, parsedDelta, trimmedReason);
+            const balance = res && res.balance !== null && res.balance !== undefined
+                ? Number(res.balance).toFixed(2)
+                : null;
+            openNotification(
+                'success',
+                t('admin.balance.done'),
+                balance === null
+                    ? user.user_login
+                    : t('admin.balance.newBalance', { login: user.user_login, balance }),
+            );
             onDone();
         } catch (e) {
+            const message = e && e.error && e.message ? e.message : t('common.serverError');
+            openNotification('error', t('admin.balance.failed'), message);
         } finally {
             setSubmitting(false);
         }
@@ -65,6 +86,11 @@ const BalanceModal = ({ user, visible, onClose, onDone }) => {
                 value={delta}
                 onChange={(e) => { setDelta(e.target.value); setReviewing(false); }}
             />
+            {deltaInvalid && (
+                <Typography.Text role="alert" type="danger">
+                    {t('admin.balance.deltaInvalid')}
+                </Typography.Text>
+            )}
 
             <label htmlFor="admin-balance-reason">{t('admin.balance.reason')}</label>
             <Input
@@ -73,6 +99,11 @@ const BalanceModal = ({ user, visible, onClose, onDone }) => {
                 value={reason}
                 onChange={(e) => { setReason(e.target.value); setReviewing(false); }}
             />
+            {reasonInvalid && (
+                <Typography.Text role="alert" type="danger">
+                    {t('admin.balance.reasonRequired')}
+                </Typography.Text>
+            )}
 
             {reviewing && (
                 <Alert

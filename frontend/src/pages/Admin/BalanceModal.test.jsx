@@ -1,6 +1,11 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import {
+    render, screen, fireEvent, waitFor,
+} from '@testing-library/react';
+import { notification } from 'antd';
 import BalanceModal from './BalanceModal';
+
+afterEach(() => { notification.destroy(); });
 
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key) => key }),
@@ -58,6 +63,34 @@ test('submitting requires passing through the confirmation step', async () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'admin.balance.confirm' }));
     expect(adjustUserBalance).toHaveBeenCalledWith(2, 10, 'бонус');
+});
+
+test('a comma decimal is accepted and sent as a dot decimal', async () => {
+    const { adjustUserBalance } = require('../../api/all/admin');
+    render(<BalanceModal user={target} visible onClose={() => {}} onDone={() => {}} />);
+
+    fireEvent.change(screen.getByLabelText('admin.balance.delta'), { target: { value: '1,5' } });
+    fireEvent.change(screen.getByLabelText('admin.balance.reason'), { target: { value: 'причина' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'admin.balance.review' }));
+    fireEvent.click(screen.getByRole('button', { name: 'admin.balance.confirm' }));
+
+    await waitFor(() => expect(adjustUserBalance).toHaveBeenCalledWith(2, 1.5, 'причина'));
+});
+
+test('an unusable amount is explained instead of only greying the button', () => {
+    render(<BalanceModal user={target} visible onClose={() => {}} onDone={() => {}} />);
+
+    expect(screen.queryByText('admin.balance.deltaInvalid')).toBeNull();
+
+    fireEvent.change(screen.getByLabelText('admin.balance.delta'), { target: { value: '1.005' } });
+    expect(screen.getByText('admin.balance.deltaInvalid')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('admin.balance.delta'), { target: { value: '1.5' } });
+    expect(screen.queryByText('admin.balance.deltaInvalid')).toBeNull();
+
+    fireEvent.change(screen.getByLabelText('admin.balance.reason'), { target: { value: '   ' } });
+    expect(screen.getByText('admin.balance.reasonRequired')).toBeInTheDocument();
 });
 
 test('confirm is present but disabled until review is pressed', () => {
