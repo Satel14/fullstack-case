@@ -59,3 +59,16 @@ test('submitting requires passing through the confirmation step', async () => {
     fireEvent.click(screen.getByRole('button', { name: 'admin.balance.confirm' }));
     expect(adjustUserBalance).toHaveBeenCalledWith(2, 10, 'бонус');
 });
+
+test('confirm is present but disabled until review is pressed', () => {
+    render(<BalanceModal user={target} visible onClose={() => {}} onDone={() => {}} />);
+
+    fireEvent.change(screen.getByLabelText('admin.balance.delta'), { target: { value: '10' } });
+    fireEvent.change(screen.getByLabelText('admin.balance.reason'), { target: { value: 'бонус' } });
+
+    const confirm = screen.getByRole('button', { name: 'admin.balance.confirm' });
+    expect(confirm).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'admin.balance.review' }));
+    expect(confirm).not.toBeDisabled();
+});

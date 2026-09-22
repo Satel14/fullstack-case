@@ -83,17 +83,19 @@ const BalanceModal = ({ user, visible, onClose, onDone }) => {
                 />
             )}
 
-            {!reviewing && (
-                <Button type="primary" disabled={!ready} onClick={() => setReviewing(true)}>
-                    {t('admin.balance.review')}
-                </Button>
-            )}
+            <Button type="primary" disabled={!ready || reviewing} onClick={() => setReviewing(true)}>
+                {t('admin.balance.review')}
+            </Button>
 
-            {reviewing && (
-                <Button type="primary" danger loading={submitting} onClick={submit}>
-                    {t('admin.balance.confirm')}
-                </Button>
-            )}
+            <Button
+                type="primary"
+                danger
+                disabled={!reviewing}
+                loading={submitting}
+                onClick={submit}
+            >
+                {t('admin.balance.confirm')}
+            </Button>
         </Modal>
     );
 };
