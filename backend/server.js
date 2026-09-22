@@ -40,7 +40,7 @@ assertMigrationsApplied(sequelize).then(() => {
     require('./src/socket/chat')(server);
 
     const RedisManager = require('./src/redis/manager');
-    RedisManager.initialRedisState().catch(console.error);
+    RedisManager.startItemCacheSync();
 }).catch((err) => {
     console.error(err.message);
     process.exit(1);

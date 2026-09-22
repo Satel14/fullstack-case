@@ -1,6 +1,19 @@
 const redis = require('redis');
 const redisHost = process.env.REDIS_HOST || (process.env.NODE_ENV === 'production' ? 'redis' : 'localhost');
-const client = redis.createClient(6379, redisHost);
+const redisPort = Number(process.env.REDIS_PORT) || 6379;
+const RETRY_MAX_DELAY_MS = 5000;
+
+const retryStrategy = ({ attempt, error }) => {
+    if (attempt === 1) {
+        console.error(`[Redis] ${redisHost}:${redisPort} unavailable, retrying: ${error ? error.message : 'connection lost'}`);
+    }
+    return Math.min(attempt * 200, RETRY_MAX_DELAY_MS);
+};
+
+const client = redis.createClient(redisPort, redisHost, {
+    enable_offline_queue: false,
+    retry_strategy: retryStrategy,
+});
 
 const InsiderPricesService = require("./../services/insiderPrices");
 const ItemService = require("./../services/item");
@@ -76,10 +89,23 @@ client.on("connect", async function () {
     console.log('[Redis] Redis Connected');
 });
 
+client.on("error", (err) => {
+    console.error('[Redis]', err.message);
+});
+
+function startItemCacheSync() {
+    const load = () => initialRedisState().catch((e) => console.error('[Redis] Items not loaded:', e.message));
+    client.on("ready", load);
+    if (client.ready) {
+        load();
+    }
+}
+
 module.exports = {
     addDataHashWithKey,
     getAllDataHashWithKey,
     setDataHashWithKey,
     cleanDataHashWithKey,
     initialRedisState,
+    startItemCacheSync,
 };
