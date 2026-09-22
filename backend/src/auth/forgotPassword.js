@@ -13,6 +13,9 @@ module.exports = (app) => {
             if (!email) {
                 return res.status(200).json({ message: message.AUTH.EMPTY_DATA });
             }
+            if (!mailSender.isEnabled()) {
+                return res.status(503).json({ message: message.AUTH.PASSWORD_RESET_UNAVAILABLE });
+            }
             const user = await Users.findOne({
                 where: {user_email: email},
             });

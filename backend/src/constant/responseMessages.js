@@ -5,7 +5,8 @@ module.exports = {
         SUCCESS_LOGOUT: 'Вийшли з аккаунта',
         EMPTY_DATA: 'Дані не отримано',
         USER_IS_EXIST: 'Такий логін (або пошта) вже існує',
-        SUCCESS_PASSWORD_SEND: 'Пароль відправлено на пошту'
+        SUCCESS_PASSWORD_SEND: 'Пароль відправлено на пошту',
+        PASSWORD_RESET_UNAVAILABLE: 'Відновлення пароля тимчасово недоступне'
     },
     VALIDATOR: {
         ERROR: "Помилка валідації"

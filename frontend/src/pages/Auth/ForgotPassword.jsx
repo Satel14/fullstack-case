@@ -70,6 +70,8 @@ const ForgotPassword = () => {
             } else {
                 openNotification('error', t('auth.forgot.errorTitle'), results.message)
             }
+        }).catch((failure) => {
+            openNotification('error', t('auth.forgot.errorTitle'), (failure && failure.message) || t('common.serverError'));
         });
     };
 

@@ -1,29 +1,50 @@
 const { Resend } = require('resend');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.RESEND_FROM || 'caseUA <onboarding@resend.dev>';
 
+let client = null;
+
+const isEnabled = () => Boolean(process.env.RESEND_API_KEY);
+
+const getClient = () => {
+    if (client === null) {
+        client = new Resend(process.env.RESEND_API_KEY);
+    }
+    return client;
+};
+
+const send = (message, sentLog, failedLog) => {
+    if (!isEnabled()) {
+        console.warn(`[mail] "${message.subject}" not sent: RESEND_API_KEY is not set`);
+        return;
+    }
+    getClient().emails.send({ from: FROM, ...message })
+        .then((res) => console.log(sentLog, res))
+        .catch((err) => console.error(failedLog, err.message));
+};
+
+if (!isEnabled()) {
+    console.warn('[mail] RESEND_API_KEY is not set: emails are disabled and password recovery is unavailable');
+}
+
 module.exports = {
+    isEnabled,
     userRegistered(mailTo, data) {
-        resend.emails.send({
-            from: FROM,
+        send({
             to: mailTo,
             subject: 'Успішна реєстрація на сайті',
             html: `<h1>Вітаємо на caseUA!</h1>
                    <p>Ваша реєстрація успішна.</p>
                    <p><strong>Ваш логін:</strong> ${data.login}</p>`,
-        }).then((res) => console.log('Welcome email sent via Resend:', res))
-            .catch(err => console.error('Failed to send Resend welcome email:', err.message));
+        }, 'Welcome email sent via Resend:', 'Failed to send Resend welcome email:');
     },
     forgotPassword(mailTo, data) {
-        resend.emails.send({
-            from: FROM,
+        send({
             to: mailTo,
             subject: 'Відновлення доступу',
             html: `<h1>Відновлення пароля</h1>
                    <p><strong>Ваш логін:</strong> ${data.login}</p>
                    <p><strong>Ваш пароль:</strong> ${data.password}</p>`,
-        }).then((res) => console.log('Recovery email sent via Resend:', res))
-            .catch((error) => console.error('Error sending recovery email:', error.message));
-    }
-}
+        }, 'Recovery email sent via Resend:', 'Error sending recovery email:');
+    },
+};
