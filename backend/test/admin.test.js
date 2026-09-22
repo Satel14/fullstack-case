@@ -142,8 +142,7 @@ test('every /api/admin route carries authenticate and adminOnly', () => {
     const app = express();
     require('../src/routes/admin')(app);
 
-    const adminRoutes = collectRoutes(app._router.stack)
-        .filter((route) => route.path.startsWith('/api/admin'));
+    const adminRoutes = collectRoutes(app._router.stack);
 
     assert.ok(adminRoutes.length > 0, 'no /api/admin routes are registered');
 
@@ -157,6 +156,27 @@ test('every /api/admin route carries authenticate and adminOnly', () => {
             `${route.path} is missing adminOnly (guards: ${route.guards.join(', ')})`,
         );
     }
+});
+
+test('collectRoutes reaches routes mounted through a nested router', () => {
+    const express = require('express');
+    const app = express();
+    const nested = express.Router();
+
+    function authenticate(req, res, next) { next(); }
+    function handler(req, res) { res.end(); }
+
+    nested.get('/unguarded', authenticate, handler);
+    app.use('/api/admin', nested);
+
+    const routes = collectRoutes(app._router.stack);
+
+    assert.strictEqual(routes.length, 1);
+    assert.ok(routes[0].guards.includes('authenticate'));
+    assert.ok(
+        !routes[0].guards.includes('adminOnly'),
+        'the nested route was expected to be missing adminOnly for this test to prove anything',
+    );
 });
 
 test('the admin router is mounted in routes.js', () => {
