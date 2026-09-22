@@ -19,7 +19,8 @@ module.exports.list = async (req, res) => {
         });
         return res.status(200).json({ status: 200, data: data.rows, count: data.count });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        console.error('[admin] users.list failed:', e);
+        return res.status(400).json({ status: 400, message: MESSAGE.ADMIN.ERROR });
     }
 };
 
@@ -50,19 +51,25 @@ module.exports.setRole = async (req, res) => {
             return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.USER_NOT_EXIST });
         }
 
-        await UserService.setRole(targetId, role);
-        await AdminActionService.record({
-            adminId,
-            action: 'user.role',
-            targetType: 'user',
-            targetId,
-            payload: { before: target.user_role, after: role },
-            reason: req.body.reason,
+        await sequelize.transaction(async (t) => {
+            await UserService.setRole(targetId, role, { transaction: t });
+            await AdminActionService.record(
+                {
+                    adminId,
+                    action: 'user.role',
+                    targetType: 'user',
+                    targetId,
+                    payload: { before: target.user_role, after: role },
+                    reason: req.body.reason,
+                },
+                { transaction: t },
+            );
         });
 
         return res.status(200).json({ status: 200 });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        console.error('[admin] users.setRole failed:', e);
+        return res.status(400).json({ status: 400, message: MESSAGE.ADMIN.ERROR });
     }
 };
 
@@ -97,12 +104,14 @@ module.exports.adjustBalance = async (req, res) => {
             return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.USER_NOT_EXIST });
         }
 
+        let resulting = null;
+
         await sequelize.transaction(async (t) => {
             const current = await UserService.getBalanceByUserId(targetId, {
                 transaction: t,
                 lock: t.LOCK.UPDATE,
             });
-            const next = Number(current) + delta;
+            const next = Math.round((Number(current) + delta) * 100) / 100;
             if (next < 0) {
                 const err = new Error(MESSAGE.ADMIN.NEGATIVE_BALANCE);
                 err.code = 'NEGATIVE_BALANCE';
@@ -124,15 +133,17 @@ module.exports.adjustBalance = async (req, res) => {
                 },
                 { transaction: t },
             );
+
+            resulting = next;
         });
 
-        const resulting = await UserService.getBalanceByUserId(targetId);
-        return res.status(200).json({ status: 200, balance: Number(resulting) });
+        return res.status(200).json({ status: 200, balance: resulting });
     } catch (e) {
         if (e && e.code === 'NEGATIVE_BALANCE') {
             return res.status(422).json({ status: 422, message: e.message });
         }
-        return res.status(400).json({ status: 400, message: e.message });
+        console.error('[admin] users.adjustBalance failed:', e);
+        return res.status(400).json({ status: 400, message: MESSAGE.ADMIN.ERROR });
     }
 };
 

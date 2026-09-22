@@ -1,4 +1,5 @@
 const AdminActionService = require('../../services/adminAction');
+const MESSAGE = require('../../constant/responseMessages');
 
 module.exports.list = async (req, res) => {
     try {
@@ -8,6 +9,7 @@ module.exports.list = async (req, res) => {
         });
         return res.status(200).json({ status: 200, data });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        console.error('[admin] actions.list failed:', e);
+        return res.status(400).json({ status: 400, message: MESSAGE.ADMIN.ERROR });
     }
 };

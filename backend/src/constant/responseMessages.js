@@ -17,6 +17,7 @@ module.exports = {
         ERROR: 'Помилка кейсів',
         ERROR_CATEGORY: 'Помилка категорії',
         NOT_EXIST: 'Такий кейс не існує',
+        NOT_PUBLISHED: 'Кейс недоступний для відкриття',
         NOT_HAVE_MONEY: 'Недостатньо грошей',
         LIMIT_EXCEEDED: 'Перевищено ліміт відкриттів кейсу'
     },
@@ -49,6 +50,7 @@ module.exports = {
         VERIFY_ERROR: 'Не вдалося перевірити результат',
     },
     ADMIN: {
+        ERROR: 'Помилка адміністрування',
         NOT_ADMIN: 'Ви не авторизовані',
         BANNED: 'Ваш акаунт заблоковано',
         REASON_REQUIRED: 'Вкажіть причину',
