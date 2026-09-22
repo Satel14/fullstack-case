@@ -45,6 +45,8 @@ const DOWN_EFFECTS = {
         + 'duplicates it revealed while converging stay revealed',
     '20260922000900-user-token-version.js':
         'drops users.tokenVersion, so a password reset stops signing out the sessions opened before it',
+    '20260922001000-seed-user-status-index.js':
+        'drops the (userId, status) index, so locking the active seed of one user scans and locks the whole seed table again',
 };
 
 const EXPECTED_COLUMNS = [

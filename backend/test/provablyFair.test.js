@@ -150,13 +150,13 @@ test('a draw table stored as JSON reproduces every golden vector', () => {
     assert.strictEqual(bad.length, 0, `first mismatch: ${JSON.stringify(bad[0])}`);
 });
 
-test('a draw table is unaffected by later price and case changes', () => {
+test('a stored draw table keeps deciding the same way after the case and prices change', () => {
     const caseDef = JSON.parse(JSON.stringify(GOLDEN.cases.dust2));
     const itemHash = { ...GOLDEN.itemHash };
-    const table = JSON.parse(JSON.stringify(pf.buildDrawTable(caseDef, itemHash)));
-    const before = GOLDEN.vectors
-        .filter((v) => v[3] === 'dust2')
-        .map(([s, c, n]) => pf.deriveFromTable(s, c, n, table));
+    const stored = JSON.stringify(pf.buildDrawTable(caseDef, itemHash));
+    const vectors = GOLDEN.vectors.filter((v) => v[3] === 'dust2');
+    const derive = () => vectors.map(([s, c, n]) => pf.deriveWinner(s, c, n, caseDef, itemHash));
+    const before = derive();
 
     caseDef.ITEMS.reverse();
     caseDef.CHANCES.COLORS.PAINTED = 90;
@@ -164,8 +164,7 @@ test('a draw table is unaffected by later price and case changes', () => {
         itemHash[id] = JSON.stringify({ pricesInCredits: JSON.stringify({ default: 1, painted: 0 }) });
     }
 
-    const after = GOLDEN.vectors
-        .filter((v) => v[3] === 'dust2')
-        .map(([s, c, n]) => pf.deriveFromTable(s, c, n, table));
-    assert.deepStrictEqual(after, before);
+    assert.notDeepStrictEqual(derive(), before, 'the change must alter what the current definitions decide');
+    const replayed = vectors.map(([s, c, n]) => pf.deriveFromTable(s, c, n, JSON.parse(stored)));
+    assert.deepStrictEqual(replayed, before);
 });

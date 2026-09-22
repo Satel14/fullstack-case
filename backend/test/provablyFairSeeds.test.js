@@ -87,3 +87,27 @@ test('the migration keeps the newest duplicate active and reveals the older ones
     ]);
     assert.ok(rows[0].revealed_at && rows[1].revealed_at);
 });
+
+test("locking one user's active seed does not block another user's", async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const PFService = require('../src/services/provablyFair');
+    for (let userId = 1; userId <= 6; userId += 1) {
+        await PFService.ensureActiveSeed(userId);
+        await PFService.rotateSeed(userId);
+    }
+
+    const holder = await sequelize.transaction();
+    try {
+        await PFService.ensureActiveSeed(1, { transaction: holder, lock: holder.LOCK.UPDATE });
+
+        const started = Date.now();
+        await sequelize.transaction(async (t) => {
+            await sequelize.query('SET SESSION innodb_lock_wait_timeout = 3', { transaction: t });
+            await PFService.ensureActiveSeed(5, { transaction: t, lock: t.LOCK.UPDATE });
+        });
+        assert.ok(Date.now() - started < 2000, `user 5 waited ${Date.now() - started}ms on user 1's lock`);
+    } finally {
+        await holder.commit();
+    }
+});

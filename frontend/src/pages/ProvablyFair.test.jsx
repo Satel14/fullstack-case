@@ -21,11 +21,15 @@ const api = require('../api/all/provablyFair');
 const ROWS = [
     {
         id: 5, caseId: 'dust2', nonce: 1, clientSeed: 'client', resultItemId: 10, resultColor: 'default',
-        revealedServerSeed: 'server', hasSnapshot: true,
+        revealedServerSeed: 'server', hasSnapshot: true, verification: 'snapshot',
     },
     {
         id: 4, caseId: 'dust2', nonce: 0, clientSeed: 'client', resultItemId: 11, resultColor: 'default',
-        revealedServerSeed: 'server', hasSnapshot: false,
+        revealedServerSeed: 'server', hasSnapshot: false, verification: 'none',
+    },
+    {
+        id: 3, caseId: 'train', nonce: 7, clientSeed: 'client', resultItemId: 12, resultColor: 'default',
+        revealedServerSeed: 'server', hasSnapshot: false, verification: 'current',
     },
 ];
 
@@ -39,6 +43,7 @@ beforeEach(() => {
 
 const rowOf = async (nonce) => {
     await screen.findAllByText('dust2');
+    await screen.findByText('train');
     return screen.getAllByRole('row').find((r) => within(r).queryByText(String(nonce), { exact: true }));
 };
 
@@ -99,4 +104,31 @@ test('editing the case id by hand drops the open id and verifies against the cur
     }));
     expect(await screen.findByText(/provablyFair.computed/)).toBeInTheDocument();
     expect(screen.queryByText('provablyFair.matchesRecord')).toBeNull();
+});
+
+test('an old open that the current case still reproduces can be verified against it', async () => {
+    api.verifyOpen.mockResolvedValue({ data: { itemId: 12, color: 'default', rarity: 'Factory New', source: 'current' } });
+    render(<ProvablyFair />);
+
+    const row = await rowOf(7);
+    expect(within(row).getByText('provablyFair.verifiableCurrent')).toBeInTheDocument();
+    fireEvent.click(within(row).getByRole('button', { name: 'provablyFair.verify' }));
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+
+    await waitFor(() => expect(api.verifyOpen).toHaveBeenCalledWith({
+        serverSeed: 'server', clientSeed: 'client', nonce: 7, caseId: 'train',
+    }));
+});
+
+test('editing the nonce or seeds by hand drops the open id', async () => {
+    api.verifyOpen.mockResolvedValue({ data: { itemId: 10, color: 'default', rarity: 'Factory New', source: 'current' } });
+    render(<ProvablyFair />);
+
+    fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.noncePlaceholder'), { target: { value: '2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+
+    await waitFor(() => expect(api.verifyOpen).toHaveBeenCalledWith({
+        serverSeed: 'server', clientSeed: 'client', nonce: 2, caseId: 'dust2',
+    }));
 });

@@ -2,7 +2,8 @@ const crypto = require('crypto');
 const ProvablyFairSeed = require('../models/provablyFairSeed');
 const CaseOpenRecord = require('../models/caseOpenRecord');
 const sequelize = require('../config/db');
-const { sha256 } = require('../modules/provablyFair');
+const { sha256, deriveWinner } = require('../modules/provablyFair');
+const allCases = require('../constant/cases/_all');
 
 const HISTORY_MAX_LIMIT = 200;
 
@@ -122,7 +123,20 @@ module.exports.recordOpen = async (data, options = {}) => {
     );
 };
 
-module.exports.getHistory = async (userId, limit, offset) => {
+const replaysAgainstCurrentCase = (row, serverSeed, itemHash) => {
+    const caseDef = allCases[row.co_caseId];
+    if (!caseDef || !serverSeed) {
+        return false;
+    }
+    try {
+        const w = deriveWinner(serverSeed, row.co_clientSeed, row.co_nonce, caseDef, itemHash || {});
+        return w.itemId === row.co_resultItemId && w.color === row.co_resultColor;
+    } catch (e) {
+        return false;
+    }
+};
+
+module.exports.getHistory = async (userId, limit, offset, itemHash = null) => {
     const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 50, HISTORY_MAX_LIMIT));
     const safeOffset = Math.max(0, parseInt(offset, 10) || 0);
 
@@ -137,26 +151,39 @@ module.exports.getHistory = async (userId, limit, offset) => {
         offset: safeOffset,
     });
 
-    // A row is verifiable only once its seed has been revealed (rotated).
-    const revealed = await ProvablyFairSeed.findAll({
-        where: { pf_userId: userId, pf_status: 'revealed' },
-        attributes: ['pf_id', 'pf_serverSeed'],
+    const seedIds = [...new Set(rows.map((r) => r.co_seedId))];
+    const seeds = seedIds.length === 0 ? [] : await ProvablyFairSeed.findAll({
+        where: { pf_userId: userId, pf_id: seedIds },
+        attributes: ['pf_id', 'pf_serverSeed', 'pf_status'],
     });
-    const revealedById = {};
-    revealed.forEach((s) => { revealedById[s.pf_id] = s.pf_serverSeed; });
+    const seedById = {};
+    seeds.forEach((s) => { seedById[s.pf_id] = s; });
 
-    return rows.map((r) => ({
-        id: r.co_id,
-        caseId: r.co_caseId,
-        nonce: r.co_nonce,
-        serverSeedHash: r.co_serverSeedHash,
-        clientSeed: r.co_clientSeed,
-        resultItemId: r.co_resultItemId,
-        resultColor: r.co_resultColor,
-        created_at: r.co_created_at,
-        revealedServerSeed: revealedById[r.co_seedId] || null,
-        hasSnapshot: Boolean(Number(r.get('hasSnapshot'))),
-    }));
+    const verificationOf = (r, hasSnapshot) => {
+        if (hasSnapshot) {
+            return 'snapshot';
+        }
+        const seed = seedById[r.co_seedId];
+        return replaysAgainstCurrentCase(r, seed && seed.pf_serverSeed, itemHash) ? 'current' : 'none';
+    };
+
+    return rows.map((r) => {
+        const seed = seedById[r.co_seedId];
+        const hasSnapshot = Boolean(Number(r.get('hasSnapshot')));
+        return {
+            id: r.co_id,
+            caseId: r.co_caseId,
+            nonce: r.co_nonce,
+            serverSeedHash: r.co_serverSeedHash,
+            clientSeed: r.co_clientSeed,
+            resultItemId: r.co_resultItemId,
+            resultColor: r.co_resultColor,
+            created_at: r.co_created_at,
+            revealedServerSeed: seed && seed.pf_status === 'revealed' ? seed.pf_serverSeed : null,
+            hasSnapshot,
+            verification: verificationOf(r, hasSnapshot),
+        };
+    });
 };
 
 module.exports.HISTORY_MAX_LIMIT = HISTORY_MAX_LIMIT;

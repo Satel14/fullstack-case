@@ -373,6 +373,8 @@
         "colorNote": "The case contents, odds and prices are frozen at the moment of the open, so verifying from history reproduces both the item and its color even if the case or prices changed later.",
         "legacy": "Not verifiable",
         "legacyNote": "This open was made before the site started storing the case contents at open time, so it cannot be reproduced.",
+        "verifiableCurrent": "Verifiable against the current case",
+        "currentNote": "This open was made before the site started storing the case contents, but the current case still reproduces it, so it can be verified. The color is checked against current prices.",
         "seedMatches": "The server seed matches the hash published before the open",
         "seedMismatch": "The server seed does NOT match the hash published before the open",
         "matchesRecord": "The result matches the item that dropped",

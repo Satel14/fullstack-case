@@ -92,7 +92,7 @@ const ProvablyFair = () => {
             clientSeed: row.clientSeed,
             nonce: String(row.nonce),
             caseId: row.caseId,
-            openId: row.id,
+            openId: row.verification === 'snapshot' ? row.id : null,
         });
         setCalcResult(null);
     };
@@ -106,17 +106,20 @@ const ProvablyFair = () => {
         {
             title: t('provablyFair.status'),
             render: (_, r) => {
-                if (!r.hasSnapshot) {
+                if (r.verification === 'none') {
                     return <Tag title={t('provablyFair.legacyNote')}>{t('provablyFair.legacy')}</Tag>;
                 }
-                return r.revealedServerSeed
-                    ? <Tag color="green">{t('provablyFair.verifiable')}</Tag>
-                    : <Tag>{t('provablyFair.awaitingRotate')}</Tag>;
+                if (!r.revealedServerSeed) {
+                    return <Tag>{t('provablyFair.awaitingRotate')}</Tag>;
+                }
+                return r.verification === 'current'
+                    ? <Tag color="gold" title={t('provablyFair.currentNote')}>{t('provablyFair.verifiableCurrent')}</Tag>
+                    : <Tag color="green">{t('provablyFair.verifiable')}</Tag>;
             },
         },
         {
             title: '',
-            render: (_, r) => (r.revealedServerSeed && r.hasSnapshot
+            render: (_, r) => (r.revealedServerSeed && r.verification !== 'none'
                 ? <Button size="small" onClick={() => onVerifyRow(r)}>{t('provablyFair.verify')}</Button>
                 : null),
         },
@@ -149,9 +152,9 @@ const ProvablyFair = () => {
             <Table rowKey="id" dataSource={history} columns={columns} pagination={false} />
 
             <h3>{t('provablyFair.calculator')}</h3>
-            <Input placeholder={t('provablyFair.serverSeedPlaceholder')} value={calc.serverSeed} onChange={(e) => setCalc({ ...calc, serverSeed: e.target.value })} />
-            <Input placeholder={t('provablyFair.clientSeedPlaceholder')} value={calc.clientSeed} onChange={(e) => setCalc({ ...calc, clientSeed: e.target.value })} />
-            <Input placeholder={t('provablyFair.noncePlaceholder')} value={calc.nonce} onChange={(e) => setCalc({ ...calc, nonce: e.target.value })} />
+            <Input placeholder={t('provablyFair.serverSeedPlaceholder')} value={calc.serverSeed} onChange={(e) => setCalc({ ...calc, serverSeed: e.target.value, openId: null })} />
+            <Input placeholder={t('provablyFair.clientSeedPlaceholder')} value={calc.clientSeed} onChange={(e) => setCalc({ ...calc, clientSeed: e.target.value, openId: null })} />
+            <Input placeholder={t('provablyFair.noncePlaceholder')} value={calc.nonce} onChange={(e) => setCalc({ ...calc, nonce: e.target.value, openId: null })} />
             <Input placeholder={t('provablyFair.caseIdPlaceholder')} value={calc.caseId} onChange={(e) => setCalc({ ...calc, caseId: e.target.value, openId: null })} />
             <Button onClick={onCompute}>{t('provablyFair.compute')}</Button>
             {calcResult && (

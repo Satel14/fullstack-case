@@ -47,7 +47,8 @@ module.exports.getHistory = async (req, res) => {
     try {
         const { user_id } = req.user.profile;
         const { limit, offset } = req.query;
-        const data = await PFService.getHistory(user_id, limit, offset);
+        const itemHash = await RedisManager.getAllDataHashWithKey(ITEM_HASH).catch(() => null);
+        const data = await PFService.getHistory(user_id, limit, offset, itemHash);
         return res.status(200).json({ status: 200, data });
     } catch (e) {
         return res.status(400).json({ status: 400, message: e.message });
@@ -72,6 +73,7 @@ module.exports.verify = async (req, res) => {
                 return res.status(422).json({ status: 422, message: MESSAGE.PROVABLY_FAIR.NO_SNAPSHOT });
             }
             const result = deriveFromTable(serverSeed, clientSeed, nonce, JSON.parse(record.co_drawTable));
+            const inputsMatchRecord = clientSeed === record.co_clientSeed && nonce === record.co_nonce;
             return res.status(200).json({
                 status: 200,
                 data: {
@@ -79,7 +81,10 @@ module.exports.verify = async (req, res) => {
                     source: 'snapshot',
                     caseId: record.co_caseId,
                     seedMatches: sha256(serverSeed) === record.co_serverSeedHash,
-                    matchesRecord: result.itemId === record.co_resultItemId && result.color === record.co_resultColor,
+                    inputsMatchRecord,
+                    matchesRecord: inputsMatchRecord
+                        && result.itemId === record.co_resultItemId
+                        && result.color === record.co_resultColor,
                 },
             });
         }

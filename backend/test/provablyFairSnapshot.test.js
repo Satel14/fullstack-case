@@ -123,3 +123,68 @@ test('each open stores the draw table it was decided by, and verification by ope
     assert.strictEqual(byId[opens[1].id], true);
     assert.ok(history.every((h) => !('drawTable' in h)), 'history must not ship the draw tables');
 });
+
+const openThree = async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await sequelize.query(
+        "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES ('player', 'x', 'player@e.ua', 10000, 0, 1)",
+    );
+    await sequelize.query(
+        "INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) VALUES "
+        + "('dust2', 'DUST2', 100, 0, 1, 1, 0, 'weapon', -1)",
+    );
+    const allCases = require('../src/constant/cases/_all');
+    stubItemCache(allCases.dust2);
+    const CaseController = require('../src/controllers/case');
+    const opened = await respond(CaseController.openCaseById, {
+        body: { id: 'dust2', count: 3 },
+        user: { profile: { user_id: 1 } },
+    });
+    assert.strictEqual(opened.code, 200, JSON.stringify(opened.payload));
+    const [opens] = await sequelize.query('SELECT * FROM case_opens ORDER BY id');
+    const [[seed]] = await sequelize.query('SELECT serverSeed FROM provably_fair_seeds');
+    return { sequelize, opens, seed };
+};
+
+test('verification by openId never confirms inputs that are not that open\'s', async () => {
+    const { opens, seed } = await openThree();
+    const PFController = require('../src/controllers/provablyFair');
+    const open = opens[0];
+
+    const own = await respond(PFController.verify, {
+        body: { openId: open.id, serverSeed: seed.serverSeed, clientSeed: open.clientSeed, nonce: open.nonce },
+    });
+    assert.strictEqual(own.payload.data.inputsMatchRecord, true);
+    assert.strictEqual(own.payload.data.matchesRecord, true);
+
+    for (const body of [
+        { clientSeed: open.clientSeed, nonce: open.nonce + 1 },
+        { clientSeed: `${open.clientSeed}x`, nonce: open.nonce },
+    ]) {
+        const other = await respond(PFController.verify, {
+            body: { openId: open.id, serverSeed: seed.serverSeed, ...body },
+        });
+        assert.strictEqual(other.payload.data.inputsMatchRecord, false, JSON.stringify(body));
+        assert.strictEqual(other.payload.data.matchesRecord, false, JSON.stringify(body));
+    }
+});
+
+test('history tells snapshot, current-definition and unverifiable opens apart', async () => {
+    const { sequelize, opens } = await openThree();
+    const PFService = require('../src/services/provablyFair');
+    const allCases = require('../src/constant/cases/_all');
+    const otherItem = allCases.dust2.ITEMS.find((i) => i.id !== opens[2].resultItemId).id;
+
+    await sequelize.query('UPDATE case_opens SET drawTable = NULL WHERE id IN (?, ?)', { replacements: [opens[1].id, opens[2].id] });
+    await sequelize.query('UPDATE case_opens SET resultItemId = ? WHERE id = ?', { replacements: [otherItem, opens[2].id] });
+
+    const itemHash = await require('../src/redis/manager').getAllDataHashWithKey('item_hash');
+    const history = await PFService.getHistory(1, 10, 0, itemHash);
+    const byId = Object.fromEntries(history.map((h) => [h.id, h.verification]));
+
+    assert.strictEqual(byId[opens[0].id], 'snapshot');
+    assert.strictEqual(byId[opens[1].id], 'current');
+    assert.strictEqual(byId[opens[2].id], 'none');
+    assert.ok(history.every((h) => !('serverSeed' in h)), 'an unrevealed server seed must never reach the history');
+});
