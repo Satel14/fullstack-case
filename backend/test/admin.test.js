@@ -328,3 +328,69 @@ test('setRole rejects malformed input through its validator chain', async () => 
     const good = await runChain({ id: '2' }, { role: 1 });
     assert.ok(validationResult(good).isEmpty());
 });
+
+test('balance correction applies a delta, requires a reason, and refuses self and overdraft', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await makeUser(sequelize, { login: 'boss', role: ROLES.ADMINISTRATOR, balance: 500 });
+    await makeUser(sequelize, { login: 'target', balance: 100 });
+
+    const UsersController = require('../src/controllers/admin/users');
+    const call = (params, body, adminId) => new Promise((resolve) => {
+        const req = { params, body, user: { profile: { user_id: adminId } } };
+        const res = {
+            statusCode: null,
+            status(c) { this.statusCode = c; return this; },
+            json(payload) { resolve({ code: this.statusCode, payload }); },
+        };
+        UsersController.adjustBalance(req, res);
+    });
+
+    const noReason = await call({ id: '2' }, { delta: 50 }, 1);
+    assert.strictEqual(noReason.code, 422);
+
+    const selfAdjust = await call({ id: '1' }, { delta: 50, reason: 'nope' }, 1);
+    assert.strictEqual(selfAdjust.code, 422);
+
+    const overdraft = await call({ id: '2' }, { delta: -500, reason: 'too much' }, 1);
+    assert.strictEqual(overdraft.code, 422);
+
+    const credit = await call({ id: '2' }, { delta: 25.5, reason: 'compensation' }, 1);
+    assert.strictEqual(credit.code, 200);
+
+    const [rows] = await sequelize.query("SELECT balance FROM users WHERE login = 'target'");
+    assert.strictEqual(Number(rows[0].balance), 125.5);
+
+    const [history] = await sequelize.query("SELECT type, balanceChange, extraData FROM balance_history WHERE userId = 2");
+    assert.strictEqual(history.length, 1);
+    assert.strictEqual(history[0].type, 'admin_adjust');
+    assert.strictEqual(Number(history[0].balanceChange), 25.5);
+
+    const journal = await require('../src/services/adminAction').list({});
+    assert.strictEqual(journal[0].action, 'user.balance');
+    assert.strictEqual(journal[0].reason, 'compensation');
+    assert.strictEqual(journal[0].payload.delta, 25.5);
+});
+
+test('a failed balance correction leaves no trace', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await makeUser(sequelize, { login: 'boss', role: ROLES.ADMINISTRATOR });
+    await makeUser(sequelize, { login: 'target', balance: 10 });
+
+    const UsersController = require('../src/controllers/admin/users');
+    await new Promise((resolve) => {
+        const req = { params: { id: '2' }, body: { delta: -99, reason: 'overdraft' }, user: { profile: { user_id: 1 } } };
+        const res = { status(c) { this.statusCode = c; return this; }, json() { resolve(); } };
+        UsersController.adjustBalance(req, res);
+    });
+
+    const [balance] = await sequelize.query("SELECT balance FROM users WHERE login = 'target'");
+    assert.strictEqual(Number(balance[0].balance), 10);
+
+    const [history] = await sequelize.query('SELECT COUNT(*) AS n FROM balance_history');
+    assert.strictEqual(Number(history[0].n), 0);
+
+    const [journal] = await sequelize.query('SELECT COUNT(*) AS n FROM admin_actions');
+    assert.strictEqual(Number(journal[0].n), 0);
+});
