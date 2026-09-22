@@ -48,4 +48,14 @@ module.exports = {
         CLIENT_SEED_INVALID: 'Некоректний client seed',
         VERIFY_ERROR: 'Не вдалося перевірити результат',
     },
+    ADMIN: {
+        NOT_ADMIN: 'Ви не авторизовані',
+        BANNED: 'Ваш акаунт заблоковано',
+        REASON_REQUIRED: 'Вкажіть причину',
+        SELF_FORBIDDEN: 'Не можна змінювати власний акаунт',
+        NEGATIVE_BALANCE: 'Баланс не може бути відʼємним',
+        ROLE_INVALID: 'Невідома роль',
+        ROLE_ADMIN_FORBIDDEN: 'Роль адміністратора призначається лише через CLI',
+        USER_NOT_EXIST: 'Такого користувача не існує',
+    },
 }
