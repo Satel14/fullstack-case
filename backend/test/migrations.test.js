@@ -105,8 +105,130 @@ test('uniqueness migration refuses to run when duplicates exist', async () => {
     const migrator = createMigrator(sequelize, { quiet: true });
 
     await migrator.down();
+    await migrator.down();
     await sequelize.query("INSERT INTO users (login, email, role) VALUES ('same', 'a@e.ua', 1)");
     await sequelize.query("INSERT INTO users (login, email, role) VALUES ('same', 'b@e.ua', 1)");
 
     await assert.rejects(() => migrator.up(), /duplicate login/i);
+});
+
+test('uniqueness migration tolerates several NULL emails', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const { createMigrator } = require('../src/db/migrator');
+    const migrator = createMigrator(sequelize, { quiet: true });
+
+    await migrator.down();
+    await migrator.down();
+    await sequelize.query("INSERT INTO users (login, email, role) VALUES ('a', NULL, 1)");
+    await sequelize.query("INSERT INTO users (login, email, role) VALUES ('b', NULL, 1)");
+    await sequelize.query("INSERT INTO users (login, email, role) VALUES ('c', NULL, 1)");
+
+    await assert.doesNotReject(() => migrator.up());
+});
+
+const bonusHistoryIndexes = async (sequelize) => {
+    const [rows] = await sequelize.query('SHOW INDEX FROM bonus_history');
+    return rows.reduce((acc, r) => {
+        acc[r.Key_name] = acc[r.Key_name] || { unique: r.Non_unique === 0, columns: [] };
+        acc[r.Key_name].columns[r.Seq_in_index - 1] = r.Column_name;
+        return acc;
+    }, {});
+};
+
+const bonusHistoryIdExtra = async (sequelize) => {
+    const [rows] = await sequelize.query("SHOW COLUMNS FROM bonus_history WHERE Field = 'id'");
+    return rows[0].Extra || '';
+};
+
+test('bonus_history ends up unique on (userId, bonusId) with an auto-increment id', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+
+    const indexes = await bonusHistoryIndexes(sequelize);
+    assert.deepStrictEqual(indexes.bonus_history_user_id_bonus_id, {
+        unique: true,
+        columns: ['userId', 'bonusId'],
+    });
+    assert.strictEqual(indexes.bonus_history_user_id, undefined);
+    assert.match(await bonusHistoryIdExtra(sequelize), /auto_increment/i);
+});
+
+test('a bonus claim inserts without an explicit id and a duplicate claim is rejected', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+
+    await sequelize.query("INSERT INTO bonus_history (userId, bonusId) VALUES (1, 'daily')");
+    await assert.rejects(
+        () => sequelize.query("INSERT INTO bonus_history (userId, bonusId) VALUES (1, 'daily')"),
+        (e) => e.name === 'SequelizeUniqueConstraintError',
+    );
+    await assert.doesNotReject(
+        () => sequelize.query("INSERT INTO bonus_history (userId, bonusId) VALUES (2, 'daily')"),
+    );
+
+    const [rows] = await sequelize.query('SELECT id FROM bonus_history ORDER BY id');
+    const ids = rows.map((r) => r.id);
+    assert.strictEqual(ids.length, 2);
+    assert.ok(ids.every((id) => Number.isInteger(id) && id > 0), `ids were ${JSON.stringify(ids)}`);
+    assert.ok(ids[0] < ids[1]);
+});
+
+test('bonus-history parity converges from a chain-built database with the legacy index', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const parity = require('../migrations/20260922000300-bonus-history-parity');
+    const context = sequelize.getQueryInterface();
+
+    await parity.down({ context });
+    let indexes = await bonusHistoryIndexes(sequelize);
+    assert.ok(indexes.bonus_history_user_id, 'legacy index should exist after down()');
+    assert.strictEqual(indexes.bonus_history_user_id_bonus_id, undefined);
+    assert.doesNotMatch(await bonusHistoryIdExtra(sequelize), /auto_increment/i);
+
+    await parity.up({ context });
+    indexes = await bonusHistoryIndexes(sequelize);
+    assert.deepStrictEqual(indexes.bonus_history_user_id_bonus_id, {
+        unique: true,
+        columns: ['userId', 'bonusId'],
+    });
+    assert.strictEqual(indexes.bonus_history_user_id, undefined);
+    assert.match(await bonusHistoryIdExtra(sequelize), /auto_increment/i);
+});
+
+test('bonus-history parity is idempotent on an already-correct database', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const parity = require('../migrations/20260922000300-bonus-history-parity');
+    const context = sequelize.getQueryInterface();
+
+    await assert.doesNotReject(() => parity.up({ context }));
+    await assert.doesNotReject(() => parity.up({ context }));
+
+    const indexes = await bonusHistoryIndexes(sequelize);
+    assert.deepStrictEqual(indexes.bonus_history_user_id_bonus_id, {
+        unique: true,
+        columns: ['userId', 'bonusId'],
+    });
+    assert.match(await bonusHistoryIdExtra(sequelize), /auto_increment/i);
+});
+
+test('bonus-history parity converges from a live-shaped database missing only auto-increment', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const parity = require('../migrations/20260922000300-bonus-history-parity');
+    const context = sequelize.getQueryInterface();
+
+    await sequelize.query('ALTER TABLE bonus_history MODIFY `id` INT NOT NULL');
+    assert.doesNotMatch(await bonusHistoryIdExtra(sequelize), /auto_increment/i);
+
+    await parity.up({ context });
+
+    const indexes = await bonusHistoryIndexes(sequelize);
+    assert.deepStrictEqual(indexes.bonus_history_user_id_bonus_id, {
+        unique: true,
+        columns: ['userId', 'bonusId'],
+    });
+    assert.strictEqual(indexes.bonus_history_user_id, undefined);
+    assert.match(await bonusHistoryIdExtra(sequelize), /auto_increment/i);
 });
