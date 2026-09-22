@@ -11,10 +11,20 @@ import smiles from '../../data/smiles';
 import { Rules } from './Rules';
 import { getProfileFetch } from '../../store/actions/user';
 
-function TextFilter(value) {
-    if (!value) {
-        return;
+const MAX_MESSAGE_LENGTH = 500;
+
+const escapeHtml = (text) => text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+function TextFilter(raw) {
+    if (typeof raw !== 'string' || !raw) {
+        return '';
     }
+    let value = escapeHtml(raw);
     if (value.length > 2) {
         value = value.replace(
             /(https?:\/\/.*\.(?:png|jpg|jpeg|gif))/gm,
@@ -64,6 +74,7 @@ const CHAT_REJECTIONS = {
     banned: 'chat.banned',
     unauthorized: 'chat.notAuthorized',
     empty: 'chat.writeMessage',
+    tooLong: 'chat.tooLong',
 };
 
 export const Chat = ({ user, enabled, refreshProfile }) => {
@@ -262,6 +273,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                                 <input
                                     type="text"
                                     name="message"
+                                    maxLength={MAX_MESSAGE_LENGTH}
                                     value={msg}
                                     onChange={(e) => {
                                         setMsg(e.target.value);

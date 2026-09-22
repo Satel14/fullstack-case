@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { message } from 'antd';
 import { Chat } from './Chat';
@@ -16,8 +16,8 @@ jest.mock('../../store/actions/user', () => ({
 jest.mock('../../api/all/ws', () => ({
     __esModule: true,
     default: {
- emit: jest.fn(), on: jest.fn(), off: jest.fn(), connected: false,
-},
+        emit: jest.fn(), on: jest.fn(), off: jest.fn(), connect: jest.fn(), connected: false,
+    },
 }));
 
 const socket = require('../../api/all/ws').default;
@@ -80,4 +80,49 @@ test('any other refusal reports a server error without refreshing the profile', 
     expect(screen.queryByText('hello there')).toBeNull();
     expect(message.error).toHaveBeenCalledWith('common.serverError');
     expect(refreshProfile).not.toHaveBeenCalled();
+});
+
+const renderLive = () => {
+    const handlers = {};
+    socket.on.mockImplementation((event, handler) => { handlers[event] = handler; });
+    render(
+        <MemoryRouter>
+            <Chat user={user} enabled refreshProfile={jest.fn()} />
+        </MemoryRouter>,
+    );
+    return handlers;
+};
+
+test('markup in a chat message is shown as text, never executed', () => {
+    serverReplies({ ok: true });
+    const payload = '<img src=x onerror="window.__pwned=1"><b>bold</b>';
+
+    send(payload);
+
+    expect(document.querySelector('.chat-messages img[src="x"]')).toBeNull();
+    expect(document.querySelector('.chat-messages b')).toBeNull();
+    expect(screen.getByText(payload)).toBeInTheDocument();
+});
+
+test('a message that is not a string does not crash the chat', () => {
+    const handlers = renderLive();
+
+    act(() => {
+        handlers['chat messages']([
+            { login: 'attacker', id: 9, msg: ['a', 'b', 'c'] },
+            { login: 'attacker', id: 9, msg: { x: 1 } },
+            { login: 'player', id: 7, msg: 'still here' },
+        ]);
+    });
+
+    expect(screen.getByText('still here')).toBeInTheDocument();
+});
+
+test('smileys and image links still render after escaping', () => {
+    serverReplies({ ok: true });
+
+    send('hi EZ https://example.com/cat.png');
+
+    expect(document.querySelector('.chat-messages img[src="https://example.com/cat.png"]')).not.toBeNull();
+    expect(document.querySelectorAll('.chat-messages img').length).toBe(2);
 });

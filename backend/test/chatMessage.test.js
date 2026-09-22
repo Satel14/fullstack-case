@@ -74,3 +74,20 @@ test('an empty or whitespace message is refused', async () => {
         assert.strictEqual(saved.length, 0);
     }
 });
+
+test('only a string message within the length limit is accepted', async () => {
+    const { MAX_MESSAGE_LENGTH } = require('../src/socket/chatMessage');
+    for (const msg of [['a', 'b', 'c'], { text: 'hi' }, 12345, true, 'x'.repeat(MAX_MESSAGE_LENGTH + 1)]) {
+        const { saved, deps } = setup(player(ROLES.NORMAL));
+
+        const result = await postChatMessage({ id: 7 }, msg, deps);
+
+        assert.strictEqual(result.ok, false, `msg ${JSON.stringify(msg).slice(0, 40)}`);
+        assert.strictEqual(saved.length, 0);
+    }
+
+    const { saved, deps } = setup(player(ROLES.NORMAL));
+    const longest = await postChatMessage({ id: 7 }, 'x'.repeat(MAX_MESSAGE_LENGTH), deps);
+    assert.strictEqual(longest.ok, true);
+    assert.strictEqual(saved.length, 1);
+});

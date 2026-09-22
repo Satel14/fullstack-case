@@ -285,7 +285,8 @@
         "hide": "Hide",
         "banned": "You are banned from the chat",
         "notAuthorized": "You are not authorized",
-        "writeMessage": "Write a message"
+        "writeMessage": "Write a message",
+        "tooLong": "The message is too long (500 characters at most)"
     },
     "openCase": {
         "open": "Open",

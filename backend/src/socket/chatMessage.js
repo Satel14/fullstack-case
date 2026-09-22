@@ -1,6 +1,7 @@
 const ROLES = require('../constant/enums/roles');
 
 const CHAT_MUTED_ROLES = [ROLES.BANNED, ROLES.BANNED_CHAT];
+const MAX_MESSAGE_LENGTH = 500;
 
 const canPostInChat = (role) => !CHAT_MUTED_ROLES.includes(Number(role));
 
@@ -8,8 +9,11 @@ async function postChatMessage(userInfo, msg, { findUser, saveMessage, now = Dat
     if (!userInfo) {
         return { ok: false, reason: 'unauthorized' };
     }
-    if (!msg || !String(msg).trim()) {
+    if (typeof msg !== 'string' || !msg.trim()) {
         return { ok: false, reason: 'empty' };
+    }
+    if (msg.length > MAX_MESSAGE_LENGTH) {
+        return { ok: false, reason: 'tooLong' };
     }
 
     const user = await findUser(userInfo.id);
@@ -32,4 +36,4 @@ async function postChatMessage(userInfo, msg, { findUser, saveMessage, now = Dat
     return { ok: true, message };
 }
 
-module.exports = { canPostInChat, postChatMessage };
+module.exports = { MAX_MESSAGE_LENGTH, canPostInChat, postChatMessage };
