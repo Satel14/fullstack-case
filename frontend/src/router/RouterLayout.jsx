@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
-import map from 'lodash/map';
+import { BrowserRouter } from 'react-router-dom';
 import routes from './routes';
+import AppSwitch from './AppSwitch';
 import Layout from '../Layout.jsx';
 import { connect } from 'react-redux';
 import { isAuthorized } from '../helpers/Player';
-import { isAdmin } from '../helpers/permissions';
 import Banned from '../components/Banned';
 import ErrorPage from '../pages/ErrorPage';
 import { getProfileFetch } from '../store/actions/user';
@@ -59,53 +58,7 @@ class RouterLayout extends Component {
         return (
             <BrowserRouter>
                 <Layout>
-                    <Switch>
-                        {map(routes.public, (route) => (
-                            <Route
-                                key={`public-${route.path}`}
-                                path={route.path}
-                                exact={route.exact}
-                                component={(props) => (
-                                    // eslint-disable-next-line react/jsx-props-no-spreading
-                                    <route.component {...props} />
-                                )}
-                            />
-                        ))}
-
-                        {isAuthorized(user) && (
-                            <>
-                                {map(routes.private, (route) => (
-                                    <Route
-                                        key={`private-${route.path}`}
-                                        path={route.path}
-                                        exact={route.exact}
-                                        breadcrumb={route.breadcrumb}
-                                        component={(props) => (
-                                            // eslint-disable-next-line react/jsx-props-no-spreading
-                                            <route.component {...props} />
-                                        )}
-                                    />
-                                ))}
-                            </>
-                        )}
-
-                        {isAdmin(user) && (
-                            <>
-                                {map(routes.admin, (route) => (
-                                    <Route
-                                        key={`admin-${route.path}`}
-                                        path={route.path}
-                                        exact={route.exact}
-                                        component={(props) => (
-                                            // eslint-disable-next-line react/jsx-props-no-spreading
-                                            <route.component {...props} />
-                                        )}
-                                    />
-                                ))}
-                            </>
-                        )}
-                        <Route key="404-fallback" component={ErrorPage}/>
-                    </Switch>
+                    <AppSwitch routes={routes} user={user} fallback={ErrorPage}/>
                 </Layout>
             </BrowserRouter>
         );
