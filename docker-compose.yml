@@ -45,6 +45,12 @@ services:
       - private
       - public
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
 
   backend:
     build:
@@ -52,6 +58,7 @@ services:
         - NODE_ENV=production
       context: backend
     command: sh -c "npm run migrate && npm start"
+    restart: on-failure
     container_name: fullstack_case_backend
     environment:
       <<: *common-variables
@@ -69,8 +76,10 @@ services:
     networks:
       - private
     depends_on:
-      - redis
-      - mysql-db
+      redis:
+        condition: service_started
+      mysql-db:
+        condition: service_healthy
 
   frontend:
     stdin_open: true
