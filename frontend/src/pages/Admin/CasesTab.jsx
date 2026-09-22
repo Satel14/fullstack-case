@@ -45,11 +45,15 @@ const CasesTab = () => {
         }
         setSaving(row.case_id);
         try {
-            await updateAdminCase(row.case_id, payload);
+            const res = await updateAdminCase(row.case_id, payload);
+            setCases((prev) => prev.map((item) => (item.case_id === row.case_id ? res.data : item)));
+            setEdits((prev) => {
+                const next = { ...prev };
+                delete next[row.case_id];
+                return next;
+            });
             openNotification('success', t('admin.cases.saved'), row.case_id);
-            await load();
         } catch (e) {
-            // the api layer already surfaced the error
         } finally {
             setSaving(null);
         }
