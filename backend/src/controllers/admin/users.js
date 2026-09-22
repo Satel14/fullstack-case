@@ -8,6 +8,7 @@ const BalanceHistoryService = require('../../services/balanceHistory');
 const BalanceHistoryEnum = require('../../constant/enums/balance').BalanceHistory;
 
 const ASSIGNABLE_ROLES = [ROLES.BANNED, ROLES.BANNED_CHAT, ROLES.NORMAL, ROLES.YOUTUBER, ROLES.STREAMER, ROLES.FAMOUS];
+const BALANCE_DELTA_LIMIT = 1000000;
 
 module.exports.list = async (req, res) => {
     try {
@@ -74,10 +75,14 @@ module.exports.adjustBalance = async (req, res) => {
 
         const targetId = parseInt(req.params.id, 10);
         const adminId = req.user.profile.user_id;
-        const delta = Number(req.body.delta);
+        const rawDelta = Number(req.body.delta);
+        const delta = Math.round(rawDelta * 100) / 100;
         const reason = typeof req.body.reason === 'string' ? req.body.reason.trim() : '';
 
-        if (!Number.isFinite(delta) || delta === 0) {
+        if (!Number.isFinite(delta) || delta === 0 || delta !== rawDelta) {
+            return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
+        }
+        if (delta > BALANCE_DELTA_LIMIT || delta < -BALANCE_DELTA_LIMIT) {
             return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
         }
         if (!reason) {
@@ -92,7 +97,6 @@ module.exports.adjustBalance = async (req, res) => {
             return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.USER_NOT_EXIST });
         }
 
-        let resulting;
         await sequelize.transaction(async (t) => {
             const current = await UserService.getBalanceByUserId(targetId, {
                 transaction: t,
@@ -120,10 +124,10 @@ module.exports.adjustBalance = async (req, res) => {
                 },
                 { transaction: t },
             );
-            resulting = next;
         });
 
-        return res.status(200).json({ status: 200, balance: resulting });
+        const resulting = await UserService.getBalanceByUserId(targetId);
+        return res.status(200).json({ status: 200, balance: Number(resulting) });
     } catch (e) {
         if (e && e.code === 'NEGATIVE_BALANCE') {
             return res.status(422).json({ status: 422, message: e.message });
@@ -144,7 +148,7 @@ module.exports.validate = (method) => {
         case 'adjustBalance': {
             return [
                 param('id').exists().isInt(),
-                body('delta').exists().isFloat(),
+                body('delta').exists().isFloat({ min: -BALANCE_DELTA_LIMIT, max: BALANCE_DELTA_LIMIT }),
                 body('reason').exists().isString().isLength({ min: 1, max: 255 }),
             ];
         }

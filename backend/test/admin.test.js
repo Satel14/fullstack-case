@@ -394,3 +394,69 @@ test('a failed balance correction leaves no trace', async () => {
     const [journal] = await sequelize.query('SELECT COUNT(*) AS n FROM admin_actions');
     assert.strictEqual(Number(journal[0].n), 0);
 });
+
+test('a failure after the balance write rolls back every table', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await makeUser(sequelize, { login: 'boss', role: ROLES.ADMINISTRATOR });
+    await makeUser(sequelize, { login: 'target', balance: 100 });
+
+    const AdminActionService = require('../src/services/adminAction');
+    const original = AdminActionService.record;
+    AdminActionService.record = async () => { throw new Error('journal down'); };
+
+    try {
+        const UsersController = require('../src/controllers/admin/users');
+        await new Promise((resolve) => {
+            const req = { params: { id: '2' }, body: { delta: 25, reason: 'test' }, user: { profile: { user_id: 1 } } };
+            const res = { status(c) { this.statusCode = c; return this; }, json() { resolve(); } };
+            UsersController.adjustBalance(req, res);
+        });
+    } finally {
+        AdminActionService.record = original;
+    }
+
+    const [balance] = await sequelize.query("SELECT balance FROM users WHERE login = 'target'");
+    assert.strictEqual(Number(balance[0].balance), 100);
+
+    const [history] = await sequelize.query('SELECT COUNT(*) AS n FROM balance_history');
+    assert.strictEqual(Number(history[0].n), 0);
+
+    const [journal] = await sequelize.query('SELECT COUNT(*) AS n FROM admin_actions');
+    assert.strictEqual(Number(journal[0].n), 0);
+});
+
+test('adjustBalance rejects malformed input through its validator chain', async () => {
+    const UsersController = require('../src/controllers/admin/users');
+    const { validationResult } = require('express-validator');
+
+    const runChain = async (params, body) => {
+        const req = { params, body, user: { profile: { user_id: 1 } } };
+        for (const validator of UsersController.validate('adjustBalance')) {
+            await validator.run(req);
+        }
+        return req;
+    };
+
+    const badId = await runChain({ id: 'abc' }, { delta: 25, reason: 'ok' });
+    assert.ok(!validationResult(badId).isEmpty());
+
+    const missingReason = await runChain({ id: '2' }, { delta: 25 });
+    assert.ok(!validationResult(missingReason).isEmpty());
+
+    const tooLarge = await runChain({ id: '2' }, { delta: 2000000, reason: 'ok' });
+    assert.ok(!validationResult(tooLarge).isEmpty());
+
+    const badResult = await new Promise((resolve) => {
+        const res = {
+            statusCode: null,
+            status(c) { this.statusCode = c; return this; },
+            json(payload) { resolve({ code: this.statusCode, payload }); },
+        };
+        UsersController.adjustBalance(badId, res);
+    });
+    assert.strictEqual(badResult.code, 422);
+
+    const good = await runChain({ id: '2' }, { delta: 25, reason: 'ok' });
+    assert.ok(validationResult(good).isEmpty());
+});
