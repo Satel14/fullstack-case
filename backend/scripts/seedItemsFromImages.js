@@ -1,5 +1,6 @@
 const Item = require('../src/models/item');
 const sequelize = require('../src/config/db');
+const { assertMigrationsApplied } = require('../src/db/migrator');
 const { enumerateItems } = require('./lib/enumerateItems');
 
 async function seedDatabase() {
@@ -8,8 +9,8 @@ async function seedDatabase() {
         const items = enumerateItems();
         console.log(`✓ Found ${items.length} items`);
 
-        await sequelize.sync();
-        console.log('✓ Database synced');
+        await assertMigrationsApplied(sequelize);
+        console.log('✓ Migrations verified');
 
         let successCount = 0;
         for (const item of items) {

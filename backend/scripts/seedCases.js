@@ -1,6 +1,7 @@
 const Category = require('../src/models/category');
 const Case = require('../src/models/case');
 const sequelize = require('../src/config/db');
+const { assertMigrationsApplied } = require('../src/db/migrator');
 const allCases = require('../src/constant/cases/_all');
 const path = require('path');
 const casePricesPath = path.join(__dirname, 'data', 'casePrices.json');
@@ -10,8 +11,8 @@ async function seedCases() {
     try {
         console.log('🚀 Starting cases and categories seed...');
 
-        await sequelize.sync();
-        console.log('✓ Database synced for cases');
+        await assertMigrationsApplied(sequelize);
+        console.log('✓ Migrations verified for cases');
 
         // Create default categories
         const categories = [
