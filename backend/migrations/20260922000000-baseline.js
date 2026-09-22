@@ -26,7 +26,10 @@ module.exports = {
             bonusId: { type: DataTypes.STRING },
             created_at: { type: DataTypes.DATE },
         });
-        await queryInterface.addIndex('bonus_history', ['userId']);
+        await queryInterface.addIndex('bonus_history', ['userId', 'bonusId'], {
+            unique: true,
+            name: 'bonus_history_user_id_bonus_id',
+        });
 
         await queryInterface.createTable('case_opens', {
             id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false },
