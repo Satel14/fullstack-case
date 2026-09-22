@@ -38,7 +38,11 @@ test('a player who is not an administrator gets not-found on the admin page', ()
 });
 
 test('a guest gets not-found on private and admin pages', () => {
-    renderAt('/inventory', guest);
+    const { unmount } = renderAt('/inventory', guest);
+    expect(screen.getByText('not-found')).toBeInTheDocument();
+    unmount();
+
+    renderAt('/admin', guest);
     expect(screen.getByText('not-found')).toBeInTheDocument();
 });
 

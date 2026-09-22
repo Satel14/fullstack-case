@@ -79,9 +79,9 @@ class Deposit extends Component {
         this.props.history.push('/payment', { amount });
     }
 
-    getSettingsPage() {
+    getPromocodePage() {
         const { history } = this.props;
-        history.push('/settings');
+        history.push('/promocode');
     }
 
     render() {
@@ -165,7 +165,7 @@ class Deposit extends Component {
                                         type="primary"
                                         danger
                                         className="color-orange"
-                                        onClick={() => this.getSettingsPage()}
+                                        onClick={() => this.getPromocodePage()}
                                     >
                                         {t('deposit.promocodeBtn')}
                                     </Button>

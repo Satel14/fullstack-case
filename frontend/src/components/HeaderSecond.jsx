@@ -121,7 +121,7 @@ class HeaderSecond extends React.Component {
             {
                 key: '8',
                 icon: <UserOutlined />,
-                label: <Link to="/settings">{t('header.promocode')}</Link>,
+                label: <Link to="/promocode">{t('header.promocode')}</Link>,
             },
             {
                 key: 'logout',

@@ -25,6 +25,12 @@ export default {
             path: '/settings',
             exact: true,
             layout: Layout,
+            component: Settings,
+        },
+        {
+            path: '/promocode',
+            exact: true,
+            layout: Layout,
             component: Promocode,
         },
         {
@@ -38,12 +44,6 @@ export default {
             exact: true,
             layout: Layout,
             component: PaymentGateway,
-        },
-        {
-            path: '/Settings',
-            exact: true,
-            layout: Layout,
-            component: Settings,
         },
         {
             path: '/provably-fair',
