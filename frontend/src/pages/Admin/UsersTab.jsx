@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import { getAdminUsers, setUserRole } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
 import roles from '../../enum/role';
+import BalanceModal from './BalanceModal';
 
 const { Option } = Select;
 const PAGE_SIZE = 20;
@@ -28,6 +29,7 @@ const UsersTab = ({ user }) => {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(false);
+    const [balanceTarget, setBalanceTarget] = useState(null);
 
     const load = async (nextPage = page, nextSearch = search) => {
         setLoading(true);
@@ -98,6 +100,19 @@ const UsersTab = ({ user }) => {
                 );
             },
         },
+        {
+            title: '',
+            key: 'balanceAction',
+            render: (row) => (
+                <Button
+                    size="small"
+                    disabled={Number(row.user_id) === Number(user && user.id)}
+                    onClick={() => setBalanceTarget(row)}
+                >
+                    {t('admin.balance.action')}
+                </Button>
+            ),
+        },
     ];
 
     return (
@@ -120,6 +135,12 @@ const UsersTab = ({ user }) => {
                     total: count,
                     onChange: (next) => { setPage(next); load(next); },
                 }}
+            />
+            <BalanceModal
+                user={balanceTarget}
+                visible={balanceTarget !== null}
+                onClose={() => setBalanceTarget(null)}
+                onDone={() => { setBalanceTarget(null); load(); }}
             />
         </Space>
     );

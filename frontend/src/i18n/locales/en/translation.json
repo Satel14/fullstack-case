@@ -386,6 +386,15 @@
             "searchPlaceholder": "Search by login or email",
             "roleChanged": "Role changed",
             "roleChangedReason": "Role changed from the admin panel"
+        },
+        "balance": {
+            "action": "Balance",
+            "title": "Balance correction",
+            "delta": "Amount (+ or −)",
+            "reason": "Reason",
+            "review": "Review",
+            "confirm": "Confirm",
+            "confirmTitle": "Confirm the correction"
         }
     }
 }
