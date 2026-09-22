@@ -41,13 +41,14 @@ test('baseline snapshots the schema including its current defects', async () => 
     await migrator.down({ to: 0 });
     await migrator.up({ to: '20260922000000-baseline.js' });
 
-    const [users] = await sequelize.query("SHOW COLUMNS FROM users WHERE Field IN ('balance', 'rank', 'email')");
+    const [users] = await sequelize.query("SHOW COLUMNS FROM users WHERE Field IN ('balance', 'rank', 'email', 'login')");
     const byField = Object.fromEntries(users.map((c) => [c.Field, c]));
 
     assert.match(byField.balance.Type, /decimal\(10,0\)/i);
     assert.match(byField.rank.Type, /decimal\(10,0\)/i);
     assert.match(byField.email.Type, /text/i);
     assert.strictEqual(byField.email.Key, '');
+    assert.strictEqual(byField.login.Key, '');
 
     const [history] = await sequelize.query("SHOW COLUMNS FROM balance_history WHERE Field = 'balanceChange'");
     assert.match(history[0].Type, /int/i);
