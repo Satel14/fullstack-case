@@ -395,6 +395,14 @@
             "review": "Review",
             "confirm": "Confirm",
             "confirmTitle": "Confirm the correction"
+        },
+        "journal": {
+            "when": "When",
+            "admin": "Admin",
+            "action": "Action",
+            "target": "Target",
+            "reason": "Reason",
+            "payload": "Details"
         }
     }
 }

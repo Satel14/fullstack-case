@@ -3,6 +3,7 @@ import { Tabs } from 'antd';
 import { useTranslation } from 'react-i18next';
 import CasesTab from './CasesTab';
 import UsersTab from './UsersTab';
+import JournalTab from './JournalTab';
 
 const { TabPane } = Tabs;
 
@@ -19,7 +20,9 @@ const Admin = () => {
                 <TabPane tab={t('admin.tabs.users')} key="users">
                     <UsersTab />
                 </TabPane>
-                <TabPane tab={t('admin.tabs.journal')} key="journal" />
+                <TabPane tab={t('admin.tabs.journal')} key="journal">
+                    <JournalTab />
+                </TabPane>
             </Tabs>
         </div>
     );
