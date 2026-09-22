@@ -45,15 +45,13 @@ services:
       - private
       - public
     restart: unless-stopped
-    volumes:
-      - ./mysql/case_db.sql:/docker-entrypoint-initdb.d/case_db.sql
 
   backend:
     build:
       args:
         - NODE_ENV=production
       context: backend
-    command: npm start
+    command: sh -c "npm run migrate && npm start"
     container_name: fullstack_case_backend
     environment:
       <<: *common-variables
@@ -62,6 +60,8 @@ services:
       - "3003:3003"
     volumes:
       - ./backend/src:/code/src:ro
+      - ./backend/migrations:/code/migrations:ro
+      - ./backend/scripts:/code/scripts:ro
       - ./backend/package.json:/code/package.json
       - ./backend/package-lock.json:/code/package-lock.json
       - ./frontend/public:/frontend/public:ro

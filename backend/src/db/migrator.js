@@ -12,4 +12,12 @@ const createMigrator = (sequelize, { quiet = false } = {}) => new Umzug({
     logger: quiet ? undefined : console,
 });
 
-module.exports = { createMigrator, MIGRATIONS_DIR };
+const assertMigrationsApplied = async (sequelize) => {
+    const pending = await createMigrator(sequelize, { quiet: true }).pending();
+    if (pending.length > 0) {
+        const names = pending.map((m) => m.name).join(', ');
+        throw new Error(`Database has ${pending.length} pending migration(s): ${names}. Run "npm run migrate".`);
+    }
+};
+
+module.exports = { createMigrator, assertMigrationsApplied, MIGRATIONS_DIR };
