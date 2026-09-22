@@ -185,3 +185,60 @@ test('the admin router is mounted in routes.js', () => {
     const source = fs.readFileSync(path.join(__dirname, '..', 'routes.js'), 'utf8');
     assert.match(source, /require\(["'].\/src\/routes\/admin["']\)\(app\)/);
 });
+
+test('case update writes the case and journals the change', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await makeUser(sequelize, { login: 'boss', role: ROLES.ADMINISTRATOR });
+
+    await sequelize.query(
+        "INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) VALUES ('t1', 'T', 100, 0, 1, 1, 0, 'weapon', -1)",
+    );
+
+    const CaseService = require('../src/services/case');
+    const AdminActionService = require('../src/services/adminAction');
+
+    const updated = await CaseService.updateCaseFields('t1', { case_price: 250, case_published: 0 });
+    assert.strictEqual(Number(updated.case_price), 250);
+    assert.strictEqual(Number(updated.case_published), 0);
+
+    await AdminActionService.record({
+        adminId: 1, action: 'case.update', targetType: 'case', targetId: 't1',
+        payload: { before: { price: 100 }, after: { price: 250 } }, reason: 'rebalance',
+    });
+
+    const journal = await AdminActionService.list({});
+    assert.strictEqual(journal.length, 1);
+    assert.strictEqual(journal[0].action, 'case.update');
+    assert.strictEqual(journal[0].targetId, 't1');
+    assert.deepStrictEqual(journal[0].payload.after, { price: 250 });
+});
+
+test('case update ignores fields that are not editable', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await sequelize.query(
+        "INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) VALUES ('t2', 'T', 100, 0, 1, 1, 7, 'weapon', -1)",
+    );
+
+    const CaseService = require('../src/services/case');
+    const updated = await CaseService.updateCaseFields('t2', { case_openedCount: 999, case_price: 150 });
+
+    assert.strictEqual(Number(updated.case_openedCount), 7);
+    assert.strictEqual(Number(updated.case_price), 150);
+});
+
+test('getAllCases filters unpublished by default and includes them on request', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await sequelize.query(
+        "INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) VALUES ('pub', 'P', 10, 0, 1, 1, 0, 'weapon', -1), ('unpub', 'U', 20, 0, 1, 0, 0, 'weapon', -1)",
+    );
+
+    const CaseService = require('../src/services/case');
+    const publicOnly = await CaseService.getAllCases();
+    assert.deepStrictEqual(publicOnly.map((c) => c.case_id), ['pub']);
+
+    const all = await CaseService.getAllCases(true);
+    assert.deepStrictEqual(all.map((c) => c.case_id).sort(), ['pub', 'unpub']);
+});
