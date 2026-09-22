@@ -12,11 +12,13 @@ import {
     UserOutlined,
     SafetyCertificateOutlined,
     AppstoreOutlined,
+    SettingOutlined,
 } from '@ant-design/icons';
 
 import Socials from './mini/Socials';
 import LanguageSwitcher from './LanguageSwitcher';
 import { isAuthorized } from '../helpers/Player';
+import { isAdmin } from '../helpers/permissions';
 
 const mapStateToProps = (state) => ({
     user: state.user,
@@ -77,6 +79,14 @@ class MenuLayoutSlider extends React.Component {
                 key: '6',
                 label: <Link to="/login">{t('menu.login')}</Link>,
                 icon: <UserOutlined />,
+            });
+        }
+
+        if (isAdmin(user)) {
+            defaultMenu.push({
+                key: 'admin',
+                label: <Link to="/admin">{t('admin.title')}</Link>,
+                icon: <SettingOutlined />,
             });
         }
 

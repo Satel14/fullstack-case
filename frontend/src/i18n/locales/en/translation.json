@@ -358,5 +358,13 @@
         "colorNote": "Rarity and item are fully reproducible from the seeds. Color is advisory: it depends on current prices and may differ on re-verification if prices changed.",
         "revealedServerSeedNote": "Previous seed — for verifying past opens (not the active one).",
         "verifyFailed": "Verification failed. Fill all fields correctly and make sure the case ID exists."
+    },
+    "admin": {
+        "title": "Admin panel",
+        "tabs": {
+            "cases": "Cases",
+            "users": "Users",
+            "journal": "Action log"
+        }
     }
 }
