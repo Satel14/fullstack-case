@@ -7,6 +7,7 @@ import Case from '../pages/Case';
 import ErrorPage from '../pages/ErrorPage';
 import Login from '../pages/Auth/Login.jsx';
 import Registration from '../pages/Auth/Registration.jsx';
+import ResetPassword from '../pages/Auth/ResetPassword';
 import Promocode from '../pages/Promocode';
 import Profile from '../pages/Profile';
 import Deposit from '../pages/Deposit';
@@ -82,6 +83,12 @@ export default {
             path: '/registration',
             layout: Layout,
             component: Registration,
+            exact: true,
+        },
+        {
+            path: '/reset-password',
+            layout: Layout,
+            component: ResetPassword,
             exact: true,
         },
         {

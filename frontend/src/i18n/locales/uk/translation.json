@@ -86,6 +86,20 @@
             "emailRequired": "Введіть почту",
             "successTitle": "Успішно",
             "errorTitle": "Помилка"
+        },
+        "reset": {
+            "title": "Новий пароль",
+            "passwordLabel": "Новий пароль",
+            "passwordRequired": "Введіть новий пароль",
+            "passwordLength": "Пароль має містити від 6 до 72 символів",
+            "confirmLabel": "Повторіть пароль",
+            "confirmRequired": "Повторіть пароль",
+            "mismatch": "Паролі не збігаються",
+            "submit": "Змінити пароль",
+            "successTitle": "Пароль змінено",
+            "errorTitle": "Не вдалося змінити пароль",
+            "missingToken": "Посилання неповне. Відкрийте його з листа ще раз або запросіть нове.",
+            "toLogin": "До входу"
         }
     },
     "error": {

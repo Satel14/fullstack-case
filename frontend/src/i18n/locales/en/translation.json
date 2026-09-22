@@ -86,6 +86,20 @@
             "emailRequired": "Enter your email",
             "successTitle": "Success",
             "errorTitle": "Error"
+        },
+        "reset": {
+            "title": "New password",
+            "passwordLabel": "New password",
+            "passwordRequired": "Enter a new password",
+            "passwordLength": "The password must be 6 to 72 characters long",
+            "confirmLabel": "Repeat the password",
+            "confirmRequired": "Repeat the password",
+            "mismatch": "The passwords do not match",
+            "submit": "Change password",
+            "successTitle": "Password changed",
+            "errorTitle": "Could not change the password",
+            "missingToken": "The link is incomplete. Open it from the email again or request a new one.",
+            "toLogin": "Back to sign in"
         }
     },
     "error": {

@@ -27,6 +27,7 @@ test('migrations create every expected table', async () => {
         'insider_prices',
         'items',
         'modules',
+        'password_resets',
         'promocodes',
         'provably_fair_seeds',
         'sequelizemeta',

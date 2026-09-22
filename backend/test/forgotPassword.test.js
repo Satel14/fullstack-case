@@ -12,10 +12,10 @@ test.after(async () => {
 });
 
 const forgotPasswordHandler = () => {
-    let handler;
-    const app = { post: (path, limiter, fn) => { handler = fn; } };
+    const handlers = {};
+    const app = { post: (path, ...chain) => { handlers[path] = chain[chain.length - 1]; } };
     require('../src/auth/forgotPassword')(app);
-    return handler;
+    return handlers['/api/profile/forgotpassword'];
 };
 
 const call = (handler, body) => new Promise((resolve) => {

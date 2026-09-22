@@ -36,6 +36,8 @@ const DOWN_EFFECTS = {
     '20260922000500-balance-admin-adjust.js':
         'removes admin_adjust from the balance_history.type ENUM — it refuses while any balance_history row '
         + 'still uses that type, so revert only after those rows are gone',
+    '20260922000600-password-resets.js':
+        'drops the password_resets table, so every outstanding password reset link stops working',
 };
 
 const EXPECTED_COLUMNS = [

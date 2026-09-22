@@ -116,7 +116,7 @@ test('admin_adjust cannot be removed while rows still use it', async () => {
         "INSERT INTO balance_history (userId, type, balanceChange, extraData, created_at) VALUES (1, 'admin_adjust', 5.00, 'test', NOW())",
     );
 
-    await assert.rejects(() => migrator.down(), /admin_adjust/i);
+    await assert.rejects(() => migrator.down({ to: '20260922000500-balance-admin-adjust.js' }), /admin_adjust/i);
 
     const [type] = await sequelize.query("SHOW COLUMNS FROM balance_history WHERE Field = 'type'");
     assert.match(type[0].Type, /admin_adjust/);
@@ -128,7 +128,7 @@ test('admin_adjust is removed cleanly when nothing uses it', async () => {
     const { createMigrator } = require('../src/db/migrator');
     const migrator = createMigrator(sequelize, { quiet: true });
 
-    await migrator.down();
+    await migrator.down({ to: '20260922000500-balance-admin-adjust.js' });
 
     const [type] = await sequelize.query("SHOW COLUMNS FROM balance_history WHERE Field = 'type'");
     assert.doesNotMatch(type[0].Type, /admin_adjust/);

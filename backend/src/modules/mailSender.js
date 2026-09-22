@@ -38,13 +38,15 @@ module.exports = {
                    <p><strong>Ваш логін:</strong> ${data.login}</p>`,
         }, 'Welcome email sent via Resend:', 'Failed to send Resend welcome email:');
     },
-    forgotPassword(mailTo, data) {
+    passwordResetLink(mailTo, data) {
         send({
             to: mailTo,
             subject: 'Відновлення доступу',
             html: `<h1>Відновлення пароля</h1>
                    <p><strong>Ваш логін:</strong> ${data.login}</p>
-                   <p><strong>Ваш пароль:</strong> ${data.password}</p>`,
+                   <p>Щоб задати новий пароль, перейдіть за посиланням (діє ${data.minutes} хв):</p>
+                   <p><a href="${data.link}">${data.link}</a></p>
+                   <p>Якщо ви не просили змінити пароль, просто проігноруйте цей лист — ваш пароль не зміниться.</p>`,
         }, 'Recovery email sent via Resend:', 'Error sending recovery email:');
     },
 };
