@@ -16,10 +16,15 @@ const getHeaders = async () => {
 }
 
 const endSessionIfRevoked = (result, headers) => {
-    if (result.status === 401 && headers.Authorization) {
-        localStorage.removeItem('token');
-        window.location.href = '/';
+    if (result.status !== 401 || !headers.Authorization) {
+        return;
     }
+    const sentToken = headers.Authorization.slice('Bearer '.length);
+    if (localStorage.getItem('token') !== sentToken) {
+        return;
+    }
+    localStorage.removeItem('token');
+    window.location.reload();
 };
 
 const errorPayload = async (result) => {

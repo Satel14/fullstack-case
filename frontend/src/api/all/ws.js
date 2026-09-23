@@ -16,9 +16,20 @@ const ws = io(WS_URL, {
     },
 });
 
+const RECONNECT_FALLBACK_MS = 1000;
+
 export const reconnectSocket = () => {
+    if (!ws.connected) {
+        ws.connect();
+        return;
+    }
+    ws.io.once('close', () => ws.connect());
     ws.disconnect();
-    ws.connect();
+    setTimeout(() => {
+        if (!ws.connected) {
+            ws.connect();
+        }
+    }, RECONNECT_FALLBACK_MS);
 };
 
 export default ws;

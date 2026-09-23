@@ -4,6 +4,16 @@ const { postChatMessage } = require('./chatMessage');
 
 let ioInstance = null;
 
+const onUserConnected = (socket, usersConnected) => async () => {
+    try {
+        socket.emit('user-on', Array.from(usersConnected.keys()));
+        const lastMessages = await ChatService.get();
+        socket.emit('chat messages', lastMessages);
+    } catch (e) {
+        console.error('[chat] user connected error:', e.message);
+    }
+};
+
 module.exports = function (server) {
     const io = require('socket.io')(server, {
         cors: {
@@ -44,15 +54,7 @@ module.exports = function (server) {
     io.on('connection', (socket) => {
         const { id } = socket.client;
 
-        socket.on('user connected', async () => {
-            try {
-                io.emit('user-on', Array.from(usersConnected.keys()));
-                const lastMessages = await ChatService.get();
-                io.emit('chat messages', lastMessages);
-            } catch (e) {
-                console.error('[chat] user connected error:', e.message);
-            }
-        });
+        socket.on('user connected', onUserConnected(socket, usersConnected));
 
         socket.on('new-user', async () => {
             if (!socket.userInfo) {
@@ -99,3 +101,4 @@ module.exports = function (server) {
 }
 
 module.exports.getIo = () => ioInstance;
+module.exports.onUserConnected = onUserConnected;

@@ -155,3 +155,25 @@ test('a message the server never acknowledges is reported, and cannot be sent tw
         jest.useRealTimers();
     }
 });
+
+test('a late acknowledgement of a timed-out message does not swallow the result of the next message', () => {
+    jest.useFakeTimers();
+    try {
+        const acks = [];
+        socket.emit.mockImplementation((event, payload, ack) => { acks.push(ack); });
+
+        const { input } = send('first');
+        act(() => { jest.advanceTimersByTime(10000); });
+        fireEvent.change(input, { target: { value: 'second' } });
+        fireEvent.submit(input.closest('form'));
+        expect(socket.emit).toHaveBeenCalledTimes(2);
+
+        act(() => { acks[0]({ ok: true }); });
+        act(() => { acks[1]({ ok: false, reason: 'banned' }); });
+
+        expect(message.error).toHaveBeenCalledWith('chat.banned');
+        expect(screen.queryByText('second')).toBeNull();
+    } finally {
+        jest.useRealTimers();
+    }
+});

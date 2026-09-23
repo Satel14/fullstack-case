@@ -204,16 +204,19 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             time: Math.round(Date.now() / 1000)
         };
 
-        pendingAck.current = setTimeout(() => {
-            pendingAck.current = null;
-            message.error(t('common.serverError'));
+        const timer = setTimeout(() => {
+            if (pendingAck.current === timer) {
+                pendingAck.current = null;
+                message.error(t('common.serverError'));
+            }
         }, ACK_TIMEOUT_MS);
+        pendingAck.current = timer;
 
         socket.emit("chat message", outgoing, (response) => {
-            if (!pendingAck.current) {
+            if (pendingAck.current !== timer) {
                 return;
             }
-            clearTimeout(pendingAck.current);
+            clearTimeout(timer);
             pendingAck.current = null;
 
             if (response && response.ok) {

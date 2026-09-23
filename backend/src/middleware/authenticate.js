@@ -11,7 +11,8 @@ module.exports = {
             console.log('[AUTH DEBUG] passport callback, err:', err, 'user:', !!user);
 
             if (err) {
-                res.status(err.statusCode || 401).json({ error: err.toString() });
+                console.error('[AUTH DEBUG] session check failed:', err);
+                res.status(503).json({ message: MESSAGE.AUTH.SESSION_CHECK_FAILED });
                 return;
             }
 
