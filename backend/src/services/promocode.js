@@ -29,32 +29,3 @@ module.exports.usePromocode = async (code, userId, options = {}) => {
         throw Error(e.message);
     }
 };
-
-
-module.exports.deleteUsedPromocodesOfUser = async (userId) => {
-    try {
-        const data = await Promocode.findAll();
-        const promises = [];
-        // eslint-disable-next-line lodash/prefer-lodash-method
-        data.forEach((element) => {
-            let promo = element.dataValues;
-            let code = promo.promo_code;
-
-            const usedIds = Array.isArray(promo.promo_used_ids)
-            ? promo.promo_used_ids
-            : JSON.parse(promo.promo_used_ids || '[]');
-            if (usedIds.includes(userId)) {
-                let filtered = usedIds.filter((id)=> id !== userId);
-                promises.push(
-                    Promocode.update({ promo_used_ids: filtered }, { where: { promo_code: code } })
-                );
-            }
-        });
-
-        await Promise.all(promises);
-
-        return true;
-    } catch (e) {
-        throw Error(e.message);
-    }
-};

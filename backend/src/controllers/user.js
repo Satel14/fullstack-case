@@ -2,10 +2,8 @@ const { check, validationResult, body } = require('express-validator');
 const UserService = require('../services/user');
 const StorageService = require('../services/storage');
 const BalanceHistoryService = require('../services/balanceHistory');
-const PromocodeService = require('../services/promocode');
 const MESSAGE = require('../constant/responseMessages');
 const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
-const BonusHistoryService = require('../services/bonusHistory');
 const sequelize = require('../config/db');
 
 module.exports.getUserById = async (req, res) => {
@@ -157,15 +155,12 @@ module.exports.editUser = async (req, res) => {
 module.exports.resetUser = async (req, res) => {
     try {
         const { user_id } = req.user.profile;
-        await BonusHistoryService.cleanBonusHistory(user_id);
-        
+
         await BalanceHistoryService.cleanBalanceHistory(user_id);
         await UserService.resetBalance(user_id)   ;
         await StorageService.cleanStorageUser(user_id);
 
         await UserService.resetRank(user_id);
-
-        await PromocodeService.deleteUsedPromocodesOfUser(user_id);
 
         return res.status(200).json({ status: 200 });
     } catch (e) {

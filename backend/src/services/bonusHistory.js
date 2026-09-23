@@ -10,19 +10,6 @@ module.exports.addBonusHistory = async (userId, bonusId, options = {}) => {
     await BonusHistory.create(item, options);
 };
 
-module.exports.cleanBonusHistory = async (userId) => {
-    try {
-        await BonusHistory.destroy({
-            where: {
-                userId
-            }
-        })
-        return;
-    } catch (e) {
-        throw Error(e.message);
-    }
-};
-
 module.exports.getBonusHistory = async (userId) => {
     try {
         const history = await BonusHistory.findAll({
