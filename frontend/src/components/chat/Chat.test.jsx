@@ -18,9 +18,11 @@ jest.mock('../../api/all/ws', () => ({
     default: {
         emit: jest.fn(), on: jest.fn(), off: jest.fn(), connect: jest.fn(), connected: false,
     },
+    connectSocket: jest.fn(),
 }));
 
 const socket = require('../../api/all/ws').default;
+const { connectSocket } = require('../../api/all/ws');
 
 const user = {
  id: 7, login: 'player', avatar: 'a.png', role: roles.NORMAL,
@@ -185,4 +187,17 @@ test('a chat opened while the socket is already connected asks for the history i
     renderLive();
 
     expect(socket.emit).toHaveBeenCalledWith('user connected');
+});
+
+test('the chat asks the shared socket helper to connect instead of calling connect itself', () => {
+    socket.connected = false;
+    connectSocket.mockReset();
+    socket.connect.mockReset();
+
+    renderLive();
+    const { input } = send('hello there');
+    void input;
+
+    expect(connectSocket).toHaveBeenCalled();
+    expect(socket.connect).not.toHaveBeenCalled();
 });

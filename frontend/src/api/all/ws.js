@@ -19,27 +19,66 @@ const ws = io(WS_URL, {
 const RECONNECT_FALLBACK_MS = 1000;
 const SESSION_CHECK_RETRY_MS = 2000;
 
-ws.on('connect_error', (error) => {
-    if (error && error.message === 'session check failed') {
-        setTimeout(() => ws.connect(), SESSION_CHECK_RETRY_MS);
+let handshakePending = true;
+let reauthorizeWhenConnected = false;
+let retryTimer = null;
+
+export const connectSocket = () => {
+    if (ws.connected || handshakePending) {
+        return;
     }
-});
+    handshakePending = true;
+    ws.connect();
+};
 
 export const reconnectSocket = () => {
     if (!ws.connected) {
-        ws.connect();
+        if (handshakePending) {
+            reauthorizeWhenConnected = true;
+            return;
+        }
+        connectSocket();
         return;
     }
     let reconnected = false;
     const connectOnce = () => {
         if (!reconnected) {
             reconnected = true;
-            ws.connect();
+            connectSocket();
         }
     };
     ws.io.once('close', () => setTimeout(connectOnce, 0));
     ws.disconnect();
     setTimeout(connectOnce, RECONNECT_FALLBACK_MS);
 };
+
+ws.io.on('open', () => {
+    handshakePending = true;
+});
+
+ws.on('connect', () => {
+    handshakePending = false;
+    clearTimeout(retryTimer);
+    retryTimer = null;
+    if (reauthorizeWhenConnected) {
+        reauthorizeWhenConnected = false;
+        reconnectSocket();
+    }
+});
+
+ws.on('disconnect', () => {
+    handshakePending = false;
+});
+
+ws.on('connect_error', (error) => {
+    handshakePending = false;
+    if (error && error.message === 'session check failed') {
+        clearTimeout(retryTimer);
+        retryTimer = setTimeout(() => {
+            retryTimer = null;
+            connectSocket();
+        }, SESSION_CHECK_RETRY_MS);
+    }
+});
 
 export default ws;

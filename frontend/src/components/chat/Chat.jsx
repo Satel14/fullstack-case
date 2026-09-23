@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { CommentOutlined, SendOutlined, SmileOutlined } from '@ant-design/icons';
 import UserOnline from './UserOnline';
 import roles from '../../enum/role';
-import { default as socket } from '../../api/all/ws';
+import { default as socket, connectSocket } from '../../api/all/ws';
 import smiles from '../../data/smiles';
 import { Rules } from './Rules';
 import { getProfileFetch } from '../../store/actions/user';
@@ -108,7 +108,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             setUsersOnline(list);
         };
 
-        socket.connect();
+        connectSocket();
         socket.on("connect", onConnect);
         socket.on("chat messages", onChatMessages);
         socket.on("user-on", onUsersOn);
@@ -195,7 +195,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
         }
         if (!socket.connected) {
             message.error(t('chat.disconnected'));
-            socket.connect();
+            connectSocket();
             return;
         }
 
