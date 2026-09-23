@@ -14,6 +14,9 @@ const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
 const MESSAGE = require('../constant/responseMessages');
 const sequelize = require('../config/db');
 
+const UAH_CREDIT_RATE_MODULE = 'uah-credit-rate';
+const DEFAULT_UAH_CREDIT_RATE = 1;
+
 function jsonParser(blob) {
     let parsed = JSON.parse(blob);
     if (typeof parsed === 'string') parsed = jsonParser(parsed);
@@ -132,16 +135,17 @@ module.exports.sellItemByStorageId = async (req, res) => {
             return res.status(422).json({ status: 422, message: 'No price for this item color' });
         }
 
-        const currentRate = await ModuleService.getModuleById('uah-credit-rate');
+        const rateModule = await ModuleService.findModuleById(UAH_CREDIT_RATE_MODULE);
 
-        if (!currentRate) {
-            console.log('[SELL] uah-credit-rate module not found');
-            return res.status(422).json({ status: 422, message: 'Rate module not found' });
+        if (!rateModule) {
+            console.log('[SELL] uah-credit-rate module not found, using rate', DEFAULT_UAH_CREDIT_RATE);
         }
 
-        console.log('[SELL] Rate extraData:', currentRate.extraData);
+        const rate = rateModule ? rateModule.extraData : DEFAULT_UAH_CREDIT_RATE;
 
-        const actualPrice = (parseInt(price * parseFloat(currentRate.extraData) * 100, 10)) / 100;
+        console.log('[SELL] Rate extraData:', rate);
+
+        const actualPrice = (parseInt(price * parseFloat(rate) * 100, 10)) / 100;
 
         console.log('[SELL] actualPrice:', actualPrice);
 
