@@ -187,11 +187,14 @@ module.exports.setStorageStatusById = async (storage_id, storage_status, options
     }
 };
 
+const STATUSES_CLEARED_ON_RESET = ['inventory', 'money'];
+
 module.exports.cleanStorageUser = async (userId, options = {}) => {
     try {
         await Storage.destroy({
             where: {
-                storage_userId: userId
+                storage_userId: userId,
+                storage_status: STATUSES_CLEARED_ON_RESET,
             },
             ...options,
         })

@@ -185,3 +185,26 @@ test('a reset waits for the player row before it changes anything', async () => 
     assert.strictEqual(after.rank, 0);
     assert.strictEqual(after.items, 0);
 });
+
+test('a reset keeps pending withdrawals and delivered items', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayers(sequelize);
+    await sequelize.query(
+        'INSERT INTO storage (userId, itemId, color, caseId, extraData, status) VALUES '
+        + "(1, 10, 'default', 'bomj', NULL, 'inventory'), "
+        + "(1, 11, 'default', 'bomj', 'https://steamcommunity.com/tradeoffer/new/?partner=1', 'waitingtrade'), "
+        + "(1, 12, 'default', 'bomj', NULL, 'received'), "
+        + "(1, 13, 'default', 'bomj', NULL, 'money'), "
+        + "(2, 14, 'default', 'bomj', NULL, 'inventory')",
+    );
+
+    assert.strictEqual((await reset(1)).code, 200);
+
+    const [rows] = await sequelize.query('SELECT userId, itemId, extraData, status FROM storage ORDER BY id');
+    assert.deepStrictEqual(rows.map((r) => [r.userId, r.itemId, r.extraData, r.status]), [
+        [1, 11, 'https://steamcommunity.com/tradeoffer/new/?partner=1', 'waitingtrade'],
+        [1, 12, null, 'received'],
+        [2, 14, null, 'inventory'],
+    ]);
+});
