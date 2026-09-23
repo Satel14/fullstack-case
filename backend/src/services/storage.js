@@ -48,6 +48,7 @@ module.exports.addItem = async (userId, itemId, itemColor, caseId, options = {})
             storage_color: itemColor,
             storage_caseId: caseId,
             storage_status: 'inventory',
+            created_at: new Date(),
         };
         const storageId = await Storage.create(item, options).then((data) => data.dataValues.storage_id);
         return storageId;
@@ -158,7 +159,7 @@ module.exports.setStorageExtraDataById = async (storage_id, storage_extraData, o
 
         if (!storageItem) throw new Error(MESSAGE.CASE.NOT_EXIST);
 
-        await Storage.update({ storage_extraData }, { where: { storage_id }, transaction });
+        await Storage.update({ storage_extraData, updated_at: new Date() }, { where: { storage_id }, transaction });
 
         return;
     } catch (e) {
@@ -178,7 +179,7 @@ module.exports.setStorageStatusById = async (storage_id, storage_status, options
 
         if (!storageItem) throw new Error(MESSAGE.CASE.NOT_EXIST);
 
-        await Storage.update({ storage_status }, { where: { storage_id }, transaction });
+        await Storage.update({ storage_status, updated_at: new Date() }, { where: { storage_id }, transaction });
 
         return;
     } catch (e) {
