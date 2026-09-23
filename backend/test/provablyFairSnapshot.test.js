@@ -187,4 +187,10 @@ test('history tells snapshot, current-definition and unverifiable opens apart', 
     assert.strictEqual(byId[opens[1].id], 'current');
     assert.strictEqual(byId[opens[2].id], 'none');
     assert.ok(history.every((h) => !('serverSeed' in h)), 'an unrevealed server seed must never reach the history');
+
+    const withoutCache = await PFService.getHistory(1, 10, 0, null);
+    const levels = Object.fromEntries(withoutCache.map((h) => [h.id, h.verification]));
+    assert.strictEqual(levels[opens[0].id], 'snapshot');
+    assert.strictEqual(levels[opens[1].id], 'unknown', 'without the item cache the server cannot tell, so it must not claim "none"');
+    assert.strictEqual(levels[opens[2].id], 'unknown');
 });

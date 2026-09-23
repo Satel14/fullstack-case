@@ -99,15 +99,67 @@ test("locking one user's active seed does not block another user's", async () =>
 
     const holder = await sequelize.transaction();
     try {
-        await PFService.ensureActiveSeed(1, { transaction: holder, lock: holder.LOCK.UPDATE });
+        await PFService.lockActiveSeed(1, holder);
 
         const started = Date.now();
         await sequelize.transaction(async (t) => {
             await sequelize.query('SET SESSION innodb_lock_wait_timeout = 3', { transaction: t });
-            await PFService.ensureActiveSeed(5, { transaction: t, lock: t.LOCK.UPDATE });
+            await PFService.lockActiveSeed(5, t);
         });
         assert.ok(Date.now() - started < 2000, `user 5 waited ${Date.now() - started}ms on user 1's lock`);
     } finally {
         await holder.commit();
     }
+});
+
+const gapLocksHeldBy = async (sequelize, transaction) => {
+    const [[trx]] = await sequelize.query(
+        'SELECT trx_id FROM information_schema.innodb_trx WHERE trx_mysql_thread_id = CONNECTION_ID()',
+        { transaction },
+    );
+    const [locks] = await sequelize.query(
+        "SELECT LOCK_MODE, LOCK_DATA FROM performance_schema.data_locks "
+        + "WHERE OBJECT_NAME = 'provably_fair_seeds' AND LOCK_TYPE = 'RECORD' AND ENGINE_TRANSACTION_ID = ?",
+        { replacements: [trx.trx_id], transaction },
+    );
+    return locks.filter((l) => !/,REC_NOT_GAP$/.test(l.LOCK_MODE));
+};
+
+test('locking the seed of a player who has none takes no gap lock, so two first opens cannot deadlock', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const PFService = require('../src/services/provablyFair');
+    for (let userId = 1; userId <= 3; userId += 1) {
+        await PFService.ensureActiveSeed(userId);
+    }
+
+    const t = await sequelize.transaction();
+    try {
+        const seed = await PFService.lockActiveSeed(41, t);
+        assert.strictEqual(seed.pf_userId, 41);
+        assert.strictEqual(seed.pf_status, 'active');
+        assert.deepStrictEqual(await gapLocksHeldBy(sequelize, t), []);
+    } finally {
+        await t.rollback();
+    }
+
+    const firstOpen = (userId) => sequelize.transaction(async (tx) => {
+        const seed = await PFService.lockActiveSeed(userId, tx);
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        return seed.pf_userId;
+    });
+    const results = await Promise.allSettled([firstOpen(42), firstOpen(43)]);
+    assert.deepStrictEqual(results.map((r) => (r.status === 'fulfilled' ? r.value : r.reason.message)), [42, 43]);
+});
+
+test('a client seed is stored without surrounding whitespace', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const PFService = require('../src/services/provablyFair');
+
+    const saved = await PFService.setClientSeed(1, '  lucky seed \t');
+
+    assert.strictEqual(saved.clientSeed, 'lucky seed');
+    const [[row]] = await sequelize.query("SELECT clientSeed FROM provably_fair_seeds WHERE userId = 1 AND status = 'active'");
+    assert.strictEqual(row.clientSeed, 'lucky seed');
 });

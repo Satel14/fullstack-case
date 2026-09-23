@@ -104,7 +104,7 @@ module.exports.verify = async (req, res) => {
 module.exports.validate = (method) => {
     switch (method) {
         case 'setClientSeed':
-            return [body('clientSeed').exists().isString().isLength({ min: 1, max: 64 })];
+            return [body('clientSeed').exists().isString().trim().isLength({ min: 1, max: 64 })];
         case 'verify':
             return [
                 body('serverSeed').exists().isString().isLength({ min: 1, max: 128 }),

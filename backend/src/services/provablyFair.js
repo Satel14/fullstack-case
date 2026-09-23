@@ -53,6 +53,19 @@ module.exports.ensureActiveSeed = async (userId, options = {}) => {
     }
 };
 
+const LOCK_ATTEMPTS = 3;
+
+module.exports.lockActiveSeed = async (userId, transaction) => {
+    for (let attempt = 0; attempt < LOCK_ATTEMPTS; attempt += 1) {
+        const current = await module.exports.ensureActiveSeed(userId);
+        const locked = await ProvablyFairSeed.findByPk(current.pf_id, { transaction, lock: transaction.LOCK.UPDATE });
+        if (locked && locked.pf_status === 'active') {
+            return locked;
+        }
+    }
+    throw new Error(`No active provably-fair seed could be locked for user ${userId}`);
+};
+
 module.exports.getState = async (userId) => {
     const active = await module.exports.ensureActiveSeed(userId);
     const previous = await ProvablyFairSeed.findOne({
@@ -77,13 +90,13 @@ module.exports.getState = async (userId) => {
 
 module.exports.setClientSeed = async (userId, clientSeed) => {
     const active = await module.exports.ensureActiveSeed(userId);
-    active.pf_clientSeed = clientSeed;
+    active.pf_clientSeed = String(clientSeed).trim();
     await active.save();
     return { clientSeed: active.pf_clientSeed };
 };
 
 module.exports.rotateSeed = async (userId) => sequelize.transaction(async (t) => {
-    const active = await module.exports.ensureActiveSeed(userId, { transaction: t, lock: t.LOCK.UPDATE });
+    const active = await module.exports.lockActiveSeed(userId, t);
     const carriedClientSeed = active.pf_clientSeed;
     active.pf_status = 'revealed';
     active.pf_revealed_at = new Date();
@@ -129,7 +142,7 @@ const replaysAgainstCurrentCase = (row, serverSeed, itemHash) => {
         return false;
     }
     try {
-        const w = deriveWinner(serverSeed, row.co_clientSeed, row.co_nonce, caseDef, itemHash || {});
+        const w = deriveWinner(serverSeed, row.co_clientSeed, row.co_nonce, caseDef, itemHash);
         return w.itemId === row.co_resultItemId && w.color === row.co_resultColor;
     } catch (e) {
         return false;
@@ -162,6 +175,9 @@ module.exports.getHistory = async (userId, limit, offset, itemHash = null) => {
     const verificationOf = (r, hasSnapshot) => {
         if (hasSnapshot) {
             return 'snapshot';
+        }
+        if (!itemHash) {
+            return 'unknown';
         }
         const seed = seedById[r.co_seedId];
         return replaysAgainstCurrentCase(r, seed && seed.pf_serverSeed, itemHash) ? 'current' : 'none';

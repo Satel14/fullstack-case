@@ -93,10 +93,7 @@ module.exports.openCaseById = async (req, res) => {
                 throw err;
             }
 
-            const seed = await PFService.ensureActiveSeed(user_id, {
-                transaction: t,
-                lock: t.LOCK.UPDATE,
-            });
+            const seed = await PFService.lockActiveSeed(user_id, t);
             let nonce = seed.pf_nonce;
 
             for (let index = 0; index < count; index++) {

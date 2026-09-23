@@ -42,8 +42,7 @@ beforeEach(() => {
 });
 
 const rowOf = async (nonce) => {
-    await screen.findAllByText('dust2');
-    await screen.findByText('train');
+    await screen.findAllByText(/dust2|train/);
     return screen.getAllByRole('row').find((r) => within(r).queryByText(String(nonce), { exact: true }));
 };
 
@@ -131,4 +130,34 @@ test('editing the nonce or seeds by hand drops the open id', async () => {
     await waitFor(() => expect(api.verifyOpen).toHaveBeenCalledWith({
         serverSeed: 'server', clientSeed: 'client', nonce: 2, caseId: 'dust2',
     }));
+});
+
+test('when the server cannot tell whether an old open replays, the row says so and still offers a check', async () => {
+    api.getOpenHistory.mockResolvedValue({ data: [{ ...ROWS[2], verification: 'unknown' }] });
+    api.verifyOpen.mockResolvedValue({ data: { itemId: 12, color: 'default', rarity: 'Factory New', source: 'current' } });
+    render(<ProvablyFair />);
+
+    const row = await rowOf(7);
+    expect(within(row).getByText('provablyFair.verificationUnknown')).toBeInTheDocument();
+    expect(within(row).queryByText('provablyFair.legacy')).toBeNull();
+    fireEvent.click(within(row).getByRole('button', { name: 'provablyFair.verify' }));
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+
+    await waitFor(() => expect(api.verifyOpen).toHaveBeenCalled());
+});
+
+test('the client seed is sent exactly as recorded, surrounding spaces included', async () => {
+    api.getOpenHistory.mockResolvedValue({ data: [{ ...ROWS[0], clientSeed: ' lucky ' }] });
+    api.verifyOpen.mockResolvedValue({
+        data: {
+            itemId: 10, color: 'default', rarity: 'Factory New', source: 'snapshot', seedMatches: true, matchesRecord: true,
+        },
+    });
+    render(<ProvablyFair />);
+
+    await screen.findByText('dust2');
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.verify' }));
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+
+    await waitFor(() => expect(api.verifyOpen).toHaveBeenCalledWith(expect.objectContaining({ clientSeed: ' lucky ' })));
 });

@@ -59,7 +59,7 @@ const ProvablyFair = () => {
 
         const nonceInt = parseInt(calc.nonce, 10);
         const incomplete = !calc.serverSeed.trim()
-            || !calc.clientSeed.trim()
+            || !calc.clientSeed
             || (!calc.openId && !calc.caseId.trim())
             || Number.isNaN(nonceInt)
             || nonceInt < 0;
@@ -72,7 +72,7 @@ const ProvablyFair = () => {
         try {
             const payload = {
                 serverSeed: calc.serverSeed.trim(),
-                clientSeed: calc.clientSeed.trim(),
+                clientSeed: calc.clientSeed,
                 nonce: nonceInt,
                 caseId: calc.caseId.trim(),
             };
@@ -108,6 +108,9 @@ const ProvablyFair = () => {
             render: (_, r) => {
                 if (r.verification === 'none') {
                     return <Tag title={t('provablyFair.legacyNote')}>{t('provablyFair.legacy')}</Tag>;
+                }
+                if (r.verification === 'unknown') {
+                    return <Tag title={t('provablyFair.unknownNote')}>{t('provablyFair.verificationUnknown')}</Tag>;
                 }
                 if (!r.revealedServerSeed) {
                     return <Tag>{t('provablyFair.awaitingRotate')}</Tag>;

@@ -376,6 +376,8 @@
         "legacyNote": "This open was made before the site started storing the case contents at open time, so it cannot be reproduced.",
         "verifiableCurrent": "Verifiable against the current case",
         "currentNote": "This open was made before the site started storing the case contents, but the current case still reproduces it, so it can be verified. The color is checked against current prices.",
+        "verificationUnknown": "Verification status unknown",
+        "unknownNote": "The server cannot tell right now whether the current case reproduces this open. Try verifying it, or reload the page a little later.",
         "seedMatches": "The server seed matches the hash published before the open",
         "seedMismatch": "The server seed does NOT match the hash published before the open",
         "matchesRecord": "The result matches the item that dropped",
