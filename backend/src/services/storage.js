@@ -2,6 +2,15 @@ const Storage = require('../models/storage');
 const MESSAGE = require('../constant/responseMessages');
 const { Op } = require('sequelize');
 
+const PUBLIC_HISTORY_FIELDS = [
+    'storage_id',
+    'storage_itemId',
+    'storage_color',
+    'storage_caseId',
+    'storage_status',
+    'created_at',
+];
+
 module.exports.getTopUsersByItemCount = async (limit, offset) => {
     try {
         const rows = await Storage.findAll({
@@ -50,6 +59,7 @@ module.exports.addItem = async (userId, itemId, itemColor, caseId, options = {})
 module.exports.getStorageLastItemsByUserId = async (id, limit, offset) => {
     try {
         const storageItems = await Storage.findAll({
+            attributes: PUBLIC_HISTORY_FIELDS,
             order: [['storage_id', 'DESC']],
             limit: parseInt(limit, 10),
             offset: parseInt(offset, 10),
