@@ -49,6 +49,40 @@ const getAllDataHashWithKey = (key) => {
     })
 }
 
+const appendToCappedList = (key, value, maxLength) => new Promise((resolve, reject) => {
+    client.multi()
+        .rpush(key, value)
+        .ltrim(key, -maxLength, -1)
+        .exec((err, replies) => (err ? reject(err) : resolve(replies)));
+});
+
+const getListRange = (key, start, stop) => new Promise((resolve, reject) => {
+    client.lrange(key, start, stop, (err, reply) => (err ? reject(err) : resolve(reply)));
+});
+
+const scanHash = (key, cursor, count) => new Promise((resolve, reject) => {
+    client.hscan(key, cursor, 'COUNT', count, (err, reply) => {
+        if (err) return reject(err);
+        const [next, flat] = reply;
+        const entries = [];
+        for (let i = 0; i < flat.length; i += 2) {
+            entries.push([flat[i], flat[i + 1]]);
+        }
+        return resolve({ cursor: next, entries });
+    });
+});
+
+const moveIntoCappedList = (fromKey, listKey, values, maxLength) => new Promise((resolve, reject) => {
+    const transaction = client.multi();
+    if (values.length > 0) {
+        transaction.lpush(listKey, ...[...values].reverse());
+    }
+    transaction
+        .ltrim(listKey, -maxLength, -1)
+        .del(fromKey)
+        .exec((err, replies) => (err ? reject(err) : resolve(replies)));
+});
+
 async function initialRedisState() {
     const itemPricesArray = await InsiderPricesService.getAllItems();
     const items = await ItemService.getAllItems();
@@ -92,6 +126,10 @@ module.exports = {
     getAllDataHashWithKey,
     setDataHashWithKey,
     cleanDataHashWithKey,
+    appendToCappedList,
+    getListRange,
+    scanHash,
+    moveIntoCappedList,
     initialRedisState,
     startItemCacheSync,
     clientOptions,
