@@ -47,6 +47,9 @@ const DOWN_EFFECTS = {
         'drops users.tokenVersion, so a password reset stops signing out the sessions opened before it',
     '20260922001000-seed-user-status-index.js':
         'drops the (userId, status) index, so locking the active seed of one user scans and locks the whole seed table again',
+    '20260923000000-uah-credit-rate-module.js':
+        'deletes the uah-credit-rate module row, including a rate someone set by hand, so every sell pays '
+        + 'at the fallback rate of 1',
 };
 
 const EXPECTED_COLUMNS = [
