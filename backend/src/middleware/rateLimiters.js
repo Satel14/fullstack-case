@@ -64,7 +64,45 @@ const adminLimiter = rateLimit({
     message: { status: 429, message: 'Забагато запитів. Зачекайте трохи.' },
 });
 
+const byPlayer = (req) => String(req.user.profile.user_id);
+
+const promocodeLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    keyGenerator: byPlayer,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: 429, message: 'Забагато спроб активувати промокод. Спробуйте пізніше.' },
+});
+
+const transferLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    keyGenerator: byPlayer,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: 429, message: 'Забагато переказів. Зачекайте трохи.' },
+});
+
+const sellLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 400,
+    keyGenerator: byPlayer,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: 429, message: 'Забагато продажів. Зачекайте трохи.' },
+});
+
+const receiveLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    keyGenerator: byPlayer,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: 429, message: 'Забагато запитів на виведення. Зачекайте трохи.' },
+});
+
 module.exports = {
     authLimiter, caseOpenLimiter, onlineLimiter, depositLimiter, resetLimiter, bonusLimiter, adminLimiter,
-    seedRotateLimiter,
+    seedRotateLimiter, promocodeLimiter, transferLimiter, sellLimiter, receiveLimiter,
 };

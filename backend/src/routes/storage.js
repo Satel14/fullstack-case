@@ -1,6 +1,7 @@
 const StorageController = require('../controllers/storage');
 const { authenticate } = require('../middleware/authenticate');
 const { notBanned } = require('../middleware/adminOnly');
+const { sellLimiter, receiveLimiter } = require('../middleware/rateLimiters');
 
 module.exports = (app) => {
     app.get('/api/storage/list/:limit', StorageController.getStorageLastItems);
@@ -9,8 +10,8 @@ module.exports = (app) => {
     app.get('/api/storage/count/:id', StorageController.validate('getStorageItemsCountByUserId'), StorageController.getStorageItemsCountByUserId);
     app.get('/api/storage/favorite/:id', StorageController.validate('getFavoriteCaseByUserId'), StorageController.getFavoriteCaseByUserId);
 
-    app.put('/api/storage/sell/:id', authenticate, notBanned, StorageController.validate('sellItemByStorageId'), StorageController.sellItemByStorageId);
-    app.put('/api/storage/receive/:id', authenticate, notBanned, StorageController.validate('receiveItemByStorageId'), StorageController.receiveItemByStorageId);
+    app.put('/api/storage/sell/:id', authenticate, notBanned, sellLimiter, StorageController.validate('sellItemByStorageId'), StorageController.sellItemByStorageId);
+    app.put('/api/storage/receive/:id', authenticate, notBanned, receiveLimiter, StorageController.validate('receiveItemByStorageId'), StorageController.receiveItemByStorageId);
 
     
     app.get('/api/storage/top/:limit/:offset', StorageController.validate('getStorageTop'), StorageController.getStorageTop);
