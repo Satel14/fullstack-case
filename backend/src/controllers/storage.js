@@ -366,8 +366,8 @@ module.exports.validate = (method) => {
         }
         case 'getStorageTop': {
             return [
-                check('limit').exists().isNumeric(),
-                check('offset').exists().isNumeric(),
+                check('limit').exists().isInt({ min: 0 }),
+                check('offset').exists().isInt({ min: 0 }),
             ];
         }
         case 'getStorageItemsCountByUserId': {

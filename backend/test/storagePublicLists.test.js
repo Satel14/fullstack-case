@@ -124,3 +124,43 @@ test('the other public storage lists never carry the withdrawal contact', async 
         assert.ok(!JSON.stringify(result.payload).includes('extraData'), JSON.stringify(result.payload));
     });
 });
+
+test('the other public storage endpoints do not answer 500 to odd numbers', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize);
+
+    const cases = [
+        ['getStorageLastItems', { limit: '-1' }],
+        ['getStorageLastItems', { limit: '.5' }],
+        ['getStorageLastItemsWithUserInfo', { limit: '-1' }],
+        ['getStorageLastItemsWithUserInfo', { limit: '.5' }],
+        ['getStorageItemsCountByUserId', { id: '1.5' }],
+        ['getStorageItemsCountByUserId', { id: '-1' }],
+        ['getFavoriteCaseByUserId', { id: '1.5' }],
+        ['getStorageTop', { limit: '.5', offset: '0' }],
+        ['getStorageTop', { limit: '10', offset: '1.5' }],
+        ['getStorageTop', { limit: '-1', offset: '0' }],
+        ['getStorageTop', { limit: '10', offset: '-1' }],
+        ['getStorageTop', { limit: '10', offset: '99999999999999999999' }],
+    ];
+
+    for (const [handler, params] of cases) {
+        const result = await call(handler, params);
+        assert.notStrictEqual(result.code, 500, `${handler} ${JSON.stringify(params)}: ${JSON.stringify(result.payload)}`);
+    }
+});
+
+test('the Top leaderboard keeps paging the way the site asks for it', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize);
+
+    const first = await call('getStorageTop', { limit: '10', offset: '0' });
+    assert.strictEqual(first.code, 200);
+    assert.deepStrictEqual(first.payload.data.map((r) => [r.userId, r.count]), [[1, 2]]);
+
+    const next = await call('getStorageTop', { limit: '10', offset: '10' });
+    assert.strictEqual(next.code, 200);
+    assert.deepStrictEqual(next.payload.data, []);
+});
