@@ -259,6 +259,69 @@ test('the reset balance type is removed cleanly when nothing uses it', async () 
     assert.match(type[0].Type, /'admin_adjust'/);
 });
 
+test('per-player tables are indexed by userId', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+
+    for (const [table, columns] of [
+        ['storage', ['userId', 'status']],
+        ['balance_history', ['userId', 'type']],
+        ['case_opens', ['userId', 'id']],
+    ]) {
+        const [rows] = await sequelize.query(`SHOW INDEX FROM \`${table}\``);
+        const byName = {};
+        rows.forEach((r) => {
+            byName[r.Key_name] = byName[r.Key_name] || [];
+            byName[r.Key_name][r.Seq_in_index - 1] = r.Column_name;
+        });
+        assert.ok(
+            Object.values(byName).some((cols) => JSON.stringify(cols) === JSON.stringify(columns)),
+            `${table} has no (${columns.join(', ')}) index: ${JSON.stringify(byName)}`,
+        );
+    }
+});
+
+test("a reset does not lock other players' items while it waits for an open in flight", async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayers(sequelize);
+    await sequelize.query(
+        'INSERT INTO storage (userId, itemId, color, caseId, status) VALUES '
+        + "(1, 10, 'default', 'bomj', 'inventory'), (3, 30, 'default', 'bomj', 'inventory')",
+    );
+    const StorageService = require('../src/services/storage');
+
+    const open = await sequelize.transaction();
+    let resetting;
+    try {
+        await sequelize.query(
+            "INSERT INTO storage (userId, itemId, color, caseId, status) VALUES (2, 20, 'default', 'bomj', 'inventory')",
+            { transaction: open },
+        );
+        resetting = reset(1);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        const sale = await sequelize.transaction();
+        try {
+            await sequelize.query('SET SESSION innodb_lock_wait_timeout = 1', { transaction: sale });
+            const item = await StorageService.getStorageInfoById(3, 2, 'inventory', {
+                transaction: sale,
+                lock: sale.LOCK.UPDATE,
+            });
+            assert.strictEqual(item.storage_userId, 3);
+        } finally {
+            await sequelize.query('SET SESSION innodb_lock_wait_timeout = DEFAULT', { transaction: sale });
+            await sale.commit();
+        }
+    } finally {
+        await open.rollback();
+    }
+
+    assert.strictEqual((await resetting).code, 200);
+    const [rows] = await sequelize.query('SELECT userId FROM storage ORDER BY id');
+    assert.deepStrictEqual(rows.map((r) => r.userId), [3]);
+});
+
 test('a reset keeps pending withdrawals and delivered items', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;

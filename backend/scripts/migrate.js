@@ -53,6 +53,9 @@ const DOWN_EFFECTS = {
     '20260923000100-balance-history-reset.js':
         'removes reset from the balance_history.type ENUM — it refuses while any balance_history row still uses '
         + 'that type, and while it is reverted every profile reset fails',
+    '20260923000110-user-id-indexes.js':
+        'drops the userId indexes on storage, balance_history and case_opens, so every per-player read scans the '
+        + "whole table again and a profile reset locks every player's items while it waits",
 };
 
 const EXPECTED_COLUMNS = [
