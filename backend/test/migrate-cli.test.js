@@ -14,7 +14,7 @@ const BACKEND_ROOT = path.join(__dirname, '..');
 const CLI = path.join('scripts', 'migrate.js');
 const BASELINE = '20260922000000-baseline.js';
 const DUMP = 'E:/React-projects/case-db-backup-2026-09-22.sql';
-const DUMP_DB = 'case_test_dump';
+const DUMP_DB = `${TEST_DB}_dump`;
 
 let activeSequelize;
 
