@@ -50,6 +50,9 @@ module.exports.setRole = async (req, res) => {
         if (!target) {
             return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.USER_NOT_EXIST });
         }
+        if (Number(target.user_role) === ROLES.ADMINISTRATOR) {
+            return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.TARGET_ADMIN_FORBIDDEN });
+        }
 
         await sequelize.transaction(async (t) => {
             await UserService.setRole(targetId, role, { transaction: t });

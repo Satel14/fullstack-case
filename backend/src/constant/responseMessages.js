@@ -66,6 +66,7 @@ module.exports = {
         NEGATIVE_BALANCE: 'Баланс не може бути відʼємним',
         ROLE_INVALID: 'Невідома роль',
         ROLE_ADMIN_FORBIDDEN: 'Роль адміністратора призначається лише через CLI',
+        TARGET_ADMIN_FORBIDDEN: 'Роль іншого адміністратора не можна змінити через панель',
         USER_NOT_EXIST: 'Такого користувача не існує',
     },
 }
