@@ -20,6 +20,7 @@ module.exports.usePromocode = async (req, res) => {
         let bonus;
         let description;
         await sequelize.transaction(async (t) => {
+            await UserService.lockUsersInIdOrder([user_id], t);
             const result = await PromocodeService.usePromocode(code, user_id, {
                 transaction: t,
                 lock: t.LOCK.UPDATE,
