@@ -45,3 +45,27 @@ test('a socket asking for the chat state gets it alone, not every connected clie
         ['chat messages', [{ login: 'a', msg: 'hi' }]],
     ]);
 });
+
+test('the socket handshake refuses to go anonymous when the session lookup fails, but accepts no token or a stale one', async () => {
+    const outcomes = [];
+    const runWith = async (userFromToken, token) => {
+        stub('../src/auth/token', { userFromToken, sessionUser: async () => null, tokenVersionOf: () => 0 });
+        delete require.cache[require.resolve('../src/socket/chat')];
+        const { authenticateHandshake, SESSION_CHECK_FAILED } = require('../src/socket/chat');
+        const socket = { handshake: { auth: { token } } };
+        const error = await new Promise((resolve) => authenticateHandshake(socket, resolve));
+        outcomes.push({ error: error ? error.message : null, userInfo: socket.userInfo });
+        return SESSION_CHECK_FAILED;
+    };
+
+    const failed = await runWith(async () => { throw new Error('ECONNREFUSED'); }, 'valid-token');
+    await runWith(async () => null, 'stale-token');
+    await runWith(async () => { throw new Error('unused'); }, undefined);
+    await runWith(async () => ({ user_id: 7, user_login: 'player', user_avatar: 1, user_role: 1 }), 'valid-token');
+
+    assert.deepStrictEqual(outcomes[0], { error: failed, userInfo: null });
+    assert.deepStrictEqual(outcomes[1], { error: null, userInfo: null });
+    assert.deepStrictEqual(outcomes[2], { error: null, userInfo: null });
+    assert.strictEqual(outcomes[3].error, null);
+    assert.strictEqual(outcomes[3].userInfo.login, 'player');
+});

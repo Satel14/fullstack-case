@@ -112,6 +112,9 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
         socket.on("connect", onConnect);
         socket.on("chat messages", onChatMessages);
         socket.on("user-on", onUsersOn);
+        if (socket.connected) {
+            socket.emit("user connected");
+        }
 
         // Remove only OUR listeners on cleanup — never socket.off() (no-arg) or
         // socket.disconnect(), which would also kill HeaderThird's shared 'new-drop' feed.

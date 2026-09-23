@@ -30,16 +30,18 @@ export const getProfileFetch = () => (dispatch) => {
                 Authorization: `Bearer ${token}`,
             },
         })
-            .then((resp) => resp.json())
-            // eslint-disable-next-line promise/always-return
-            .then((data) => {
-                if (data && data.user) {
-                    dispatch(loginUser(data.user));
-                } else {
+            .then(async (resp) => {
+                if (resp.status === 401) {
                     localStorage.removeItem('token');
                     dispatch(logoutUser());
+                    return;
                 }
-            });
+                const data = await resp.json().catch(() => null);
+                if (data && data.user) {
+                    dispatch(loginUser(data.user));
+                }
+            })
+            .catch(() => {});
     }
 
     return null;

@@ -4,6 +4,33 @@ const { postChatMessage } = require('./chatMessage');
 
 let ioInstance = null;
 
+const SESSION_CHECK_FAILED = 'session check failed';
+
+const authenticateHandshake = async (socket, next) => {
+    const token = socket.handshake.auth && socket.handshake.auth.token;
+    socket.userInfo = null;
+
+    if (!token) {
+        return next();
+    }
+
+    let user;
+    try {
+        user = await userFromToken(token);
+    } catch (e) {
+        console.error('[chat] handshake session check failed:', e.message);
+        return next(new Error(SESSION_CHECK_FAILED));
+    }
+    socket.userInfo = user ? {
+        id: user.user_id,
+        login: user.user_login,
+        avatar: user.user_avatar,
+        role: user.user_role,
+        ver: tokenVersionOf(token),
+    } : null;
+    return next();
+};
+
 const onUserConnected = (socket, usersConnected) => async () => {
     try {
         socket.emit('user-on', Array.from(usersConnected.keys()));
@@ -25,29 +52,7 @@ module.exports = function (server) {
 
     ioInstance = io;
 
-    io.use(async (socket, next) => {
-        const token = socket.handshake.auth && socket.handshake.auth.token;
-        socket.userInfo = null;
-
-        if (!token) {
-            return next();
-        }
-
-        try {
-            const user = await userFromToken(token);
-            socket.userInfo = user ? {
-                id: user.user_id,
-                login: user.user_login,
-                avatar: user.user_avatar,
-                role: user.user_role,
-                ver: tokenVersionOf(token),
-            } : null;
-        } catch (e) {
-            socket.userInfo = null;
-        }
-
-        return next();
-    });
+    io.use(authenticateHandshake);
 
     const usersConnected = new Map();
 
@@ -102,3 +107,5 @@ module.exports = function (server) {
 
 module.exports.getIo = () => ioInstance;
 module.exports.onUserConnected = onUserConnected;
+module.exports.authenticateHandshake = authenticateHandshake;
+module.exports.SESSION_CHECK_FAILED = SESSION_CHECK_FAILED;

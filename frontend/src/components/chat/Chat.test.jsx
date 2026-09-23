@@ -177,3 +177,12 @@ test('a late acknowledgement of a timed-out message does not swallow the result 
         jest.useRealTimers();
     }
 });
+
+test('a chat opened while the socket is already connected asks for the history itself', () => {
+    socket.connected = true;
+    socket.emit.mockReset();
+
+    renderLive();
+
+    expect(socket.emit).toHaveBeenCalledWith('user connected');
+});

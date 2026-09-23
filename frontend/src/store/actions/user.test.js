@@ -34,3 +34,41 @@ test('a failed login does not reconnect the socket', async () => {
     expect(result).toBe('wrong');
     expect(reconnectSocket).not.toHaveBeenCalled();
 });
+
+describe('the profile check on page load', () => {
+    const { getProfileFetch } = require('./user');
+    const run = async (response) => {
+        localStorage.setItem('token', 'kept');
+        global.fetch = jest.fn(response);
+        const dispatch = jest.fn();
+        await getProfileFetch()(dispatch);
+        return dispatch;
+    };
+
+    test('keeps the session when the server cannot check it right now', async () => {
+        const dispatch = await run(() => Promise.resolve({ status: 503, json: () => Promise.resolve({ message: 'later' }) }));
+
+        expect(localStorage.getItem('token')).toBe('kept');
+        expect(dispatch).not.toHaveBeenCalled();
+    });
+
+    test('keeps the session when the request itself fails', async () => {
+        const dispatch = await run(() => Promise.reject(new TypeError('Failed to fetch')));
+
+        expect(localStorage.getItem('token')).toBe('kept');
+        expect(dispatch).not.toHaveBeenCalled();
+    });
+
+    test('ends the session only when the token is rejected', async () => {
+        const dispatch = await run(() => Promise.resolve({ status: 401, json: () => Promise.resolve({ message: 'no' }) }));
+
+        expect(localStorage.getItem('token')).toBeNull();
+        expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'LOGOUT_USER' }));
+    });
+
+    test('logs the user in when the profile comes back', async () => {
+        const dispatch = await run(() => Promise.resolve({ status: 200, json: () => Promise.resolve({ user: { login: 'player' } }) }));
+
+        expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ payloadUser: { login: 'player' } }));
+    });
+});
