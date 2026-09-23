@@ -62,8 +62,9 @@ services:
       REDIS_HOST: redis
       JWT_SECRET: asf4ASGiuh8xc735unjk
       CLIENT_ORIGIN: http://localhost:3009
+      TRUST_PROXY: ${TRUST_PROXY:-}
     ports:
-      - "3003:3003"
+      - "127.0.0.1:3003:3003"
     volumes:
       - ./frontend/public:/frontend/public:ro
     networks:

@@ -4,10 +4,11 @@ const cors = require('cors')
 const compression = require('compression')
 const routes = require('./routes')
 const config = require('./src/config/serverConfig')
+const { parseTrustProxy } = require('./src/config/trustProxy')
 
 require("dotenv").config();
 const app = express();
-app.set('trust proxy', 1);
+app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
