@@ -119,7 +119,7 @@ const gapLocksHeldBy = async (sequelize, transaction) => {
     );
     const [locks] = await sequelize.query(
         "SELECT LOCK_MODE, LOCK_DATA FROM performance_schema.data_locks "
-        + "WHERE OBJECT_NAME = 'provably_fair_seeds' AND LOCK_TYPE = 'RECORD' AND ENGINE_TRANSACTION_ID = ?",
+        + "WHERE OBJECT_SCHEMA = DATABASE() AND OBJECT_NAME = 'provably_fair_seeds' AND LOCK_TYPE = 'RECORD' AND ENGINE_TRANSACTION_ID = ?",
         { replacements: [trx.trx_id], transaction },
     );
     return locks.filter((l) => !/,REC_NOT_GAP$/.test(l.LOCK_MODE));
@@ -254,7 +254,7 @@ test('a rotation waits for the player row before it touches any seed, the same l
 
         const [seedLocksByOthers] = await sequelize.query(
             "SELECT ENGINE_TRANSACTION_ID, LOCK_MODE FROM performance_schema.data_locks "
-            + "WHERE OBJECT_NAME = 'provably_fair_seeds' AND LOCK_TYPE = 'RECORD' AND ENGINE_TRANSACTION_ID <> ?",
+            + "WHERE OBJECT_SCHEMA = DATABASE() AND OBJECT_NAME = 'provably_fair_seeds' AND LOCK_TYPE = 'RECORD' AND ENGINE_TRANSACTION_ID <> ?",
             { replacements: [openTrx.trx_id], transaction: open },
         );
         assert.deepStrictEqual(seedLocksByOthers, [], 'the rotation locked a seed while the open held the player row');

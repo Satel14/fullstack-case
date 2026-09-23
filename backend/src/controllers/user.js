@@ -52,6 +52,7 @@ module.exports.sendMoneyForUserByUserId = async (req, res) => {
         }
 
         await sequelize.transaction(async (t) => {
+            await UserService.lockUsersInIdOrder([user_id, userIdTo], t);
             const lockedBalance = await UserService.getBalanceByUserId(user_id, {
                 transaction: t,
                 lock: t.LOCK.UPDATE,

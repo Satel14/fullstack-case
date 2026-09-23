@@ -82,6 +82,14 @@ module.exports.editUser = async (fields, id) => {
     }
 };
 
+module.exports.lockUsersInIdOrder = (ids, transaction) => User.findAll({
+    attributes: ['user_id'],
+    where: { user_id: ids },
+    order: [['user_id', 'ASC']],
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+});
+
 module.exports.getBalanceByUserId = async (id, options = {}) => {
     try {
         const balance = await User.findByPk(id, {
