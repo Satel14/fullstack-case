@@ -76,6 +76,7 @@ const CHAT_REJECTIONS = {
     unauthorized: 'chat.notAuthorized',
     empty: 'chat.writeMessage',
     tooLong: 'chat.tooLong',
+    tooFast: 'chat.tooFast',
 };
 
 export const Chat = ({ user, enabled, refreshProfile }) => {

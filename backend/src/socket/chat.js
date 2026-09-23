@@ -1,10 +1,15 @@
 const ChatService = require("../services/chat")
 const { userFromToken, sessionUser, tokenVersionOf } = require('../auth/token');
 const { postChatMessage } = require('./chatMessage');
+const { createRateLimiter } = require('./throttle');
 
 let ioInstance = null;
 
 const SESSION_CHECK_FAILED = 'session check failed';
+const CHAT_MESSAGE_BURST = 5;
+const CHAT_MESSAGE_REFILL_MS = 1000;
+
+const chatSenderKey = (socket) => (socket.userInfo ? `user:${socket.userInfo.id}` : `socket:${socket.id}`);
 
 const authenticateHandshake = async (socket, next) => {
     const token = socket.handshake.auth && socket.handshake.auth.token;
@@ -55,6 +60,7 @@ module.exports = function (server) {
     io.use(authenticateHandshake);
 
     const usersConnected = new Map();
+    const chatLimiter = createRateLimiter({ burst: CHAT_MESSAGE_BURST, refillMs: CHAT_MESSAGE_REFILL_MS });
 
     io.on('connection', (socket) => {
         const { id } = socket.client;
@@ -75,6 +81,11 @@ module.exports = function (server) {
 
         socket.on("chat message", async (payload, ack) => {
             const reply = typeof ack === 'function' ? ack : () => {};
+
+            if (!chatLimiter.take(chatSenderKey(socket))) {
+                reply({ ok: false, reason: 'tooFast' });
+                return;
+            }
 
             try {
                 const result = await postChatMessage(socket.userInfo, payload && payload.msg, {

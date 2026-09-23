@@ -75,6 +75,17 @@ test('a message refused for a chat ban is not shown, the ban is reported and the
     expect(input.value).toBe('hello there');
 });
 
+test('a message refused for being sent too fast says so and keeps the text for a retry', () => {
+    serverReplies({ ok: false, reason: 'tooFast' });
+
+    const { input, refreshProfile } = send('hello there');
+
+    expect(screen.queryByText('hello there')).toBeNull();
+    expect(message.error).toHaveBeenCalledWith('chat.tooFast');
+    expect(refreshProfile).not.toHaveBeenCalled();
+    expect(input.value).toBe('hello there');
+});
+
 test('any other refusal reports a server error without refreshing the profile', () => {
     serverReplies({ ok: false, reason: 'error' });
 
