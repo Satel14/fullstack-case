@@ -72,3 +72,58 @@ test("a player whose row is busy does not hold up everyone else's redemption of 
     assert.ok((await bob).payload.balance);
     assert.deepStrictEqual(await balances(sequelize), [['alice', 150], ['bob', 150]]);
 });
+
+const MESSAGE = require('../src/constant/responseMessages');
+
+const promocodeState = async (sequelize, code) => {
+    const [[row]] = await sequelize.query('SELECT used_ids FROM promocodes WHERE code = ?', { replacements: [code] });
+    const [[history]] = await sequelize.query("SELECT COUNT(*) AS n FROM balance_history WHERE type = 'promocode'");
+    const usedIds = typeof row.used_ids === 'string' ? JSON.parse(row.used_ids) : row.used_ids;
+    return { usedIds, credits: Number(history.n) };
+};
+
+for (const [label, bonus] of [
+    ['no bonus', null], ['an empty bonus', ''], ['a zero bonus', '0'],
+    ['a negative bonus', '-50'], ['a bonus that is not a number', 'fifty'],
+]) {
+    test(`a promocode with ${label} is refused without touching the balance`, async () => {
+        const sequelize = await resetTestDatabase();
+        activeSequelize = sequelize;
+        await seedPlayers(sequelize);
+        await addPromocode(sequelize, 'BROKEN', bonus, 10);
+
+        const result = await redeem(1, 'BROKEN');
+
+        assert.strictEqual(result.payload.message, MESSAGE.PROMOCODE.INVALID);
+        assert.strictEqual(result.payload.balance, undefined);
+        assert.deepStrictEqual(await balances(sequelize), [['alice', 100], ['bob', 100]]);
+        assert.deepStrictEqual(await promocodeState(sequelize, 'BROKEN'), { usedIds: [], credits: 0 });
+    });
+}
+
+test('a promocode without a limit is refused as invalid rather than as exhausted', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayers(sequelize);
+    await addPromocode(sequelize, 'NOLIMIT', '50', null);
+
+    const result = await redeem(1, 'NOLIMIT');
+
+    assert.strictEqual(result.payload.message, MESSAGE.PROMOCODE.INVALID);
+    assert.deepStrictEqual(await balances(sequelize), [['alice', 100], ['bob', 100]]);
+    assert.deepStrictEqual(await promocodeState(sequelize, 'NOLIMIT'), { usedIds: [], credits: 0 });
+});
+
+test('a promocode credits exactly its bonus, kopiyky included', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayers(sequelize);
+    await addPromocode(sequelize, 'CENTS', '12.50', 10);
+
+    const result = await redeem(1, 'CENTS');
+
+    assert.strictEqual(Number(result.payload.balance), 112.5);
+    assert.match(result.payload.message, /12\.50? ₴/);
+    assert.deepStrictEqual(await balances(sequelize), [['alice', 112.5], ['bob', 100]]);
+    assert.deepStrictEqual(await promocodeState(sequelize, 'CENTS'), { usedIds: [1], credits: 1 });
+});
