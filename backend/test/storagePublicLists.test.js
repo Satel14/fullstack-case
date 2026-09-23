@@ -69,6 +69,42 @@ test('the public per-user history returns only the fields the site reads, never 
     assert.ok(!JSON.stringify(result.payload).includes('SECRET-TOKEN'));
 });
 
+test('the public per-user history keeps serving the limits the site sends', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize);
+
+    for (const [limit, offset, rows] of [['5', '0', 2], ['5', '1', 1], ['200', '0', 2], ['1000', '0', 2], ['5', '5', 0]]) {
+        const result = await call('getStorageLastItemsByUserId', { id: '1', limit, offset });
+        assert.strictEqual(result.code, 200, `limit ${limit} offset ${offset}: ${JSON.stringify(result.payload)}`);
+        assert.strictEqual(result.payload.data.length, rows, `limit ${limit} offset ${offset}`);
+    }
+});
+
+test('the public per-user history answers 422, not 500, to a limit or offset that is not a sane integer', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize);
+
+    const bad = [
+        { id: '1', limit: '-1', offset: '0' },
+        { id: '1', limit: '.5', offset: '0' },
+        { id: '1', limit: '1.5', offset: '0' },
+        { id: '1', limit: '0', offset: '0' },
+        { id: '1', limit: '1001', offset: '0' },
+        { id: '1', limit: '10', offset: '-1' },
+        { id: '1', limit: '10', offset: '.5' },
+        { id: '1', limit: '10', offset: '99999999999999999999' },
+        { id: '1.5', limit: '10', offset: '0' },
+        { id: '-1', limit: '10', offset: '0' },
+    ];
+
+    for (const params of bad) {
+        const result = await call('getStorageLastItemsByUserId', params);
+        assert.strictEqual(result.code, 422, `${JSON.stringify(params)}: ${JSON.stringify(result.payload)}`);
+    }
+});
+
 test('the other public storage lists never carry the withdrawal contact', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
