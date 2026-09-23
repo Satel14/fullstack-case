@@ -187,12 +187,13 @@ module.exports.setStorageStatusById = async (storage_id, storage_status, options
     }
 };
 
-module.exports.cleanStorageUser = async (userId) => {
+module.exports.cleanStorageUser = async (userId, options = {}) => {
     try {
         await Storage.destroy({
             where: {
                 storage_userId: userId
-            }
+            },
+            ...options,
         })
         return;
     } catch (e) {

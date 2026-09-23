@@ -112,3 +112,76 @@ test('a reset keeps the bonuses the player already claimed', async () => {
     const [rows] = await sequelize.query('SELECT userId, bonusId FROM bonus_history');
     assert.deepStrictEqual(rows.map((r) => [r.userId, r.bonusId]), [[1, 'daily']]);
 });
+
+const setUpRichPlayer = async (sequelize) => {
+    await seedPlayers(sequelize);
+    await sequelize.query('UPDATE users SET balance = 100, `rank` = 5 WHERE id = 1');
+    await sequelize.query(
+        "INSERT INTO storage (userId, itemId, color, caseId, status) VALUES (1, 10, 'default', 'bomj', 'inventory')",
+    );
+    await sequelize.query(
+        'INSERT INTO balance_history (userId, type, balanceChange, extraData, created_at) '
+        + "VALUES (1, 'payment', 100, '', NOW())",
+    );
+};
+
+const profileOf = async (sequelize) => {
+    const [[user]] = await sequelize.query('SELECT balance, `rank` FROM users WHERE id = 1');
+    const [[storage]] = await sequelize.query('SELECT COUNT(*) AS n FROM storage WHERE userId = 1');
+    const [[history]] = await sequelize.query('SELECT COUNT(*) AS n FROM balance_history WHERE userId = 1');
+    return {
+        balance: Number(user.balance),
+        rank: Number(user.rank),
+        items: Number(storage.n),
+        history: Number(history.n),
+    };
+};
+
+test('a reset that fails part-way leaves the profile exactly as it was', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await setUpRichPlayer(sequelize);
+
+    const StorageService = require('../src/services/storage');
+    const { cleanStorageUser } = StorageService;
+    StorageService.cleanStorageUser = async () => { throw new Error('storage unavailable'); };
+    try {
+        assert.strictEqual((await reset(1)).code, 400);
+    } finally {
+        StorageService.cleanStorageUser = cleanStorageUser;
+    }
+
+    assert.deepStrictEqual(await profileOf(sequelize), {
+        balance: 100, rank: 5, items: 1, history: 1,
+    });
+});
+
+test('a reset waits for the player row before it changes anything', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await setUpRichPlayer(sequelize);
+    const UserService = require('../src/services/user');
+
+    const open = await sequelize.transaction();
+    let resetting;
+    try {
+        await UserService.getBalanceByUserId(1, { transaction: open, lock: open.LOCK.UPDATE });
+
+        let settled = false;
+        resetting = reset(1).finally(() => { settled = true; });
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        assert.strictEqual(settled, false, 'the reset must queue behind the transaction that holds the player row');
+        assert.deepStrictEqual(await profileOf(sequelize), {
+            balance: 100, rank: 5, items: 1, history: 1,
+        });
+    } finally {
+        await open.commit();
+    }
+
+    assert.strictEqual((await resetting).code, 200);
+    const after = await profileOf(sequelize);
+    assert.strictEqual(after.balance, 0);
+    assert.strictEqual(after.rank, 0);
+    assert.strictEqual(after.items, 0);
+});

@@ -156,11 +156,13 @@ module.exports.resetUser = async (req, res) => {
     try {
         const { user_id } = req.user.profile;
 
-        await BalanceHistoryService.cleanBalanceHistory(user_id);
-        await UserService.resetBalance(user_id)   ;
-        await StorageService.cleanStorageUser(user_id);
-
-        await UserService.resetRank(user_id);
+        await sequelize.transaction(async (t) => {
+            await UserService.lockUsersInIdOrder([user_id], t);
+            await UserService.resetBalance(user_id, { transaction: t });
+            await UserService.resetRank(user_id, { transaction: t });
+            await BalanceHistoryService.cleanBalanceHistory(user_id, { transaction: t });
+            await StorageService.cleanStorageUser(user_id, { transaction: t });
+        });
 
         return res.status(200).json({ status: 200 });
     } catch (e) {

@@ -31,12 +31,13 @@ module.exports.getHistoryByUserAndType = async (userId, type) => {
     }
 }
 
-module.exports.cleanBalanceHistory = async (userId) => {
+module.exports.cleanBalanceHistory = async (userId, options = {}) => {
     try {
         await BalanceHistory.destroy({
             where: {
                 history_userId: userId
-            }
+            },
+            ...options,
         })
         return;
     } catch (e) {

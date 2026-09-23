@@ -100,12 +100,12 @@ module.exports.incrementBalance = async (value, id, options = {}) => {
     }
 };
 
-module.exports.resetBalance = async (id) => {
+module.exports.resetBalance = async (id, options = {}) => {
     try {
         const defaultBalance = 0;
         await User.update(
             { user_balance: defaultBalance },
-            { where: { user_id: id } }
+            { where: { user_id: id }, ...options }
         );
         return true;
     } catch (e) {
@@ -113,12 +113,12 @@ module.exports.resetBalance = async (id) => {
     }
 };
 
-module.exports.resetRank = async (id) => {
+module.exports.resetRank = async (id, options = {}) => {
     try {
         const defaultRank = 0;
         await User.update(
             { user_rank: defaultRank },
-            { where: { user_id: id } }
+            { where: { user_id: id }, ...options }
         );
         return true;
     } catch (e) {
