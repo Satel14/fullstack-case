@@ -195,9 +195,9 @@ test('the chat asks the shared socket helper to connect instead of calling conne
     socket.connect.mockReset();
 
     renderLive();
-    const { input } = send('hello there');
-    void input;
+    connectSocket.mockClear();
+    send('hello there');
 
-    expect(connectSocket).toHaveBeenCalled();
+    expect(connectSocket).toHaveBeenCalledTimes(1);
     expect(socket.connect).not.toHaveBeenCalled();
 });

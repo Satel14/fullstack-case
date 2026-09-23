@@ -2,17 +2,22 @@ import io from "socket.io-client";
 
 const WS_URL = process.env.REACT_APP_WS_URL || 'http://localhost:3003';
 
+const storedToken = () => {
+    try {
+        return localStorage.getItem('token');
+    } catch (e) {
+        return null;
+    }
+};
+
+let handshakeToken = null;
+
 const ws = io(WS_URL, {
     transports: ["websocket"],
     withCredentials: true,
     auth: (cb) => {
-        let token = null;
-        try {
-            token = localStorage.getItem('token');
-        } catch (e) {
-            token = null;
-        }
-        cb({ token });
+        handshakeToken = storedToken();
+        cb({ token: handshakeToken });
     },
 });
 
@@ -60,18 +65,21 @@ ws.on('connect', () => {
     handshakePending = false;
     clearTimeout(retryTimer);
     retryTimer = null;
-    if (reauthorizeWhenConnected) {
-        reauthorizeWhenConnected = false;
-        reconnectSocket();
+    const tokenChanged = handshakeToken !== storedToken();
+    if (reauthorizeWhenConnected && tokenChanged) {
+        setTimeout(reconnectSocket, 0);
     }
+    reauthorizeWhenConnected = false;
 });
 
 ws.on('disconnect', () => {
     handshakePending = false;
+    reauthorizeWhenConnected = false;
 });
 
 ws.on('connect_error', (error) => {
     handshakePending = false;
+    reauthorizeWhenConnected = false;
     if (error && error.message === 'session check failed') {
         clearTimeout(retryTimer);
         retryTimer = setTimeout(() => {
