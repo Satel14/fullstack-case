@@ -25,7 +25,6 @@ const RECONNECT_FALLBACK_MS = 1000;
 const SESSION_CHECK_RETRY_MS = 2000;
 
 let handshakePending = true;
-let reauthorizeWhenConnected = false;
 let retryTimer = null;
 
 export const connectSocket = () => {
@@ -38,10 +37,6 @@ export const connectSocket = () => {
 
 export const reconnectSocket = () => {
     if (!ws.connected) {
-        if (handshakePending) {
-            reauthorizeWhenConnected = true;
-            return;
-        }
         connectSocket();
         return;
     }
@@ -65,21 +60,17 @@ ws.on('connect', () => {
     handshakePending = false;
     clearTimeout(retryTimer);
     retryTimer = null;
-    const tokenChanged = handshakeToken !== storedToken();
-    if (reauthorizeWhenConnected && tokenChanged) {
+    if (handshakeToken !== storedToken()) {
         setTimeout(reconnectSocket, 0);
     }
-    reauthorizeWhenConnected = false;
 });
 
 ws.on('disconnect', () => {
     handshakePending = false;
-    reauthorizeWhenConnected = false;
 });
 
 ws.on('connect_error', (error) => {
     handshakePending = false;
-    reauthorizeWhenConnected = false;
     if (error && error.message === 'session check failed') {
         clearTimeout(retryTimer);
         retryTimer = setTimeout(() => {

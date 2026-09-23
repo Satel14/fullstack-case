@@ -166,3 +166,16 @@ test('a pending re-authentication is dropped when that handshake fails, since th
 
     expect(mockSocket.disconnect).not.toHaveBeenCalled();
 });
+
+test('a token that changes while a handshake is in flight is picked up even without a login call, e.g. on logout', async () => {
+    dropped();
+    localStorage.setItem('token', 'old');
+    connectSocket();
+    await handshakeReadsToken();
+
+    localStorage.removeItem('token');
+    connected();
+    jest.advanceTimersByTime(0);
+
+    expect(mockSocket.disconnect).toHaveBeenCalledTimes(1);
+});
