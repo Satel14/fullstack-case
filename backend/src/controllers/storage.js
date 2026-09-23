@@ -53,9 +53,15 @@ module.exports.receiveItemByStorageId = async (req, res) => {
         const { user_id } = req.user.profile;
         const { id } = req.params;
 
-        const { user_receiveInfo } = await UserService.getUserFullInfoById(user_id);
-
         await sequelize.transaction(async (t) => {
+            const { user_receiveInfo } = await UserService.getUserFullInfoById(user_id, { transaction: t });
+
+            if (!user_receiveInfo || !String(user_receiveInfo).trim()) {
+                const err = new Error(MESSAGE.ITEM.RECEIVE_INFO_REQUIRED);
+                err.code = 'NO_RECEIVE_INFO';
+                throw err;
+            }
+
             const locked = await StorageService.getStorageInfoById(user_id, id, 'inventory', {
                 transaction: t,
                 lock: t.LOCK.UPDATE,
@@ -75,6 +81,9 @@ module.exports.receiveItemByStorageId = async (req, res) => {
     } catch (e) {
         if (e && e.code === 'NOT_RECEIVABLE') {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
+        }
+        if (e && e.code === 'NO_RECEIVE_INFO') {
+            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.RECEIVE_INFO_REQUIRED });
         }
         return res.status(500).json({ status: 500, message: e.message });
     }

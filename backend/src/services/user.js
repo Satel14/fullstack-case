@@ -29,9 +29,9 @@ module.exports.getUserById = async (id) => {
     }
 };
 
-module.exports.getUserFullInfoById = async (id) => {
+module.exports.getUserFullInfoById = async (id, options = {}) => {
     try {
-        const user = await User.findByPk(id);
+        const user = await User.findByPk(id, options);
 
         if (!user) throw new Error(MESSAGE.USER.NOT_EXIST);
 
