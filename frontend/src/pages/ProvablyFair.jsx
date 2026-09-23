@@ -109,11 +109,11 @@ const ProvablyFair = () => {
                 if (r.verification === 'none') {
                     return <Tag title={t('provablyFair.legacyNote')}>{t('provablyFair.legacy')}</Tag>;
                 }
-                if (r.verification === 'unknown') {
-                    return <Tag title={t('provablyFair.unknownNote')}>{t('provablyFair.verificationUnknown')}</Tag>;
-                }
                 if (!r.revealedServerSeed) {
                     return <Tag>{t('provablyFair.awaitingRotate')}</Tag>;
+                }
+                if (r.verification === 'unknown') {
+                    return <Tag title={t('provablyFair.unknownNote')}>{t('provablyFair.verificationUnknown')}</Tag>;
                 }
                 return r.verification === 'current'
                     ? <Tag color="gold" title={t('provablyFair.currentNote')}>{t('provablyFair.verifiableCurrent')}</Tag>

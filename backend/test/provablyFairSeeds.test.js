@@ -133,9 +133,10 @@ test('locking the seed of a player who has none takes no gap lock, so two first 
         await PFService.ensureActiveSeed(userId);
     }
 
+    const prepared = await PFService.ensureActiveSeed(41);
     const t = await sequelize.transaction();
     try {
-        const seed = await PFService.lockActiveSeed(41, t);
+        const seed = await PFService.lockActiveSeed(41, t, prepared.pf_id);
         assert.strictEqual(seed.pf_userId, 41);
         assert.strictEqual(seed.pf_status, 'active');
         assert.deepStrictEqual(await gapLocksHeldBy(sequelize, t), []);
@@ -143,11 +144,14 @@ test('locking the seed of a player who has none takes no gap lock, so two first 
         await t.rollback();
     }
 
-    const firstOpen = (userId) => sequelize.transaction(async (tx) => {
-        const seed = await PFService.lockActiveSeed(userId, tx);
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        return seed.pf_userId;
-    });
+    const firstOpen = async (userId) => {
+        const preparedSeed = await PFService.ensureActiveSeed(userId);
+        return sequelize.transaction(async (tx) => {
+            const seed = await PFService.lockActiveSeed(userId, tx, preparedSeed.pf_id);
+            await new Promise((resolve) => setTimeout(resolve, 200));
+            return seed.pf_userId;
+        });
+    };
     const results = await Promise.allSettled([firstOpen(42), firstOpen(43)]);
     assert.deepStrictEqual(results.map((r) => (r.status === 'fulfilled' ? r.value : r.reason.message)), [42, 43]);
 });
@@ -162,4 +166,32 @@ test('a client seed is stored without surrounding whitespace', async () => {
     assert.strictEqual(saved.clientSeed, 'lucky seed');
     const [[row]] = await sequelize.query("SELECT clientSeed FROM provably_fair_seeds WHERE userId = 1 AND status = 'active'");
     assert.strictEqual(row.clientSeed, 'lucky seed');
+});
+
+const withinSeconds = (promise, seconds, what) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`${what} did not finish within ${seconds}s`)), seconds * 1000)),
+]);
+
+test('more concurrent rotations and opens than the pool has connections still complete', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const PFService = require('../src/services/provablyFair');
+    const poolMax = sequelize.connectionManager.pool.maxSize;
+    const callers = poolMax + 2;
+
+    const rotations = Array.from({ length: callers }, (_, i) => PFService.rotateSeed(100 + i));
+    const rotated = await withinSeconds(Promise.allSettled(rotations), 10, `${callers} concurrent rotations`);
+    assert.deepStrictEqual(rotated.filter((r) => r.status === 'rejected').map((r) => r.reason.message), []);
+
+    const openLike = async (userId) => {
+        const prepared = await PFService.ensureActiveSeed(userId);
+        return sequelize.transaction((t) => PFService.lockActiveSeed(userId, t, prepared.pf_id));
+    };
+    const opened = await withinSeconds(
+        Promise.allSettled(Array.from({ length: callers }, (_, i) => openLike(200 + i))),
+        10,
+        `${callers} concurrent seed locks`,
+    );
+    assert.deepStrictEqual(opened.filter((r) => r.status === 'rejected').map((r) => r.reason.message), []);
 });

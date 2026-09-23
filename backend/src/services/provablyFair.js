@@ -53,17 +53,16 @@ module.exports.ensureActiveSeed = async (userId, options = {}) => {
     }
 };
 
-const LOCK_ATTEMPTS = 3;
-
-module.exports.lockActiveSeed = async (userId, transaction) => {
-    for (let attempt = 0; attempt < LOCK_ATTEMPTS; attempt += 1) {
-        const current = await module.exports.ensureActiveSeed(userId);
-        const locked = await ProvablyFairSeed.findByPk(current.pf_id, { transaction, lock: transaction.LOCK.UPDATE });
-        if (locked && locked.pf_status === 'active') {
-            return locked;
+module.exports.lockActiveSeed = async (userId, transaction, preparedSeedId = null) => {
+    const lock = { transaction, lock: transaction.LOCK.UPDATE };
+    if (preparedSeedId) {
+        const prepared = await ProvablyFairSeed.findByPk(preparedSeedId, lock);
+        if (prepared && Number(prepared.pf_userId) === Number(userId) && prepared.pf_status === 'active') {
+            return prepared;
         }
     }
-    throw new Error(`No active provably-fair seed could be locked for user ${userId}`);
+    const current = await findActiveSeed(userId, lock);
+    return current || createActiveSeed(userId, null, { transaction });
 };
 
 module.exports.getState = async (userId) => {
@@ -95,8 +94,13 @@ module.exports.setClientSeed = async (userId, clientSeed) => {
     return { clientSeed: active.pf_clientSeed };
 };
 
-module.exports.rotateSeed = async (userId) => sequelize.transaction(async (t) => {
-    const active = await module.exports.lockActiveSeed(userId, t);
+module.exports.rotateSeed = async (userId) => {
+    const prepared = await module.exports.ensureActiveSeed(userId);
+    return sequelize.transaction((t) => rotateLocked(userId, prepared.pf_id, t));
+};
+
+const rotateLocked = async (userId, preparedSeedId, t) => {
+    const active = await module.exports.lockActiveSeed(userId, t, preparedSeedId);
     const carriedClientSeed = active.pf_clientSeed;
     active.pf_status = 'revealed';
     active.pf_revealed_at = new Date();
@@ -108,7 +112,7 @@ module.exports.rotateSeed = async (userId) => sequelize.transaction(async (t) =>
         clientSeed: next.pf_clientSeed,
         nonce: next.pf_nonce,
     };
-});
+};
 
 module.exports.bumpNonce = async (seedId, nextNonce, options = {}) => {
     await ProvablyFairSeed.update(

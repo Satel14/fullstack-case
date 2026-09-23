@@ -194,3 +194,35 @@ test('history tells snapshot, current-definition and unverifiable opens apart', 
     assert.strictEqual(levels[opens[1].id], 'unknown', 'without the item cache the server cannot tell, so it must not claim "none"');
     assert.strictEqual(levels[opens[2].id], 'unknown');
 });
+
+test('more players than the pool has connections can open a case at the same moment', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const players = sequelize.connectionManager.pool.maxSize + 2;
+    for (let i = 1; i <= players; i += 1) {
+        await sequelize.query(
+            "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES (?, 'x', ?, 10000, 0, 1)",
+            { replacements: [`player${i}`, `player${i}@e.ua`] },
+        );
+    }
+    await sequelize.query(
+        "INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) VALUES "
+        + "('dust2', 'DUST2', 100, 0, 1, 1, 0, 'weapon', -1)",
+    );
+    const allCases = require('../src/constant/cases/_all');
+    stubItemCache(allCases.dust2);
+    const CaseController = require('../src/controllers/case');
+
+    const opens = Array.from({ length: players }, (_, i) => respond(CaseController.openCaseById, {
+        body: { id: 'dust2', count: 1 },
+        user: { profile: { user_id: i + 1 } },
+    }));
+    const results = await Promise.race([
+        Promise.all(opens),
+        new Promise((_, reject) => setTimeout(() => reject(new Error(`${players} concurrent opens did not finish within 10s`)), 10000)),
+    ]);
+
+    assert.deepStrictEqual(results.map((r) => r.code), Array(players).fill(200));
+    const [[count]] = await sequelize.query('SELECT COUNT(*) AS n FROM case_opens');
+    assert.strictEqual(Number(count.n), players);
+});

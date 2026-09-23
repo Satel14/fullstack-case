@@ -161,3 +161,12 @@ test('the client seed is sent exactly as recorded, surrounding spaces included',
 
     await waitFor(() => expect(api.verifyOpen).toHaveBeenCalledWith(expect.objectContaining({ clientSeed: ' lucky ' })));
 });
+
+test('an unknown old open whose seed is not revealed yet says it awaits a rotation', async () => {
+    api.getOpenHistory.mockResolvedValue({ data: [{ ...ROWS[2], verification: 'unknown', revealedServerSeed: null }] });
+    render(<ProvablyFair />);
+
+    const row = await rowOf(7);
+    expect(within(row).getByText('provablyFair.awaitingRotate')).toBeInTheDocument();
+    expect(within(row).queryByText('provablyFair.verificationUnknown')).toBeNull();
+});

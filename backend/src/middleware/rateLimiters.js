@@ -48,6 +48,14 @@ const bonusLimiter = rateLimit({
     message: { status: 429, message: 'Забагато спроб. Зачекайте трохи.' },
 });
 
+const seedRotateLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: 429, message: 'Забагато оновлень сіда. Зачекайте трохи.' },
+});
+
 const adminLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 120,
@@ -58,4 +66,5 @@ const adminLimiter = rateLimit({
 
 module.exports = {
     authLimiter, caseOpenLimiter, onlineLimiter, depositLimiter, resetLimiter, bonusLimiter, adminLimiter,
+    seedRotateLimiter,
 };

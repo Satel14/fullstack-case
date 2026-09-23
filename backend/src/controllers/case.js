@@ -82,6 +82,8 @@ module.exports.openCaseById = async (req, res) => {
         const drawTable = buildDrawTable(caseDef, itemHash);
         const drawTableJson = JSON.stringify(drawTable);
 
+        const preparedSeed = await PFService.ensureActiveSeed(user_id);
+
         await sequelize.transaction(async (t) => {
             const lockedBalance = await UserService.getBalanceByUserId(user_id, {
                 transaction: t,
@@ -93,7 +95,7 @@ module.exports.openCaseById = async (req, res) => {
                 throw err;
             }
 
-            const seed = await PFService.lockActiveSeed(user_id, t);
+            const seed = await PFService.lockActiveSeed(user_id, t, preparedSeed.pf_id);
             let nonce = seed.pf_nonce;
 
             for (let index = 0; index < count; index++) {
