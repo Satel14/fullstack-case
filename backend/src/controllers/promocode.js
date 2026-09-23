@@ -45,7 +45,7 @@ module.exports.validate = (method) => {
     switch (method) {
         case 'usePromocode': {
             return [
-                body('promocode').isString().optional({ nullable: true }),
+                body('promocode').isString().trim().notEmpty(),
             ];
         }
         default:

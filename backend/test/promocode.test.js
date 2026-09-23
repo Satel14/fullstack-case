@@ -28,6 +28,22 @@ const redeem = (userId, promocode) => new Promise((resolve) => {
     }, res);
 });
 
+const redeemThroughRoute = async (userId, body) => {
+    const PromocodeController = require('../src/controllers/promocode');
+    const req = { body, user: { profile: { user_id: userId } } };
+    for (const chain of PromocodeController.validate('usePromocode')) {
+        await chain.run(req);
+    }
+    return new Promise((resolve) => {
+        const res = {
+            statusCode: 200,
+            status(code) { this.statusCode = code; return this; },
+            json(payload) { resolve({ code: this.statusCode, payload }); },
+        };
+        PromocodeController.usePromocode(req, res);
+    });
+};
+
 const seedPlayers = (sequelize) => sequelize.query(
     'INSERT INTO users (login, password, email, balance, `rank`, role) VALUES '
     + "('alice', 'x', 'alice@e.ua', 100, 0, 1), ('bob', 'x', 'bob@e.ua', 100, 0, 1)",
@@ -126,4 +142,32 @@ test('a promocode credits exactly its bonus, kopiyky included', async () => {
     assert.match(result.payload.message, /12\.50? ₴/);
     assert.deepStrictEqual(await balances(sequelize), [['alice', 112.5], ['bob', 100]]);
     assert.deepStrictEqual(await promocodeState(sequelize, 'CENTS'), { usedIds: [1], credits: 1 });
+});
+
+test('a code pasted with spaces or a tab around it is still found', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayers(sequelize);
+    await addPromocode(sequelize, 'SPRING', '50', 10);
+
+    const alice = await redeemThroughRoute(1, { promocode: ' SPRING ' });
+    const bob = await redeemThroughRoute(2, { promocode: '\tSPRING' });
+
+    assert.strictEqual(Number(alice.payload.balance), 150, JSON.stringify(alice.payload));
+    assert.strictEqual(Number(bob.payload.balance), 150, JSON.stringify(bob.payload));
+    assert.deepStrictEqual(await promocodeState(sequelize, 'SPRING'), { usedIds: [1, 2], credits: 2 });
+});
+
+test('a blank or missing code is rejected by validation', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayers(sequelize);
+    await sequelize.query("INSERT INTO promocodes (code, description, bonus, used_ids, `limit`) VALUES ('', 'blank', '50', '[]', 10)");
+
+    for (const body of [{ promocode: '   ' }, { promocode: '' }, {}]) {
+        const result = await redeemThroughRoute(1, body);
+        assert.strictEqual(result.code, 422, JSON.stringify(body));
+        assert.strictEqual(result.payload.message, MESSAGE.VALIDATOR.ERROR);
+    }
+    assert.deepStrictEqual(await balances(sequelize), [['alice', 100], ['bob', 100]]);
 });
