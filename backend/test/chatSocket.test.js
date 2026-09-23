@@ -86,3 +86,65 @@ test('one account flooding the chat is throttled per player, and everyone else o
     await settle(1100);
     assert.strictEqual((await attacker.request('chat message', { msg: 'later' })).ok, true, 'the allowance refills');
 });
+
+test("repeating 'new-user' on one socket announces the player once", async () => {
+    await start();
+    const observer = await join(null);
+    const player = await join('alice');
+
+    for (let i = 0; i < 20; i += 1) {
+        player.emit('new-user', 'alice');
+    }
+    await observer.waitFor('user-on', (list) => list.includes('alice'));
+    await settle(1300);
+
+    assert.strictEqual(observer.events('user-on').length, 1, JSON.stringify(observer.events('user-on')));
+});
+
+test('an anonymous visitor leaving does not rebroadcast the chat roster', async () => {
+    await start();
+    const observer = await join(null);
+    const visitor = await join(null);
+
+    await visitor.close();
+    await settle(300);
+
+    assert.deepStrictEqual(observer.events('user-on'), []);
+});
+
+test('a player with two tabs stays in the roster until the last tab closes', async () => {
+    await start();
+    const observer = await join(null);
+    const firstTab = await join('alice');
+    const secondTab = await join('alice');
+    firstTab.emit('new-user', 'alice');
+    secondTab.emit('new-user', 'alice');
+    await observer.waitFor('user-on', (list) => list.includes('alice'));
+
+    await secondTab.close();
+    await settle(1300);
+    const afterOneTab = observer.events('user-on');
+    assert.deepStrictEqual(afterOneTab[afterOneTab.length - 1], ['alice']);
+
+    await firstTab.close();
+    await observer.waitFor('user-on', (list) => list.length === 0);
+});
+
+test("a burst of 'user connected' reads the history at most once per second, and the last request is still answered", async () => {
+    await start();
+    const observer = await join(null);
+    const visitor = await join(null);
+
+    for (let i = 0; i < 50; i += 1) {
+        visitor.emit('user connected');
+    }
+    await settle(1300);
+
+    assert.ok(chatStore.reads >= 1 && chatStore.reads <= 2, `the history was read ${chatStore.reads} times`);
+    const answered = visitor.events('chat messages').length;
+    assert.ok(answered >= 1 && answered <= 2, `answered ${answered} times`);
+    assert.deepStrictEqual(observer.events('chat messages'), [], 'the history goes to the asking socket alone');
+
+    visitor.emit('user connected');
+    await visitor.waitFor('chat messages', () => visitor.events('chat messages').length > answered, 1500);
+});

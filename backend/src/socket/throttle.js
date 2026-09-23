@@ -30,4 +30,34 @@ function createRateLimiter({ burst, refillMs, now = Date.now }) {
     return { take, size: () => buckets.size };
 }
 
-module.exports = { createRateLimiter };
+function createTrailingThrottle(fn, intervalMs, now = () => Date.now()) {
+    let lastRun = -Infinity;
+    let timer = null;
+
+    const run = () => {
+        timer = null;
+        lastRun = now();
+        fn();
+    };
+
+    const call = () => {
+        if (timer) {
+            return;
+        }
+        const wait = lastRun + intervalMs - now();
+        if (wait <= 0) {
+            run();
+        } else {
+            timer = setTimeout(run, wait);
+        }
+    };
+
+    call.cancel = () => {
+        clearTimeout(timer);
+        timer = null;
+    };
+
+    return call;
+}
+
+module.exports = { createRateLimiter, createTrailingThrottle };

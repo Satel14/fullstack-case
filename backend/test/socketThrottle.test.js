@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { createRateLimiter } = require('../src/socket/throttle');
+const { createRateLimiter, createTrailingThrottle } = require('../src/socket/throttle');
 
 const clock = () => {
     let at = 1000000;
@@ -41,4 +41,31 @@ test('the rate limiter forgets keys whose allowance has fully refilled', () => {
     time.advance(5000);
     limiter.take('socket:new');
     assert.strictEqual(limiter.size(), 1);
+});
+
+test('the trailing throttle runs at once, folds a burst into one later run, and can be cancelled', (t) => {
+    t.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 0 });
+    let runs = 0;
+    const call = createTrailingThrottle(() => { runs += 1; }, 1000);
+
+    call();
+    assert.strictEqual(runs, 1, 'the first call is answered at once');
+    for (let i = 0; i < 50; i += 1) {
+        call();
+    }
+    assert.strictEqual(runs, 1);
+
+    t.mock.timers.tick(999);
+    assert.strictEqual(runs, 1);
+    t.mock.timers.tick(1);
+    assert.strictEqual(runs, 2, 'the burst is answered once, when the interval is over');
+    t.mock.timers.tick(5000);
+    assert.strictEqual(runs, 2);
+
+    call();
+    assert.strictEqual(runs, 3, 'a call after a quiet interval is answered at once');
+    call();
+    call.cancel();
+    t.mock.timers.tick(5000);
+    assert.strictEqual(runs, 3, 'a cancelled run never happens');
 });

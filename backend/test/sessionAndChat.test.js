@@ -38,7 +38,7 @@ test('a socket asking for the chat state gets it alone, not every connected clie
 
     const sent = [];
     const socket = { emit: (event, payload) => sent.push([event, payload]) };
-    await onUserConnected(socket, new Map([['player', ['c', 's']]]))();
+    await onUserConnected(socket, { chatLogins: () => ['player'] })();
 
     assert.deepStrictEqual(sent, [
         ['user-on', ['player']],

@@ -1,13 +1,16 @@
 const ChatService = require("../services/chat")
 const { userFromToken, sessionUser, tokenVersionOf } = require('../auth/token');
 const { postChatMessage } = require('./chatMessage');
-const { createRateLimiter } = require('./throttle');
+const { createRateLimiter, createTrailingThrottle } = require('./throttle');
+const { createPresence } = require('./presence');
 
 let ioInstance = null;
 
 const SESSION_CHECK_FAILED = 'session check failed';
 const CHAT_MESSAGE_BURST = 5;
 const CHAT_MESSAGE_REFILL_MS = 1000;
+const CHAT_STATE_INTERVAL_MS = 1000;
+const ROSTER_BROADCAST_INTERVAL_MS = 1000;
 
 const chatSenderKey = (socket) => (socket.userInfo ? `user:${socket.userInfo.id}` : `socket:${socket.id}`);
 
@@ -36,9 +39,9 @@ const authenticateHandshake = async (socket, next) => {
     return next();
 };
 
-const onUserConnected = (socket, usersConnected) => async () => {
+const onUserConnected = (socket, presence) => async () => {
     try {
-        socket.emit('user-on', Array.from(usersConnected.keys()));
+        socket.emit('user-on', presence.chatLogins());
         const lastMessages = await ChatService.get();
         socket.emit('chat messages', lastMessages);
     } catch (e) {
@@ -59,24 +62,24 @@ module.exports = function (server) {
 
     io.use(authenticateHandshake);
 
-    const usersConnected = new Map();
+    const presence = createPresence();
     const chatLimiter = createRateLimiter({ burst: CHAT_MESSAGE_BURST, refillMs: CHAT_MESSAGE_REFILL_MS });
+    const broadcastRoster = createTrailingThrottle(
+        () => io.emit('user-on', presence.chatLogins()),
+        ROSTER_BROADCAST_INTERVAL_MS
+    );
 
     io.on('connection', (socket) => {
-        const { id } = socket.client;
+        presence.connect(socket.id, socket.userInfo);
 
-        socket.on('user connected', onUserConnected(socket, usersConnected));
+        const sendChatState = createTrailingThrottle(onUserConnected(socket, presence), CHAT_STATE_INTERVAL_MS);
+        socket.on('user connected', () => sendChatState());
 
-        socket.on('new-user', async () => {
-            if (!socket.userInfo) {
-                return;
+        socket.on('new-user', () => {
+            if (presence.joinChat(socket.id)) {
+                console.log('connection' + socket.userInfo.login);
+                broadcastRoster();
             }
-            const login = socket.userInfo.login;
-            console.log('connection' + login);
-
-            usersConnected.set(login, [socket.client.id, socket.id]);
-            io.emit('user-on', Array.from(usersConnected.keys()));
-            return;
         });
 
         socket.on("chat message", async (payload, ack) => {
@@ -104,14 +107,10 @@ module.exports = function (server) {
         })
 
         socket.on('disconnect', () => {
-            for (const key of usersConnected.keys()) {
-                if (usersConnected.get(key)[0] === id) {
-                    usersConnected.delete(key);
-                    break;
-                }
+            sendChatState.cancel();
+            if (presence.disconnect(socket.id)) {
+                broadcastRoster();
             }
-
-            io.emit('user-on', Array.from(usersConnected.keys()));
         })
     })
 }
