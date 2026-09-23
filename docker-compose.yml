@@ -20,8 +20,14 @@ services:
   redis:
     image: redis:alpine
     container_name: redis
+    command:
+      - sh
+      - -c
+      - exec docker-entrypoint.sh redis-server $${REDIS_PASSWORD:+--requirepass "$$REDIS_PASSWORD"}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     networks:
       - private
 
@@ -60,6 +66,7 @@ services:
       PROD_DB_USER: fullstack
       PROD_DB_PASS: "1234"
       REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       JWT_SECRET: asf4ASGiuh8xc735unjk
       CLIENT_ORIGIN: http://localhost:3009
       TRUST_PROXY: ${TRUST_PROXY:-}

@@ -16,6 +16,7 @@ const clientOptions = {
     enable_offline_queue: false,
     retry_strategy: retryStrategy,
     connect_timeout: LARGEST_TIMER_MS,
+    ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
 };
 
 const client = redis.createClient(redisPort, redisHost, clientOptions);
