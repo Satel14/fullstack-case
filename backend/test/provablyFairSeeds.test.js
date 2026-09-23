@@ -195,3 +195,73 @@ test('more concurrent rotations and opens than the pool has connections still co
     );
     assert.deepStrictEqual(opened.filter((r) => r.status === 'rejected').map((r) => r.reason.message), []);
 });
+
+test('a burst of rotations and opens for one player never deadlocks and leaves one active seed', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await sequelize.query(
+        "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES ('player', 'x', 'player@e.ua', 0, 0, 1)",
+    );
+    const PFService = require('../src/services/provablyFair');
+    const UserService = require('../src/services/user');
+    await PFService.ensureActiveSeed(1);
+
+    const openLike = async () => {
+        const prepared = await PFService.ensureActiveSeed(1);
+        return sequelize.transaction(async (t) => {
+            await UserService.getBalanceByUserId(1, { transaction: t, lock: t.LOCK.UPDATE });
+            const seed = await PFService.lockActiveSeed(1, t, prepared.pf_id);
+            await PFService.bumpNonce(seed.pf_id, seed.pf_nonce + 1, { transaction: t });
+        });
+    };
+
+    for (let round = 0; round < 6; round += 1) {
+        const burst = Array.from({ length: 8 }, (_, i) => (i % 2 === 0 ? PFService.rotateSeed(1) : openLike()));
+        const results = await Promise.allSettled(burst);
+        assert.deepStrictEqual(
+            results.filter((r) => r.status === 'rejected').map((r) => r.reason.message),
+            [],
+            `round ${round}`,
+        );
+    }
+    const [[active]] = await sequelize.query("SELECT COUNT(*) AS n FROM provably_fair_seeds WHERE userId = 1 AND status = 'active'");
+    assert.strictEqual(Number(active.n), 1);
+});
+
+test('a rotation waits for the player row before it touches any seed, the same lock order as a case open', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await sequelize.query(
+        "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES ('player', 'x', 'player@e.ua', 0, 0, 1)",
+    );
+    const PFService = require('../src/services/provablyFair');
+    const UserService = require('../src/services/user');
+    await PFService.ensureActiveSeed(1);
+
+    const open = await sequelize.transaction();
+    let rotation;
+    try {
+        await UserService.getBalanceByUserId(1, { transaction: open, lock: open.LOCK.UPDATE });
+        const [[openTrx]] = await sequelize.query(
+            'SELECT trx_id FROM information_schema.innodb_trx WHERE trx_mysql_thread_id = CONNECTION_ID()',
+            { transaction: open },
+        );
+
+        let settled = false;
+        rotation = PFService.rotateSeed(1).finally(() => { settled = true; });
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        assert.strictEqual(settled, false, 'the rotation must queue behind the open that holds the player row');
+
+        const [seedLocksByOthers] = await sequelize.query(
+            "SELECT ENGINE_TRANSACTION_ID, LOCK_MODE FROM performance_schema.data_locks "
+            + "WHERE OBJECT_NAME = 'provably_fair_seeds' AND LOCK_TYPE = 'RECORD' AND ENGINE_TRANSACTION_ID <> ?",
+            { replacements: [openTrx.trx_id], transaction: open },
+        );
+        assert.deepStrictEqual(seedLocksByOthers, [], 'the rotation locked a seed while the open held the player row');
+    } finally {
+        await open.commit();
+    }
+    await rotation;
+    const [[active]] = await sequelize.query("SELECT COUNT(*) AS n FROM provably_fair_seeds WHERE userId = 1 AND status = 'active'");
+    assert.strictEqual(Number(active.n), 1);
+});

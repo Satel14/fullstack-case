@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const ProvablyFairSeed = require('../models/provablyFairSeed');
 const CaseOpenRecord = require('../models/caseOpenRecord');
+const User = require('../models/user');
 const sequelize = require('../config/db');
 const { sha256, deriveWinner } = require('../modules/provablyFair');
 const allCases = require('../constant/cases/_all');
@@ -100,6 +101,7 @@ module.exports.rotateSeed = async (userId) => {
 };
 
 const rotateLocked = async (userId, preparedSeedId, t) => {
+    await User.findByPk(userId, { attributes: ['user_id'], transaction: t, lock: t.LOCK.UPDATE });
     const active = await module.exports.lockActiveSeed(userId, t, preparedSeedId);
     const carriedClientSeed = active.pf_clientSeed;
     active.pf_status = 'revealed';
