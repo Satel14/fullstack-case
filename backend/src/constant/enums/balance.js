@@ -6,4 +6,5 @@ module.exports.BalanceHistory = {
     BONUS: 'bonus',
     SEND_MONEY: 'sendmoney',
     ADMIN_ADJUST: 'admin_adjust',
+    RESET: 'reset',
 };

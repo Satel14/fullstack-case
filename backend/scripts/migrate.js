@@ -50,6 +50,9 @@ const DOWN_EFFECTS = {
     '20260923000000-uah-credit-rate-module.js':
         'deletes the uah-credit-rate module row, including a rate someone set by hand, so every sell pays '
         + 'at the fallback rate of 1',
+    '20260923000100-balance-history-reset.js':
+        'removes reset from the balance_history.type ENUM — it refuses while any balance_history row still uses '
+        + 'that type, and while it is reverted every profile reset fails',
 };
 
 const EXPECTED_COLUMNS = [

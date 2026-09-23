@@ -186,6 +186,79 @@ test('a reset waits for the player row before it changes anything', async () => 
     assert.strictEqual(after.items, 0);
 });
 
+const historyOf = async (sequelize, userId) => {
+    const [rows] = await sequelize.query(
+        'SELECT type, balanceChange FROM balance_history WHERE userId = ? ORDER BY id',
+        { replacements: [userId] },
+    );
+    return rows.map((r) => [r.type, Number(r.balanceChange)]);
+};
+
+test('a reset keeps the balance history and records the balance it took', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await setUpRichPlayer(sequelize);
+
+    assert.strictEqual((await reset(1)).code, 200);
+
+    assert.deepStrictEqual(await historyOf(sequelize, 1), [['payment', 100], ['reset', -100]]);
+    assert.strictEqual(await balanceOf(sequelize, 'alice'), 0);
+});
+
+test('a reset records the balance it actually removed when a credit lands while it waits', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await setUpRichPlayer(sequelize);
+    const UserService = require('../src/services/user');
+    const BalanceHistoryService = require('../src/services/balanceHistory');
+
+    const sale = await sequelize.transaction();
+    let resetting;
+    try {
+        await UserService.getBalanceByUserId(1, { transaction: sale, lock: sale.LOCK.UPDATE });
+        resetting = reset(1);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        await UserService.incrementBalance(50, 1, { transaction: sale });
+        await BalanceHistoryService.addBalanceChange(1, 'sellitem', 50, '', { transaction: sale });
+    } finally {
+        await sale.commit();
+    }
+
+    assert.strictEqual((await resetting).code, 200);
+    assert.deepStrictEqual(await historyOf(sequelize, 1), [['payment', 100], ['sellitem', 50], ['reset', -150]]);
+    assert.strictEqual(await balanceOf(sequelize, 'alice'), 0);
+});
+
+test('the reset balance type cannot be removed while rows still use it', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const { createMigrator } = require('../src/db/migrator');
+    const migrator = createMigrator(sequelize, { quiet: true });
+    await setUpRichPlayer(sequelize);
+    assert.strictEqual((await reset(1)).code, 200);
+
+    await assert.rejects(
+        () => migrator.down({ to: '20260923000100-balance-history-reset.js' }),
+        /Cannot remove reset: 1 balance_history row/,
+    );
+
+    const [type] = await sequelize.query("SHOW COLUMNS FROM balance_history WHERE Field = 'type'");
+    assert.match(type[0].Type, /'reset'/);
+});
+
+test('the reset balance type is removed cleanly when nothing uses it', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const { createMigrator } = require('../src/db/migrator');
+    const migrator = createMigrator(sequelize, { quiet: true });
+
+    await migrator.down({ to: '20260923000100-balance-history-reset.js' });
+
+    const [type] = await sequelize.query("SHOW COLUMNS FROM balance_history WHERE Field = 'type'");
+    assert.doesNotMatch(type[0].Type, /'reset'/);
+    assert.match(type[0].Type, /'admin_adjust'/);
+});
+
 test('a reset keeps pending withdrawals and delivered items', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;

@@ -30,17 +30,3 @@ module.exports.getHistoryByUserAndType = async (userId, type) => {
         throw Error(e.message);
     }
 }
-
-module.exports.cleanBalanceHistory = async (userId, options = {}) => {
-    try {
-        await BalanceHistory.destroy({
-            where: {
-                history_userId: userId
-            },
-            ...options,
-        })
-        return;
-    } catch (e) {
-        throw Error(e.message);
-    }
-}
