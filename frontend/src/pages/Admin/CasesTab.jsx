@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Table, InputNumber, Switch, Button, Input, Alert, Space } from 'antd';
+import {
+    Table, InputNumber, Switch, Button, Input, Alert, Space, Tooltip,
+} from 'antd';
 import { useTranslation } from 'react-i18next';
 import { getAdminCases, updateAdminCase } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
@@ -57,6 +59,8 @@ const CasesTab = () => {
             });
             openNotification('success', t('admin.cases.saved'), row.case_id);
         } catch (e) {
+            const message = e && e.error && e.message ? e.message : t('common.serverError');
+            openNotification('error', t('admin.cases.saveFailed'), message);
         } finally {
             setSaving(null);
         }
@@ -87,14 +91,18 @@ const CasesTab = () => {
             ),
         },
         {
-            title: t('admin.cases.discount'),
+            title: (
+                <Tooltip title={t('admin.cases.salePriceHint')}>
+                    {t('admin.cases.salePrice')}
+                </Tooltip>
+            ),
             key: 'case_discount',
             render: (row) => (
                 <InputNumber
                     min={0}
                     precision={0}
                     value={editValue(row, 'case_discount')}
-                    onChange={(value) => setEdit(row.case_id, 'case_discount', value)}
+                    onChange={(value) => setEdit(row.case_id, 'case_discount', value === null ? 0 : value)}
                 />
             ),
         },

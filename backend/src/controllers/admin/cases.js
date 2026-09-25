@@ -12,6 +12,15 @@ const snapshot = (row) => ({
     title: row.case_title,
 });
 
+const salePriceFits = (fields, current) => {
+    if (fields.case_price === undefined && fields.case_discount === undefined) {
+        return true;
+    }
+    const price = Number(fields.case_price !== undefined ? fields.case_price : current.case_price);
+    const discount = Number(fields.case_discount !== undefined ? fields.case_discount : current.case_discount) || 0;
+    return discount === 0 || (discount > 0 && discount < price);
+};
+
 module.exports.list = async (req, res) => {
     try {
         const cases = await CaseService.getAllCases(true);
@@ -30,16 +39,24 @@ module.exports.update = async (req, res) => {
         }
 
         const { id } = req.params;
+        const fields = req.body.case_discount === null ? { ...req.body, case_discount: 0 } : req.body;
         const existing = await CaseService.getCaseById(id).catch(() => null);
         if (!existing) {
             return res.status(422).json({ status: 422, message: MESSAGE.CASE.NOT_EXIST });
         }
 
-        const before = snapshot(existing);
         let updated = null;
 
         await sequelize.transaction(async (t) => {
-            updated = await CaseService.updateCaseFields(id, req.body, { transaction: t });
+            const current = await CaseService.getCaseById(id, { transaction: t, lock: t.LOCK.UPDATE });
+            if (!salePriceFits(fields, current)) {
+                const err = new Error(MESSAGE.ADMIN.DISCOUNT_INVALID);
+                err.code = 'DISCOUNT_INVALID';
+                throw err;
+            }
+
+            const before = snapshot(current);
+            updated = await CaseService.updateCaseFields(id, fields, { transaction: t });
 
             await AdminActionService.record(
                 {
@@ -56,6 +73,9 @@ module.exports.update = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: updated });
     } catch (e) {
+        if (e && e.code === 'DISCOUNT_INVALID') {
+            return res.status(422).json({ status: 422, message: e.message });
+        }
         console.error('[admin] cases.update failed:', e);
         return res.status(400).json({ status: 400, message: MESSAGE.ADMIN.ERROR });
     }
@@ -67,7 +87,7 @@ module.exports.validate = (method) => {
             return [
                 param('id').exists().isString(),
                 body('case_price').optional().isInt({ min: 0 }),
-                body('case_discount').optional().isInt({ min: 0 }),
+                body('case_discount').optional({ nullable: true }).isInt({ min: 0 }),
                 body('case_published').optional().isInt({ min: 0, max: 1 }),
                 body('case_openLimit').optional().isInt({ min: -1 }),
                 body('case_title').optional().isString().isLength({ max: 255 }),

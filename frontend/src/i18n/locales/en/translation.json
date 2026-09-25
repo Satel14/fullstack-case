@@ -398,11 +398,13 @@
             "id": "Id",
             "name": "Title",
             "price": "Price",
-            "discount": "Discount",
+            "salePrice": "Sale price",
+            "salePriceHint": "What one open costs during a sale. Must be below the price; 0 removes the sale",
             "openLimit": "Open limit",
             "opened": "Opened",
             "published": "Published",
             "saved": "Case saved",
+            "saveFailed": "The case was not saved",
             "loadFailed": "Could not load the cases"
         },
         "users": {
