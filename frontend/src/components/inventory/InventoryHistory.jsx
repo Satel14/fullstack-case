@@ -46,6 +46,11 @@ class InventoryHistory extends React.Component {
     return '';
   }
 
+  itemImage(id) {
+    const imagePath = this.getShortInfoItem(id, 'item_imagePath');
+    return imagePath ? `url(${encodeURI(imagePath)})` : 'none';
+  }
+
   addItemsToCache(arrayItemIds) {
     const { itemCache } = this.props;
     for (let index = 0; index < arrayItemIds.length; index++) {
@@ -151,7 +156,7 @@ class InventoryHistory extends React.Component {
                                 )}`
                               }
                               style={{
-                                backgroundImage: `url(/img/items/${item.storage_itemId}.webp)`,
+                                backgroundImage: this.itemImage(item.storage_itemId),
                               }}
                             >
                               <ItemColor color={item.storage_color} />
