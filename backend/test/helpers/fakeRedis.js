@@ -57,6 +57,9 @@ const createFakeRedis = () => {
                 return 0;
             }
             if (store.get(legacyKey).size > Number(largest)) {
+                if (store.has(oversizedKey)) {
+                    return -2;
+                }
                 store.set(oversizedKey, store.get(legacyKey));
                 store.delete(legacyKey);
                 return -1;

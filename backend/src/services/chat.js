@@ -13,8 +13,10 @@ const adoptLegacyHistory = async () => {
     const kept = await RedisManager.adoptLegacyHash(
         LEGACY_CHAT_HASH, CHAT_LIST, OVERSIZED_LEGACY_CHAT_HASH, MAXIMUM_STORED_MESSAGES, LARGEST_LEGACY_CHAT_HASH
     );
-    if (kept < 0) {
+    if (kept === -1) {
         console.warn(`[Chat] ${LEGACY_CHAT_HASH} holds more than ${LARGEST_LEGACY_CHAT_HASH} messages; set aside as ${OVERSIZED_LEGACY_CHAT_HASH} instead of carried over`);
+    } else if (kept === -2) {
+        console.warn(`[Chat] ${LEGACY_CHAT_HASH} holds more than ${LARGEST_LEGACY_CHAT_HASH} messages and ${OVERSIZED_LEGACY_CHAT_HASH} already exists; both left in place`);
     }
 };
 

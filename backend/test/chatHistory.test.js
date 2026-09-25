@@ -119,6 +119,18 @@ test('a legacy chat_hash too large to carry over in one step is set aside, not l
     assert.strictEqual(fake.entriesAt('chat_hash:oversized'), 10001);
 });
 
+test('empty legacy values are dropped, not carried over', async () => {
+    const { fake, ChatService } = freshChat();
+    const hash = legacyHash(fake, [0]);
+    hash.set('emptyArray', '[]');
+    hash.set('emptyObject', '{}');
+
+    const last = await ChatService.get();
+
+    assert.deepStrictEqual(last.map((m) => m.msg), ['m0']);
+    assert.strictEqual(fake.entriesAt('chat_messages'), 1);
+});
+
 test('a corrupt legacy entry is dropped instead of breaking the chat', async () => {
     const { fake, ChatService } = freshChat();
     const hash = legacyHash(fake, [0, 1, 2]);
@@ -178,10 +190,29 @@ const report = (result) => { console.log('RESULT ' + JSON.stringify(result)); };
         const oversizedKept = await call('hlen', prefix + ':oversized');
         const bigLeft = await call('exists', big);
         const bigList = await call('exists', prefix + ':bigList');
-        await call('del', adopted, prefix + ':oversized');
+        await call('hmset', big, ...bigFields);
+        const secondOversized = await manager.adoptLegacyHash(big, prefix + ':bigList', prefix + ':oversized', 500, 10);
+        const firstAsideKept = await call('hlen', prefix + ':oversized');
+        const secondLeft = await call('hlen', big);
+        await call('del', adopted, prefix + ':oversized', big);
+
+        const small = prefix + ':small';
+        await call('hmset', small, 'a', JSON.stringify({ msg: 'a', time: 1 }), 'e', '[]', 'o', '{}');
+        const smallKept = await manager.adoptLegacyHash(small, prefix + ':smallList', prefix + ':unused', 500, 1000);
+        const smallList = await manager.getListRange(prefix + ':smallList', 0, -1);
+        await call('del', prefix + ':smallList');
+
+        const broken = prefix + ':brokenList';
+        await call('set', broken, 'not a list');
+        await call('hmset', small, 'a', JSON.stringify({ msg: 'a', time: 1 }));
+        let brokenError = null;
+        try { await manager.adoptLegacyHash(small, broken, prefix + ':unused', 500, 1000); } catch (e) { brokenError = e.message; }
+        const smallAfterError = await call('hlen', small);
+        await call('del', broken, small);
 
         report({
             capped, lastTwo, missing, moved, afterFirst, hashLeft, movedAgain, afterSecond, nothing, oversized, oversizedKept, bigLeft, bigList,
+            secondOversized, firstAsideKept, secondLeft, smallKept, smallList, brokenError, smallAfterError,
         });
     } finally {
         await call('del', list, hash);
@@ -225,4 +256,11 @@ test('the list helpers keep their contract on a real Redis', {
     assert.strictEqual(result.oversizedKept, 11);
     assert.strictEqual(result.bigLeft, 0);
     assert.strictEqual(result.bigList, 0);
+    assert.strictEqual(result.secondOversized, -2, 'a second oversized hash never replaces the one set aside');
+    assert.strictEqual(result.firstAsideKept, 11);
+    assert.strictEqual(result.secondLeft, 11);
+    assert.strictEqual(result.smallKept, 1);
+    assert.deepStrictEqual(result.smallList, [JSON.stringify({ msg: 'a', time: 1 })], 'empty values like [] and {} are dropped');
+    assert.match(result.brokenError, /WRONGTYPE/);
+    assert.strictEqual(result.smallAfterError, 1, 'a failed carry-over keeps the legacy hash');
 });
