@@ -109,7 +109,8 @@ test('a sale locks the player before the item, so it cannot deadlock with a prof
         for (let attempt = 0; attempt < 50 && waiting.length === 0; attempt += 1) {
             await new Promise((resolve) => { setTimeout(resolve, 50); });
             [waiting] = await sequelize.query(
-                "SELECT trx_id FROM information_schema.innodb_trx WHERE trx_state = 'LOCK WAIT'",
+                "SELECT trx_id FROM information_schema.innodb_trx WHERE trx_state = 'LOCK WAIT' "
+                + 'AND trx_mysql_thread_id IN (SELECT id FROM information_schema.processlist WHERE db = DATABASE())',
                 { transaction: holder },
             );
         }
