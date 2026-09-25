@@ -225,7 +225,8 @@
         "amountRequired": "Enter the amount!",
         "trigger": "Send money",
         "successTitle": "Money sent",
-        "failTitle": "Failed"
+        "failTitle": "Failed",
+        "failed": "Failed to send the money"
     },
     "cases": {
         "searchPlaceholder": "Case name",

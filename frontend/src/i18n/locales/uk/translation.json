@@ -225,7 +225,8 @@
         "amountRequired": "Введіть суму!",
         "trigger": "Переказати гроші",
         "successTitle": "Гроші надіслано",
-        "failTitle": "Не вдалося"
+        "failTitle": "Не вдалося",
+        "failed": "Не вдалося надіслати гроші"
     },
     "cases": {
         "searchPlaceholder": "Назва кейсу",
