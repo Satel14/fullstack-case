@@ -5,6 +5,7 @@ const message = require('../constant/responseMessages');
 const Encrypt = require('../modules/Encrypt');
 const mailSender = require('../modules/mailSender');
 const { authLimiter } = require('../middleware/rateLimiters');
+const { isAcceptablePassword } = require('./credentials');
 
 module.exports = (app) => {
     app.post('/api/profile/register', authLimiter, async (req, res) => {
@@ -15,6 +16,10 @@ module.exports = (app) => {
 
             if ([login, password, email].some((value) => typeof value !== 'string' || !value)) {
                 return res.status(401).json({ message: message.AUTH.EMPTY_DATA });
+            }
+
+            if (!isAcceptablePassword(password)) {
+                return res.status(422).json({ message: message.AUTH.PASSWORD_INVALID });
             }
 
             const user = await Users.findOne({

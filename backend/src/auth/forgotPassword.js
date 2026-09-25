@@ -4,14 +4,9 @@ const mailSender = require('../modules/mailSender');
 const Encrypt = require('../modules/Encrypt');
 const PasswordResetService = require('../services/passwordReset');
 const { authLimiter } = require('../middleware/rateLimiters');
+const { isAcceptablePassword } = require('./credentials');
 
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
-const PASSWORD_MIN = 6;
-const PASSWORD_MAX = 72;
-
-const isAcceptablePassword = (password) => typeof password === 'string'
-    && password.length >= PASSWORD_MIN
-    && Buffer.byteLength(password, 'utf8') <= PASSWORD_MAX;
 
 module.exports = (app) => {
     app.post('/api/profile/forgotpassword', authLimiter, async (req, res) => {
