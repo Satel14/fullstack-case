@@ -134,25 +134,34 @@ const Inventory = ({
         const attempted = new Set();
         const refused = new Set();
         let total = 0;
+        let offset = 0;
+        let left = [];
         for (;;) {
             let rows;
             try {
                 // eslint-disable-next-line no-await-in-loop
-                const page = await getProfileStorage({ status: 'inventory', limit: PAGE_LIMIT });
+                const page = await getProfileStorage({ status: 'inventory', limit: PAGE_LIMIT, offset });
                 rows = page.data || [];
             } catch (e) {
-                return { failure: true, total, refused: refused.size };
+                return { failure: true, total };
             }
             const fresh = rows.filter((r) => !attempted.has(r.storage_id));
-            if (!fresh.length) {
-                const stuck = rows.some((r) => !refused.has(r.storage_id));
-                return { failure: stuck || null, total, refused: refused.size };
-            }
-            // eslint-disable-next-line no-await-in-loop
-            const { failure, soldCount } = await sellRows(fresh, attempted, refused);
-            total += soldCount;
-            if (failure) {
-                return { failure, total, refused: refused.size };
+            if (fresh.length) {
+                // eslint-disable-next-line no-await-in-loop
+                const { failure, soldCount } = await sellRows(fresh, attempted, refused);
+                total += soldCount;
+                if (failure) {
+                    return { failure, total };
+                }
+                offset = 0;
+                left = [];
+            } else if (rows.length === PAGE_LIMIT) {
+                left = [...left, ...rows];
+                offset += PAGE_LIMIT;
+            } else {
+                left = [...left, ...rows];
+                const stuck = left.some((r) => !refused.has(r.storage_id));
+                return { failure: stuck || null, total, refused: left.length };
             }
         }
     };

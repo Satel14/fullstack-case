@@ -12,7 +12,9 @@ import { LOGIN_USER } from '../store/types';
 import Inventory from './Inventory';
 
 jest.mock('react-i18next', () => ({
-    withTranslation: () => (Component) => (props) => <Component {...props} t={(key) => key} />,
+    withTranslation: () => (Component) => (props) => (
+        <Component {...props} t={(key, options) => (options ? `${key} ${JSON.stringify(options)}` : key)} />
+    ),
     useTranslation: () => ({ t: (key) => key }),
     initReactI18next: { type: '3rdParty', init: () => {} },
 }));
@@ -110,7 +112,7 @@ test('sell all stops at the first failed sale and reports how many were sold', a
     await clickSellAll();
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
-        'error', 'openCase.sellErrorTitle', 'inventory.sellAllStopped',
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllStopped {"sold":2}',
     ));
     expect(sellItemByStorageId).toHaveBeenCalledTimes(3);
     expect(server.inventory).toHaveLength(3);
@@ -131,7 +133,7 @@ test('sell all stops when the server says the player is selling too fast', async
     await clickSellAll();
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
-        'error', 'openCase.sellErrorTitle', 'inventory.sellAllRateLimited',
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllRateLimited {"sold":1}',
     ));
     expect(sellItemByStorageId).toHaveBeenCalledTimes(2);
     expect(server.inventory).toHaveLength(4);
@@ -146,7 +148,7 @@ test('sell all does not claim success when sold items stay in the inventory', as
     await clickSellAll();
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
-        'error', 'openCase.sellErrorTitle', 'inventory.sellAllStopped',
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllStopped {"sold":3}',
     ));
     expect(sellItemByStorageId).toHaveBeenCalledTimes(3);
     expect(openNotification).not.toHaveBeenCalledWith('success', 'openCase.allSold');
@@ -163,10 +165,44 @@ test('sell all skips an item the server refuses to sell and sells everything els
     await clickSellAll();
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
-        'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped',
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped {"sold":4,"skipped":1}',
     ));
     expect(server.inventory.map((r) => r.storage_id)).toEqual([3]);
     expect(sellItemByStorageId).toHaveBeenCalledTimes(5);
     expect(store.getState().user.balance).toBe('40.00');
     expect(openNotification).not.toHaveBeenCalledWith('success', 'openCase.allSold');
+});
+
+test('an item that left the inventory during sell all is not reported as skipped', async () => {
+    server.inventory = inventoryRows(5);
+    const sell = sellItemByStorageId.getMockImplementation();
+    sellItemByStorageId.mockImplementation((storageId) => {
+        if (storageId === 3) {
+            server.inventory = server.inventory.filter((r) => r.storage_id !== 3);
+            return Promise.reject({ error: 422, message: 'gone' });
+        }
+        return sell(storageId);
+    });
+    renderInventory();
+
+    await clickSellAll();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('success', 'openCase.allSold'));
+    expect(server.inventory).toHaveLength(0);
+});
+
+test('sell all reaches sellable items behind a full page of items the server refuses', async () => {
+    server.inventory = inventoryRows(205);
+    const sell = sellItemByStorageId.getMockImplementation();
+    sellItemByStorageId.mockImplementation((storageId) => (
+        storageId > 5 ? Promise.reject({ error: 422, message: 'no price' }) : sell(storageId)
+    ));
+    renderInventory();
+
+    await clickSellAll();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped {"sold":5,"skipped":200}',
+    ));
+    expect(server.inventory).toHaveLength(200);
 });
