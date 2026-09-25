@@ -14,7 +14,6 @@ const mapDispatchToProps = (dispatch) => ({
 const Promocode = (props) => {
   const { t } = useTranslation();
   const onFinish = (values) => {
-    // eslint-disable-next-line promise/catch-or-return
     props
       .usePromocodeFetch({
         promocode: values.promocode,
@@ -26,6 +25,9 @@ const Promocode = (props) => {
           return;
         }
         openNotification('success', t('promocode.successTitle'), data.message);
+      })
+      .catch(() => {
+        openNotification('error', t('promocode.errorTitle'), t('promocode.failed'));
       });
   };
 
