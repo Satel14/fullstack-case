@@ -82,3 +82,72 @@ test('selling one item puts the new balance into the store', async () => {
 
     await waitFor(() => expect(store.getState().user.balance).toBe('10.00'));
 });
+
+const clickSellAll = async () => {
+    fireEvent.click(await screen.findByRole('button', { name: /inventory.sellAll/ }));
+};
+
+test('sell all sells every inventory item, not only the first page of 200', async () => {
+    server.inventory = inventoryRows(250);
+    const store = renderInventory();
+
+    await clickSellAll();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('success', 'openCase.allSold'));
+    expect(server.inventory).toHaveLength(0);
+    expect(sellItemByStorageId).toHaveBeenCalledTimes(250);
+    expect(store.getState().user.balance).toBe('2500.00');
+});
+
+test('sell all stops at the first failed sale and reports how many were sold', async () => {
+    server.inventory = inventoryRows(5);
+    const sell = sellItemByStorageId.getMockImplementation();
+    sellItemByStorageId.mockImplementation((storageId) => (
+        sellItemByStorageId.mock.calls.length === 3 ? Promise.reject({ error: 400 }) : sell(storageId)
+    ));
+    const store = renderInventory();
+
+    await clickSellAll();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllStopped',
+    ));
+    expect(sellItemByStorageId).toHaveBeenCalledTimes(3);
+    expect(server.inventory).toHaveLength(3);
+    expect(store.getState().user.balance).toBe('20.00');
+    expect(openNotification).not.toHaveBeenCalledWith('success', 'openCase.allSold');
+});
+
+test('sell all stops when the server says the player is selling too fast', async () => {
+    server.inventory = inventoryRows(5);
+    const sell = sellItemByStorageId.getMockImplementation();
+    sellItemByStorageId.mockImplementation((storageId) => (
+        sellItemByStorageId.mock.calls.length === 2
+            ? Promise.reject({ error: 429, message: 'too many' })
+            : sell(storageId)
+    ));
+    renderInventory();
+
+    await clickSellAll();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllRateLimited',
+    ));
+    expect(sellItemByStorageId).toHaveBeenCalledTimes(2);
+    expect(server.inventory).toHaveLength(4);
+    expect(openNotification).not.toHaveBeenCalledWith('success', 'openCase.allSold');
+});
+
+test('sell all does not claim success when sold items stay in the inventory', async () => {
+    server.inventory = inventoryRows(3);
+    sellItemByStorageId.mockResolvedValue({ status: 200, balance: '10.00' });
+    renderInventory();
+
+    await clickSellAll();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllStopped',
+    ));
+    expect(sellItemByStorageId).toHaveBeenCalledTimes(3);
+    expect(openNotification).not.toHaveBeenCalledWith('success', 'openCase.allSold');
+});

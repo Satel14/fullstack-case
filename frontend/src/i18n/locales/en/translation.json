@@ -278,7 +278,9 @@
         "sellAll": "Sell all",
         "emptyActive": "No items to sell",
         "emptySold": "Nothing sold yet",
-        "soldLabel": "Sold"
+        "soldLabel": "Sold",
+        "sellAllStopped": "Sold {{sold}} items, then a sale failed. The rest are still in your inventory.",
+        "sellAllRateLimited": "Sold {{sold}} items. You are selling too fast: wait a minute and try again."
     },
     "chat": {
         "title": "Online chat",
