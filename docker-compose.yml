@@ -69,7 +69,7 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       JWT_SECRET: asf4ASGiuh8xc735unjk
       CLIENT_ORIGIN: http://localhost:3009
-      TRUST_PROXY: ${TRUST_PROXY:-}
+      TRUST_PROXY: ${TRUST_PROXY:-loopback, uniquelocal}
     ports:
       - "127.0.0.1:3003:3003"
     volumes:

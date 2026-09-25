@@ -17,6 +17,13 @@ const clientIp = (setting, socketAddress, forwardedFor) => {
 
 const serverDefault = () => parseTrustProxy(undefined);
 
+const composeSetting = () => {
+    const compose = fs.readFileSync(path.join(__dirname, '..', '..', 'docker-compose.yml'), 'utf8');
+    const match = compose.match(/TRUST_PROXY:\s*\$\{TRUST_PROXY:-([^}]*)\}/);
+    assert.ok(match, 'docker-compose.yml does not give the backend a TRUST_PROXY default');
+    return parseTrustProxy(match[1]);
+};
+
 test('a direct client on a public address cannot choose its own IP with X-Forwarded-For', () => {
     for (const socket of ['203.0.113.7', '::ffff:203.0.113.7', '2001:db8::7']) {
         assert.strictEqual(clientIp(serverDefault(), socket, '10.9.8.246'), socket, `${socket} picked its key`);
@@ -25,14 +32,28 @@ test('a direct client on a public address cannot choose its own IP with X-Forwar
     }
 });
 
-test('nginx on the docker network and a proxy on the same host still forward the real client address', () => {
-    for (const proxy of ['172.18.0.5', '::ffff:172.18.0.5', '10.0.0.4', '192.168.1.20', '127.0.0.1', '::1']) {
+test('a direct client on a private network cannot choose its own IP either', () => {
+    for (const socket of ['192.168.1.20', '10.0.0.4', '172.18.0.9', 'fd00::4']) {
+        assert.strictEqual(clientIp(serverDefault(), socket, '203.0.113.7'), socket, `${socket} picked its key`);
+    }
+});
+
+test('a proxy on the same host still forwards the real client address', () => {
+    for (const proxy of ['127.0.0.1', '::1', '::ffff:127.0.0.1']) {
         assert.strictEqual(clientIp(serverDefault(), proxy, '203.0.113.7'), '203.0.113.7', `${proxy} is not trusted`);
     }
 });
 
+test('in docker-compose nginx on the private network forwards the real client address', () => {
+    for (const proxy of ['172.18.0.5', '::ffff:172.18.0.5', '127.0.0.1']) {
+        assert.strictEqual(clientIp(composeSetting(), proxy, '203.0.113.7'), '203.0.113.7', `${proxy} is not trusted`);
+    }
+    assert.strictEqual(clientIp(composeSetting(), '203.0.113.7', '10.9.8.246'), '203.0.113.7');
+});
+
 test('a spoofed entry in front of the real address never becomes the client IP behind a trusted proxy', () => {
-    assert.strictEqual(clientIp(serverDefault(), '172.18.0.5', '10.9.8.246, 203.0.113.7'), '203.0.113.7');
+    assert.strictEqual(clientIp(serverDefault(), '127.0.0.1', '10.9.8.246, 203.0.113.7'), '203.0.113.7');
+    assert.strictEqual(clientIp(composeSetting(), '172.18.0.5', '10.9.8.246, 203.0.113.7'), '203.0.113.7');
 });
 
 test('without the header the client IP is the socket address', () => {
@@ -40,8 +61,8 @@ test('without the header the client IP is the socket address', () => {
     assert.strictEqual(clientIp(serverDefault(), '172.18.0.5'), '172.18.0.5');
 });
 
-test('TRUST_PROXY reads hop counts, booleans and address lists, and falls back to loopback plus private ranges', () => {
-    assert.strictEqual(DEFAULT_TRUST_PROXY, 'loopback, uniquelocal');
+test('TRUST_PROXY reads hop counts, booleans and address lists, and falls back to loopback only', () => {
+    assert.strictEqual(DEFAULT_TRUST_PROXY, 'loopback');
     assert.strictEqual(parseTrustProxy(undefined), DEFAULT_TRUST_PROXY);
     assert.strictEqual(parseTrustProxy(''), DEFAULT_TRUST_PROXY);
     assert.strictEqual(parseTrustProxy('   '), DEFAULT_TRUST_PROXY);

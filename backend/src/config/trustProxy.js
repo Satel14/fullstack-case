@@ -1,4 +1,4 @@
-const DEFAULT_TRUST_PROXY = 'loopback, uniquelocal';
+const DEFAULT_TRUST_PROXY = 'loopback';
 
 const parseTrustProxy = (value) => {
     const setting = String(value === undefined ? '' : value).trim();
