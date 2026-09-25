@@ -12,7 +12,7 @@ export const getAdminUsers = ({ search = '', limit = 50, offset = 0 } = {}) => {
     return get(`/admin/users?${query.toString()}`);
 };
 
-export const setUserRole = (id, role) => put(`/admin/user/${id}/role`, { role }, true);
+export const setUserRole = (id, role) => put(`/admin/user/${id}/role`, { role });
 
 export const adjustUserBalance = (id, delta, reason) => post(`/admin/user/${id}/balance`, { delta, reason });
 

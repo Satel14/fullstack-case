@@ -66,6 +66,9 @@ const UsersTab = ({ user }) => {
             openNotification('success', t('admin.users.roleChanged'), row.user_login);
             await load();
         } catch (e) {
+            const message = e && e.error && e.message ? e.message : t('common.serverError');
+            openNotification('error', t('admin.users.roleFailed'), message);
+            await load();
         }
     };
 

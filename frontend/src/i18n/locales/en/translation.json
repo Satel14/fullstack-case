@@ -415,6 +415,7 @@
             "role": "Role",
             "searchPlaceholder": "Search by login or email",
             "roleChanged": "Role changed",
+            "roleFailed": "Role was not changed",
             "loadFailed": "Could not load the users"
         },
         "balance": {

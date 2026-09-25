@@ -417,6 +417,7 @@
             "role": "Роль",
             "searchPlaceholder": "Пошук за логіном або поштою",
             "roleChanged": "Роль змінено",
+            "roleFailed": "Роль не змінено",
             "loadFailed": "Не вдалося завантажити користувачів"
         },
         "balance": {
