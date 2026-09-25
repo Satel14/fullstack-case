@@ -7,7 +7,7 @@ import CountUp from 'react-countup';
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import { isAuthorized } from '../helpers/Player';
-import { logoutProfile } from '../store/actions/user';
+import { logoutProfile, updateBalance } from '../store/actions/user';
 import { API_URL } from '../api/config';
 
 const { Header } = Layout;
@@ -18,13 +18,13 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => ({
     logoutUser: () => dispatch(logoutProfile()),
+    updateBalance: (balance) => dispatch(updateBalance(balance)),
 });
 
 class HeaderSecond extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            balance: this.props.user.balance,
             onlineUser: { old: 0, new: 0 },
             chatButton: false,
             stats: {
@@ -41,12 +41,6 @@ class HeaderSecond extends React.Component {
 
     async componentDidMount() {
         this.fetchStats();
-    }
-
-    componentDidUpdate(prevProps) {
-        if (prevProps.user.balance !== this.props.user.balance) {
-            this.setState({ balance: this.props.user.balance });
-        }
     }
 
     async fetchStats() {
@@ -71,9 +65,7 @@ class HeaderSecond extends React.Component {
     }
 
     changeBalance(balance) {
-        this.setState({
-            balance,
-        });
+        this.props.updateBalance(balance);
     }
 
     chatButtonStatusHeader(status) {
@@ -210,7 +202,7 @@ class HeaderSecond extends React.Component {
                                         />
                                         <div className="headersecond-profile__info">
                                             <span className="nickname">{user.login}</span>
-                                            <span className="balance">{this.state.balance}</span>
+                                            <span className="balance">{user.balance}</span>
                                         </div>
                                     </Link>
                                 </Dropdown>

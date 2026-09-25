@@ -7,6 +7,7 @@ import map from 'lodash/map';
 import { getProfileStorage, sellItemByStorageId } from '../api/all/storage';
 import { getItemPriceById } from '../api/all/item';
 import { itemInfoFetch } from '../store/actions/itemCache';
+import { updateBalance } from '../store/actions/user';
 import { computeItemPriceUAH } from '../helpers/price';
 import ItemColor from '../components/mini/ItemColor';
 import openNotification from '../components/mini/openNotification';
@@ -21,10 +22,11 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => ({
     itemInfoFetch: (id) => dispatch(itemInfoFetch(id)),
+    updateBalance: (balance) => dispatch(updateBalance(balance)),
 });
 
 const Inventory = ({
-    itemCache, modules, itemInfoFetch: fetchItem, t,
+    itemCache, modules, itemInfoFetch: fetchItem, updateBalance: setBalance, t,
 }) => {
     const [active, setActive] = useState([]);
     const [sold, setSold] = useState([]);
@@ -86,9 +88,7 @@ const Inventory = ({
         try {
             const res = await sellItemByStorageId(row.storage_id);
             if (res.status === 200) {
-                if (window.HeaderSecond) {
-                    window.HeaderSecond.changeBalance(res.balance);
-                }
+                setBalance(res.balance);
                 openNotification('success', t('openCase.sold'));
                 setActive((prev) => prev.filter((x) => x.storage_id !== row.storage_id));
                 setSold((prev) => [row, ...prev]);
@@ -113,9 +113,7 @@ const Inventory = ({
                 // eslint-disable-next-line no-await-in-loop
                 const res = await sellItemByStorageId(rows[i].storage_id);
                 if (res.status === 200) {
-                    if (window.HeaderSecond) {
-                        window.HeaderSecond.changeBalance(res.balance);
-                    }
+                    setBalance(res.balance);
                 } else {
                     failed += 1;
                 }

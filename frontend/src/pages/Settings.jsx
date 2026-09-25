@@ -70,7 +70,7 @@ class Settings extends Component {
                                 name="balance"
                                 label={t('settings.balance')}
                             >
-                                <Input defaultValue={user.balance} disabled style={{ maxWidth: '120px' }} />
+                                <Input value={user.balance} disabled style={{ maxWidth: '120px' }} />
 
                                 <Button type="primary" icon={<DollarOutlined />} className="color-green" onClick={() => this.getDepositePage()}>
                                     {t('settings.topUp')}
