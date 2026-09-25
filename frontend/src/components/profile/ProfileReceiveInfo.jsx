@@ -16,14 +16,19 @@ const mapStateToProps = (state) => ({
 });
 
 class ProfileReceiveInfo extends Component {
-  onFinish(e) {
+  async onFinish(e) {
     const { t } = this.props;
     if (!e.receiveInfo) {
       openNotification('error', t('receiveInfo.errorTitle'), t('receiveInfo.emptyError'));
       return;
     }
 
-    this.props.updateProfileField('receiveInfo', e.receiveInfo);
+    try {
+      await this.props.updateProfileField('receiveInfo', e.receiveInfo);
+    } catch (error) {
+      openNotification('error', t('receiveInfo.errorTitle'), t('receiveInfo.saveError'));
+      return;
+    }
     openNotification('success', t('receiveInfo.savedTitle'));
   }
 

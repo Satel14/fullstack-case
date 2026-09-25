@@ -172,7 +172,8 @@
         "resetLabel": "Reset profile",
         "resetBtn": "Reset",
         "changeAvatar": "Change avatar",
-        "inventoryHistory": "Inventory history"
+        "inventoryHistory": "Inventory history",
+        "avatarError": "Could not change the avatar. Please try again."
     },
     "profile": {
         "title": "Profile",
@@ -213,7 +214,8 @@
         "save": "Save",
         "emptyError": "Don't leave the field empty",
         "errorTitle": "Error",
-        "savedTitle": "Saved"
+        "savedTitle": "Saved",
+        "saveError": "Could not save. Please try again."
     },
     "sendMoney": {
         "modalTitle": "Send money to {{nickname}}",

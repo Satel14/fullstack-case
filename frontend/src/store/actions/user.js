@@ -112,7 +112,6 @@ export const updateBalance = (balance) => async (dispatch) => {
 
 
 export const updateProfileField = (fieldReduxName, fieldData) => (dispatch) => {
-    // eslint-disable-next-line promise/catch-or-return
     let fieldRealName;
 
     // eslint-disable-next-line no-restricted-syntax
@@ -125,8 +124,7 @@ export const updateProfileField = (fieldReduxName, fieldData) => (dispatch) => {
 
     const body = { [fieldRealName]: fieldData };
 
-    // eslint-disable-next-line promise/catch-or-return
-    editProfile(body).then(() => dispatch({
+    return editProfile(body).then(() => dispatch({
         type: UPDATE_USER_FIELD,
         payloadKey: fieldReduxName,
         payloadData: fieldData,

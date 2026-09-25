@@ -172,7 +172,8 @@
         "resetLabel": "Скинути профіль",
         "resetBtn": "Обнулитися",
         "changeAvatar": "Змінити аватар",
-        "inventoryHistory": "Історія інвентаря"
+        "inventoryHistory": "Історія інвентаря",
+        "avatarError": "Не вдалося змінити аватар. Спробуйте ще раз."
     },
     "profile": {
         "title": "Профіль",
@@ -213,7 +214,8 @@
         "save": "Зберегти",
         "emptyError": "Не залишайте поле пустим",
         "errorTitle": "Помилка",
-        "savedTitle": "Збережено"
+        "savedTitle": "Збережено",
+        "saveError": "Не вдалося зберегти. Спробуйте ще раз."
     },
     "sendMoney": {
         "modalTitle": "Надіслати гроші гравцю {{nickname}}",
