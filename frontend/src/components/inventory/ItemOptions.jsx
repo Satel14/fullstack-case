@@ -92,17 +92,25 @@ class ItemOptions extends Component {
 
   async receiveItem() {
     const { item } = this.state;
+    const { receiveInfo, t } = this.props;
 
-    if (this.props.receiveInfo === '') {
+    if (!receiveInfo || !String(receiveInfo).trim()) {
       openNotification(
         'error',
-        this.props.t('common.error'),
-        this.props.t('itemOptions.needTradeInfo'),
+        t('common.error'),
+        t('itemOptions.needTradeInfo'),
       );
       return;
     }
 
-    const result = await receiveItemByStorageId(item.storage_id);
+    let result;
+    try {
+      result = await receiveItemByStorageId(item.storage_id);
+    } catch (e) {
+      openNotification('error', t('common.error'), (e && e.message) || t('common.serverError'));
+      return;
+    }
+
     if (result.status === 200) {
       if (this.props.onItemRemoved) {
         this.props.onItemRemoved(item.storage_id);
@@ -110,12 +118,12 @@ class ItemOptions extends Component {
       this.setEmpty();
       openNotification(
         'success',
-        this.props.t('itemOptions.withdrawRequested'),
-        this.props.t('itemOptions.withdrawText'),
+        t('itemOptions.withdrawRequested'),
+        t('itemOptions.withdrawText'),
       );
       return;
     }
-    openNotification('error', this.props.t('common.error'));
+    openNotification('error', t('common.error'), result.message || t('common.serverError'));
   }
 
   async sellItem() {
@@ -212,6 +220,7 @@ class ItemOptions extends Component {
 
 const mapStateToProps = (state) => ({
   modules: state.modules,
+  receiveInfo: state.user.receiveInfo,
 });
 
 export default connect(mapStateToProps, null)(withTranslation()(ItemOptions));
