@@ -172,7 +172,7 @@
         "resetLabel": "Reset profile",
         "resetBtn": "Reset",
         "resetConfirmTitle": "Reset the profile?",
-        "resetConfirmText": "Your balance, rank and the items in your inventory will be deleted. Items awaiting withdrawal and your history are kept. This cannot be undone.",
+        "resetConfirmText": "Your balance and rank go to zero, and the items in your inventory and the list of items you sold are deleted. Items awaiting withdrawal, items already received and your balance history are kept. This cannot be undone.",
         "resetConfirmOk": "Reset",
         "resetConfirmCancel": "Cancel",
         "resetFailed": "Failed to reset the profile",
