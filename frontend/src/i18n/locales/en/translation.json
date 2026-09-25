@@ -171,6 +171,11 @@
         "topUp": "Top up",
         "resetLabel": "Reset profile",
         "resetBtn": "Reset",
+        "resetConfirmTitle": "Reset the profile?",
+        "resetConfirmText": "Your balance, rank and the items in your inventory will be deleted. Items awaiting withdrawal and your history are kept. This cannot be undone.",
+        "resetConfirmOk": "Reset",
+        "resetConfirmCancel": "Cancel",
+        "resetFailed": "Failed to reset the profile",
         "changeAvatar": "Change avatar",
         "inventoryHistory": "Inventory history",
         "avatarError": "Could not change the avatar. Please try again."

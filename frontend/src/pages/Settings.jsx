@@ -5,6 +5,7 @@ import {
     Row,
     Col,
     Button,
+    Modal,
 } from 'antd';
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
@@ -17,27 +18,41 @@ import Promocode from '../components/profile/Promocode';
 import InventoryHistory from '../components/inventory/InventoryHistory';
 import ProfileReceiveInfo from '../components/profile/ProfileReceiveInfo';
 import { resetProfile } from '../api/all/profile';
+import openNotification from '../components/mini/openNotification';
 
 const mapStateToProps = (state) => ({
     user: state.user,
 });
 
-const resetProfileHandle = async () => {
-    await resetProfile().then(() => {
-        window.location.reload();
-        return null;
-    });
-};
-
 class Settings extends Component {
     constructor(props) {
         super(props);
         this.getDepositePage = this.getDepositePage.bind(this);
+        this.confirmReset = this.confirmReset.bind(this);
     }
 
     getDepositePage() {
         const { history } = this.props;
         history.push('/deposit');
+    }
+
+    confirmReset() {
+        const { t } = this.props;
+        Modal.confirm({
+            title: t('settings.resetConfirmTitle'),
+            content: t('settings.resetConfirmText'),
+            okText: t('settings.resetConfirmOk'),
+            cancelText: t('settings.resetConfirmCancel'),
+            okButtonProps: { danger: true },
+            onOk: () => resetProfile()
+                .then(() => {
+                    window.location.reload();
+                    return null;
+                })
+                .catch(() => {
+                    openNotification('error', t('common.error'), t('settings.resetFailed'));
+                }),
+        });
     }
 
     render() {
@@ -83,7 +98,7 @@ class Settings extends Component {
                                 label={t('settings.resetLabel')}
                             >
 
-                                <Button type="primary" className="color-green" onClick={() => resetProfileHandle()}>
+                                <Button type="primary" className="color-green" onClick={this.confirmReset}>
                                     {t('settings.resetBtn')}
                                 </Button>
 
