@@ -92,6 +92,20 @@ test('concurrent first calls carry the legacy history over exactly once', async 
     assert.deepStrictEqual(last.map((m) => m.msg), [...range(15, 39), 'm100']);
 });
 
+test('two backend processes starting together carry the legacy history over exactly once', async () => {
+    const { fake, ChatService: first } = freshChat();
+    delete require.cache[managerPath];
+    delete require.cache[chatPath];
+    const second = require('../src/services/chat');
+    legacyHash(fake, shuffled(40));
+
+    await Promise.all([first.get(), second.get()]);
+
+    assert.strictEqual(fake.store.has('chat_hash'), false);
+    assert.strictEqual(storedMessages(fake), 40, 'every legacy message is stored once');
+    assert.deepStrictEqual((await second.get()).map((m) => m.msg), range(14, 39));
+});
+
 test('a corrupt legacy entry is dropped instead of breaking the chat', async () => {
     const { fake, ChatService } = freshChat();
     const hash = legacyHash(fake, [0, 1, 2]);

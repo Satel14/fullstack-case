@@ -1,3 +1,4 @@
+const { randomUUID } = require('crypto');
 const RedisManager = require("../redis/manager");
 const { parseChatMessage, keepNewestMessages } = require('../helpers/chat');
 
@@ -8,25 +9,26 @@ const MAXIMUM_STORED_MESSAGES = 500;
 const LEGACY_SCAN_COUNT = 500;
 
 const adoptLegacyHistory = async () => {
+    const claimed = `${LEGACY_CHAT_HASH}:adopting:${randomUUID()}`;
+    if (!(await RedisManager.renameIfExists(LEGACY_CHAT_HASH, claimed))) {
+        return;
+    }
+
     let cursor = '0';
-    let found = false;
     let newest = [];
 
     do {
-        const page = await RedisManager.scanHash(LEGACY_CHAT_HASH, cursor, LEGACY_SCAN_COUNT);
+        const page = await RedisManager.scanHash(claimed, cursor, LEGACY_SCAN_COUNT);
         cursor = String(page.cursor);
-        found = found || page.entries.length > 0;
         newest = keepNewestMessages(newest, page.entries, MAXIMUM_STORED_MESSAGES);
     } while (cursor !== '0');
 
-    if (found) {
-        await RedisManager.moveIntoCappedList(
-            LEGACY_CHAT_HASH,
-            CHAT_LIST,
-            newest.map(([, message]) => JSON.stringify(message)),
-            MAXIMUM_STORED_MESSAGES
-        );
-    }
+    await RedisManager.moveIntoCappedList(
+        claimed,
+        CHAT_LIST,
+        newest.map(([, message]) => JSON.stringify(message)),
+        MAXIMUM_STORED_MESSAGES
+    );
 };
 
 let legacyAdoption = null;

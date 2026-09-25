@@ -72,6 +72,18 @@ const scanHash = (key, cursor, count) => new Promise((resolve, reject) => {
     });
 });
 
+const renameIfExists = (fromKey, toKey) => new Promise((resolve, reject) => {
+    client.rename(fromKey, toKey, (err) => {
+        if (!err) {
+            resolve(true);
+        } else if (/no such key/i.test(err.message)) {
+            resolve(false);
+        } else {
+            reject(err);
+        }
+    });
+});
+
 const moveIntoCappedList = (fromKey, listKey, values, maxLength) => new Promise((resolve, reject) => {
     const transaction = client.multi();
     if (values.length > 0) {
@@ -130,6 +142,7 @@ module.exports = {
     getListRange,
     scanHash,
     moveIntoCappedList,
+    renameIfExists,
     initialRedisState,
     startItemCacheSync,
     clientOptions,

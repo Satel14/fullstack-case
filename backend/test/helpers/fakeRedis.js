@@ -52,6 +52,14 @@ const createFakeRedis = () => {
         del(...keys) {
             return keys.filter((key) => store.delete(key)).length;
         },
+        rename(key, newKey) {
+            if (!store.has(key)) {
+                throw new Error('ERR no such key');
+            }
+            store.set(newKey, store.get(key));
+            store.delete(key);
+            return 'OK';
+        },
         exists(key) {
             return store.has(key) ? 1 : 0;
         },
@@ -102,9 +110,15 @@ const createFakeRedis = () => {
     Object.keys(commands).forEach((name) => {
         client[name] = (...args) => {
             const callback = typeof args[args.length - 1] === 'function' ? args.pop() : null;
-            const reply = run(name, args);
+            let reply;
+            let error = null;
+            try {
+                reply = run(name, args);
+            } catch (e) {
+                error = e;
+            }
             if (callback) {
-                setImmediate(() => callback(null, reply));
+                setImmediate(() => callback(error, error ? undefined : reply));
             }
             return true;
         };
