@@ -79,7 +79,7 @@ const SendMoney = (props) => {
       }
       return null;
     }).catch((e) => {
-      const reason = e && [422, 429].includes(e.error) && e.message;
+      const reason = e && [403, 422, 429].includes(e.error) && e.message;
       openNotification('error', t('sendMoney.failTitle'), reason || t('sendMoney.failed'));
     });
   };

@@ -88,18 +88,27 @@ test.each([
     openCaseById.mockRejectedValue(failure);
     renderOpenCase();
 
-    fireEvent.click(screen.getByRole('button', { name: /openCase.fast$/ }));
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.fast$/ }));
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'common.serverError'));
     expect(openNotification).toHaveBeenCalledTimes(1);
     openControlsAreBack();
 });
 
+test('a player banned mid-session is told the account is blocked', async () => {
+    openCaseById.mockRejectedValue({ error: 403, message: 'Ваш акаунт заблоковано' });
+    renderOpenCase();
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.fast$/ }));
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Ваш акаунт заблоковано'));
+});
+
 test('a rate-limited open shows the limiter message', async () => {
     openCaseById.mockRejectedValue({ error: 429, message: 'Забагато відкриттів' });
     renderOpenCase();
 
-    fireEvent.click(screen.getByRole('button', { name: /openCase.fast$/ }));
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.fast$/ }));
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Забагато відкриттів'));
 });

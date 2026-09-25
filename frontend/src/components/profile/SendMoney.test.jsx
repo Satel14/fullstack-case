@@ -53,3 +53,11 @@ test('a transfer the server refuses shows the reason it gave', async () => {
 
     expect(await screen.findByText('Такого гравця не існує')).toBeInTheDocument();
 });
+
+test('a player banned mid-session is told why the transfer failed', async () => {
+    sendMoneyForUser.mockRejectedValue({ error: 403, message: 'Ваш акаунт заблоковано' });
+
+    send(25);
+
+    expect(await screen.findByText('Ваш акаунт заблоковано')).toBeInTheDocument();
+});
