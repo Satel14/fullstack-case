@@ -1,5 +1,7 @@
 import React from 'react';
-import { render, act } from '@testing-library/react';
+import {
+    render, act, screen, fireEvent, waitFor,
+} from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
@@ -70,4 +72,48 @@ test('a store balance that equals the stale value from before an open still reac
     await act(async () => { await store.dispatch(updateBalance('100.00')); });
 
     expect(shownBalance()).toBe('100.00');
+});
+
+const onlineCount = () => screen.getAllByTestId('count')[3].textContent;
+
+test('the online counter shows the number of players the server reports', async () => {
+    stats({
+        openedCases: 1, userCounts: 2, receivedItems: 0, onlineUser: 3, onlineUserList: [],
+    });
+    renderHeader();
+
+    await waitFor(() => expect(onlineCount()).toBe('3'));
+});
+
+test('nobody online is shown as zero', async () => {
+    renderHeader();
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    await act(async () => {});
+
+    expect(onlineCount()).toBe('0');
+});
+
+test('the online tooltip lists the players the server reports', async () => {
+    stats({
+        openedCases: 1,
+        userCounts: 2,
+        receivedItems: 0,
+        onlineUser: 2,
+        onlineUserList: [
+            {
+                user_id: 7, user_login: 'player', user_avatar: 1, user_role: 1,
+            },
+            {
+                user_id: 9, user_login: 'Satel7', user_avatar: 3, user_role: 10,
+            },
+        ],
+    });
+    renderHeader();
+    await waitFor(() => expect(onlineCount()).toBe('2'));
+
+    fireEvent.mouseEnter(screen.getByText('header.stats.online'));
+
+    expect(await screen.findByText('Satel7')).toBeInTheDocument();
+    expect(screen.getAllByText('player').length).toBeGreaterThan(1);
 });

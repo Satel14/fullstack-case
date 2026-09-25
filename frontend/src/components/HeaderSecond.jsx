@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-syntax */
 import React from 'react';
 import { Button, Dropdown, Layout, Tooltip } from 'antd';
 import { DollarOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
@@ -26,6 +25,7 @@ class HeaderSecond extends React.Component {
         super(props);
         this.state = {
             onlineUser: { old: 0, new: 0 },
+            onlineUserList: [],
             chatButton: false,
             stats: {
                 openedCases: 5,
@@ -49,6 +49,11 @@ class HeaderSecond extends React.Component {
             const data = await response.json();
             if (data.status === 200) {
                 this.setState((prevState) => ({
+                    onlineUser: {
+                        old: prevState.onlineUser.new,
+                        new: Number(data.data.onlineUser) || 0,
+                    },
+                    onlineUserList: Array.isArray(data.data.onlineUserList) ? data.data.onlineUserList : [],
                     stats: {
                         openedCasesOld: prevState.stats.openedCases,
                         openedCases: data.data.openedCases,
@@ -75,20 +80,14 @@ class HeaderSecond extends React.Component {
     }
 
     renderUserList() {
-        const arr = [];
         const { onlineUserList } = this.state;
-        if (onlineUserList && !onlineUserList.length) {
-            return <></>;
+        if (!onlineUserList.length) {
+            return null;
         }
 
-        for (const key in onlineUserList) {
-            if (Object.hasOwnProperty.call(onlineUserList, key)) {
-                const element = onlineUserList[key];
-                arr.push(<div>{element.user_login}</div>);
-            }
-        }
-
-        return arr;
+        return onlineUserList.map((onlineUser) => (
+            <div key={onlineUser.user_id}>{onlineUser.user_login}</div>
+        ));
     }
 
     render() {
@@ -160,7 +159,7 @@ class HeaderSecond extends React.Component {
                         <div className="headersecond-stats__online" />
                         <div className="headersecond-stats__block">
                             <i>
-                                <CountUp start={onlineUser.old} end={onlineUser.new + 1} />
+                                <CountUp start={onlineUser.old} end={onlineUser.new} />
                             </i>
                             <Tooltip placement="bottom" title={this.renderUserList()}>
                                 <span>{t('header.stats.online')}</span>
