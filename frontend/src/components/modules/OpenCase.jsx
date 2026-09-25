@@ -253,7 +253,7 @@ class OpenCase extends Component {
         if (err && err.error === 401) {
             return t('openCase.authRequired');
         }
-        if (err && err.message) {
+        if (err && [422, 429].includes(err.error) && err.message) {
             return err.message;
         }
         return t('common.serverError');

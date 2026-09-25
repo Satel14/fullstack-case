@@ -81,6 +81,29 @@ test('a failed open without a reason reports a server error, not missing funds',
     openControlsAreBack();
 });
 
+test.each([
+    ['an unexpected backend error', { error: 400, message: "Cannot read properties of null (reading 'name')" }],
+    ['a network failure', new TypeError('Failed to fetch')],
+])('%s is reported as a server error, not as raw text', async (name, failure) => {
+    openCaseById.mockRejectedValue(failure);
+    renderOpenCase();
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase.fast$/ }));
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'common.serverError'));
+    expect(openNotification).toHaveBeenCalledTimes(1);
+    openControlsAreBack();
+});
+
+test('a rate-limited open shows the limiter message', async () => {
+    openCaseById.mockRejectedValue({ error: 429, message: 'Забагато відкриттів' });
+    renderOpenCase();
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase.fast$/ }));
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Забагато відкриттів'));
+});
+
 test('an open refused for missing funds in block mode brings the open controls back', async () => {
     openCaseById.mockResolvedValue({ status: 200, message: 'Недостатньо грошей' });
     renderOpenCase();
