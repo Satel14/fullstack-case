@@ -60,6 +60,14 @@ const createFakeRedis = () => {
             store.delete(key);
             return 'OK';
         },
+        scan(cursor, ...args) {
+            const matchAt = args.findIndex((a) => String(a).toUpperCase() === 'MATCH');
+            const pattern = matchAt === -1 ? '*' : String(args[matchAt + 1]);
+            const matches = pattern.endsWith('*')
+                ? (key) => key.startsWith(pattern.slice(0, -1))
+                : (key) => key === pattern;
+            return ['0', [...store.keys()].filter(matches)];
+        },
         exists(key) {
             return store.has(key) ? 1 : 0;
         },

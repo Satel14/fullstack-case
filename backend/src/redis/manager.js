@@ -84,6 +84,23 @@ const renameIfExists = (fromKey, toKey) => new Promise((resolve, reject) => {
     });
 });
 
+const keyExists = (key) => new Promise((resolve, reject) => {
+    client.exists(key, (err, reply) => (err ? reject(err) : resolve(Number(reply) > 0)));
+});
+
+const scanKeys = async (pattern) => {
+    const keys = new Set();
+    let cursor = '0';
+    do {
+        const reply = await new Promise((resolve, reject) => {
+            client.scan(cursor, 'MATCH', pattern, 'COUNT', 500, (err, page) => (err ? reject(err) : resolve(page)));
+        });
+        cursor = String(reply[0]);
+        reply[1].forEach((key) => keys.add(key));
+    } while (cursor !== '0');
+    return [...keys];
+};
+
 const moveIntoCappedList = (fromKey, listKey, values, maxLength) => new Promise((resolve, reject) => {
     const transaction = client.multi();
     if (values.length > 0) {
@@ -143,6 +160,8 @@ module.exports = {
     scanHash,
     moveIntoCappedList,
     renameIfExists,
+    keyExists,
+    scanKeys,
     initialRedisState,
     startItemCacheSync,
     clientOptions,

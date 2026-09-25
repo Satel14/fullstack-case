@@ -7,10 +7,36 @@ const LEGACY_CHAT_HASH = "chat_hash";
 const MAXIMUM_SEND_MESSAGES = 26;
 const MAXIMUM_STORED_MESSAGES = 500;
 const LEGACY_SCAN_COUNT = 500;
+const ADOPTING_PREFIX = `${LEGACY_CHAT_HASH}:adopting:`;
+const ABANDONED_CLAIM_MS = 10 * 60 * 1000;
+
+let claimedKey = null;
+
+const claimAge = (key) => Date.now() - Number(key.slice(ADOPTING_PREFIX.length).split(':')[0]);
+
+const claimLegacyHistory = async () => {
+    if (claimedKey && await RedisManager.keyExists(claimedKey)) {
+        return claimedKey;
+    }
+    const mine = `${ADOPTING_PREFIX}${Date.now()}:${randomUUID()}`;
+    if (await RedisManager.renameIfExists(LEGACY_CHAT_HASH, mine)) {
+        claimedKey = mine;
+        return mine;
+    }
+    const abandoned = (await RedisManager.scanKeys(`${ADOPTING_PREFIX}*`))
+        .filter((key) => claimAge(key) > ABANDONED_CLAIM_MS);
+    for (const key of abandoned) {
+        if (await RedisManager.renameIfExists(key, mine)) {
+            claimedKey = mine;
+            return mine;
+        }
+    }
+    return null;
+};
 
 const adoptLegacyHistory = async () => {
-    const claimed = `${LEGACY_CHAT_HASH}:adopting:${randomUUID()}`;
-    if (!(await RedisManager.renameIfExists(LEGACY_CHAT_HASH, claimed))) {
+    const claimed = await claimLegacyHistory();
+    if (!claimed) {
         return;
     }
 

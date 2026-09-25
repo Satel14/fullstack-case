@@ -106,6 +106,59 @@ test('two backend processes starting together carry the legacy history over exac
     assert.deepStrictEqual((await second.get()).map((m) => m.msg), range(14, 39));
 });
 
+const failNextScan = (fake) => {
+    const scan = fake.client.hscan;
+    let failed = false;
+    fake.client.hscan = (...args) => {
+        if (failed) {
+            return scan(...args);
+        }
+        failed = true;
+        const callback = args.pop();
+        setImmediate(() => callback(new Error('Connection lost')));
+        return true;
+    };
+};
+
+const adoptingKeys = (fake) => [...fake.store.keys()].filter((key) => key.startsWith('chat_hash:adopting:'));
+
+test('a failure after the legacy history was claimed is retried from the claimed copy', async () => {
+    const { fake, ChatService } = freshChat();
+    legacyHash(fake, [0, 1, 2]);
+    failNextScan(fake);
+
+    await assert.rejects(ChatService.get(), /Connection lost/);
+    const last = await ChatService.get();
+
+    assert.deepStrictEqual(last.map((m) => m.msg), ['m0', 'm1', 'm2']);
+    assert.deepStrictEqual(adoptingKeys(fake), []);
+});
+
+test('a legacy history claimed by a process that died long ago is carried over', async () => {
+    const { fake, ChatService } = freshChat();
+    const hash = legacyHash(fake, [0, 1, 2]);
+    fake.store.delete('chat_hash');
+    fake.store.set('chat_hash:adopting:1000:dead-process', hash);
+
+    const last = await ChatService.get();
+
+    assert.deepStrictEqual(last.map((m) => m.msg), ['m0', 'm1', 'm2']);
+    assert.deepStrictEqual(adoptingKeys(fake), []);
+});
+
+test('a legacy history another process claimed a moment ago is left to that process', async () => {
+    const { fake, ChatService } = freshChat();
+    const hash = legacyHash(fake, [0, 1, 2]);
+    fake.store.delete('chat_hash');
+    const live = `chat_hash:adopting:${Date.now()}:live-process`;
+    fake.store.set(live, hash);
+
+    const last = await ChatService.get();
+
+    assert.deepStrictEqual(last, []);
+    assert.deepStrictEqual(adoptingKeys(fake), [live]);
+});
+
 test('a corrupt legacy entry is dropped instead of breaking the chat', async () => {
     const { fake, ChatService } = freshChat();
     const hash = legacyHash(fake, [0, 1, 2]);
@@ -158,7 +211,15 @@ const report = (result) => { console.log('RESULT ' + JSON.stringify(result)); };
         const merged = await manager.getListRange(list, 0, -1);
         const hashLeft = await call('exists', hash);
 
-        report({ capped, lastTwo, missing, seen: seen.size, largest, empty, merged, hashLeft });
+        const renamedMissing = await manager.renameIfExists(prefix + ':none', prefix + ':moved');
+        await call('hset', hash, 'k', 'v');
+        const renamedExisting = await manager.renameIfExists(hash, prefix + ':moved');
+        const found = await manager.scanKeys(prefix + ':mov*');
+        await call('del', prefix + ':moved');
+
+        report({
+            capped, lastTwo, missing, seen: seen.size, largest, empty, merged, hashLeft, renamedMissing, renamedExisting, found,
+        });
     } finally {
         await call('del', list, hash);
     }
@@ -191,4 +252,8 @@ test('the list helpers keep their contract on a real Redis', {
     assert.deepStrictEqual(result.empty, { cursor: '0', entries: [] });
     assert.deepStrictEqual(result.merged, ['o2', 'o3', 'n3', 'n4', 'n5', 'n6', 'n7']);
     assert.strictEqual(result.hashLeft, 0);
+    assert.strictEqual(result.renamedMissing, false);
+    assert.strictEqual(result.renamedExisting, true);
+    assert.strictEqual(result.found.length, 1);
+    assert.match(result.found[0], /:moved$/);
 });
