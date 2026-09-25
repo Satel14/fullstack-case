@@ -7,22 +7,6 @@ function parseChatMessage(raw) {
     }
 }
 
-function keepNewestMessages(kept, entries, limit) {
-    const byField = new Map(kept);
-
-    for (const [field, raw] of entries) {
-        const message = parseChatMessage(raw);
-        if (message && !byField.has(field)) {
-            byField.set(field, message);
-        }
-    }
-
-    return [...byField]
-        .sort(([, a], [, b]) => (Number(a.time) || 0) - (Number(b.time) || 0))
-        .slice(-limit);
-}
-
 module.exports = {
     parseChatMessage,
-    keepNewestMessages,
 };

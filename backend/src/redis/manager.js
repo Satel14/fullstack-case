@@ -60,56 +60,26 @@ const getListRange = (key, start, stop) => new Promise((resolve, reject) => {
     client.lrange(key, start, stop, (err, reply) => (err ? reject(err) : resolve(reply)));
 });
 
-const scanHash = (key, cursor, count) => new Promise((resolve, reject) => {
-    client.hscan(key, cursor, 'COUNT', count, (err, reply) => {
-        if (err) return reject(err);
-        const [next, flat] = reply;
-        const entries = [];
-        for (let i = 0; i < flat.length; i += 2) {
-            entries.push([flat[i], flat[i + 1]]);
-        }
-        return resolve({ cursor: next, entries });
-    });
-});
+const ADOPT_LEGACY_HASH_SCRIPT = [
+    'local legacy, list, keep = KEYS[1], KEYS[2], tonumber(ARGV[1])',
+    'if redis.call("EXISTS", legacy) == 0 then return 0 end',
+    'local rows = {}',
+    'for _, raw in ipairs(redis.call("HVALS", legacy)) do',
+    '    local ok, message = pcall(cjson.decode, raw)',
+    '    if ok and type(message) == "table" and message[1] == nil then',
+    '        rows[#rows + 1] = { tonumber(message.time) or 0, raw }',
+    '    end',
+    'end',
+    'table.sort(rows, function(a, b) return a[1] < b[1] end)',
+    'local first = math.max(1, #rows - keep + 1)',
+    'for i = #rows, first, -1 do redis.call("LPUSH", list, rows[i][2]) end',
+    'redis.call("LTRIM", list, -keep, -1)',
+    'redis.call("DEL", legacy)',
+    'return #rows - first + 1',
+].join('\n');
 
-const renameIfExists = (fromKey, toKey) => new Promise((resolve, reject) => {
-    client.rename(fromKey, toKey, (err) => {
-        if (!err) {
-            resolve(true);
-        } else if (/no such key/i.test(err.message)) {
-            resolve(false);
-        } else {
-            reject(err);
-        }
-    });
-});
-
-const keyExists = (key) => new Promise((resolve, reject) => {
-    client.exists(key, (err, reply) => (err ? reject(err) : resolve(Number(reply) > 0)));
-});
-
-const scanKeys = async (pattern) => {
-    const keys = new Set();
-    let cursor = '0';
-    do {
-        const reply = await new Promise((resolve, reject) => {
-            client.scan(cursor, 'MATCH', pattern, 'COUNT', 500, (err, page) => (err ? reject(err) : resolve(page)));
-        });
-        cursor = String(reply[0]);
-        reply[1].forEach((key) => keys.add(key));
-    } while (cursor !== '0');
-    return [...keys];
-};
-
-const moveIntoCappedList = (fromKey, listKey, values, maxLength) => new Promise((resolve, reject) => {
-    const transaction = client.multi();
-    if (values.length > 0) {
-        transaction.lpush(listKey, ...[...values].reverse());
-    }
-    transaction
-        .ltrim(listKey, -maxLength, -1)
-        .del(fromKey)
-        .exec((err, replies) => (err ? reject(err) : resolve(replies)));
+const adoptLegacyHash = (legacyKey, listKey, maxLength) => new Promise((resolve, reject) => {
+    client.eval(ADOPT_LEGACY_HASH_SCRIPT, 2, legacyKey, listKey, maxLength, (err, moved) => (err ? reject(err) : resolve(Number(moved))));
 });
 
 async function initialRedisState() {
@@ -157,11 +127,8 @@ module.exports = {
     cleanDataHashWithKey,
     appendToCappedList,
     getListRange,
-    scanHash,
-    moveIntoCappedList,
-    renameIfExists,
-    keyExists,
-    scanKeys,
+    adoptLegacyHash,
+    ADOPT_LEGACY_HASH_SCRIPT,
     initialRedisState,
     startItemCacheSync,
     clientOptions,

@@ -59,7 +59,7 @@ test('the chat history is capped, and a read fetches only the 26 newest messages
     assert.ok(largest <= 26, `showing 26 messages pulled ${largest} entries out of Redis`);
 });
 
-test('a legacy chat_hash is carried over once, page by page, and then deleted', async () => {
+test('a legacy chat_hash is carried over once inside Redis, and then deleted', async () => {
     const { fake, ChatService } = freshChat();
     legacyHash(fake, shuffled(3000));
 
@@ -67,17 +67,19 @@ test('a legacy chat_hash is carried over once, page by page, and then deleted', 
 
     assert.deepStrictEqual(last.map((m) => m.msg), range(2974, 2999));
     assert.strictEqual(fake.store.has('chat_hash'), false, 'the legacy hash must be deleted once carried over');
-    assert.ok(!fake.log.some((c) => c.name === 'hgetall'), 'the legacy hash must never be read whole');
+    assert.ok(
+        !fake.log.some((c) => ['hgetall', 'hscan', 'hvals'].includes(c.name)),
+        'the legacy hash must never be read into the backend',
+    );
     const largest = Math.max(0, ...fake.log.map((c) => c.size));
-    assert.ok(largest <= 1000, `one reply carried ${largest} of 3000 legacy entries`);
+    assert.ok(largest <= 26, `one reply carried ${largest} entries`);
     assert.ok(storedMessages(fake) <= 500);
 
-    const scans = fake.log.filter((c) => c.name === 'hscan').length;
     await ChatService.add(message(5000));
     const after = await ChatService.get();
 
     assert.deepStrictEqual(after.map((m) => m.msg), [...range(2975, 2999), 'm5000']);
-    assert.strictEqual(fake.log.filter((c) => c.name === 'hscan').length, scans, 'the carry-over runs once');
+    assert.strictEqual(fake.log.filter((c) => c.name === 'eval').length, 1, 'the carry-over runs once');
 });
 
 test('concurrent first calls carry the legacy history over exactly once', async () => {
@@ -104,59 +106,6 @@ test('two backend processes starting together carry the legacy history over exac
     assert.strictEqual(fake.store.has('chat_hash'), false);
     assert.strictEqual(storedMessages(fake), 40, 'every legacy message is stored once');
     assert.deepStrictEqual((await second.get()).map((m) => m.msg), range(14, 39));
-});
-
-const failNextScan = (fake) => {
-    const scan = fake.client.hscan;
-    let failed = false;
-    fake.client.hscan = (...args) => {
-        if (failed) {
-            return scan(...args);
-        }
-        failed = true;
-        const callback = args.pop();
-        setImmediate(() => callback(new Error('Connection lost')));
-        return true;
-    };
-};
-
-const adoptingKeys = (fake) => [...fake.store.keys()].filter((key) => key.startsWith('chat_hash:adopting:'));
-
-test('a failure after the legacy history was claimed is retried from the claimed copy', async () => {
-    const { fake, ChatService } = freshChat();
-    legacyHash(fake, [0, 1, 2]);
-    failNextScan(fake);
-
-    await assert.rejects(ChatService.get(), /Connection lost/);
-    const last = await ChatService.get();
-
-    assert.deepStrictEqual(last.map((m) => m.msg), ['m0', 'm1', 'm2']);
-    assert.deepStrictEqual(adoptingKeys(fake), []);
-});
-
-test('a legacy history claimed by a process that died long ago is carried over', async () => {
-    const { fake, ChatService } = freshChat();
-    const hash = legacyHash(fake, [0, 1, 2]);
-    fake.store.delete('chat_hash');
-    fake.store.set('chat_hash:adopting:1000:dead-process', hash);
-
-    const last = await ChatService.get();
-
-    assert.deepStrictEqual(last.map((m) => m.msg), ['m0', 'm1', 'm2']);
-    assert.deepStrictEqual(adoptingKeys(fake), []);
-});
-
-test('a legacy history another process claimed a moment ago is left to that process', async () => {
-    const { fake, ChatService } = freshChat();
-    const hash = legacyHash(fake, [0, 1, 2]);
-    fake.store.delete('chat_hash');
-    const live = `chat_hash:adopting:${Date.now()}:live-process`;
-    fake.store.set(live, hash);
-
-    const last = await ChatService.get();
-
-    assert.deepStrictEqual(last, []);
-    assert.deepStrictEqual(adoptingKeys(fake), [live]);
 });
 
 test('a corrupt legacy entry is dropped instead of breaking the chat', async () => {
@@ -193,32 +142,26 @@ const report = (result) => { console.log('RESULT ' + JSON.stringify(result)); };
         const lastTwo = await manager.getListRange(list, -2, -1);
         const missing = await manager.getListRange(prefix + ':none', -26, -1);
 
+        const adopted = prefix + ':adopted';
         const fields = [];
-        for (let i = 0; i < 1000; i += 1) { fields.push('f' + i, 'v' + i); }
+        for (let i = 0; i < 600; i += 1) {
+            const n = (i * 7919) % 600;
+            fields.push('u' + n, JSON.stringify({ msg: 'm' + n, time: 1700000000 + n }));
+        }
+        fields.push('broken', '{not json', 'array', '[1,2]');
         await call('hmset', hash, ...fields);
-        const seen = new Set();
-        let cursor = '0';
-        let largest = 0;
-        do {
-            const page = await manager.scanHash(hash, cursor, 50);
-            cursor = page.cursor;
-            largest = Math.max(largest, page.entries.length);
-            page.entries.forEach(([field, value]) => seen.add(field + '=' + value));
-        } while (cursor !== '0');
-        const empty = await manager.scanHash(prefix + ':none', '0', 50);
+        await call('rpush', adopted, JSON.stringify({ msg: 'live', time: 1800000000 }));
 
-        await manager.moveIntoCappedList(hash, list, ['o1', 'o2', 'o3'], 7);
-        const merged = await manager.getListRange(list, 0, -1);
+        const moved = await manager.adoptLegacyHash(hash, adopted, 500);
+        const afterFirst = (await manager.getListRange(adopted, 0, -1)).map((raw) => JSON.parse(raw).msg);
         const hashLeft = await call('exists', hash);
-
-        const renamedMissing = await manager.renameIfExists(prefix + ':none', prefix + ':moved');
-        await call('hset', hash, 'k', 'v');
-        const renamedExisting = await manager.renameIfExists(hash, prefix + ':moved');
-        const found = await manager.scanKeys(prefix + ':mov*');
-        await call('del', prefix + ':moved');
+        const movedAgain = await manager.adoptLegacyHash(hash, adopted, 500);
+        const afterSecond = await call('llen', adopted);
+        const nothing = await manager.adoptLegacyHash(prefix + ':none', prefix + ':empty', 500);
+        await call('del', adopted);
 
         report({
-            capped, lastTwo, missing, seen: seen.size, largest, empty, merged, hashLeft, renamedMissing, renamedExisting, found,
+            capped, lastTwo, missing, moved, afterFirst, hashLeft, movedAgain, afterSecond, nothing,
         });
     } finally {
         await call('del', list, hash);
@@ -247,13 +190,15 @@ test('the list helpers keep their contract on a real Redis', {
     assert.deepStrictEqual(result.capped, ['n3', 'n4', 'n5', 'n6', 'n7']);
     assert.deepStrictEqual(result.lastTwo, ['n6', 'n7']);
     assert.deepStrictEqual(result.missing, []);
-    assert.strictEqual(result.seen, 1000);
-    assert.ok(result.largest < 1000, `one HSCAN page returned ${result.largest} of 1000 fields`);
-    assert.deepStrictEqual(result.empty, { cursor: '0', entries: [] });
-    assert.deepStrictEqual(result.merged, ['o2', 'o3', 'n3', 'n4', 'n5', 'n6', 'n7']);
+    assert.strictEqual(result.moved, 500);
+    assert.strictEqual(result.afterFirst.length, 500);
+    assert.deepStrictEqual(
+        result.afterFirst,
+        [...Array.from({ length: 499 }, (_, i) => `m${101 + i}`), 'live'],
+        'the newest legacy messages, oldest first, in front of the live list',
+    );
     assert.strictEqual(result.hashLeft, 0);
-    assert.strictEqual(result.renamedMissing, false);
-    assert.strictEqual(result.renamedExisting, true);
-    assert.strictEqual(result.found.length, 1);
-    assert.match(result.found[0], /:moved$/);
+    assert.strictEqual(result.movedAgain, 0, 'a second run finds nothing to move');
+    assert.strictEqual(result.afterSecond, 500);
+    assert.strictEqual(result.nothing, 0);
 });

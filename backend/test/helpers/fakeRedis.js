@@ -52,21 +52,27 @@ const createFakeRedis = () => {
         del(...keys) {
             return keys.filter((key) => store.delete(key)).length;
         },
-        rename(key, newKey) {
-            if (!store.has(key)) {
-                throw new Error('ERR no such key');
+        eval(script, numKeys, legacyKey, listKey, keep) {
+            if (!store.has(legacyKey)) {
+                return 0;
             }
-            store.set(newKey, store.get(key));
-            store.delete(key);
-            return 'OK';
-        },
-        scan(cursor, ...args) {
-            const matchAt = args.findIndex((a) => String(a).toUpperCase() === 'MATCH');
-            const pattern = matchAt === -1 ? '*' : String(args[matchAt + 1]);
-            const matches = pattern.endsWith('*')
-                ? (key) => key.startsWith(pattern.slice(0, -1))
-                : (key) => key === pattern;
-            return ['0', [...store.keys()].filter(matches)];
+            const rows = [];
+            store.get(legacyKey).forEach((raw) => {
+                try {
+                    const message = JSON.parse(raw);
+                    if (message && typeof message === 'object' && !Array.isArray(message)) {
+                        rows.push([Number(message.time) || 0, raw]);
+                    }
+                } catch (e) {
+                    return;
+                }
+            });
+            const newest = rows.sort((a, b) => a[0] - b[0]).slice(-Number(keep));
+            const list = listAt(listKey);
+            list.unshift(...newest.map(([, raw]) => raw));
+            store.set(listKey, list.slice(-Number(keep)));
+            store.delete(legacyKey);
+            return newest.length;
         },
         exists(key) {
             return store.has(key) ? 1 : 0;
