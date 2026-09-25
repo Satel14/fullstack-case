@@ -112,6 +112,29 @@ test('a password reset-password would refuse is refused at registration too', as
     assert.strictEqual(signedIn.code, 200);
 });
 
+test('the email must be an address, and is stored trimmed as forgot-password looks it up', async () => {
+    const sequelize = await setup();
+
+    for (const email of ['not-an-email', 'a@b', '@e.ua', 'a b@e.ua', 'a@e.ua\u202E', '   ', `${'x'.repeat(250)}@e.ua`]) {
+        const result = await register({ email });
+        assert.strictEqual(result.code, 422, JSON.stringify(email));
+        assert.strictEqual(result.payload.message, MESSAGE.AUTH.EMAIL_INVALID, JSON.stringify(email));
+    }
+    assert.strictEqual(await userCount(sequelize), 1);
+
+    const accepted = await register({ email: '  newbie@e.ua  ' });
+    assert.strictEqual(accepted.code, 200, JSON.stringify(accepted.payload));
+    assert.strictEqual(accepted.payload.user.user_email, 'newbie@e.ua');
+    const [[stored]] = await sequelize.query("SELECT email FROM users WHERE login = 'newbie'");
+    assert.strictEqual(stored.email, 'newbie@e.ua');
+    assert.deepStrictEqual(welcomes, [{ mailTo: 'newbie@e.ua', login: 'newbie' }]);
+
+    const duplicate = await register({ login: 'other', email: ' admin@e.ua ' });
+    assert.strictEqual(duplicate.code, 401);
+    assert.strictEqual(duplicate.payload.message, MESSAGE.AUTH.USER_IS_EXIST);
+    assert.strictEqual(await userCount(sequelize), 2);
+});
+
 test('a login within the rule registers and signs in, and lookalike case variants still collide', async () => {
     const sequelize = await setup();
 
