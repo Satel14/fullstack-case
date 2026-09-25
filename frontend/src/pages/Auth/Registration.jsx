@@ -12,6 +12,7 @@ import {connect} from "react-redux";
 import capitalize from "lodash/capitalize";
 import openNotification from '../../components/mini/openNotification';
 import { useTranslation } from 'react-i18next';
+import { LOGIN_PATTERN, acceptablePassword, acceptableEmail } from '../../helpers/credentials';
 
 
 const formItemLayout = {
@@ -92,6 +93,10 @@ const Registration = (props) => {
                             required: true,
                             message: t('auth.register.loginRequired'),
                             whitespace: true,
+                        },
+                        {
+                            pattern: LOGIN_PATTERN,
+                            message: t('auth.register.loginInvalid'),
                         }
                     ]}
                     hasFeedback
@@ -105,6 +110,11 @@ const Registration = (props) => {
                         {
                             required: true,
                             message: t('auth.register.passwordRequired'),
+                        },
+                        {
+                            validator: (_, value) => (!value || acceptablePassword(value)
+                                ? Promise.resolve()
+                                : Promise.reject(new Error(t('auth.register.passwordLength')))),
                         }
                     ]}
                 >
@@ -134,10 +144,12 @@ const Registration = (props) => {
                 <Form.Item
                     name="email"
                     label={t('auth.register.emailLabel')}
+                    normalize={(value) => (value || '').trim()}
                     rules={[
                         {
-                            type: "email",
-                            message: t('auth.register.emailInvalid'),
+                            validator: (_, value) => (!value || acceptableEmail(value)
+                                ? Promise.resolve()
+                                : Promise.reject(new Error(t('auth.register.emailInvalid')))),
                         },
                         {
                             required: true,
