@@ -2,7 +2,7 @@ import { post, get, put } from '../fetch';
 
 const getProfileStorage = (fields) => post('/profile/storage', {
     ...fields,
-}, true);
+});
 
 const getStorageLastItemsByUserId = (id, limit, offset) => get(`/storage/user/${id}/${limit}/${offset}`);
 

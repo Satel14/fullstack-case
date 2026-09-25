@@ -28,7 +28,7 @@ const send = (amount) => {
 };
 
 test('a rejected transfer tells the player the money was not sent', async () => {
-    sendMoneyForUser.mockRejectedValue({ error: 429, message: 'too many' });
+    sendMoneyForUser.mockRejectedValue({ error: 500 });
 
     send(25);
 
@@ -44,4 +44,12 @@ test('a refused transfer shows the server message', async () => {
 
     expect(await screen.findByText('Недостатньо коштів')).toBeInTheDocument();
     expect(screen.getByText('sendMoney.failTitle')).toBeInTheDocument();
+});
+
+test('a transfer the server refuses shows the reason it gave', async () => {
+    sendMoneyForUser.mockRejectedValue({ error: 422, message: 'Такого гравця не існує' });
+
+    send(25);
+
+    expect(await screen.findByText('Такого гравця не існує')).toBeInTheDocument();
 });

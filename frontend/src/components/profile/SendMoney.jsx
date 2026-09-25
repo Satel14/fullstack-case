@@ -78,8 +78,9 @@ const SendMoney = (props) => {
         openNotification('error', t('sendMoney.failTitle'), result.message);
       }
       return null;
-    }).catch(() => {
-      openNotification('error', t('sendMoney.failTitle'), t('sendMoney.failed'));
+    }).catch((e) => {
+      const reason = e && [422, 429].includes(e.error) && e.message;
+      openNotification('error', t('sendMoney.failTitle'), reason || t('sendMoney.failed'));
     });
   };
 
