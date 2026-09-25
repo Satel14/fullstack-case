@@ -1,12 +1,7 @@
 /* eslint-disable */
 import React from 'react';
 import { Link } from 'react-router-dom';
-import CasePrice from './CasePrice';
-
-const checkPrice = (data) => {
-    const discount = Number(data?.case_discount || 0);
-    return discount > 0;
-};
+import CasePrice, { hasDiscount } from './CasePrice';
 
 const formatNumber = (value) => new Intl.NumberFormat('uk-UA').format(Number(value) || 0);
 
@@ -33,7 +28,7 @@ const CaseMini = ({ data }) => {
 
     return (
         <Link
-            className={checkPrice(data) ? 'case discount' : 'case'}
+            className={hasDiscount(data) ? 'case discount' : 'case'}
             to={`/case/${data.case_id}`}
         >
             <div className="case-openstats">

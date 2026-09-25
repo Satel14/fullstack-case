@@ -2,9 +2,14 @@ import React from 'react';
 import { Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
 
-const checkPrice = (data) => {
-    const discount = parseInt(data.case_discount, 10);
-    return Number.isFinite(discount) && discount > 0;
+export const effectivePrice = (data) => {
+    const discount = Number(data.case_discount) || 0;
+    return discount > 0 ? discount : Number(data.case_price) || 0;
+};
+
+export const hasDiscount = (data) => {
+    const discount = Number(data.case_discount) || 0;
+    return discount > 0 && discount < (Number(data.case_price) || 0);
 };
 
 const getSummPrice = (price, openCount) => {
@@ -18,7 +23,7 @@ const CasePrice = (props) => {
     const { t } = useTranslation();
     return (
         <>
-            {checkPrice(props.data) ? (
+            {hasDiscount(props.data) ? (
                 <>
                     <div className="case-price">
                         <Tooltip placement="right" title={t('common.discount')}>
@@ -33,7 +38,7 @@ const CasePrice = (props) => {
                 </>
             ) : (
                 <div className="case-price">
-                    {getSummPrice(props.data.case_price, props.count)}
+                    {getSummPrice(effectivePrice(props.data), props.count)}
                     ₴
                 </div>
             )}
