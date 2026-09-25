@@ -8,6 +8,7 @@ import { withTranslation } from 'react-i18next';
 import { isAuthorized } from '../helpers/Player';
 import { logoutProfile, updateBalance } from '../store/actions/user';
 import { API_URL } from '../api/config';
+import { default as socket } from '../api/all/ws';
 
 const { Header } = Layout;
 
@@ -36,11 +37,17 @@ class HeaderSecond extends React.Component {
                 receivedItemsOld: 0,
             },
         };
+        this.fetchStats = this.fetchStats.bind(this);
         window.HeaderSecond = this;
     }
 
     async componentDidMount() {
+        socket.on('connect', this.fetchStats);
         this.fetchStats();
+    }
+
+    componentWillUnmount() {
+        socket.off('connect', this.fetchStats);
     }
 
     async fetchStats() {

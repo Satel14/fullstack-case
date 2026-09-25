@@ -22,7 +22,13 @@ jest.mock('react-countup', () => ({
     default: ({ end }) => <span data-testid="count">{end}</span>,
 }));
 
-jest.mock('../api/all/ws', () => ({ __esModule: true, default: {}, reconnectSocket: jest.fn() }));
+jest.mock('../api/all/ws', () => ({
+    __esModule: true, default: { on: jest.fn(), off: jest.fn() }, reconnectSocket: jest.fn(),
+}));
+
+const socket = require('../api/all/ws').default;
+
+const socketHandlers = {};
 
 const stats = (data) => {
     global.fetch = jest.fn(() => Promise.resolve({
@@ -51,6 +57,8 @@ const renderHeader = () => {
 const shownBalance = () => document.querySelector('.headersecond-profile__info .balance').textContent;
 
 beforeEach(() => {
+    Object.keys(socketHandlers).forEach((event) => { delete socketHandlers[event]; });
+    socket.on.mockImplementation((event, handler) => { socketHandlers[event] = handler; });
     stats({
         openedCases: 1, userCounts: 2, receivedItems: 0, onlineUser: 0, onlineUserList: [],
     });
@@ -116,4 +124,19 @@ test('the online tooltip lists the players the server reports', async () => {
 
     expect(await screen.findByText('Satel7')).toBeInTheDocument();
     expect(screen.getAllByText('player').length).toBeGreaterThan(1);
+});
+
+test('the online counter is fetched again once the own socket of the viewer connects', async () => {
+    renderHeader();
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+    await act(async () => {});
+    expect(onlineCount()).toBe('0');
+
+    stats({
+        openedCases: 1, userCounts: 2, receivedItems: 0, onlineUser: 1, onlineUserList: [],
+    });
+    expect(socketHandlers.connect).toBeInstanceOf(Function);
+    await act(async () => { socketHandlers.connect(); });
+
+    await waitFor(() => expect(onlineCount()).toBe('1'));
 });
