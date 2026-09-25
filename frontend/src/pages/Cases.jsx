@@ -7,6 +7,7 @@ import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { withTranslation } from 'react-i18next';
 import H2A from '../components/mini/H2A';
 import CaseMini from '../components/mini/CaseMini';
+import { effectivePrice, hasDiscount } from '../components/mini/CasePrice';
 import Flip from 'react-reveal/Flip';
 
 const filteredCases = (categoryId, cases) => cases.filter((item) => item.case_categoryId === categoryId);
@@ -126,8 +127,8 @@ class Cases extends Component {
             const sortCaseList = newBobi.length === 0 && optionCounter === 1 ? allCases : newBobi;
             for (const key in sortCaseList) {
                 const element = sortCaseList[key];
-                let price = element.case_price;
-                
+                const price = effectivePrice(element);
+
                 if (price >= min && price <= max) {
                     newSortedList.push(element);
                 }
@@ -142,7 +143,7 @@ class Cases extends Component {
 
             for (const key in sortCaseList) {
                 const element = sortCaseList[key];
-                if (element.case_discount > 0) {
+                if (hasDiscount(element)) {
                     newSortedList.push(element);
                 }
             }
