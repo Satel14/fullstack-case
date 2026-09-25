@@ -2,12 +2,13 @@ const MESSAGE = require('../constant/responseMessages');
 const Case = require('../models/case')
 const Category = require('../models/category');
 
-module.exports.getCaseById = async (id) => {
+module.exports.getCaseById = async (id, options = {}) => {
     try {
         const getCase = await Case.findOne({
             where: {
                 case_id: id
-            }
+            },
+            ...options,
         })
 
         if (!getCase) throw new Error(MESSAGE.CASE.NOT_EXIST);
@@ -18,9 +19,10 @@ module.exports.getCaseById = async (id) => {
     }
 }
 
-module.exports.addUsedCount = async (id, options = {}) => {
+module.exports.addUsedCount = async (id, count = 1, options = {}) => {
     try {
         await Case.increment('case_openedCount', {
+            by: count,
             where: {
                 case_id: id
             },
@@ -46,9 +48,9 @@ module.exports.decrementLimit = async (id, count = 1) => {
     }
 }
 
-module.exports.unpublishCase = async (id) => {
+module.exports.unpublishCase = async (id, options = {}) => {
     try {
-        await Case.update({case_published: 0}, {where: {case_id: id}})
+        await Case.update({case_published: 0}, {where: {case_id: id}, ...options})
         return;
     } catch (e) {
         throw Error(e.message)

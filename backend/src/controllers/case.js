@@ -14,6 +14,12 @@ const { buildDrawTable, deriveFromTable } = require('../modules/provablyFair');
 const RedisManager = require('../redis/manager');
 const ITEM_HASH = 'item_hash';
 
+const refusal = (code, message) => {
+    const err = new Error(message);
+    err.code = code;
+    return err;
+};
+
 module.exports.openCaseById = async (req, res) => {
     try {
         console.log('[DEBUG] openCaseById called');
@@ -89,14 +95,28 @@ module.exports.openCaseById = async (req, res) => {
                 transaction: t,
                 lock: t.LOCK.UPDATE,
             });
-            if (lockedBalance < priceCase * count) {
-                const err = new Error(MESSAGE.CASE.NOT_HAVE_MONEY);
-                err.code = 'NOT_HAVE_MONEY';
-                throw err;
-            }
-
             const seed = await PFService.lockActiveSeed(user_id, t, preparedSeed.pf_id);
             let nonce = seed.pf_nonce;
+
+            const lockedCase = await CaseService.getCaseById(id, { transaction: t, lock: t.LOCK.UPDATE });
+            const lockedLimit = Number(lockedCase.case_openLimit);
+            const lockedOpened = Number(lockedCase.case_openedCount || 0);
+            console.log('[DEBUG] Locked case:', id, 'published:', lockedCase.case_published, 'opened:', lockedOpened, 'limit:', lockedLimit);
+
+            if (Number(lockedCase.case_published) !== 1) {
+                console.log('[DEBUG] Case was unpublished before the open got its lock');
+                throw refusal('NOT_PUBLISHED', MESSAGE.CASE.NOT_PUBLISHED);
+            }
+            if (lockedLimit !== -1 && lockedOpened + count > lockedLimit) {
+                console.log('[DEBUG] Open limit reached before the open got its lock');
+                throw refusal('LIMIT_EXCEEDED', MESSAGE.CASE.LIMIT_EXCEEDED);
+            }
+
+            const lockedPrice = lockedCase.case_discount || lockedCase.case_price;
+            console.log('[DEBUG] Locked price:', lockedPrice, 'locked balance:', lockedBalance);
+            if (lockedBalance < lockedPrice * count) {
+                throw refusal('NOT_HAVE_MONEY', MESSAGE.CASE.NOT_HAVE_MONEY);
+            }
 
             for (let index = 0; index < count; index++) {
                 console.log('[DEBUG] Opening case iteration', index);
@@ -104,12 +124,11 @@ module.exports.openCaseById = async (req, res) => {
                 const resultCase = await new CaseOpen().openCase(id, winner);
                 console.log('[DEBUG] Case opened, winner:', resultCase?.winner?.item?.name);
 
-                await CaseService.addUsedCount(id, { transaction: t });
-                await UserService.decrementBalance(priceCase, user_id, { transaction: t });
+                await UserService.decrementBalance(lockedPrice, user_id, { transaction: t });
                 await BalanceHistoryService.addBalanceChange(
                     user_id,
                     BalanceHistoryEnum.OPEN_CASE,
-                    -priceCase,
+                    -lockedPrice,
                     '',
                     { transaction: t },
                 );
@@ -144,6 +163,12 @@ module.exports.openCaseById = async (req, res) => {
             }
 
             await PFService.bumpNonce(seed.pf_id, nonce, { transaction: t });
+            await CaseService.addUsedCount(id, count, { transaction: t });
+
+            if (lockedLimit !== -1 && lockedOpened + count >= lockedLimit) {
+                console.log('[DEBUG] Open limit reached, unpublishing case', id);
+                await CaseService.unpublishCase(id, { transaction: t });
+            }
         });
 
         const io = getIo();
@@ -159,12 +184,7 @@ module.exports.openCaseById = async (req, res) => {
             });
         }
 
-        console.log('[DEBUG] All done, getting updated case and balance');
-
-        const updatedCase = await CaseService.getCaseById(id);
-        if (updatedCase.case_openLimit !== -1 && updatedCase.case_openedCount >= updatedCase.case_openLimit) {
-            await CaseService.unpublishCase(id);
-        }
+        console.log('[DEBUG] All done, getting updated balance');
 
         const actualBalance = await UserService.getBalanceByUserId(user_id);
         console.log('[DEBUG] Returning response, balance:', actualBalance);
@@ -180,6 +200,9 @@ module.exports.openCaseById = async (req, res) => {
             return res.status(200).json({
                 status: 200, message: MESSAGE.CASE.NOT_HAVE_MONEY,
             })
+        }
+        if (e && (e.code === 'NOT_PUBLISHED' || e.code === 'LIMIT_EXCEEDED')) {
+            return res.status(422).json({ status: 422, message: e.message });
         }
         return res.status(400).json({
             status: 400, message: e.message
