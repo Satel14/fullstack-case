@@ -16,10 +16,7 @@ const AppSwitch = ({ routes, user, fallback }) => (
                 key={`${group}-${route.path}`}
                 path={route.path}
                 exact={route.exact}
-                component={(props) => (
-                    // eslint-disable-next-line react/jsx-props-no-spreading
-                    <route.component {...props} />
-                )}
+                component={route.component}
             />
         )))}
         <Route key="404-fallback" component={fallback}/>

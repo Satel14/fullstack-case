@@ -50,3 +50,43 @@ test('an authorized user gets not-found on an unknown page', () => {
     renderAt('/nope', admin);
     expect(screen.getByText('not-found')).toBeInTheDocument();
 });
+
+test('a user update re-renders the current page without remounting it', () => {
+    let mounts = 0;
+    const Probe = () => {
+        React.useEffect(() => { mounts += 1; }, []);
+        return <div>probe</div>;
+    };
+    const probeRoutes = {
+        public: [],
+        private: [{ path: '/settings', exact: true, component: Probe }],
+        admin: [],
+    };
+    const at = (user) => (
+        <MemoryRouter initialEntries={['/settings']}>
+            <AppSwitch routes={probeRoutes} user={user} fallback={page('not-found')} />
+        </MemoryRouter>
+    );
+
+    const { rerender } = render(at(player));
+    rerender(at({ ...player, avatar: 5 }));
+    rerender(at({ ...player, balance: '90.00' }));
+
+    expect(screen.getByText('probe')).toBeInTheDocument();
+    expect(mounts).toBe(1);
+});
+
+test('a page receives the router props', () => {
+    const Params = ({ match }) => <div>{`id=${match.params.id}`}</div>;
+    render(
+        <MemoryRouter initialEntries={['/profile/3']}>
+            <AppSwitch
+                routes={{ public: [{ path: '/profile/:id', component: Params }], private: [], admin: [] }}
+                user={guest}
+                fallback={page('not-found')}
+            />
+        </MemoryRouter>,
+    );
+
+    expect(screen.getByText('id=3')).toBeInTheDocument();
+});
