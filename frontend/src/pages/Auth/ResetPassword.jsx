@@ -5,19 +5,7 @@ import { LockOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { resetPassword } from '../../api/all/user';
 import openNotification from '../../components/mini/openNotification';
-
-const PASSWORD_MIN = 6;
-const PASSWORD_MAX_BYTES = 72;
-
-const utf8Length = (value) => {
-    try {
-        return encodeURIComponent(value).replace(/%[0-9A-F]{2}/gi, '_').length;
-    } catch (e) {
-        return Infinity;
-    }
-};
-
-const acceptablePassword = (value) => value.length >= PASSWORD_MIN && utf8Length(value) <= PASSWORD_MAX_BYTES;
+import { acceptablePassword } from '../../helpers/credentials';
 
 const ResetPassword = () => {
     const { t } = useTranslation();
