@@ -108,6 +108,17 @@ test('two backend processes starting together carry the legacy history over exac
     assert.deepStrictEqual((await second.get()).map((m) => m.msg), range(14, 39));
 });
 
+test('a legacy chat_hash too large to carry over in one step is set aside, not loaded', async () => {
+    const { fake, ChatService } = freshChat();
+    legacyHash(fake, Array.from({ length: 10001 }, (_, i) => i));
+
+    const last = await ChatService.get();
+
+    assert.deepStrictEqual(last, []);
+    assert.strictEqual(fake.store.has('chat_hash'), false);
+    assert.strictEqual(fake.entriesAt('chat_hash:oversized'), 10001);
+});
+
 test('a corrupt legacy entry is dropped instead of breaking the chat', async () => {
     const { fake, ChatService } = freshChat();
     const hash = legacyHash(fake, [0, 1, 2]);
@@ -148,20 +159,29 @@ const report = (result) => { console.log('RESULT ' + JSON.stringify(result)); };
             const n = (i * 7919) % 600;
             fields.push('u' + n, JSON.stringify({ msg: 'm' + n, time: 1700000000 + n }));
         }
-        fields.push('broken', '{not json', 'array', '[1,2]');
+        fields.push('broken', '{not json', 'array', '[1,2]', 'emptyArray', '[]', 'number', '42');
         await call('hmset', hash, ...fields);
         await call('rpush', adopted, JSON.stringify({ msg: 'live', time: 1800000000 }));
 
-        const moved = await manager.adoptLegacyHash(hash, adopted, 500);
+        const moved = await manager.adoptLegacyHash(hash, adopted, prefix + ':unused', 500, 1000);
         const afterFirst = (await manager.getListRange(adopted, 0, -1)).map((raw) => JSON.parse(raw).msg);
         const hashLeft = await call('exists', hash);
-        const movedAgain = await manager.adoptLegacyHash(hash, adopted, 500);
+        const movedAgain = await manager.adoptLegacyHash(hash, adopted, prefix + ':unused', 500, 1000);
         const afterSecond = await call('llen', adopted);
-        const nothing = await manager.adoptLegacyHash(prefix + ':none', prefix + ':empty', 500);
-        await call('del', adopted);
+        const nothing = await manager.adoptLegacyHash(prefix + ':none', prefix + ':empty', prefix + ':unused', 500, 1000);
+
+        const big = prefix + ':big';
+        const bigFields = [];
+        for (let i = 0; i < 11; i += 1) { bigFields.push('b' + i, JSON.stringify({ msg: 'b' + i, time: i })); }
+        await call('hmset', big, ...bigFields);
+        const oversized = await manager.adoptLegacyHash(big, prefix + ':bigList', prefix + ':oversized', 500, 10);
+        const oversizedKept = await call('hlen', prefix + ':oversized');
+        const bigLeft = await call('exists', big);
+        const bigList = await call('exists', prefix + ':bigList');
+        await call('del', adopted, prefix + ':oversized');
 
         report({
-            capped, lastTwo, missing, moved, afterFirst, hashLeft, movedAgain, afterSecond, nothing,
+            capped, lastTwo, missing, moved, afterFirst, hashLeft, movedAgain, afterSecond, nothing, oversized, oversizedKept, bigLeft, bigList,
         });
     } finally {
         await call('del', list, hash);
@@ -190,7 +210,7 @@ test('the list helpers keep their contract on a real Redis', {
     assert.deepStrictEqual(result.capped, ['n3', 'n4', 'n5', 'n6', 'n7']);
     assert.deepStrictEqual(result.lastTwo, ['n6', 'n7']);
     assert.deepStrictEqual(result.missing, []);
-    assert.strictEqual(result.moved, 500);
+    assert.strictEqual(result.moved, 499, 'the count is of legacy messages that survived the trim');
     assert.strictEqual(result.afterFirst.length, 500);
     assert.deepStrictEqual(
         result.afterFirst,
@@ -201,4 +221,8 @@ test('the list helpers keep their contract on a real Redis', {
     assert.strictEqual(result.movedAgain, 0, 'a second run finds nothing to move');
     assert.strictEqual(result.afterSecond, 500);
     assert.strictEqual(result.nothing, 0);
+    assert.strictEqual(result.oversized, -1, 'a legacy hash over the limit is not loaded');
+    assert.strictEqual(result.oversizedKept, 11);
+    assert.strictEqual(result.bigLeft, 0);
+    assert.strictEqual(result.bigList, 0);
 });

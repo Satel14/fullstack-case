@@ -52,27 +52,36 @@ const createFakeRedis = () => {
         del(...keys) {
             return keys.filter((key) => store.delete(key)).length;
         },
-        eval(script, numKeys, legacyKey, listKey, keep) {
+        eval(script, numKeys, legacyKey, listKey, oversizedKey, keep, largest) {
             if (!store.has(legacyKey)) {
                 return 0;
+            }
+            if (store.get(legacyKey).size > Number(largest)) {
+                store.set(oversizedKey, store.get(legacyKey));
+                store.delete(legacyKey);
+                return -1;
             }
             const rows = [];
             store.get(legacyKey).forEach((raw) => {
                 try {
                     const message = JSON.parse(raw);
-                    if (message && typeof message === 'object' && !Array.isArray(message)) {
-                        rows.push([Number(message.time) || 0, raw]);
+                    if (message && typeof message === 'object' && !Array.isArray(message) && Object.keys(message).length) {
+                        rows.push([typeof message.time === 'boolean' ? 0 : Number(message.time) || 0, raw]);
                     }
                 } catch (e) {
                     return;
                 }
             });
             const newest = rows.sort((a, b) => a[0] - b[0]).slice(-Number(keep));
+            store.delete(legacyKey);
+            if (!newest.length) {
+                return 0;
+            }
             const list = listAt(listKey);
+            const room = Math.max(0, Number(keep) - list.length);
             list.unshift(...newest.map(([, raw]) => raw));
             store.set(listKey, list.slice(-Number(keep)));
-            store.delete(legacyKey);
-            return newest.length;
+            return Math.min(newest.length, room);
         },
         exists(key) {
             return store.has(key) ? 1 : 0;

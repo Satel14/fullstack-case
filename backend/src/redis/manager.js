@@ -61,25 +61,36 @@ const getListRange = (key, start, stop) => new Promise((resolve, reject) => {
 });
 
 const ADOPT_LEGACY_HASH_SCRIPT = [
-    'local legacy, list, keep = KEYS[1], KEYS[2], tonumber(ARGV[1])',
-    'if redis.call("EXISTS", legacy) == 0 then return 0 end',
+    'local legacy, list, oversized = KEYS[1], KEYS[2], KEYS[3]',
+    'local keep, largest = tonumber(ARGV[1]), tonumber(ARGV[2])',
+    'local size = redis.call("HLEN", legacy)',
+    'if size == 0 then return 0 end',
+    'if size > largest then',
+    '    redis.call("RENAME", legacy, oversized)',
+    '    return -1',
+    'end',
     'local rows = {}',
     'for _, raw in ipairs(redis.call("HVALS", legacy)) do',
     '    local ok, message = pcall(cjson.decode, raw)',
-    '    if ok and type(message) == "table" and message[1] == nil then',
+    '    if ok and type(message) == "table" and next(message) ~= nil and message[1] == nil then',
     '        rows[#rows + 1] = { tonumber(message.time) or 0, raw }',
     '    end',
     'end',
+    'redis.call("DEL", legacy)',
+    'if #rows == 0 then return 0 end',
     'table.sort(rows, function(a, b) return a[1] < b[1] end)',
+    'local room = math.max(0, keep - redis.call("LLEN", list))',
     'local first = math.max(1, #rows - keep + 1)',
     'for i = #rows, first, -1 do redis.call("LPUSH", list, rows[i][2]) end',
     'redis.call("LTRIM", list, -keep, -1)',
-    'redis.call("DEL", legacy)',
-    'return #rows - first + 1',
+    'return math.min(#rows - first + 1, room)',
 ].join('\n');
 
-const adoptLegacyHash = (legacyKey, listKey, maxLength) => new Promise((resolve, reject) => {
-    client.eval(ADOPT_LEGACY_HASH_SCRIPT, 2, legacyKey, listKey, maxLength, (err, moved) => (err ? reject(err) : resolve(Number(moved))));
+const adoptLegacyHash = (legacyKey, listKey, oversizedKey, maxLength, largestLegacy) => new Promise((resolve, reject) => {
+    client.eval(
+        ADOPT_LEGACY_HASH_SCRIPT, 3, legacyKey, listKey, oversizedKey, maxLength, largestLegacy,
+        (err, kept) => (err ? reject(err) : resolve(Number(kept))),
+    );
 });
 
 async function initialRedisState() {

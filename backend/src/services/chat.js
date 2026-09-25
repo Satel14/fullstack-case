@@ -6,7 +6,17 @@ const LEGACY_CHAT_HASH = "chat_hash";
 const MAXIMUM_SEND_MESSAGES = 26;
 const MAXIMUM_STORED_MESSAGES = 500;
 
-const adoptLegacyHistory = () => RedisManager.adoptLegacyHash(LEGACY_CHAT_HASH, CHAT_LIST, MAXIMUM_STORED_MESSAGES);
+const OVERSIZED_LEGACY_CHAT_HASH = "chat_hash:oversized";
+const LARGEST_LEGACY_CHAT_HASH = 10000;
+
+const adoptLegacyHistory = async () => {
+    const kept = await RedisManager.adoptLegacyHash(
+        LEGACY_CHAT_HASH, CHAT_LIST, OVERSIZED_LEGACY_CHAT_HASH, MAXIMUM_STORED_MESSAGES, LARGEST_LEGACY_CHAT_HASH
+    );
+    if (kept < 0) {
+        console.warn(`[Chat] ${LEGACY_CHAT_HASH} holds more than ${LARGEST_LEGACY_CHAT_HASH} messages; set aside as ${OVERSIZED_LEGACY_CHAT_HASH} instead of carried over`);
+    }
+};
 
 let legacyAdoption = null;
 
