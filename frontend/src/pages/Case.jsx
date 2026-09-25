@@ -127,6 +127,17 @@ class Case extends Component {
         });
     }
 
+    async refreshCase() {
+        const { id } = this.state;
+        try {
+            const caseData = await getCaseById(id);
+            if (caseData && caseData.data && caseData.data.case_id === id) {
+                this.setState({ caseData: caseData.data });
+            }
+        } catch (e) {
+        }
+    }
+
     async getProvablyFairInfo() {
         try {
             const res = await getProvablyFairState();
@@ -161,7 +172,7 @@ class Case extends Component {
                 ) : (
                     <>
                         <div className="casepage-openbutton">
-                            <OpenCase data={caseData} />
+                            <OpenCase data={caseData} onCaseChanged={() => this.refreshCase()} />
                         </div>
 
                         {serverSeedHash && (

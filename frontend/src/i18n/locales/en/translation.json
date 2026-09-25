@@ -307,7 +307,6 @@
         "limitReached": "This case has reached its opening limit. It can no longer be opened!",
         "limitExceededTitle": "Limit exceeded",
         "limitExceededText": "You can open only {{remaining}} more",
-        "authOrFunds": "You are not authorized or have insufficient funds",
         "authRequired": "To open a case you need to sign in",
         "authorize": "Sign in"
     },

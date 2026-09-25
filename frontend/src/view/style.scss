@@ -1577,6 +1577,19 @@ blockquote {
         }
     }
 
+    &-price {
+        display: flex;
+        gap: 12px;
+        align-items: baseline;
+        justify-content: center;
+
+        .case-price-old {
+            font-size: 18px;
+            color: gray;
+            text-decoration: line-through;
+        }
+    }
+
     &-buttons {
         display: flex;
         gap: 10px;

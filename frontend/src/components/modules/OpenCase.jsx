@@ -24,6 +24,7 @@ import { getItemPriceById } from '../../api/all/item';
 import openNotification from '../mini/openNotification';
 import { itemInfoFetch } from '../../store/actions/itemCache';
 import ItemColor from '../mini/ItemColor';
+import CasePrice from '../mini/CasePrice';
 import { computeItemPriceUAH } from '../../helpers/price';
 
 const delayAnimation = 4;
@@ -127,6 +128,7 @@ class OpenCase extends Component {
         this.openScrollMethod = this.openScrollMethod.bind(this);
         this.getBack = this.getBack.bind(this);
         this.getLoginPage = this.getLoginPage.bind(this);
+        this.resetView = this.resetView.bind(this);
 
         this.blockRef = React.createRef();
         this.timers = [];
@@ -226,6 +228,44 @@ class OpenCase extends Component {
         });
     }
 
+    resetView() {
+        this.clearTimers();
+        this.safeSetState({
+            openMethod: '',
+            load: false,
+            randomItemsList: [],
+            winner: null,
+            positions: [],
+            recenter: false,
+            sold: [],
+            loadIndex: null,
+            loadItem: false,
+            loadAll: false,
+            clicked: false,
+            processWorking: false,
+            loading: false,
+            prices: [],
+        });
+    }
+
+    openFailureMessage(err) {
+        const { t } = this.props;
+        if (err && err.error === 401) {
+            return t('openCase.authRequired');
+        }
+        if (err && err.message) {
+            return err.message;
+        }
+        return t('common.serverError');
+    }
+
+    caseChanged() {
+        const { onCaseChanged } = this.props;
+        if (onCaseChanged) {
+            onCaseChanged();
+        }
+    }
+
     getLoginPage() {
         const { history } = this.props;
         if (history) {
@@ -272,13 +312,7 @@ class OpenCase extends Component {
             const remaining = maxLimit - openedCount;
 
             if (remaining <= 0) {
-                this.setState({
-                    load: false,
-                    openMethod: '',
-                    processWorking: false,
-                    loadItem: false,
-                    loading: false,
-                });
+                this.resetView();
                 openNotification(
                     'error',
                     this.props.t('openCase.limitReached'),
@@ -287,13 +321,7 @@ class OpenCase extends Component {
             }
 
             if (requestCount > remaining) {
-                this.setState({
-                    load: false,
-                    openMethod: '',
-                    processWorking: false,
-                    loadItem: false,
-                    loading: false,
-                });
+                this.resetView();
                 openNotification(
                     'error',
                     this.props.t('openCase.limitExceededTitle'),
@@ -303,26 +331,19 @@ class OpenCase extends Component {
             }
         }
 
-        const result = await openCaseById(
-            data.case_id,
-            requestCount,
-        ).then((res) => res).catch((err) => {
-            openNotification('error', this.props.t('common.error'), this.props.t('openCase.authOrFunds'));
-            this.setState({
-                loading: false,
-                processWorking: false,
-            });
-            return null;
-        });
+        let result;
+        try {
+            result = await openCaseById(data.case_id, requestCount);
+        } catch (err) {
+            this.resetView();
+            openNotification('error', this.props.t('common.error'), this.openFailureMessage(err));
+            this.caseChanged();
+            return false;
+        }
 
-        if (!result) return false;
-
-        if (!result.balance && result.balance !== 0) {
-            openNotification('error', this.props.t('common.error'), result.message);
-            this.setState({
-                loading: false,
-                processWorking: false,
-            });
+        if (!result || (!result.balance && result.balance !== 0)) {
+            this.resetView();
+            openNotification('error', this.props.t('common.error'), (result && result.message) || this.props.t('common.serverError'));
             return false;
         }
 
@@ -359,6 +380,7 @@ class OpenCase extends Component {
         });
 
         window.HeaderSecond.changeBalance(result.balance);
+        this.caseChanged();
         return true;
     }
 
@@ -461,7 +483,6 @@ class OpenCase extends Component {
         const result = await this.open();
 
         if (!result) {
-            this.setState({ clicked: false, loading: false, processWorking: false });
             return;
         }
         this.setState({
@@ -595,6 +616,9 @@ class OpenCase extends Component {
                                     <Fade>
                                         <img src={data.case_img} alt={data.case_title} />
                                     </Fade>
+                                    <div className="casepage-price">
+                                        <CasePrice data={data} count={openCount} />
+                                    </div>
                                     <div className="count-buttons">
                                         <Radio.Group
                                             buttonStyle="solid"
@@ -798,6 +822,9 @@ class OpenCase extends Component {
                             <Fade>
                                 <img src={data.case_img} alt={data.case_title} />
                             </Fade>
+                            <div className="casepage-price">
+                                <CasePrice data={data} />
+                            </div>
                         </div>
                         <div className="alert-case-auth">
                             <Alert
