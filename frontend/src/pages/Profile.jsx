@@ -14,7 +14,7 @@ import {
     getStorageLastItemsByUserId,
 } from '../api/all/storage';
 import { getItemInfoById } from '../api/all/item';
-import { rareRank } from '../helpers/rarity';
+import { computeItemPriceUAH } from '../helpers/price';
 import roles from '../enum/role';
 
 const STORAGE_LOAD_LIMIT = 200;
@@ -46,6 +46,19 @@ const buildItemInfoMap = (itemIds, responses) => {
     return result;
 };
 
+const parsePrices = (prices) => {
+    if (typeof prices !== 'string') {
+        return prices;
+    }
+    try {
+        return JSON.parse(prices);
+    } catch (e) {
+        return null;
+    }
+};
+
+const dropValue = (item, color) => computeItemPriceUAH(parsePrices(item.pricesInCredits), color) || 0;
+
 const pickBestDrop = (storageItems, itemInfoById) => {
     let best = null;
 
@@ -57,7 +70,7 @@ const pickBestDrop = (storageItems, itemInfoById) => {
 
         const candidate = {
             storageId: Number(storageItem.storage_id || 0),
-            rank: rareRank(item.item_rare),
+            rank: dropValue(item, storageItem.storage_color),
             name: item.item_name || `Item #${storageItem.storage_itemId}`,
             imagePath: item.item_imagePath || '',
         };

@@ -27,6 +27,7 @@ jest.mock('../api/all/storage', () => ({
 jest.mock('../api/all/item', () => ({ getItemInfoById: jest.fn() }));
 
 const { getUserById } = require('../api/all/user');
+const { getItemInfoById } = require('../api/all/item');
 const {
     getFavoriteCaseByUserId, getStorageItemsCountByUserId, getStorageLastItemsByUserId,
 } = require('../api/all/storage');
@@ -92,4 +93,37 @@ test('the viewer\'s own profile shows their own identity', async () => {
     await waitFor(() => expect(screen.getByText('Satel7')).toBeInTheDocument());
     expect(avatarUrls(container)).toEqual(['url(/img/avatars/3.png)']);
     expect(screen.getByText('profile.roles.admin')).toBeInTheDocument();
+});
+
+test('the best drop is the most valuable item, not the one with the rarest wear label', async () => {
+    getUserById.mockResolvedValue({
+        data: {
+            user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
+        },
+    });
+    getStorageLastItemsByUserId.mockResolvedValue({
+        data: [
+            {
+                storage_id: 3, storage_itemId: 1507, storage_color: 'default', storage_caseId: 1,
+            },
+            {
+                storage_id: 2, storage_itemId: 361, storage_color: 'default', storage_caseId: 1,
+            },
+            {
+                storage_id: 1, storage_itemId: 88, storage_color: 'painted', storage_caseId: 1,
+            },
+        ],
+    });
+    const items = {
+        1507: { item_name: 'Nova | Caged Steel', item_rare: 'Factory New', pricesInCredits: { default: 7, painted: 10 } },
+        361: { item_name: 'Shadow Daggers | Safari Mesh', item_rare: 'Field Tested', pricesInCredits: { default: 1939, painted: 2715 } },
+        88: { item_name: 'AWP | Worm God', item_rare: 'Battle Scarred', pricesInCredits: JSON.stringify({ default: 300, painted: 2000 }) },
+    };
+    getItemInfoById.mockImplementation((id) => Promise.resolve({ data: items[id] }));
+
+    const { container } = renderProfile('5');
+
+    await screen.findByText('testopen');
+    const bestDrop = container.querySelector('.profilepage-firstblock__bestdrop span');
+    expect(bestDrop.textContent).toBe('AWP | Worm God');
 });
