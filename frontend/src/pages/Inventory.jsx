@@ -135,7 +135,7 @@ const Inventory = ({
         const refused = new Set();
         let total = 0;
         let offset = 0;
-        let left = [];
+        let left = new Map();
         for (;;) {
             let rows;
             try {
@@ -154,14 +154,15 @@ const Inventory = ({
                     return { failure, total };
                 }
                 offset = 0;
-                left = [];
-            } else if (rows.length === PAGE_LIMIT) {
-                left = [...left, ...rows];
-                offset += PAGE_LIMIT;
+                left = new Map();
             } else {
-                left = [...left, ...rows];
-                const stuck = left.some((r) => !refused.has(r.storage_id));
-                return { failure: stuck || null, total, refused: left.length };
+                rows.forEach((r) => left.set(r.storage_id, r));
+                if (rows.length === PAGE_LIMIT) {
+                    offset += PAGE_LIMIT;
+                } else {
+                    const stuck = [...left.keys()].some((id) => !refused.has(id));
+                    return { failure: stuck || null, total, refused: left.size };
+                }
             }
         }
     };

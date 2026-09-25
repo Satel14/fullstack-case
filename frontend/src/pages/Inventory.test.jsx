@@ -206,3 +206,28 @@ test('sell all reaches sellable items behind a full page of items the server ref
     ));
     expect(server.inventory).toHaveLength(200);
 });
+
+test('a row that shifts onto the next page during sell all is not counted twice', async () => {
+    server.inventory = inventoryRows(205);
+    sellItemByStorageId.mockImplementation(() => Promise.reject({ error: 422, message: 'no price' }));
+    const page = getProfileStorage.getMockImplementation();
+    let secondPageReads = 0;
+    getProfileStorage.mockImplementation((request) => {
+        if (request.status === 'inventory' && request.offset === 200) {
+            secondPageReads += 1;
+            if (secondPageReads === 2) {
+                server.inventory = [{
+                    storage_id: 1000, storage_itemId: 1, storage_color: 'default', storage_status: 'inventory',
+                }, ...server.inventory];
+            }
+        }
+        return page(request);
+    });
+    renderInventory();
+
+    await clickSellAll();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped {"sold":0,"skipped":205}',
+    ));
+});
