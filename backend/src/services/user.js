@@ -41,30 +41,15 @@ module.exports.getUserFullInfoById = async (id, options = {}) => {
     }
 };
 
-module.exports.getOnlineUsers = async () => {
-    try {
-        const fiveMinutesAgo = new Date(
-            new Date().setMinutes(new Date().getMinutes() - 5)
-        );
-        const users = await User.findAndCountAll({
-            attributes: PUBLIC_FIELDS,
-            order: [["updated_at", "DESC"]],
-            where: {
-                updated_at: { [Op.gt]: fiveMinutesAgo },
-            },
-        });
-
-        const list = [];
-
-        for (const key in users.rows) {
-            const element = users.rows[key];
-            list.push(element);
-        }
-
-        return { count: users.count, userList: list };
-    } catch (e) {
-        throw Error(e.message);
+module.exports.getOnlineUsers = async (userIds) => {
+    if (!userIds.length) {
+        return [];
     }
+    return User.findAll({
+        attributes: PUBLIC_FIELDS,
+        where: { user_id: userIds },
+        order: [["user_login", "ASC"]],
+    });
 };
 
 module.exports.editUser = async (fields, id) => {

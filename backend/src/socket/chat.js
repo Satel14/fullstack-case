@@ -5,6 +5,7 @@ const { createRateLimiter, createTrailingThrottle } = require('./throttle');
 const { createPresence } = require('./presence');
 
 let ioInstance = null;
+let presenceInstance = null;
 
 const SESSION_CHECK_FAILED = 'session check failed';
 const CHAT_MESSAGE_BURST = 5;
@@ -63,6 +64,7 @@ module.exports = function (server) {
     io.use(authenticateHandshake);
 
     const presence = createPresence();
+    presenceInstance = presence;
     const chatLimiter = createRateLimiter({ burst: CHAT_MESSAGE_BURST, refillMs: CHAT_MESSAGE_REFILL_MS });
     const broadcastRoster = createTrailingThrottle(
         () => io.emit('user-on', presence.chatLogins()),
@@ -116,6 +118,7 @@ module.exports = function (server) {
 }
 
 module.exports.getIo = () => ioInstance;
+module.exports.onlinePresence = () => (presenceInstance ? presenceInstance.online() : { count: 0, userIds: [] });
 module.exports.onUserConnected = onUserConnected;
 module.exports.authenticateHandshake = authenticateHandshake;
 module.exports.SESSION_CHECK_FAILED = SESSION_CHECK_FAILED;

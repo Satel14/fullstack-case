@@ -1,10 +1,12 @@
 function createPresence() {
     const sockets = new Map();
     const users = new Map();
+    let anonymous = 0;
 
     const connect = (socketId, user) => {
         sockets.set(socketId, { userId: user ? user.id : null, inChat: false });
         if (!user) {
+            anonymous += 1;
             return;
         }
         const entry = users.get(user.id) || { login: user.login, sockets: new Set(), chatSockets: new Set() };
@@ -31,6 +33,7 @@ function createPresence() {
         }
         sockets.delete(socketId);
         if (socket.userId === null) {
+            anonymous -= 1;
             return false;
         }
         const entry = users.get(socket.userId);
@@ -46,8 +49,10 @@ function createPresence() {
         .filter((entry) => entry.chatSockets.size > 0)
         .map((entry) => entry.login);
 
+    const online = () => ({ count: users.size + anonymous, userIds: [...users.keys()] });
+
     return {
-        connect, joinChat, disconnect, chatLogins,
+        connect, joinChat, disconnect, chatLogins, online,
     };
 }
 
