@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import Loader from '../components/mini/Loader';
+import ErrorPage from './ErrorPage';
 import { getUserById } from '../api/all/user';
 import {
     getFavoriteCaseByUserId,
@@ -202,9 +203,13 @@ class Profile extends Component {
         const favoriteCaseImg = favoriteCase?.case_img || '';
         const favoriteCaseName = favoriteCase?.case_title || t('profile.noCase');
 
-        const userName = profileUser?.user_login || this.props.user?.login || t('profile.player');
-        const userAvatar = profileUser?.user_avatar || this.props.user?.avatar || 1;
-        const userRole = t(`profile.roles.${roleKey(profileUser?.user_role || this.props.user?.role)}`);
+        if (!fetching && !profileUser) {
+            return <ErrorPage />;
+        }
+
+        const userName = profileUser?.user_login || t('profile.player');
+        const userAvatar = profileUser?.user_avatar || 1;
+        const userRole = t(`profile.roles.${roleKey(profileUser?.user_role)}`);
 
         const bestDropName = bestDrop?.name || t('profile.noDrop');
         const bestDropImg = bestDrop?.imagePath ? encodeURI(bestDrop.imagePath) : '';
