@@ -2,7 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 const { spawnSync } = require('child_process');
-const { resetTestDatabase, TEST_DB } = require('./helpers/db');
+const { resetTestDatabase, recreateTestDatabase, TEST_DB } = require('./helpers/db');
+const { createMigrator } = require('../src/db/migrator');
 
 const MIGRATION = '20260923000000-uah-credit-rate-module.js';
 
@@ -52,7 +53,8 @@ test('reverting the uah-credit-rate migration removes only that module row', asy
 });
 
 test('the migrate CLI names what reverting the uah-credit-rate migration does and asks to confirm', async () => {
-    const sequelize = await resetTestDatabase();
+    const sequelize = await recreateTestDatabase();
+    await createMigrator(sequelize, { quiet: true }).up({ to: MIGRATION });
     activeSequelize = sequelize;
 
     const result = spawnSync(process.execPath, [path.join('scripts', 'migrate.js'), 'down'], {
