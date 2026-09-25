@@ -17,6 +17,7 @@ const { TabPane } = Tabs;
 
 const PAGE_LIMIT = 200;
 const TOO_MANY_REQUESTS = 429;
+const UNSELLABLE = 422;
 
 const mapStateToProps = (state) => ({
     itemCache: state.itemCache,
@@ -104,20 +105,26 @@ const Inventory = ({
         setSelling(false);
     };
 
-    const sellRows = async (rows, attempted) => {
+    const sellRows = async (rows, attempted, refused) => {
         let soldCount = 0;
         for (let i = 0; i < rows.length; i++) {
             attempted.add(rows[i].storage_id);
             try {
                 // eslint-disable-next-line no-await-in-loop
                 const res = await sellItemByStorageId(rows[i].storage_id);
-                if (res.status !== 200) {
+                if (res.status === UNSELLABLE) {
+                    refused.add(rows[i].storage_id);
+                } else if (res.status !== 200) {
                     return { failure: res.status || true, soldCount };
+                } else {
+                    setBalance(res.balance);
+                    soldCount += 1;
                 }
-                setBalance(res.balance);
-                soldCount += 1;
             } catch (e) {
-                return { failure: (e && e.error) || true, soldCount };
+                if (!e || e.error !== UNSELLABLE) {
+                    return { failure: (e && e.error) || true, soldCount };
+                }
+                refused.add(rows[i].storage_id);
             }
         }
         return { failure: null, soldCount };
@@ -125,6 +132,7 @@ const Inventory = ({
 
     const sellEverything = async () => {
         const attempted = new Set();
+        const refused = new Set();
         let total = 0;
         for (;;) {
             let rows;
@@ -133,17 +141,18 @@ const Inventory = ({
                 const page = await getProfileStorage({ status: 'inventory', limit: PAGE_LIMIT });
                 rows = page.data || [];
             } catch (e) {
-                return { failure: true, total };
+                return { failure: true, total, refused: refused.size };
             }
             const fresh = rows.filter((r) => !attempted.has(r.storage_id));
             if (!fresh.length) {
-                return { failure: rows.length ? true : null, total };
+                const stuck = rows.some((r) => !refused.has(r.storage_id));
+                return { failure: stuck || null, total, refused: refused.size };
             }
             // eslint-disable-next-line no-await-in-loop
-            const { failure, soldCount } = await sellRows(fresh, attempted);
+            const { failure, soldCount } = await sellRows(fresh, attempted, refused);
             total += soldCount;
             if (failure) {
-                return { failure, total };
+                return { failure, total, refused: refused.size };
             }
         }
     };
@@ -153,12 +162,14 @@ const Inventory = ({
             return;
         }
         setSelling(true);
-        const { failure, total } = await sellEverything();
+        const { failure, total, refused } = await sellEverything();
         setSelling(false);
         if (failure === TOO_MANY_REQUESTS) {
             openNotification('error', t('openCase.sellErrorTitle'), t('inventory.sellAllRateLimited', { sold: total }));
         } else if (failure) {
             openNotification('error', t('openCase.sellErrorTitle'), t('inventory.sellAllStopped', { sold: total }));
+        } else if (refused) {
+            openNotification('error', t('openCase.sellErrorTitle'), t('inventory.sellAllSkipped', { sold: total, skipped: refused }));
         } else {
             openNotification('success', t('openCase.allSold'));
         }

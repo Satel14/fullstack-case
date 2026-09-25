@@ -151,3 +151,22 @@ test('sell all does not claim success when sold items stay in the inventory', as
     expect(sellItemByStorageId).toHaveBeenCalledTimes(3);
     expect(openNotification).not.toHaveBeenCalledWith('success', 'openCase.allSold');
 });
+
+test('sell all skips an item the server refuses to sell and sells everything else', async () => {
+    server.inventory = inventoryRows(5);
+    const sell = sellItemByStorageId.getMockImplementation();
+    sellItemByStorageId.mockImplementation((storageId) => (
+        storageId === 3 ? Promise.reject({ error: 422, message: 'no price' }) : sell(storageId)
+    ));
+    const store = renderInventory();
+
+    await clickSellAll();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped',
+    ));
+    expect(server.inventory.map((r) => r.storage_id)).toEqual([3]);
+    expect(sellItemByStorageId).toHaveBeenCalledTimes(5);
+    expect(store.getState().user.balance).toBe('40.00');
+    expect(openNotification).not.toHaveBeenCalledWith('success', 'openCase.allSold');
+});

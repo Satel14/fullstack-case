@@ -288,7 +288,8 @@
         "emptySold": "Nothing sold yet",
         "soldLabel": "Sold",
         "sellAllStopped": "Sold {{sold}} items, then a sale failed. The rest are still in your inventory.",
-        "sellAllRateLimited": "Sold {{sold}} items. You are selling too fast: wait a minute and try again."
+        "sellAllRateLimited": "Sold {{sold}} items. You are selling too fast: wait a minute and try again.",
+        "sellAllSkipped": "Sold {{sold}} items. {{skipped}} could not be sold and stay in your inventory."
     },
     "chat": {
         "title": "Online chat",
