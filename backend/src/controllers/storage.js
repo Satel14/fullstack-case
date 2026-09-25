@@ -165,6 +165,7 @@ module.exports.sellItemByStorageId = async (req, res) => {
         }
 
         await sequelize.transaction(async (t) => {
+            await UserService.lockUsersInIdOrder([user_id], t);
             const locked = await StorageService.getStorageInfoById(user_id, id, 'inventory', {
                 transaction: t,
                 lock: t.LOCK.UPDATE,

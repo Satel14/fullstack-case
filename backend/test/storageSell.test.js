@@ -93,3 +93,40 @@ test('selling applies the uah-credit-rate module when the row exists', async () 
         history: [['sellitem', 180]],
     });
 });
+
+test('a sale locks the player before the item, so it cannot deadlock with a profile reset', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedSellableItem(sequelize);
+
+    const holder = await sequelize.transaction();
+    let sale;
+    try {
+        await sequelize.query('SELECT id FROM users WHERE id = 1 FOR UPDATE', { transaction: holder });
+        sale = sell(1);
+
+        let waiting = [];
+        for (let attempt = 0; attempt < 50 && waiting.length === 0; attempt += 1) {
+            await new Promise((resolve) => { setTimeout(resolve, 50); });
+            [waiting] = await sequelize.query(
+                "SELECT trx_id FROM information_schema.innodb_trx WHERE trx_state = 'LOCK WAIT'",
+                { transaction: holder },
+            );
+        }
+        assert.strictEqual(waiting.length, 1, 'the sale never started waiting for the player row');
+
+        const [storageLocks] = await sequelize.query(
+            "SELECT LOCK_MODE FROM performance_schema.data_locks "
+            + "WHERE OBJECT_SCHEMA = DATABASE() AND OBJECT_NAME = 'storage' AND LOCK_TYPE = 'RECORD' "
+            + 'AND ENGINE_TRANSACTION_ID = ?',
+            { replacements: [waiting[0].trx_id], transaction: holder },
+        );
+        assert.deepStrictEqual(storageLocks, [], 'the sale held an item lock while waiting for the player');
+    } finally {
+        await holder.commit();
+        await sale;
+    }
+
+    const result = await sale;
+    assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
+});
