@@ -8,15 +8,20 @@ const completesAt = (requestedAt) => new Date(new Date(requestedAt).getTime() + 
 
 const completeDue = async (now = new Date()) => {
     const cutoff = new Date(now.getTime() - WITHDRAW_DELAY_MS);
-    const [changed] = await Storage.update(
-        { storage_status: 'received', updated_at: now },
-        {
-            where: {
-                storage_status: 'waitingtrade',
-                [Op.or]: [{ updated_at: { [Op.lte]: cutoff } }, { updated_at: null }],
-            },
-        },
-    );
+    const dueWhere = {
+        storage_status: 'waitingtrade',
+        [Op.or]: [{ updated_at: { [Op.lte]: cutoff } }, { updated_at: null }],
+    };
+    const due = await Storage.findAll({ attributes: ['storage_id'], where: dueWhere, raw: true });
+    let changed = 0;
+    for (const { storage_id } of due) {
+        // eslint-disable-next-line no-await-in-loop
+        const [updated] = await Storage.update(
+            { storage_status: 'received', updated_at: now },
+            { where: { ...dueWhere, storage_id } },
+        );
+        changed += updated;
+    }
     return changed;
 };
 
