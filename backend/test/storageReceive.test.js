@@ -204,7 +204,12 @@ test('a cancel racing the sweep always ends in exactly one state', async () => {
     assert.strictEqual(Number(n), 1);
 });
 
-test('the sweep waits behind a cancel that already holds the item instead of deadlocking with it', async () => {
+const withinMs = (promise, ms) => Promise.race([
+    promise,
+    new Promise((_, reject) => { setTimeout(() => reject(new Error(`still waiting after ${ms} ms`)), ms); }),
+]);
+
+test('the sweep skips an item a cancel already holds instead of waiting for it or deadlocking with it', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
     await seed(sequelize, 'steam:abc');
@@ -217,33 +222,45 @@ test('the sweep waits behind a cancel that already holds the item instead of dea
     );
 
     const holder = await sequelize.transaction();
-    let sweep;
     try {
         await StorageService.getStorageInfoById(1, 1, 'waitingtrade', { transaction: holder, lock: holder.LOCK.UPDATE });
-        sweep = WithdrawalService.completeDue();
 
-        let waiting = [];
-        for (let attempt = 0; attempt < 50 && waiting.length === 0; attempt += 1) {
-            // eslint-disable-next-line no-await-in-loop
-            await new Promise((resolve) => { setTimeout(resolve, 50); });
-            // eslint-disable-next-line no-await-in-loop
-            [waiting] = await sequelize.query(
-                "SELECT trx_id FROM information_schema.innodb_trx WHERE trx_state = 'LOCK WAIT' "
-                + 'AND trx_mysql_thread_id IN (SELECT id FROM information_schema.processlist WHERE db = DATABASE())',
-                { transaction: holder },
-            );
-        }
-        assert.strictEqual(waiting.length, 1, 'the sweep never reached the held item');
+        assert.strictEqual(await withinMs(WithdrawalService.completeDue(), 3000), 0);
 
         await StorageService.setStorageStatusById(1, 'inventory', { transaction: holder });
         await StorageService.setStorageExtraDataById(1, null, { transaction: holder });
         await holder.commit();
     } catch (e) {
         await holder.rollback().catch(() => {});
-        await (sweep || Promise.resolve()).catch(() => {});
         throw e;
     }
 
-    assert.strictEqual(await sweep, 0);
     assert.deepStrictEqual(await storageRow(sequelize), { status: 'inventory', extraData: null });
+});
+
+test('one held item does not stop the sweep from completing the others', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize, 'steam:abc');
+    await sequelize.query(
+        "INSERT INTO storage (userId, itemId, color, caseId, status) VALUES (1, 707, 'default', 'dust2', 'inventory')",
+    );
+    const Storage = require('../src/models/storage');
+    const WithdrawalService = require('../src/services/withdrawal');
+    await Storage.update(
+        { storage_status: 'waitingtrade', storage_extraData: 'steam:abc', updated_at: new Date(Date.now() - 61000) },
+        { where: {} },
+    );
+
+    const holder = await sequelize.transaction();
+    try {
+        await Storage.findOne({ where: { storage_id: 1 }, transaction: holder, lock: holder.LOCK.UPDATE });
+        assert.strictEqual(await withinMs(WithdrawalService.completeDue(), 3000), 1);
+    } finally {
+        await holder.commit();
+    }
+
+    const [rows] = await sequelize.query('SELECT id, status FROM storage ORDER BY id');
+    assert.deepStrictEqual(rows.map((r) => [r.id, r.status]), [[1, 'waitingtrade'], [2, 'received']]);
+    assert.strictEqual(await WithdrawalService.completeDue(), 1, 'the next sweep picks up the item once it is free');
 });

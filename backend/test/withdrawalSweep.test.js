@@ -104,3 +104,46 @@ test('the server starts the sweep only after it is listening, and importing the 
     const topLevel = service.split(/\r?\n/).filter((line) => /^\S/.test(line)).join('\n');
     assert.doesNotMatch(topLevel, /setInterval\(|completeDue\(\)/);
 });
+
+test('sweeps never overlap: the next one starts only after the previous one finished', async () => {
+    const WithdrawalService = require('../src/services/withdrawal');
+    let running = 0;
+    let mostAtOnce = 0;
+    let runs = 0;
+    const slowSweep = async () => {
+        running += 1;
+        runs += 1;
+        mostAtOnce = Math.max(mostAtOnce, running);
+        await new Promise((resolve) => { setTimeout(resolve, 60); });
+        running -= 1;
+        return 0;
+    };
+
+    const sweep = WithdrawalService.startSweep({ intervalMs: 5, run: slowSweep });
+    await new Promise((resolve) => { setTimeout(resolve, 400); });
+    sweep.stop();
+
+    assert.ok(runs >= 3, `only ${runs} sweeps ran`);
+    assert.strictEqual(mostAtOnce, 1);
+});
+
+test('a failed sweep is logged and the next one still runs', async () => {
+    const WithdrawalService = require('../src/services/withdrawal');
+    let runs = 0;
+    const errors = [];
+    const originalError = console.error;
+    console.error = (...args) => { errors.push(args.join(' ')); };
+    try {
+        const sweep = WithdrawalService.startSweep({
+            intervalMs: 5,
+            run: async () => { runs += 1; throw new Error('database gone'); },
+        });
+        await new Promise((resolve) => { setTimeout(resolve, 100); });
+        sweep.stop();
+    } finally {
+        console.error = originalError;
+    }
+
+    assert.ok(runs >= 2, `only ${runs} sweeps ran`);
+    assert.ok(errors.some((line) => line.includes('database gone')));
+});
