@@ -3411,3 +3411,56 @@ footer.ant-layout-footer {
         }
     }
 }
+
+.bonuspage {
+    max-width: 1100px;
+    margin: 0 auto;
+    color: #adb0b9;
+
+    h2 {
+        color: #fff;
+        font-family: "Roboto Bold";
+        margin-bottom: 14px;
+    }
+
+    &-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    &-card {
+        box-sizing: border-box;
+        width: 200px;
+        padding: 16px 14px;
+        border-radius: 10px;
+        border: 1px solid #262e43;
+        background: linear-gradient(180deg, #161a29 0%, #10131e 100%);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        text-align: center;
+
+        &__amount {
+            color: #f7c948;
+            font-size: 22px;
+            font-family: "Roboto Bold";
+        }
+
+        &__title {
+            color: #fff;
+            font-family: "Roboto Bold";
+        }
+
+        &__condition {
+            font-size: 12px;
+            min-height: 34px;
+        }
+
+        &__hint {
+            font-size: 12px;
+        }
+    }
+}

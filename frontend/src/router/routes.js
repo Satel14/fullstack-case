@@ -18,6 +18,7 @@ import Faq from '../pages/Faq';
 import ProvablyFair from '../pages/ProvablyFair';
 import Inventory from '../pages/Inventory';
 import Admin from '../pages/Admin';
+import Bonus from '../pages/Bonus';
 
 export default {
     private: [
@@ -141,6 +142,12 @@ export default {
             exact: true,
             layout: Layout,
             component: Faq,
+        },
+        {
+            path: '/bonus',
+            exact: true,
+            layout: Layout,
+            component: Bonus,
         },
     ],
 };

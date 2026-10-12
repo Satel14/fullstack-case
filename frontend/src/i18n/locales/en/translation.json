@@ -459,5 +459,41 @@
             "loadFailed": "Could not load the action log",
             "loadFailedHint": "The list is empty because loading failed, not because no actions were recorded"
         }
+    },
+    "bonus": {
+        "title": "Bonuses",
+        "loginCta": "Log in to collect bonuses",
+        "loginButton": "Log in",
+        "claim": "Claim",
+        "claimed": "Claimed",
+        "tomorrow": "Available tomorrow",
+        "credited": "{{amount}} ₴ credited",
+        "errorTitle": "Bonus not claimed",
+        "amount": "{{amount}} ₴",
+        "items": {
+            "daily": {
+                "title": "Daily bonus",
+                "condition": "Once a day"
+            },
+            "welcome": {
+                "title": "Welcome bonus",
+                "condition": "For every new player"
+            },
+            "receiveInfo": {
+                "title": "Withdrawal details",
+                "condition": "Add your Steam or Epic details in the settings",
+                "hint": "Fill in the settings"
+            },
+            "firstCase": {
+                "title": "First case",
+                "condition": "Open your first case",
+                "hint": "Open a case"
+            },
+            "firstWithdrawal": {
+                "title": "First withdrawal",
+                "condition": "Withdraw your first item",
+                "hint": "Withdraw an item"
+            }
+        }
     }
 }
