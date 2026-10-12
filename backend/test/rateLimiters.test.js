@@ -33,6 +33,7 @@ const PER_USER_LIMITERS = {
     'PUT /api/profile/sendmoney': 'transferLimiter',
     'PUT /api/storage/sell/:id': 'sellLimiter',
     'PUT /api/storage/receive/:id': 'receiveLimiter',
+    'PUT /api/storage/receive/:id/cancel': 'receiveLimiter',
 };
 
 const collectWriteRoutes = (stack) => stack.flatMap((layer) => {

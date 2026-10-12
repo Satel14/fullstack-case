@@ -88,3 +88,162 @@ test('a withdrawal of an item that is not in the inventory is refused', async ()
     assert.strictEqual(result.payload.message, MESSAGE.ITEM.NOT_EXIST);
     assert.deepStrictEqual(await storageRow(sequelize), { status: 'money', extraData: null });
 });
+
+const cancel = (storageId, userId = 1) => {
+    const StorageController = require('../src/controllers/storage');
+    return respond(StorageController.cancelWithdrawalByStorageId, {
+        params: { id: String(storageId) },
+        user: { profile: { user_id: userId } },
+    });
+};
+
+test('a withdrawal tells the player when it completes', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize, 'steam:abc');
+    const before = Date.now();
+
+    const result = await receive(1);
+
+    assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
+    const completes = Date.parse(result.payload.completesAt);
+    assert.ok(completes >= before + 60000 && completes <= Date.now() + 60000, result.payload.completesAt);
+});
+
+test('cancelling a pending withdrawal returns the item to the inventory and forgets the trade contact', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize, 'steam:abc');
+    await receive(1);
+
+    const result = await cancel(1);
+
+    assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
+    assert.deepStrictEqual(await storageRow(sequelize), { status: 'inventory', extraData: null });
+});
+
+test('a withdrawal that is not pending cannot be cancelled', async () => {
+    const notPending = MESSAGE.ITEM.WITHDRAW_NOT_PENDING;
+    assert.ok(notPending);
+
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize, 'steam:abc');
+    await sequelize.query(
+        "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES ('other', 'x', 'o@e.ua', 0, 0, 1)",
+    );
+
+    const notRequested = await cancel(1);
+    assert.strictEqual(notRequested.code, 422);
+    assert.strictEqual(notRequested.payload.message, notPending);
+
+    await receive(1);
+    const byAnotherPlayer = await cancel(1, 2);
+    assert.strictEqual(byAnotherPlayer.code, 422);
+    assert.strictEqual((await storageRow(sequelize)).status, 'waitingtrade');
+
+    await cancel(1);
+    const twice = await cancel(1);
+    assert.strictEqual(twice.code, 422);
+
+    await receive(1);
+    await sequelize.query("UPDATE storage SET status = 'received' WHERE id = 1");
+    const received = await cancel(1);
+    assert.strictEqual(received.code, 422);
+    assert.strictEqual((await storageRow(sequelize)).status, 'received');
+});
+
+test('a pending withdrawal cannot be sold', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize, 'steam:abc');
+    await receive(1);
+
+    const StorageController = require('../src/controllers/storage');
+    const sold = await respond(StorageController.sellItemByStorageId, {
+        params: { id: '1' },
+        user: { profile: { user_id: 1 } },
+    });
+
+    assert.strictEqual(sold.code, 422, JSON.stringify(sold.payload));
+    assert.strictEqual((await storageRow(sequelize)).status, 'waitingtrade');
+});
+
+test('a cancel racing the sweep always ends in exactly one state', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize, 'steam:abc');
+    const Storage = require('../src/models/storage');
+    const WithdrawalService = require('../src/services/withdrawal');
+
+    for (let round = 0; round < 20; round += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await Storage.update(
+            { storage_status: 'waitingtrade', storage_extraData: 'steam:abc', updated_at: new Date(Date.now() - 61000) },
+            { where: { storage_id: 1 } },
+        );
+        const sweepFirst = round % 2 === 1;
+        const delayed = (fn) => new Promise((resolve) => { setTimeout(resolve, 5); }).then(fn);
+        // eslint-disable-next-line no-await-in-loop
+        const [cancelled, completed] = await Promise.all([
+            sweepFirst ? delayed(() => cancel(1)) : cancel(1),
+            sweepFirst ? WithdrawalService.completeDue() : delayed(() => WithdrawalService.completeDue()),
+        ]);
+        // eslint-disable-next-line no-await-in-loop
+        const row = await storageRow(sequelize);
+        if (cancelled.code === 200) {
+            assert.strictEqual(completed, 0, `round ${round}: both the cancel and the sweep won`);
+            assert.deepStrictEqual(row, { status: 'inventory', extraData: null }, `round ${round}`);
+        } else {
+            assert.strictEqual(cancelled.code, 422, `round ${round}: ${JSON.stringify(cancelled.payload)}`);
+            assert.strictEqual(completed, 1, `round ${round}`);
+            assert.strictEqual(row.status, 'received', `round ${round}`);
+        }
+    }
+    const [[{ n }]] = await sequelize.query('SELECT COUNT(*) AS n FROM storage');
+    assert.strictEqual(Number(n), 1);
+});
+
+test('the sweep waits behind a cancel that already holds the item instead of deadlocking with it', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize, 'steam:abc');
+    const Storage = require('../src/models/storage');
+    const StorageService = require('../src/services/storage');
+    const WithdrawalService = require('../src/services/withdrawal');
+    await Storage.update(
+        { storage_status: 'waitingtrade', storage_extraData: 'steam:abc', updated_at: new Date(Date.now() - 61000) },
+        { where: { storage_id: 1 } },
+    );
+
+    const holder = await sequelize.transaction();
+    let sweep;
+    try {
+        await StorageService.getStorageInfoById(1, 1, 'waitingtrade', { transaction: holder, lock: holder.LOCK.UPDATE });
+        sweep = WithdrawalService.completeDue();
+
+        let waiting = [];
+        for (let attempt = 0; attempt < 50 && waiting.length === 0; attempt += 1) {
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((resolve) => { setTimeout(resolve, 50); });
+            // eslint-disable-next-line no-await-in-loop
+            [waiting] = await sequelize.query(
+                "SELECT trx_id FROM information_schema.innodb_trx WHERE trx_state = 'LOCK WAIT' "
+                + 'AND trx_mysql_thread_id IN (SELECT id FROM information_schema.processlist WHERE db = DATABASE())',
+                { transaction: holder },
+            );
+        }
+        assert.strictEqual(waiting.length, 1, 'the sweep never reached the held item');
+
+        await StorageService.setStorageStatusById(1, 'inventory', { transaction: holder });
+        await StorageService.setStorageExtraDataById(1, null, { transaction: holder });
+        await holder.commit();
+    } catch (e) {
+        await holder.rollback().catch(() => {});
+        await (sweep || Promise.resolve()).catch(() => {});
+        throw e;
+    }
+
+    assert.strictEqual(await sweep, 0);
+    assert.deepStrictEqual(await storageRow(sequelize), { status: 'inventory', extraData: null });
+});

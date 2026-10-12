@@ -31,7 +31,8 @@ module.exports = {
     ITEM: {
         NOT_EXIST: 'Такого предмету не існує',
         ERROR: 'Помилка предмету',
-        RECEIVE_INFO_REQUIRED: 'Вкажіть у налаштуваннях профілю дані вашого Steam або Epic'
+        RECEIVE_INFO_REQUIRED: 'Вкажіть у налаштуваннях профілю дані вашого Steam або Epic',
+        WITHDRAW_NOT_PENDING: 'Цей предмет не очікує виведення'
     },
     PROMOCODE: {
         NOT_EXIST: 'Такого промокоду не існує',

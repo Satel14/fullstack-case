@@ -9,6 +9,7 @@ const InsiderService = require('../services/insiderPrices');
 const ModuleService = require('../services/module');
 const UserService = require('../services/user');
 const BalanceHistoryService = require('../services/balanceHistory');
+const WithdrawalService = require('../services/withdrawal');
 const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
 
 const MESSAGE = require('../constant/responseMessages');
@@ -52,6 +53,7 @@ module.exports.receiveItemByStorageId = async (req, res) => {
 
         const { user_id } = req.user.profile;
         const { id } = req.params;
+        const requestedAt = new Date();
 
         await sequelize.transaction(async (t) => {
             const { user_receiveInfo } = await UserService.getUserFullInfoById(user_id, { transaction: t });
@@ -77,13 +79,52 @@ module.exports.receiveItemByStorageId = async (req, res) => {
             await StorageService.setStorageExtraDataById(id, user_receiveInfo, { transaction: t });
         });
 
-        return res.status(200).json({ status: 200 });
+        return res.status(200).json({
+            status: 200,
+            completesAt: WithdrawalService.completesAt(requestedAt).toISOString(),
+        });
     } catch (e) {
         if (e && e.code === 'NOT_RECEIVABLE') {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
         }
         if (e && e.code === 'NO_RECEIVE_INFO') {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.RECEIVE_INFO_REQUIRED });
+        }
+        return res.status(500).json({ status: 500, message: e.message });
+    }
+};
+
+module.exports.cancelWithdrawalByStorageId = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
+        }
+
+        const { user_id } = req.user.profile;
+        const { id } = req.params;
+
+        await sequelize.transaction(async (t) => {
+            const pending = await StorageService.getStorageInfoById(user_id, id, 'waitingtrade', {
+                transaction: t,
+                lock: t.LOCK.UPDATE,
+            });
+
+            if (!pending) {
+                const err = new Error(MESSAGE.ITEM.WITHDRAW_NOT_PENDING);
+                err.code = 'NOT_PENDING';
+                throw err;
+            }
+
+            await StorageService.setStorageStatusById(id, 'inventory', { transaction: t });
+            await StorageService.setStorageExtraDataById(id, null, { transaction: t });
+        });
+
+        return res.status(200).json({ status: 200 });
+    } catch (e) {
+        if (e && e.code === 'NOT_PENDING') {
+            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.WITHDRAW_NOT_PENDING });
         }
         return res.status(500).json({ status: 500, message: e.message });
     }
@@ -398,6 +439,11 @@ module.exports.validate = (method) => {
         case 'receiveItemByStorageId': {
             return [
                 check('id').exists().isNumeric(),
+            ];
+        }
+        case 'cancelWithdrawalByStorageId': {
+            return [
+                check('id').exists().isInt({ min: 1 }),
             ];
         }
         default:
