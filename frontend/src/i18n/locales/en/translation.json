@@ -351,14 +351,6 @@
         "published": "Published",
         "updated": "Updated"
     },
-    "itemOptions": {
-        "needTradeInfo": "Specify your Steam or Epic details in profile settings.",
-        "withdrawRequested": "Withdrawal requested",
-        "withdrawText": "A trader will add you within 24 hours and hand over the item.",
-        "pick": "Select an item to interact with",
-        "sellFor": "Sell for",
-        "withdraw": "Withdraw item"
-    },
     "time": {
         "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
         "someday": "a long time ago",
