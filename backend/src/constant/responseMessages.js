@@ -48,7 +48,8 @@ module.exports = {
     },
     BONUS: {
         NOT_EXIST: 'Такого бонуса не існує',
-        ALREADY_USED: 'Бонус вже отримано'
+        ALREADY_USED: 'Бонус вже отримано',
+        NOT_AVAILABLE: 'Умову бонусу ще не виконано'
     },
     ARTICLE: {
         NOT_EXIST: 'Такої статті не існує'

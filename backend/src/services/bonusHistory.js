@@ -4,6 +4,7 @@ module.exports.addBonusHistory = async (userId, bonusId, options = {}) => {
     const item = {
         userId,
         bonusId,
+        created_at: new Date(),
     };
     // No try/catch here: the original error (e.g. SequelizeUniqueConstraintError
     // on a duplicate (userId, bonusId)) must propagate so the caller can map it.
