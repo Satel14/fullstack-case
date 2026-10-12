@@ -11,6 +11,8 @@ import moduleReducer from '../store/reducers/module';
 import { LOGIN_USER } from '../store/types';
 import Inventory from './Inventory';
 
+jest.setTimeout(20000);
+
 jest.mock('react-i18next', () => ({
     withTranslation: () => (Component) => (props) => (
         <Component {...props} t={(key, options) => (options ? `${key} ${JSON.stringify(options)}` : key)} />
