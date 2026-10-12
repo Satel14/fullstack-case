@@ -225,3 +225,52 @@ test('a claim locks the player before writing the claim row', async () => {
     }
     assert.strictEqual((await pending).code, 200);
 });
+
+const withinMs = (promise, ms) => Promise.race([
+    promise,
+    new Promise((_, reject) => { setTimeout(() => reject(new Error(`still running after ${ms} ms`)), ms); }),
+]);
+
+test('parallel claims of a bonus with a condition credit it once, quickly, without holding a second connection', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayer(sequelize);
+    await sequelize.query("INSERT INTO case_opens (userId, caseId) VALUES (1, 'dust2')");
+
+    const results = await withinMs(Promise.all(Array.from({ length: 6 }, () => claim('first-case'))), 8000);
+
+    assert.deepStrictEqual(results.map((r) => r.code).sort(), [200, 422, 422, 422, 422, 422]);
+    assert.deepStrictEqual(await ledger(sequelize), { balance: 100, credits: [100], claims: ['first-case'] });
+});
+
+test('the receive-info and first-withdrawal bonuses are paid once their condition holds', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayer(sequelize, 'steam:abc');
+    await sequelize.query(
+        "INSERT INTO storage (userId, itemId, color, caseId, status) VALUES (1, 707, 'default', 'dust2', 'received')",
+    );
+
+    assert.strictEqual((await claim('receive-info')).code, 200);
+    assert.strictEqual((await claim('first-withdrawal')).code, 200);
+    assert.deepStrictEqual(await ledger(sequelize), {
+        balance: 250, credits: [50, 200], claims: ['receive-info', 'first-withdrawal'],
+    });
+});
+
+test('a bonus id that is not a string is refused by the route validator', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayer(sequelize);
+    const Controller = require('../src/controllers/bonusHistory');
+
+    for (const bonusId of [['welcome'], { id: 'welcome' }, 100, null]) {
+        const req = { body: { bonusId }, user: { profile: { user_id: 1 } } };
+        // eslint-disable-next-line no-await-in-loop
+        for (const check of Controller.validate('activateBonus')) await check.run(req);
+        // eslint-disable-next-line no-await-in-loop
+        const result = await respond(Controller.activateBonus, req);
+        assert.strictEqual(result.code, 422, `bonusId ${JSON.stringify(bonusId)}`);
+    }
+    assert.deepStrictEqual(await ledger(sequelize), { balance: 0, credits: [], claims: [] });
+});
