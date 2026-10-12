@@ -32,8 +32,10 @@ jest.mock('../api/all/storage', () => ({
 
 const openNotification = require('../components/mini/openNotification');
 const {
-    getProfileStorage, receiveItemByStorageId, cancelWithdrawalByStorageId,
+    getProfileStorage, receiveItemByStorageId, cancelWithdrawalByStorageId, sellItemByStorageId,
 } = require('../api/all/storage');
+
+const sellItemByStorageIdMock = () => sellItemByStorageId;
 const { getItemInfoById, getItemPriceById } = require('../api/all/item');
 
 const server = { rows: [] };
@@ -61,7 +63,7 @@ beforeEach(() => {
     });
 });
 
-const renderInventory = (receiveInfo = 'steam:abc') => {
+const renderInventory = (receiveInfo = 'steam:abc', history = { push: jest.fn() }) => {
     const store = createStore(
         combineReducers({ user: usersReducer, itemCache: itemCacheReducer, modules: moduleReducer }),
         applyMiddleware(thunk),
@@ -74,7 +76,7 @@ const renderInventory = (receiveInfo = 'steam:abc') => {
     });
     return render(
         <Provider store={store}>
-            <Inventory />
+            <Inventory history={history} />
         </Provider>,
     );
 };
@@ -206,4 +208,83 @@ test('polling stops when the page is left while a request is still pending', asy
     expect(clearIntervalSpy).toHaveBeenCalledWith(poll.id);
     setIntervalSpy.mockRestore();
     clearIntervalSpy.mockRestore();
+});
+
+const deferred = () => {
+    let resolve;
+    const promise = new Promise((done) => { resolve = done; });
+    return { promise, resolve };
+};
+
+test('a poll that answers after a cancel does not bring the cancelled item back to the pending list', async () => {
+    const setIntervalSpy = jest.spyOn(window, 'setInterval');
+    server.rows = [row(1, 'waitingtrade', new Date().toISOString()), row(2, 'waitingtrade', new Date().toISOString())];
+    renderInventory();
+    await openWithdrawTab();
+    const poll = pollTimer(setIntervalSpy);
+
+    const stale = deferred();
+    const answer = getProfileStorage.getMockImplementation();
+    getProfileStorage.mockImplementation((request) => (request.status === 'waitingtrade' ? stale.promise : answer(request)));
+    await act(async () => { poll.tick(); });
+
+    const [firstCancel] = await screen.findAllByRole('button', { name: /inventory\.withdrawCancel/ });
+    fireEvent.click(firstCancel);
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('success', 'inventory.withdrawCancelled'));
+
+    await act(async () => {
+        stale.resolve({
+            status: 200,
+            data: [row(1, 'waitingtrade', new Date().toISOString()), row(2, 'waitingtrade', new Date().toISOString())],
+        });
+    });
+
+    expect(screen.getAllByRole('button', { name: /inventory\.withdrawCancel/ })).toHaveLength(1);
+    setIntervalSpy.mockRestore();
+});
+
+test('while a withdrawal request is in flight every item action is disabled', async () => {
+    server.rows = [row(1, 'inventory'), row(2, 'inventory')];
+    const inFlight = deferred();
+    receiveItemByStorageId.mockImplementation(() => inFlight.promise);
+    renderInventory();
+
+    const [firstWithdraw] = await screen.findAllByRole('button', { name: /inventory\.withdraw$/ });
+    fireEvent.click(firstWithdraw);
+
+    await waitFor(() => {
+        screen.getAllByRole('button', { name: /inventory\.withdraw$/ }).forEach((b) => expect(b).toBeDisabled());
+    });
+    screen.getAllByRole('button', { name: /openCase\.sellFor|inventory\.sell$/ }).forEach((b) => expect(b).toBeDisabled());
+    expect(screen.getByRole('button', { name: /inventory\.sellAll/ })).toBeDisabled();
+
+    await act(async () => { inFlight.resolve({ status: 200, completesAt: new Date(Date.now() + 60000).toISOString() }); });
+    await waitFor(() => expect(screen.getByRole('button', { name: /inventory\.withdraw$/ })).not.toBeDisabled());
+});
+
+test('a pending withdrawal cannot be cancelled while sell all is running', async () => {
+    server.rows = [row(1, 'inventory'), row(2, 'waitingtrade', new Date().toISOString())];
+    const sale = deferred();
+    sellItemByStorageIdMock().mockImplementation(() => sale.promise);
+    renderInventory();
+
+    fireEvent.click(await screen.findByRole('button', { name: /inventory\.sellAll/ }));
+    await openWithdrawTab();
+
+    expect(await screen.findByRole('button', { name: /inventory\.withdrawCancel/ })).toBeDisabled();
+    await act(async () => { sale.resolve({ status: 200, balance: '10.00' }); });
+});
+
+test('the hint about missing receive info opens the settings inside the app', async () => {
+    const history = { push: jest.fn() };
+    server.rows = [row(1, 'inventory')];
+    renderInventory('', history);
+
+    fireEvent.click(await screen.findByRole('button', { name: /inventory\.withdraw$/ }));
+    await waitFor(() => expect(openNotification).toHaveBeenCalled());
+    const hint = openNotification.mock.calls[0][2];
+
+    render(hint);
+    fireEvent.click(screen.getByText('inventory.withdrawNeedsInfo'));
+    expect(history.push).toHaveBeenCalledWith('/settings');
 });

@@ -36,7 +36,7 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 const Inventory = ({
-    itemCache, modules, receiveInfo, itemInfoFetch: fetchItem, updateBalance: setBalance, t,
+    itemCache, modules, receiveInfo, history, itemInfoFetch: fetchItem, updateBalance: setBalance, t,
 }) => {
     const [active, setActive] = useState([]);
     const [sold, setSold] = useState([]);
@@ -47,6 +47,8 @@ const Inventory = ({
     const [selling, setSelling] = useState(false);
     const [now, setNow] = useState(Date.now());
     const busy = useRef(false);
+    const [acting, setActing] = useState(false);
+    const epoch = useRef(0);
 
     const rate = (modules && modules['uah-credit-rate']) ? modules['uah-credit-rate'].extraData : 1;
 
@@ -72,12 +74,16 @@ const Inventory = ({
     };
 
     const loadWithdrawals = async () => {
+        const generation = epoch.current;
         const [waiting, done] = await Promise.all([
             getProfileStorage({ status: 'waitingtrade', limit: PAGE_LIMIT }),
             getProfileStorage({ status: 'received', limit: PAGE_LIMIT }),
         ]);
         const waitingRows = waiting.data || [];
         const doneRows = done.data || [];
+        if (generation !== epoch.current) {
+            return;
+        }
         cacheItems([...waitingRows, ...doneRows]);
         setPending(waitingRows);
         setWithdrawn(doneRows);
@@ -104,6 +110,8 @@ const Inventory = ({
     };
 
     useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    useEffect(() => () => { epoch.current += 1; }, []);
 
     useEffect(() => {
         if (!pending.length) {
@@ -228,12 +236,22 @@ const Inventory = ({
             return;
         }
         if (!receiveInfo || !String(receiveInfo).trim()) {
-            openNotification('error', t('inventory.withdrawErrorTitle'), <a href="/settings">{t('inventory.withdrawNeedsInfo')}</a>);
+            const openSettings = (e) => {
+                if (history) {
+                    e.preventDefault();
+                    history.push('/settings');
+                }
+            };
+            openNotification('error', t('inventory.withdrawErrorTitle'), (
+                <a href="/settings" onClick={openSettings}>{t('inventory.withdrawNeedsInfo')}</a>
+            ));
             return;
         }
         busy.current = true;
+        setActing(true);
         try {
             const res = await receiveItemByStorageId(item.storage_id);
+            epoch.current += 1;
             openNotification('success', t('inventory.withdrawRequested'));
             setActive((prev) => prev.filter((x) => x.storage_id !== item.storage_id));
             setNow(Date.now());
@@ -242,6 +260,7 @@ const Inventory = ({
             openNotification('error', t('inventory.withdrawErrorTitle'), failureReason(e));
         }
         busy.current = false;
+        setActing(false);
     };
 
     const onCancelWithdraw = async (item) => {
@@ -249,8 +268,10 @@ const Inventory = ({
             return;
         }
         busy.current = true;
+        setActing(true);
         try {
             await cancelWithdrawalByStorageId(item.storage_id);
+            epoch.current += 1;
             openNotification('success', t('inventory.withdrawCancelled'));
             setPending((prev) => prev.filter((x) => x.storage_id !== item.storage_id));
             setActive((prev) => [{ ...item, storage_status: 'inventory' }, ...prev]);
@@ -259,6 +280,7 @@ const Inventory = ({
             await loadWithdrawals().catch(() => {});
         }
         busy.current = false;
+        setActing(false);
     };
 
     const secondsLeft = (item) => {
@@ -291,14 +313,14 @@ const Inventory = ({
                 icon={<DollarOutlined />}
                 ghost
                 size="small"
-                disabled={selling}
+                disabled={selling || acting}
                 onClick={() => onSell(row)}
             >
                 {prices[row.storage_id]
                     ? t('openCase.sellFor', { price: prices[row.storage_id] })
                     : t('inventory.sell')}
             </Button>
-            <Button icon={<ExportOutlined />} size="small" disabled={selling} onClick={() => onWithdraw(row)}>
+            <Button icon={<ExportOutlined />} size="small" disabled={selling || acting} onClick={() => onWithdraw(row)}>
                 {t('inventory.withdraw')}
             </Button>
         </>
@@ -311,7 +333,7 @@ const Inventory = ({
                     ? t('inventory.withdrawCountdown', { seconds: secondsLeft(row) })
                     : t('inventory.withdrawCompleting')}
             </span>
-            <Button icon={<RollbackOutlined />} size="small" onClick={() => onCancelWithdraw(row)}>
+            <Button icon={<RollbackOutlined />} size="small" disabled={selling || acting} onClick={() => onCancelWithdraw(row)}>
                 {t('inventory.withdrawCancel')}
             </Button>
         </>
@@ -329,7 +351,7 @@ const Inventory = ({
                     {active.length ? (
                         <>
                             <div className="inventorypage-actions">
-                                <Button type="primary" icon={<DollarOutlined />} disabled={selling} onClick={onSellAll}>
+                                <Button type="primary" icon={<DollarOutlined />} disabled={selling || acting} onClick={onSellAll}>
                                     {t('inventory.sellAll')}
                                 </Button>
                             </div>
