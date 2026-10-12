@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -42,16 +42,25 @@ const Bonus = ({
     const [loading, setLoading] = useState(loggedIn);
     const [failed, setFailed] = useState(false);
     const [claiming, setClaiming] = useState(false);
+    const generation = useRef(0);
 
     const load = async () => {
+        generation.current += 1;
+        const mine = generation.current;
         try {
             const res = await getBonusList();
-            setBonuses((res.data || []).filter((bonus) => TEXT_KEYS[bonus.id]));
-            setFailed(false);
+            if (mine === generation.current) {
+                setBonuses((res.data || []).filter((bonus) => TEXT_KEYS[bonus.id]));
+                setFailed(false);
+            }
         } catch (e) {
-            setFailed(true);
+            if (mine === generation.current) {
+                setFailed(true);
+            }
         }
-        setLoading(false);
+        if (mine === generation.current) {
+            setLoading(false);
+        }
     };
 
     const reload = () => {
@@ -70,6 +79,7 @@ const Bonus = ({
     }, [loggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const onClaim = async (bonus) => {
+        generation.current += 1;
         setClaiming(true);
         try {
             const res = await activateBonus(bonus.id);

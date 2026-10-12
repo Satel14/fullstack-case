@@ -182,3 +182,33 @@ test('while a claim is in flight every claim button is disabled', async () => {
     await waitFor(() => expect(within(screen.getByTestId('bonus-daily')).getByRole('button', { name: /bonus\.claim$/ })).toBeDisabled());
     await act(async () => { pending.resolve({ status: 200, balance: '100.00', bonus: 100 }); });
 });
+
+test('a refresh that answers after a claim does not re-enable the claimed card', async () => {
+    renderBonus();
+    await card('welcome');
+    const stale = deferred();
+    getBonusList.mockImplementationOnce(() => stale.promise);
+
+    act(() => { window.dispatchEvent(new Event('focus')); });
+    fireEvent.click(within(screen.getByTestId('bonus-welcome')).getByRole('button', { name: /bonus\.claim$/ }));
+    await waitFor(() => expect(within(screen.getByTestId('bonus-welcome')).getByRole('button', { name: 'bonus.claimed' })).toBeDisabled());
+
+    await act(async () => { stale.resolve({ status: 200, data: catalogue() }); });
+
+    expect(within(screen.getByTestId('bonus-welcome')).getByRole('button', { name: 'bonus.claimed' })).toBeDisabled();
+});
+
+test('a refresh that fails after a newer one succeeded keeps the list', async () => {
+    renderBonus();
+    await card('welcome');
+    const slowFailure = deferred();
+    getBonusList.mockImplementationOnce(() => slowFailure.promise.then(() => Promise.reject({ error: 500 })));
+
+    act(() => { window.dispatchEvent(new Event('focus')); });
+    act(() => { window.dispatchEvent(new Event('focus')); });
+    await waitFor(() => expect(getBonusList).toHaveBeenCalledTimes(3));
+    await act(async () => { slowFailure.resolve(); });
+
+    expect(screen.getByTestId('bonus-welcome')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /bonus\.retry$/ })).not.toBeInTheDocument();
+});
