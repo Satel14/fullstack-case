@@ -20,7 +20,7 @@ const { TabPane } = Tabs;
 const PAGE_LIMIT = 200;
 const TOO_MANY_REQUESTS = 429;
 const UNSELLABLE = 422;
-const WITHDRAW_DELAY_MS = 60 * 1000;
+const WITHDRAW_COMPLETES_MS = 70 * 1000;
 const WITHDRAW_POLL_MS = 10 * 1000;
 const SHOWN_REASONS = [403, 422, 429];
 
@@ -49,6 +49,14 @@ const Inventory = ({
     const busy = useRef(false);
     const [acting, setActing] = useState(false);
     const epoch = useRef(0);
+    const clockOffset = useRef(0);
+
+    const syncClock = (serverNow) => {
+        const server = Date.parse(serverNow);
+        if (!Number.isNaN(server)) {
+            clockOffset.current = server - Date.now();
+        }
+    };
 
     const rate = (modules && modules['uah-credit-rate']) ? modules['uah-credit-rate'].extraData : 1;
 
@@ -79,6 +87,7 @@ const Inventory = ({
             getProfileStorage({ status: 'waitingtrade', limit: PAGE_LIMIT }),
             getProfileStorage({ status: 'received', limit: PAGE_LIMIT }),
         ]);
+        syncClock(waiting.serverNow);
         const waitingRows = waiting.data || [];
         const doneRows = done.data || [];
         if (generation !== epoch.current) {
@@ -252,6 +261,7 @@ const Inventory = ({
         try {
             const res = await receiveItemByStorageId(item.storage_id);
             epoch.current += 1;
+            syncClock(res.serverNow);
             openNotification('success', t('inventory.withdrawRequested'));
             setActive((prev) => prev.filter((x) => x.storage_id !== item.storage_id));
             setNow(Date.now());
@@ -286,8 +296,8 @@ const Inventory = ({
     const secondsLeft = (item) => {
         const completes = item.completesAt
             ? Date.parse(item.completesAt)
-            : Date.parse(item.updated_at) + WITHDRAW_DELAY_MS;
-        return Math.max(0, Math.ceil((completes - now) / 1000));
+            : Date.parse(item.updated_at) + WITHDRAW_COMPLETES_MS;
+        return Math.max(0, Math.ceil((completes - (now + clockOffset.current)) / 1000));
     };
 
     const card = (row, actions) => (

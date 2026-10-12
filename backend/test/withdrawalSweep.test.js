@@ -84,13 +84,13 @@ test('the sweep completes requests older than the delay and leaves everything el
     assert.strictEqual(await WithdrawalService.completeDue(now), 0, 'a second sweep changes nothing');
 });
 
-test('completesAt is the request time plus the delay', () => {
+test('completesAt is the latest moment a sweep has completed the request: delay plus one sweep interval', () => {
     const WithdrawalService = require('../src/services/withdrawal');
     assert.strictEqual(WithdrawalService.WITHDRAW_DELAY_MS, 60000);
     assert.strictEqual(WithdrawalService.SWEEP_INTERVAL_MS, 10000);
     assert.strictEqual(
         WithdrawalService.completesAt('2026-10-12T12:00:00.000Z').toISOString(),
-        '2026-10-12T12:01:00.000Z',
+        '2026-10-12T12:01:10.000Z',
     );
 });
 

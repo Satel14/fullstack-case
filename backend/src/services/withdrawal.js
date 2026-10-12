@@ -6,7 +6,7 @@ const WITHDRAW_DELAY_MS = 60 * 1000;
 const SWEEP_INTERVAL_MS = 10 * 1000;
 const SWEEP_BATCH = 500;
 
-const completesAt = (requestedAt) => new Date(new Date(requestedAt).getTime() + WITHDRAW_DELAY_MS);
+const completesAt = (requestedAt) => new Date(new Date(requestedAt).getTime() + WITHDRAW_DELAY_MS + SWEEP_INTERVAL_MS);
 
 const utcDatetime = (date) => date.toISOString().slice(0, 19).replace('T', ' ');
 

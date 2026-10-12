@@ -107,7 +107,27 @@ test('a withdrawal tells the player when it completes', async () => {
 
     assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
     const completes = Date.parse(result.payload.completesAt);
-    assert.ok(completes >= before + 60000 && completes <= Date.now() + 60000, result.payload.completesAt);
+    assert.ok(completes >= before + 70000 && completes <= Date.now() + 70000, result.payload.completesAt);
+    const serverNow = Date.parse(result.payload.serverNow);
+    assert.ok(serverNow >= before && serverNow <= Date.now(), result.payload.serverNow);
+});
+
+test('the player inventory list carries the server clock for countdowns', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize, 'steam:abc');
+    const StorageController = require('../src/controllers/storage');
+    const before = Date.now();
+
+    const listed = await respond(StorageController.getProfileStorage, {
+        body: { status: 'inventory', limit: 10 },
+        user: { profile: { user_id: 1 } },
+    });
+
+    assert.strictEqual(listed.code, 200);
+    assert.strictEqual(listed.payload.data.length, 1);
+    const serverNow = Date.parse(listed.payload.serverNow);
+    assert.ok(serverNow >= before && serverNow <= Date.now(), listed.payload.serverNow);
 });
 
 test('cancelling a pending withdrawal returns the item to the inventory and forgets the trade contact', async () => {

@@ -38,17 +38,19 @@ const {
 const sellItemByStorageIdMock = () => sellItemByStorageId;
 const { getItemInfoById, getItemPriceById } = require('../api/all/item');
 
-const server = { rows: [] };
+const server = { rows: [], clockAhead: 0 };
+const serverNow = () => new Date(Date.now() + server.clockAhead).toISOString();
 const row = (id, status, updatedAt = null) => ({
     storage_id: id, storage_itemId: 1, storage_color: 'default', storage_status: status, updated_at: updatedAt,
 });
 
 beforeEach(() => {
+    server.clockAhead = 0;
     openNotification.mockReset();
     getItemInfoById.mockImplementation((id) => Promise.resolve({ data: { item_name: `Item ${id}` } }));
     getItemPriceById.mockResolvedValue({ prices: { default: 10 } });
     getProfileStorage.mockImplementation(({ status }) => Promise.resolve({
-        status: 200, data: server.rows.filter((r) => r.storage_status === status),
+        status: 200, data: server.rows.filter((r) => r.storage_status === status), serverNow: serverNow(),
     }));
     receiveItemByStorageId.mockImplementation((id) => {
         const target = server.rows.find((r) => r.storage_id === id);
@@ -287,4 +289,40 @@ test('the hint about missing receive info opens the settings inside the app', as
     render(hint);
     fireEvent.click(screen.getByText('inventory.withdrawNeedsInfo'));
     expect(history.push).toHaveBeenCalledWith('/settings');
+});
+
+const shownSeconds = async () => {
+    const text = (await screen.findByText(/inventory\.withdrawCountdown/)).textContent;
+    return JSON.parse(text.slice(text.indexOf('{'))).seconds;
+};
+
+test('the countdown of a new request follows the server clock, not the browser clock', async () => {
+    server.clockAhead = 5 * 60 * 1000;
+    server.rows = [row(1, 'inventory')];
+    receiveItemByStorageId.mockImplementation(() => Promise.resolve({
+        status: 200,
+        completesAt: new Date(Date.now() + server.clockAhead + 70000).toISOString(),
+        serverNow: serverNow(),
+    }));
+    renderInventory();
+
+    fireEvent.click(await screen.findByRole('button', { name: /inventory\.withdraw$/ }));
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('success', 'inventory.withdrawRequested'));
+    await openWithdrawTab();
+
+    const seconds = await shownSeconds();
+    expect(seconds).toBeGreaterThanOrEqual(65);
+    expect(seconds).toBeLessThanOrEqual(70);
+});
+
+test('the countdown of a listed request counts to the latest sweep on the server clock', async () => {
+    server.clockAhead = 5 * 60 * 1000;
+    server.rows = [row(1, 'waitingtrade', new Date(Date.now() + server.clockAhead - 10000).toISOString())];
+    renderInventory();
+
+    await openWithdrawTab();
+
+    const seconds = await shownSeconds();
+    expect(seconds).toBeGreaterThanOrEqual(55);
+    expect(seconds).toBeLessThanOrEqual(60);
 });

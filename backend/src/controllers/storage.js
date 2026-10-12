@@ -32,12 +32,12 @@ module.exports.getProfileStorage = async (req, res) => {
         const { status, limit, offset } = req.body;
 
         if (!status) {
-            return res.status(200).json({ status: 200, data: [] });
+            return res.status(200).json({ status: 200, data: [], serverNow: new Date().toISOString() });
         }
 
         const items = await StorageService.getStorageById(user_id, status, { limit, offset });
 
-        return res.status(200).json({ status: 200, data: items });
+        return res.status(200).json({ status: 200, data: items, serverNow: new Date().toISOString() });
     } catch (e) {
         return res.status(500).json({ status: 500, message: e.message });
     }
@@ -82,6 +82,7 @@ module.exports.receiveItemByStorageId = async (req, res) => {
         return res.status(200).json({
             status: 200,
             completesAt: WithdrawalService.completesAt(requestedAt).toISOString(),
+            serverNow: new Date().toISOString(),
         });
     } catch (e) {
         if (e && e.code === 'NOT_RECEIVABLE') {
