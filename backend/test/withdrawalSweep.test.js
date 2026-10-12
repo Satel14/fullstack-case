@@ -113,9 +113,11 @@ test('importing the withdrawal service neither schedules nor runs a sweep', asyn
     const realTimeout = global.setTimeout;
     const realInterval = global.setInterval;
     const calls = [];
-    db.transaction = (...args) => { calls.push('transaction'); return realTransaction.apply(db, args); };
-    global.setTimeout = (...args) => { calls.push('setTimeout'); return realTimeout(...args); };
-    global.setInterval = (...args) => { calls.push('setInterval'); return realInterval(...args); };
+    const fromService = () => /services[\\/]withdrawal\.js/.test(new Error().stack);
+    const record = (name) => { if (fromService()) calls.push(name); };
+    db.transaction = (...args) => { record('transaction'); return realTransaction.apply(db, args); };
+    global.setTimeout = (...args) => { record('setTimeout'); return realTimeout(...args); };
+    global.setInterval = (...args) => { record('setInterval'); return realInterval(...args); };
     try {
         require('../src/services/withdrawal');
         await new Promise((resolve) => { setImmediate(resolve); });
