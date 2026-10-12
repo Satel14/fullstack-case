@@ -83,6 +83,9 @@ const Bonus = ({
         setClaiming(true);
         try {
             const res = await activateBonus(bonus.id);
+            generation.current += 1;
+            setFailed(false);
+            setLoading(false);
             setBalance(res.balance);
             openNotification('success', t('bonus.credited', { amount: res.bonus }));
             setBonuses((prev) => prev.map((b) => (b.id === bonus.id ? { ...b, claimed: true, available: false } : b)));

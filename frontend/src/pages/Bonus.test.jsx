@@ -212,3 +212,35 @@ test('a refresh that fails after a newer one succeeded keeps the list', async ()
     expect(screen.getByTestId('bonus-welcome')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /bonus\.retry$/ })).not.toBeInTheDocument();
 });
+
+test('a refresh that starts while a claim is in flight does not re-enable the claimed card', async () => {
+    renderBonus();
+    await card('welcome');
+    const claimAnswer = deferred();
+    activateBonus.mockImplementationOnce(() => claimAnswer.promise);
+    const stale = deferred();
+    getBonusList.mockImplementationOnce(() => stale.promise);
+
+    fireEvent.click(within(screen.getByTestId('bonus-welcome')).getByRole('button', { name: /bonus\.claim$/ }));
+    act(() => { window.dispatchEvent(new Event('focus')); });
+    await act(async () => { claimAnswer.resolve({ status: 200, balance: '100.00', bonus: 100 }); });
+    await act(async () => { stale.resolve({ status: 200, data: catalogue() }); });
+
+    expect(within(screen.getByTestId('bonus-welcome')).getByRole('button', { name: 'bonus.claimed' })).toBeDisabled();
+});
+
+test('retry pressed while a claim is in flight still leaves the loader once the claim succeeds', async () => {
+    getBonusList.mockImplementationOnce(() => Promise.resolve({ status: 200, data: catalogue() }));
+    renderBonus();
+    await card('welcome');
+    const claimAnswer = deferred();
+    activateBonus.mockImplementationOnce(() => claimAnswer.promise);
+    getBonusList.mockImplementationOnce(() => Promise.reject({ error: 500 }));
+
+    fireEvent.click(within(screen.getByTestId('bonus-welcome')).getByRole('button', { name: /bonus\.claim$/ }));
+    act(() => { window.dispatchEvent(new Event('focus')); });
+    fireEvent.click(await screen.findByRole('button', { name: /bonus\.retry$/ }));
+    await act(async () => { claimAnswer.resolve({ status: 200, balance: '100.00', bonus: 100 }); });
+
+    await waitFor(() => expect(document.querySelector('.loader')).toBeNull());
+});
