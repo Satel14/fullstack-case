@@ -94,15 +94,37 @@ test('completesAt is the request time plus the delay', () => {
     );
 });
 
-test('the server starts the sweep only after it is listening, and importing the service starts nothing', () => {
+test('the server starts the sweep only once migrations are verified and it is listening', () => {
     const server = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
-    const listenAt = server.indexOf('app.listen(');
+    const gateOpens = server.indexOf('assertMigrationsApplied(sequelize).then(');
+    const gateCloses = server.indexOf('}).catch(', gateOpens);
+    const listenAt = server.indexOf('app.listen(', gateOpens);
     const sweepAt = server.indexOf("require('./src/services/withdrawal').startSweep()");
-    assert.ok(listenAt !== -1 && sweepAt > listenAt, 'server.js must start the sweep after app.listen');
+    assert.ok(gateOpens !== -1 && gateCloses > gateOpens, 'server.js no longer gates the listen on migrations');
+    assert.ok(sweepAt > listenAt && listenAt > gateOpens && sweepAt < gateCloses, 'the sweep must start inside the gate, after listen');
+    assert.strictEqual(server.split('startSweep(').length - 1, 1, 'the sweep must be started exactly once');
+});
 
-    const service = fs.readFileSync(path.join(__dirname, '..', 'src', 'services', 'withdrawal.js'), 'utf8');
-    const topLevel = service.split(/\r?\n/).filter((line) => /^\S/.test(line)).join('\n');
-    assert.doesNotMatch(topLevel, /setInterval\(|completeDue\(\)/);
+test('importing the withdrawal service neither schedules nor runs a sweep', async () => {
+    const servicePath = require.resolve('../src/services/withdrawal');
+    delete require.cache[servicePath];
+    const db = require('../src/config/db');
+    const realTransaction = db.transaction;
+    const realTimeout = global.setTimeout;
+    const realInterval = global.setInterval;
+    const calls = [];
+    db.transaction = (...args) => { calls.push('transaction'); return realTransaction.apply(db, args); };
+    global.setTimeout = (...args) => { calls.push('setTimeout'); return realTimeout(...args); };
+    global.setInterval = (...args) => { calls.push('setInterval'); return realInterval(...args); };
+    try {
+        require('../src/services/withdrawal');
+        await new Promise((resolve) => { setImmediate(resolve); });
+    } finally {
+        db.transaction = realTransaction;
+        global.setTimeout = realTimeout;
+        global.setInterval = realInterval;
+    }
+    assert.deepStrictEqual(calls, []);
 });
 
 test('sweeps never overlap: the next one starts only after the previous one finished', async () => {
