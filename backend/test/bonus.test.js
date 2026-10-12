@@ -226,22 +226,41 @@ test('a claim locks the player before writing the claim row', async () => {
     assert.strictEqual((await pending).code, 200);
 });
 
-const withinMs = (promise, ms) => Promise.race([
-    promise,
-    new Promise((_, reject) => { setTimeout(() => reject(new Error(`still running after ${ms} ms`)), ms); }),
-]);
+const settledWithin = async (promises, ms) => {
+    const all = Promise.allSettled(promises);
+    let timer;
+    const deadline = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`still running after ${ms} ms`)), ms);
+    });
+    try {
+        return (await Promise.race([all, deadline])).map((r) => r.value);
+    } catch (e) {
+        await all;
+        throw e;
+    } finally {
+        clearTimeout(timer);
+    }
+};
 
-test('parallel claims of a bonus with a condition credit it once, quickly, without holding a second connection', async () => {
-    const sequelize = await resetTestDatabase();
-    activeSequelize = sequelize;
-    await seedPlayer(sequelize);
-    await sequelize.query("INSERT INTO case_opens (userId, caseId) VALUES (1, 'dust2')");
+for (const [bonusId, amount, meetCondition] of [
+    ['first-case', 100, (sequelize) => sequelize.query("INSERT INTO case_opens (userId, caseId) VALUES (1, 'dust2')")],
+    ['receive-info', 50, (sequelize) => sequelize.query("UPDATE users SET receiveInfo = 'steam:abc' WHERE id = 1")],
+    ['first-withdrawal', 200, (sequelize) => sequelize.query(
+        "INSERT INTO storage (userId, itemId, color, caseId, status) VALUES (1, 707, 'default', 'dust2', 'received')",
+    )],
+]) {
+    test(`parallel ${bonusId} claims credit it once, quickly, without holding a second connection`, async () => {
+        const sequelize = await resetTestDatabase();
+        activeSequelize = sequelize;
+        await seedPlayer(sequelize);
+        await meetCondition(sequelize);
 
-    const results = await withinMs(Promise.all(Array.from({ length: 6 }, () => claim('first-case'))), 8000);
+        const results = await settledWithin(Array.from({ length: 6 }, () => claim(bonusId)), 8000);
 
-    assert.deepStrictEqual(results.map((r) => r.code).sort(), [200, 422, 422, 422, 422, 422]);
-    assert.deepStrictEqual(await ledger(sequelize), { balance: 100, credits: [100], claims: ['first-case'] });
-});
+        assert.deepStrictEqual(results.map((r) => r.code).sort(), [200, 422, 422, 422, 422, 422]);
+        assert.deepStrictEqual(await ledger(sequelize), { balance: amount, credits: [amount], claims: [bonusId] });
+    });
+}
 
 test('the receive-info and first-withdrawal bonuses are paid once their condition holds', async () => {
     const sequelize = await resetTestDatabase();
@@ -271,6 +290,7 @@ test('a bonus id that is not a string is refused by the route validator', async 
         // eslint-disable-next-line no-await-in-loop
         const result = await respond(Controller.activateBonus, req);
         assert.strictEqual(result.code, 422, `bonusId ${JSON.stringify(bonusId)}`);
+        assert.strictEqual(result.payload.message, MESSAGE.VALIDATOR.ERROR, `bonusId ${JSON.stringify(bonusId)}`);
     }
     assert.deepStrictEqual(await ledger(sequelize), { balance: 0, credits: [], claims: [] });
 });
