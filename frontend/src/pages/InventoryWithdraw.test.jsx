@@ -318,11 +318,15 @@ test('the countdown of a new request follows the server clock, not the browser c
 test('the countdown of a listed request counts to the latest sweep on the server clock', async () => {
     server.clockAhead = 5 * 60 * 1000;
     server.rows = [row(1, 'waitingtrade', new Date(Date.now() + server.clockAhead - 10000).toISOString())];
+    const answer = getProfileStorage.getMockImplementation();
+    getProfileStorage.mockImplementation((request) => new Promise((resolve) => {
+        setTimeout(() => resolve(answer(request)), request.status === 'waitingtrade' ? 1500 : 0);
+    }));
     renderInventory();
 
-    await openWithdrawTab();
+    fireEvent.click(await screen.findByRole('tab', { name: 'inventory.withdrawTab' }, { timeout: 5000 }));
 
     const seconds = await shownSeconds();
     expect(seconds).toBeGreaterThanOrEqual(55);
-    expect(seconds).toBeLessThanOrEqual(60);
+    expect(seconds).toBeLessThanOrEqual(59);
 });

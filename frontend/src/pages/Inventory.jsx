@@ -94,6 +94,7 @@ const Inventory = ({
             return;
         }
         cacheItems([...waitingRows, ...doneRows]);
+        setNow(Date.now());
         setPending(waitingRows);
         setWithdrawn(doneRows);
     };
