@@ -266,7 +266,10 @@ const Inventory = ({
             openNotification('success', t('inventory.withdrawRequested'));
             setActive((prev) => prev.filter((x) => x.storage_id !== item.storage_id));
             setNow(Date.now());
-            setPending((prev) => [{ ...item, storage_status: 'waitingtrade', completesAt: res.completesAt }, ...prev]);
+            setPending((prev) => [
+                { ...item, storage_status: 'waitingtrade', completesAt: res.completesAt },
+                ...prev.filter((x) => x.storage_id !== item.storage_id),
+            ]);
         } catch (e) {
             openNotification('error', t('inventory.withdrawErrorTitle'), failureReason(e));
         }

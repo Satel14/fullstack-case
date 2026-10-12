@@ -330,3 +330,29 @@ test('the countdown of a listed request counts to the latest sweep on the server
     expect(seconds).toBeGreaterThanOrEqual(55);
     expect(seconds).toBeLessThanOrEqual(59);
 });
+
+test('a poll that already sees a new request does not make it appear twice', async () => {
+    const setIntervalSpy = jest.spyOn(window, 'setInterval');
+    server.rows = [row(1, 'inventory'), row(2, 'waitingtrade', new Date().toISOString())];
+    const withdrawal = deferred();
+    receiveItemByStorageId.mockImplementation((id) => {
+        const target = server.rows.find((r) => r.storage_id === id);
+        target.storage_status = 'waitingtrade';
+        target.updated_at = new Date().toISOString();
+        return withdrawal.promise;
+    });
+    renderInventory();
+    await screen.findByRole('tab', { name: 'inventory.withdrawTab' });
+    const poll = pollTimer(setIntervalSpy);
+
+    fireEvent.click(await screen.findByRole('button', { name: /inventory\.withdraw$/ }));
+    await waitFor(() => expect(receiveItemByStorageId).toHaveBeenCalledWith(1));
+    await act(async () => { poll.tick(); });
+    await act(async () => {
+        withdrawal.resolve({ status: 200, completesAt: new Date(Date.now() + 70000).toISOString(), serverNow: serverNow() });
+    });
+
+    await openWithdrawTab();
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /inventory\.withdrawCancel/ })).toHaveLength(2));
+    setIntervalSpy.mockRestore();
+});
