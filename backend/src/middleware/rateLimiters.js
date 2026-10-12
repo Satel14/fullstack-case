@@ -102,7 +102,16 @@ const receiveLimiter = rateLimit({
     message: { status: 429, message: 'Забагато запитів на виведення. Зачекайте трохи.' },
 });
 
+const withdrawCancelLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    keyGenerator: byPlayer,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: 429, message: 'Забагато скасувань виведення. Зачекайте трохи.' },
+});
+
 module.exports = {
     authLimiter, caseOpenLimiter, onlineLimiter, depositLimiter, resetLimiter, bonusLimiter, adminLimiter,
-    seedRotateLimiter, promocodeLimiter, transferLimiter, sellLimiter, receiveLimiter,
+    seedRotateLimiter, promocodeLimiter, transferLimiter, sellLimiter, receiveLimiter, withdrawCancelLimiter,
 };

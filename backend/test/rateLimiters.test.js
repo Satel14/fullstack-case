@@ -33,7 +33,7 @@ const PER_USER_LIMITERS = {
     'PUT /api/profile/sendmoney': 'transferLimiter',
     'PUT /api/storage/sell/:id': 'sellLimiter',
     'PUT /api/storage/receive/:id': 'receiveLimiter',
-    'PUT /api/storage/receive/:id/cancel': 'receiveLimiter',
+    'PUT /api/storage/receive/:id/cancel': 'withdrawCancelLimiter',
 };
 
 const collectWriteRoutes = (stack) => stack.flatMap((layer) => {
@@ -230,5 +230,20 @@ test('the real promocode route limits a logged-in player by account and keeps se
         assert.strictEqual(bystander.body.message, MESSAGE.PROMOCODE.NOT_EXIST);
     } finally {
         await new Promise((resolve) => server.close(resolve));
+    }
+});
+
+test('withdrawing does not use up the budget for cancelling a withdrawal', async () => {
+    assert.notStrictEqual(limiters.withdrawCancelLimiter, limiters.receiveLimiter);
+    const withdraw = await serve(limiters.receiveLimiter);
+    const cancel = await serve(limiters.withdrawCancelLimiter);
+    try {
+        const player = freshUser();
+        assert.ok(await sendUntilLimited(withdraw.send, player, 1000), 'withdrawals were never limited');
+        const afterWithdrawals = await cancel.send(player, '198.51.100.9');
+        assert.strictEqual(afterWithdrawals.code, 200, 'a player who withdrew a lot can no longer cancel');
+    } finally {
+        await withdraw.close();
+        await cancel.close();
     }
 });
