@@ -289,7 +289,19 @@
         "soldLabel": "Sold",
         "sellAllStopped": "Sold {{sold}} items, then a sale failed. The rest are still in your inventory.",
         "sellAllRateLimited": "Sold {{sold}} items. You are selling too fast: wait a minute and try again.",
-        "sellAllSkipped": "Sold {{sold}} items. {{skipped}} could not be sold and stay in your inventory."
+        "sellAllSkipped": "Sold {{sold}} items. {{skipped}} could not be sold and stay in your inventory.",
+        "withdraw": "Withdraw",
+        "withdrawTab": "Withdrawals",
+        "withdrawPending": "Waiting",
+        "withdrawDone": "Withdrawn",
+        "withdrawEmpty": "No withdrawals yet",
+        "withdrawCountdown": "≈ {{seconds}} s",
+        "withdrawCompleting": "Finishing…",
+        "withdrawCancel": "Cancel",
+        "withdrawRequested": "Withdrawal requested",
+        "withdrawCancelled": "Withdrawal cancelled, the item is back in your inventory",
+        "withdrawNeedsInfo": "First add your Steam or Epic details in your profile settings",
+        "withdrawErrorTitle": "Withdrawal failed"
     },
     "chat": {
         "title": "Online chat",

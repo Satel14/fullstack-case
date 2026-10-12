@@ -18,6 +18,8 @@ const sellItemByStorageId = (storageId) => put(`/storage/sell/${storageId}`, {})
 
 const receiveItemByStorageId = (storageId) => put(`/storage/receive/${storageId}`, {});
 
+const cancelWithdrawalByStorageId = (storageId) => put(`/storage/receive/${storageId}/cancel`, {});
+
 const getStorageTop = (limit, offset) => get(`/storage/top/${limit}/${offset}`);
 
 export {
@@ -28,6 +30,7 @@ export {
     getFavoriteCaseByUserId,
     sellItemByStorageId,
     receiveItemByStorageId,
+    cancelWithdrawalByStorageId,
     getStorageTop,
     getStorageLastItemsWithUserInfo,
 };

@@ -289,7 +289,19 @@
         "soldLabel": "Продано",
         "sellAllStopped": "Продано предметів: {{sold}}, після цього продаж не вдався. Решта лишилася в інвентарі.",
         "sellAllRateLimited": "Продано предметів: {{sold}}. Ви продаєте надто швидко: зачекайте хвилину і спробуйте ще раз.",
-        "sellAllSkipped": "Продано предметів: {{sold}}. Не вдалося продати: {{skipped}}, вони лишилися в інвентарі."
+        "sellAllSkipped": "Продано предметів: {{sold}}. Не вдалося продати: {{skipped}}, вони лишилися в інвентарі.",
+        "withdraw": "Вивести",
+        "withdrawTab": "Вивід",
+        "withdrawPending": "Очікують виведення",
+        "withdrawDone": "Виведені",
+        "withdrawEmpty": "Заявок на вивід ще немає",
+        "withdrawCountdown": "≈ {{seconds}} с",
+        "withdrawCompleting": "Завершується…",
+        "withdrawCancel": "Скасувати",
+        "withdrawRequested": "Заявку на вивід створено",
+        "withdrawCancelled": "Вивід скасовано, предмет повернувся в інвентар",
+        "withdrawNeedsInfo": "Спершу вкажіть ваш Steam або Epic у налаштуваннях профілю",
+        "withdrawErrorTitle": "Вивід не вдався"
     },
     "chat": {
         "title": "Онлайн чат",

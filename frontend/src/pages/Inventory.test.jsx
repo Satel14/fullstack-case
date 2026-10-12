@@ -49,7 +49,8 @@ beforeEach(() => {
     server.sold = [];
     server.balance = 0;
     getProfileStorage.mockImplementation(({ status, limit, offset = 0 }) => {
-        const rows = status === 'inventory' ? server.inventory : server.sold;
+        const byStatus = { inventory: server.inventory, money: server.sold };
+        const rows = byStatus[status] || [];
         return Promise.resolve({ status: 200, data: rows.slice(offset, offset + Math.min(limit, 200)) });
     });
     sellItemByStorageId.mockImplementation((storageId) => {
