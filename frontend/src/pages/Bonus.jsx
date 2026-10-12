@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from 'antd';
-import { GiftOutlined } from '@ant-design/icons';
+import { GiftOutlined, ReloadOutlined } from '@ant-design/icons';
 import { getBonusList, activateBonus } from '../api/all/bonus';
 import { updateBalance } from '../store/actions/user';
 import { isAuthorized } from '../helpers/Player';
@@ -34,26 +34,39 @@ const mapDispatchToProps = (dispatch) => ({
     updateBalance: (balance) => dispatch(updateBalance(balance)),
 });
 
-const Bonus = ({ user, updateBalance: setBalance, t }) => {
+const Bonus = ({
+    user, history, updateBalance: setBalance, t,
+}) => {
     const loggedIn = isAuthorized(user);
     const [bonuses, setBonuses] = useState([]);
     const [loading, setLoading] = useState(loggedIn);
+    const [failed, setFailed] = useState(false);
     const [claiming, setClaiming] = useState(false);
 
     const load = async () => {
         try {
             const res = await getBonusList();
-            setBonuses(res.data || []);
+            setBonuses((res.data || []).filter((bonus) => TEXT_KEYS[bonus.id]));
+            setFailed(false);
         } catch (e) {
-            openNotification('error', t('common.error'), t('common.serverError'));
+            setFailed(true);
         }
         setLoading(false);
     };
 
+    const reload = () => {
+        setLoading(true);
+        load();
+    };
+
     useEffect(() => {
-        if (loggedIn) {
-            load();
+        if (!loggedIn) {
+            return undefined;
         }
+        reload();
+        const refresh = () => { load(); };
+        window.addEventListener('focus', refresh);
+        return () => window.removeEventListener('focus', refresh);
     }, [loggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const onClaim = async (bonus) => {
@@ -96,7 +109,7 @@ const Bonus = ({ user, updateBalance: setBalance, t }) => {
             <div className="bonuspage">
                 <h2>{t('bonus.title')}</h2>
                 <p>{t('bonus.loginCta')}</p>
-                <Link to="/login" className="ant-btn ant-btn-primary">{t('bonus.loginButton')}</Link>
+                <Button type="primary" onClick={() => history.push('/login')}>{t('bonus.loginButton')}</Button>
             </div>
         );
     }
@@ -105,12 +118,22 @@ const Bonus = ({ user, updateBalance: setBalance, t }) => {
         return <Loader />;
     }
 
+    if (failed) {
+        return (
+            <div className="bonuspage">
+                <h2>{t('bonus.title')}</h2>
+                <p>{t('bonus.loadFailed')}</p>
+                <Button icon={<ReloadOutlined />} onClick={reload}>{t('bonus.retry')}</Button>
+            </div>
+        );
+    }
+
     return (
         <div className="bonuspage">
             <h2>{t('bonus.title')}</h2>
             <div className="bonuspage-grid">
                 {bonuses.map((bonus) => {
-                    const key = TEXT_KEYS[bonus.id] || bonus.id;
+                    const key = TEXT_KEYS[bonus.id];
                     const hint = !bonus.claimed && !bonus.available && HINT_LINKS[bonus.id];
                     return (
                         <div key={bonus.id} className="bonuspage-card" data-testid={`bonus-${bonus.id}`}>

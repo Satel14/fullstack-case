@@ -48,15 +48,19 @@ beforeEach(() => {
     }));
 });
 
-const renderBonus = (loggedIn = true) => {
+const logIn = (store) => store.dispatch({
+    type: LOGIN_USER, payloadUser: { user_id: 7, user_login: 'player', user_balance: '0.00' },
+});
+
+const renderBonus = (loggedIn = true, history = { push: jest.fn() }) => {
     const store = createStore(combineReducers({ user: usersReducer }), applyMiddleware(thunk));
     if (loggedIn) {
-        store.dispatch({ type: LOGIN_USER, payloadUser: { user_id: 7, user_login: 'player', user_balance: '0.00' } });
+        logIn(store);
     }
     render(
         <Provider store={store}>
             <MemoryRouter>
-                <Bonus />
+                <Bonus history={history} />
             </MemoryRouter>
         </Provider>,
     );
@@ -66,11 +70,59 @@ const renderBonus = (loggedIn = true) => {
 const card = async (id) => screen.findByTestId(`bonus-${id}`);
 
 test('a guest is asked to log in and nothing is requested', async () => {
-    renderBonus(false);
+    const history = { push: jest.fn() };
+    renderBonus(false, history);
 
     expect(await screen.findByText('bonus.loginCta')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'bonus.loginButton' })).toHaveAttribute('href', '/login');
+    fireEvent.click(screen.getByRole('button', { name: 'bonus.loginButton' }));
+    expect(history.push).toHaveBeenCalledWith('/login');
     expect(getBonusList).not.toHaveBeenCalled();
+});
+
+test('a player whose profile arrives after the page mounted sees the loader, then the bonuses', async () => {
+    const list = deferred();
+    getBonusList.mockImplementation(() => list.promise);
+    const store = renderBonus(false);
+
+    act(() => { logIn(store); });
+
+    await waitFor(() => expect(getBonusList).toHaveBeenCalled());
+    expect(document.querySelector('.loader')).not.toBeNull();
+    await act(async () => { list.resolve({ status: 200, data: catalogue() }); });
+    expect(await card('welcome')).toBeInTheDocument();
+});
+
+test('a list that fails to load offers a retry', async () => {
+    getBonusList.mockImplementationOnce(() => Promise.reject({ error: 500 }));
+    renderBonus();
+
+    fireEvent.click(await screen.findByRole('button', { name: /bonus\.retry$/ }));
+
+    expect(await card('welcome')).toBeInTheDocument();
+    expect(getBonusList).toHaveBeenCalledTimes(2);
+});
+
+test('a bonus the page has no text for is not shown', async () => {
+    getBonusList.mockImplementation(() => Promise.resolve({
+        status: 200,
+        data: [...catalogue(), { id: 'new-thing', kind: 'once', amount: 5, claimed: false, available: true }],
+    }));
+    renderBonus();
+
+    expect(await card('welcome')).toBeInTheDocument();
+    expect(screen.queryByTestId('bonus-new-thing')).not.toBeInTheDocument();
+});
+
+test('coming back to the page refreshes the list, so a new day shows the daily bonus again', async () => {
+    getBonusList.mockImplementationOnce(() => Promise.resolve({
+        status: 200, data: catalogue({ daily: { claimed: true, available: false } }),
+    }));
+    renderBonus();
+    expect(within(await card('daily')).getByRole('button', { name: 'bonus.tomorrow' })).toBeDisabled();
+
+    act(() => { window.dispatchEvent(new Event('focus')); });
+
+    await waitFor(() => expect(within(screen.getByTestId('bonus-daily')).getByRole('button', { name: /bonus\.claim$/ })).not.toBeDisabled());
 });
 
 test('every card shows the action that fits its state', async () => {
@@ -113,10 +165,11 @@ test('a refused claim shows the server reason, an unexpected failure the generic
     fireEvent.click(within(await card('welcome')).getByRole('button', { name: /bonus\.claim$/ }));
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'bonus.errorTitle', 'Бонус вже отримано'));
 
-    activateBonus.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    activateBonus.mockRejectedValueOnce({ error: 500, message: 'ER_LOCK_DEADLOCK raw database text' });
     await waitFor(() => expect(within(screen.getByTestId('bonus-daily')).getByRole('button', { name: /bonus\.claim$/ })).not.toBeDisabled());
     fireEvent.click(within(screen.getByTestId('bonus-daily')).getByRole('button', { name: /bonus\.claim$/ }));
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'bonus.errorTitle', 'common.serverError'));
+    await waitFor(() => expect(getBonusList).toHaveBeenCalledTimes(3));
 });
 
 test('while a claim is in flight every claim button is disabled', async () => {

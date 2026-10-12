@@ -471,6 +471,8 @@
         "tomorrow": "Доступний завтра",
         "credited": "Нараховано {{amount}} ₴",
         "errorTitle": "Бонус не отримано",
+        "loadFailed": "Не вдалося завантажити бонуси",
+        "retry": "Спробувати ще раз",
         "amount": "{{amount}} ₴",
         "items": {
             "daily": {

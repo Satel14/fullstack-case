@@ -469,6 +469,8 @@
         "tomorrow": "Available tomorrow",
         "credited": "{{amount}} ₴ credited",
         "errorTitle": "Bonus not claimed",
+        "loadFailed": "Could not load the bonuses",
+        "retry": "Try again",
         "amount": "{{amount}} ₴",
         "items": {
             "daily": {
