@@ -56,6 +56,8 @@ const DOWN_EFFECTS = {
     '20260923000110-user-id-indexes.js':
         'drops the userId indexes on storage, balance_history and case_opens, so every per-player read scans the '
         + "whole table again and a profile reset locks every player's items while it waits",
+    '20260930000000-storage-status-updated-index.js':
+        'drops the (status, updated_at) index, so the withdrawal sweep scans the whole storage table every 10 seconds',
 };
 
 const EXPECTED_COLUMNS = [
