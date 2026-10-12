@@ -37,3 +37,70 @@ test('the migrations index storage by status and update time, and the revert dro
     const cli = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'migrate.js'), 'utf8');
     assert.ok(cli.includes(`'${INDEX_MIGRATION}':`), 'the revert must name what it costs in DOWN_EFFECTS');
 });
+
+const Storage = require('../src/models/storage');
+
+const seedRows = async (sequelize, rows) => {
+    await sequelize.query(
+        "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES "
+        + "('one', 'x', 'one@e.ua', 0, 0, 1), ('two', 'x', 'two@e.ua', 0, 0, 1)",
+    );
+    for (const row of rows) {
+        // eslint-disable-next-line no-await-in-loop
+        await Storage.create({
+            storage_userId: row.userId,
+            storage_itemId: 707,
+            storage_color: 'default',
+            storage_caseId: 'dust2',
+            storage_status: row.status,
+            storage_extraData: row.status === 'waitingtrade' ? 'steam:abc' : null,
+            created_at: row.updatedAt || new Date(),
+            updated_at: row.updatedAt,
+        });
+    }
+};
+
+const statuses = async () => (await Storage.findAll({ order: [['storage_id', 'ASC']] }))
+    .map((r) => r.storage_status);
+
+test('the sweep completes requests older than the delay and leaves everything else alone', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const WithdrawalService = require('../src/services/withdrawal');
+    const now = new Date('2026-10-12T12:00:00Z');
+    const ago = (ms) => new Date(now.getTime() - ms);
+
+    await seedRows(sequelize, [
+        { userId: 1, status: 'waitingtrade', updatedAt: ago(WithdrawalService.WITHDRAW_DELAY_MS + 1000) },
+        { userId: 2, status: 'waitingtrade', updatedAt: ago(WithdrawalService.WITHDRAW_DELAY_MS) },
+        { userId: 1, status: 'waitingtrade', updatedAt: ago(30 * 1000) },
+        { userId: 1, status: 'waitingtrade', updatedAt: null },
+        { userId: 1, status: 'inventory', updatedAt: ago(10 * 60 * 1000) },
+        { userId: 2, status: 'money', updatedAt: ago(10 * 60 * 1000) },
+    ]);
+
+    assert.strictEqual(await WithdrawalService.completeDue(now), 3);
+    assert.deepStrictEqual(await statuses(), ['received', 'received', 'waitingtrade', 'received', 'inventory', 'money']);
+    assert.strictEqual(await WithdrawalService.completeDue(now), 0, 'a second sweep changes nothing');
+});
+
+test('completesAt is the request time plus the delay', () => {
+    const WithdrawalService = require('../src/services/withdrawal');
+    assert.strictEqual(WithdrawalService.WITHDRAW_DELAY_MS, 60000);
+    assert.strictEqual(WithdrawalService.SWEEP_INTERVAL_MS, 10000);
+    assert.strictEqual(
+        WithdrawalService.completesAt('2026-10-12T12:00:00.000Z').toISOString(),
+        '2026-10-12T12:01:00.000Z',
+    );
+});
+
+test('the server starts the sweep only after it is listening, and importing the service starts nothing', () => {
+    const server = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+    const listenAt = server.indexOf('app.listen(');
+    const sweepAt = server.indexOf("require('./src/services/withdrawal').startSweep()");
+    assert.ok(listenAt !== -1 && sweepAt > listenAt, 'server.js must start the sweep after app.listen');
+
+    const service = fs.readFileSync(path.join(__dirname, '..', 'src', 'services', 'withdrawal.js'), 'utf8');
+    const topLevel = service.split(/\r?\n/).filter((line) => /^\S/.test(line)).join('\n');
+    assert.doesNotMatch(topLevel, /setInterval\(|completeDue\(\)/);
+});

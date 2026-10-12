@@ -43,6 +43,8 @@ assertMigrationsApplied(sequelize).then(() => {
 
     const RedisManager = require('./src/redis/manager');
     RedisManager.startItemCacheSync();
+
+    require('./src/services/withdrawal').startSweep();
 }).catch((err) => {
     console.error(err.message);
     process.exit(1);
