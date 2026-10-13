@@ -259,7 +259,7 @@ const dropValue = (item, color) => {
 
 module.exports.getDropStatsByUserId = async (userId) => {
     const [[{ uniqueCases }]] = await Storage.sequelize.query(
-        'SELECT COUNT(DISTINCT caseId) AS uniqueCases FROM storage WHERE userId = ?',
+        'SELECT COUNT(caseId) AS uniqueCases FROM (SELECT DISTINCT caseId FROM storage WHERE userId = ?) AS dropped_cases',
         { replacements: [userId] },
     );
     const [drops] = await Storage.sequelize.query(

@@ -61,6 +61,9 @@ const DOWN_EFFECTS = {
     '20261013000100-counters-not-null.js':
         'lets cases.openedCount, cases.openLimit, users.balance and users.rank hold NULL again; stored values stay, '
         + 'but a case whose openedCount is NULL is never closed by its open limit and a NULL balance swallows every credit',
+    '20261013000200-storage-profile-stats-indexes.js':
+        'drops the (userId, caseId) and (userId, itemId, color) indexes on storage, so every view of a public profile '
+        + "reads each of the player's drops row by row and groups them in a temporary table again",
 };
 
 const status = async (migrator) => {

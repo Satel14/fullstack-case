@@ -1,6 +1,15 @@
 const test = require('node:test');
 const assert = require('node:assert');
+const fs = require('fs');
+const path = require('path');
 const { resetTestDatabase } = require('./helpers/db');
+const { createMigrator } = require('../src/db/migrator');
+
+const INDEX_MIGRATION = '20261013000200-storage-profile-stats-indexes.js';
+const STATS_INDEXES = {
+    storage_user_id_case_id: ['userId', 'caseId'],
+    storage_user_id_item_id_color: ['userId', 'itemId', 'color'],
+};
 
 let activeSequelize;
 
@@ -110,4 +119,77 @@ test('a player without drops has no unique cases and no best drop', async () => 
         { data: result.payload.data, uniqueCases: result.payload.uniqueCases, bestDrop: result.payload.bestDrop },
         { data: 0, uniqueCases: 0, bestDrop: null },
     );
+});
+
+const storageIndexes = async (sequelize) => Object.fromEntries(
+    (await sequelize.getQueryInterface().showIndex('storage')).map((i) => [i.name, i.fields.map((f) => f.attribute)]),
+);
+
+test('the migrations index storage by player and case and by player, item and colour, and the revert drops only those', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+
+    const indexes = await storageIndexes(sequelize);
+    Object.entries(STATS_INDEXES).forEach(([name, fields]) => assert.deepStrictEqual(indexes[name], fields, name));
+
+    await createMigrator(sequelize, { quiet: true }).down({ to: INDEX_MIGRATION });
+
+    const kept = Object.keys(indexes).filter((name) => !STATS_INDEXES[name]).sort();
+    assert.deepStrictEqual(Object.keys(await storageIndexes(sequelize)).sort(), kept);
+    const cli = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'migrate.js'), 'utf8');
+    assert.ok(cli.includes(`'${INDEX_MIGRATION}':`), 'the revert must name what it costs in DOWN_EFFECTS');
+});
+
+const recordQueries = async (sequelize, run) => {
+    const recorded = [];
+    const { query } = sequelize;
+    sequelize.query = function recording(sql, options) {
+        recorded.push({ sql, options });
+        return query.call(this, sql, options);
+    };
+    try {
+        await run();
+    } finally {
+        delete sequelize.query;
+    }
+    return recorded;
+};
+
+const manyDrops = () => [1, 2, 3].flatMap((userId) => Array.from({ length: 400 }, (_, i) => ({
+    userId,
+    itemId: ITEMS[i % ITEMS.length][0],
+    color: i % 3 ? 'default' : 'painted',
+    caseId: `case-${i % 7}`,
+    status: i % 5 ? 'inventory' : 'money',
+})));
+
+const assertIndexOnlyStorageReads = async (sequelize, recorded) => {
+    const storageReads = recorded.filter(({ sql }) => typeof sql === 'string' && /\bFROM `?storage`?(\s|$)/i.test(sql));
+    assert.ok(storageReads.length > 0, 'expected the handler to read storage');
+    for (const { sql, options } of storageReads) {
+        const [plan] = await sequelize.query(`EXPLAIN ${sql}`, { replacements: options && options.replacements });
+        const storageSteps = plan.filter((step) => step.table === 'storage');
+        assert.ok(storageSteps.length > 0, sql);
+        storageSteps.forEach((step) => {
+            const described = `${sql}\n${JSON.stringify(step)}`;
+            assert.match(String(step.Extra), /Using index/, described);
+            assert.doesNotMatch(String(step.Extra), /Using temporary|Using filesort/, described);
+        });
+    }
+};
+
+test('the profile statistics read storage from its indexes alone, without a temporary table', async () => {
+    const sequelize = await fresh();
+    await addDrops(sequelize, manyDrops());
+    await sequelize.query('ANALYZE TABLE storage');
+
+    let result;
+    const recorded = await recordQueries(sequelize, async () => { result = await countFor(1); });
+
+    assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
+    assert.deepStrictEqual(
+        { data: result.payload.data, uniqueCases: result.payload.uniqueCases, bestDrop: result.payload.bestDrop },
+        { data: 400, uniqueCases: 7, bestDrop: { storage_id: 391, storage_itemId: 300, storage_color: 'painted' } },
+    );
+    await assertIndexOnlyStorageReads(sequelize, recorded);
 });
