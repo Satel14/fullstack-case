@@ -143,6 +143,82 @@ test('a failure that arrives after the player left the case page does not naviga
     expect(history.push).not.toHaveBeenCalled();
 });
 
+const updatesAfterClosing = async (unmount, answer) => {
+    unmount();
+    const setState = jest.spyOn(React.Component.prototype, 'setState');
+    const consoleError = jest.spyOn(console, 'error');
+    await act(async () => {
+        answer();
+        await new Promise((resolve) => { setTimeout(resolve, 50); });
+    });
+    const result = {
+        setStates: setState.mock.calls.length,
+        warnings: consoleError.mock.calls.filter(([message]) => String(message).includes('unmounted component')),
+    };
+    setState.mockRestore();
+    consoleError.mockRestore();
+    return result;
+};
+
+test('the provably fair badge shows the active seed hash', async () => {
+    getProvablyFairState.mockResolvedValue({ data: { active: { serverSeedHash: 'hash' } } });
+    getCaseById.mockResolvedValue(caseResponse(7));
+    const store = createStore(() => ({ itemCache: {} }));
+
+    render(casePage(store, 'havoc', { push: jest.fn() }));
+
+    expect(await screen.findByText('provablyFair.badge')).toBeInTheDocument();
+});
+
+test('a seed answer that arrives after the page closed updates nothing', async () => {
+    const seed = deferred();
+    getProvablyFairState.mockReturnValue(seed.promise);
+    getCaseById.mockResolvedValue(caseResponse(7));
+    const store = createStore(() => ({ itemCache: {} }));
+
+    const { unmount } = render(casePage(store, 'havoc', { push: jest.fn() }));
+    await waitFor(() => expect(getProvablyFairState).toHaveBeenCalled());
+
+    const { setStates, warnings } = await updatesAfterClosing(unmount, () => {
+        seed.resolve({ data: { active: { serverSeedHash: 'hash' } } });
+    });
+
+    expect(setStates).toBe(0);
+    expect(warnings).toEqual([]);
+});
+
+test('the seed is not asked for once the page closed before the case arrived', async () => {
+    const havoc = deferred();
+    getCaseById.mockReturnValue(havoc.promise);
+    getProvablyFairState.mockResolvedValue({ data: { active: { serverSeedHash: 'hash' } } });
+    const store = createStore(() => ({ itemCache: {} }));
+
+    const { unmount } = render(casePage(store, 'havoc', { push: jest.fn() }));
+
+    const { setStates, warnings } = await updatesAfterClosing(unmount, () => havoc.resolve(caseResponse(7)));
+
+    expect(getProvablyFairState).not.toHaveBeenCalled();
+    expect(setStates).toBe(0);
+    expect(warnings).toEqual([]);
+});
+
+test('a refresh that answers after the page closed updates nothing', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    const refresh = deferred();
+    getCaseById.mockResolvedValueOnce(caseResponse(7)).mockReturnValueOnce(refresh.promise);
+    const store = createStore(() => ({ itemCache: {} }));
+
+    const { container, unmount } = render(casePage(store, 'havoc', { push: jest.fn() }));
+    await waitFor(() => expect(container.querySelector('.casepage-title-second i').textContent).toBe('case.openedCount 7'));
+    fireEvent.click(screen.getByRole('button', { name: 'opened' }));
+    expect(getCaseById).toHaveBeenCalledTimes(2);
+
+    const { setStates, warnings } = await updatesAfterClosing(unmount, () => refresh.resolve(caseResponse(8)));
+
+    expect(setStates).toBe(0);
+    expect(warnings).toEqual([]);
+});
+
 test('every item of the case is looked up, cached or not, so a failed lookup is asked for again', async () => {
     getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockResolvedValue({ ...caseResponse(7), caseCollection: { ITEMS: [{ id: 1 }, { id: 2 }] } });

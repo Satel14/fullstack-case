@@ -40,7 +40,9 @@ class Case extends Component {
     async componentDidMount() {
         this.mounted = true;
         await this.getData();
-        await this.getProvablyFairInfo();
+        if (this.mounted) {
+            await this.getProvablyFairInfo();
+        }
     }
 
     componentDidUpdate(prevProps) {
@@ -137,7 +139,9 @@ class Case extends Component {
     async getProvablyFairInfo() {
         try {
             const res = await getProvablyFairState();
-            this.setState({ serverSeedHash: res.data.active.serverSeedHash });
+            if (this.mounted) {
+                this.setState({ serverSeedHash: res.data.active.serverSeedHash });
+            }
         } catch (e) {
             // anonymous users get 401/403 here - render no badge
         }
@@ -147,7 +151,7 @@ class Case extends Component {
         const { id } = this.state;
         try {
             const caseData = await getCaseById(id);
-            if (caseData && caseData.data && caseData.data.case_id === id) {
+            if (this.mounted && caseData && caseData.data && caseData.data.case_id === id) {
                 this.setState({ caseData: caseData.data });
                 return true;
             }
