@@ -12,7 +12,7 @@ import { userPostFetch } from '../../store/actions/user';
 import openNotification from '../../components/mini/openNotification';
 
 const mapDispatchToProps = (dispatch) => ({
-    userPostFetch: (userInfo) => dispatch(userPostFetch(userInfo)),
+    userPostFetch: (userInfo, remember) => dispatch(userPostFetch(userInfo, remember)),
 });
 const Login = (props) => {
     const { t } = useTranslation();
@@ -32,7 +32,7 @@ const Login = (props) => {
         return props.userPostFetch({
             login: values.username,
             password: values.password,
-        })
+        }, values.remember !== false)
             .then((failure) => {
                 setLoading(false);
                 if (failure) {

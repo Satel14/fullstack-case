@@ -1,10 +1,10 @@
 import { API_URL } from './config';
-import { getToken } from './token';
+import { getToken, removeToken } from './token';
 import openNotification from '../components/mini/openNotification';
 import i18n from '../i18n';
 
-const getHeaders = async () => {
-    const token = await getToken();
+const getHeaders = () => {
+    const token = getToken();
     const headers = {
         Accept: 'application/json',
         'Content-type': 'application/json',
@@ -20,10 +20,10 @@ const endSessionIfRevoked = (result, headers) => {
         return;
     }
     const sentToken = headers.Authorization.slice('Bearer '.length);
-    if (localStorage.getItem('token') !== sentToken) {
+    if (getToken() !== sentToken) {
         return;
     }
-    localStorage.removeItem('token');
+    removeToken();
     window.location.reload();
 };
 
@@ -38,7 +38,7 @@ const errorPayload = async (result) => {
 };
 
 export const post = async (destination, body, notificationErr = false) => {
-    const headers = await getHeaders();
+    const headers = getHeaders();
 
     const result = await fetch(`${API_URL}${destination}`, {
         method: 'POST',
@@ -58,7 +58,7 @@ export const post = async (destination, body, notificationErr = false) => {
     throw failure;
 };
 export const put = async (destination, body, notificationErr = false) => {
-    const headers = await getHeaders();
+    const headers = getHeaders();
 
     const result = await fetch(`${API_URL}${destination}`, {
         method: 'PUT',
@@ -79,7 +79,7 @@ export const put = async (destination, body, notificationErr = false) => {
     throw failure;
 };
 export const get = async (destination) => {
-    const headers = await getHeaders();
+    const headers = getHeaders();
     const result = await fetch(`${API_URL}${destination}`, {
         method: 'GET',
         headers,

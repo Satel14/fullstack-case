@@ -1,29 +1,39 @@
-export const getToken = async () => {
+const TOKEN_KEY = 'token';
+
+const persistent = () => window.localStorage;
+const perSession = () => window.sessionStorage;
+
+const readFrom = (storage) => {
     try {
-        const token = localStorage.getItem('token');
-        if (token !== null && token !== undefined) {
-            return token;
-        }
+        return storage().getItem(TOKEN_KEY);
     } catch (e) {
         return null;
     }
-    return null;
 };
 
-export const setToken = async (token) => {
+const removeFrom = (storage) => {
     try {
-        await localStorage.setItem('token', token);
+        storage().removeItem(TOKEN_KEY);
     } catch (e) {
-        return null;
+        return false;
     }
-    return undefined;
+    return true;
 };
 
-export const removeItem = () => {
+export const getToken = () => readFrom(perSession) || readFrom(persistent) || null;
+
+export const setToken = (token, remember = true) => {
+    const [keep, drop] = remember ? [persistent, perSession] : [perSession, persistent];
+    removeFrom(drop);
     try {
-        localStorage.removeItem('token');
+        keep().setItem(TOKEN_KEY, token);
     } catch (e) {
-        return null;
+        return false;
     }
-    return undefined;
+    return true;
+};
+
+export const removeToken = () => {
+    removeFrom(persistent);
+    removeFrom(perSession);
 };

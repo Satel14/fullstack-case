@@ -1,14 +1,7 @@
 import io from 'socket.io-client';
+import { getToken as storedToken } from '../token';
 
 const WS_URL = process.env.REACT_APP_WS_URL || 'http://localhost:3003';
-
-const storedToken = () => {
-    try {
-        return localStorage.getItem('token');
-    } catch (e) {
-        return null;
-    }
-};
 
 let handshakeToken = null;
 

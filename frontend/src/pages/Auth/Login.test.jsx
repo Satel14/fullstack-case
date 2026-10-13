@@ -65,7 +65,7 @@ test('a short login and an old short password are left for the server to judge',
     fill({ login: 'abc', password: '1234' });
 
     await waitFor(() => expect(screen.getByText('home page')).toBeInTheDocument());
-    expect(userPostFetch).toHaveBeenCalledWith({ login: 'abc', password: '1234' });
+    expect(userPostFetch).toHaveBeenCalledWith({ login: 'abc', password: '1234' }, true);
     expect(screen.queryByText('auth.login.minChars')).toBeNull();
 });
 
@@ -75,8 +75,20 @@ test('a correct login and password logs in with the typed values and goes home',
     fill({ login: 'satel7', password: 'secret1' });
 
     await waitFor(() => expect(screen.getByText('home page')).toBeInTheDocument());
-    expect(userPostFetch).toHaveBeenCalledWith({ login: 'satel7', password: 'secret1' });
+    expect(userPostFetch).toHaveBeenCalledWith({ login: 'satel7', password: 'secret1' }, true);
     expect(openNotification).toHaveBeenCalledWith('success', 'auth.login.successTitle', 'auth.login.welcome');
+});
+
+test('"remember me" is ticked by default, and unticking it asks for a session that ends with the browser', async () => {
+    renderForm();
+    const remember = screen.getByRole('checkbox', { name: 'auth.login.remember' });
+
+    expect(remember).toBeChecked();
+    fireEvent.click(remember);
+    fill({ login: 'satel7', password: 'secret1' });
+
+    await waitFor(() => expect(screen.getByText('home page')).toBeInTheDocument());
+    expect(userPostFetch).toHaveBeenCalledWith({ login: 'satel7', password: 'secret1' }, false);
 });
 
 test('a failed login shows the wrong-credentials message and stays on the page', async () => {

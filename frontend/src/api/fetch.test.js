@@ -15,6 +15,7 @@ beforeEach(() => {
     delete window.location;
     window.location = { href: '/case/dust2', reload: jest.fn() };
     localStorage.clear();
+    sessionStorage.clear();
     global.fetch = jest.fn();
 });
 
@@ -31,6 +32,17 @@ test('a 401 on a request that carried a token ends the session and reloads the p
     expect(localStorage.getItem('token')).toBeNull();
     expect(window.location.reload).toHaveBeenCalledTimes(1);
     expect(window.location.href).toBe('/case/dust2');
+});
+
+test('a token kept for this browser session only is sent, and a 401 for it ends that session too', async () => {
+    sessionStorage.setItem('token', 'this-tab');
+    global.fetch.mockReturnValue(respond(401));
+
+    await expect(get('/profile/provably-fair')).rejects.toEqual({ error: 401 });
+
+    expect(global.fetch.mock.calls[0][1].headers.Authorization).toBe('Bearer this-tab');
+    expect(sessionStorage.getItem('token')).toBeNull();
+    expect(window.location.reload).toHaveBeenCalledTimes(1);
 });
 
 test('several requests failing with the same revoked token reload only once', async () => {

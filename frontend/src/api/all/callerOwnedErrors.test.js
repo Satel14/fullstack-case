@@ -3,7 +3,7 @@ import { getProfileStorage } from './storage';
 
 jest.mock('../../components/mini/openNotification', () => jest.fn());
 jest.mock('../../i18n', () => ({ t: (key) => key }));
-jest.mock('../token', () => ({ getToken: () => Promise.resolve(null) }));
+jest.mock('../token', () => ({ getToken: () => null, removeToken: () => undefined }));
 
 const openNotification = require('../../components/mini/openNotification');
 

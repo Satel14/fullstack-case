@@ -94,6 +94,72 @@ describe('userPostRegisterFetch', () => {
     });
 });
 
+describe('remember me', () => {
+    const { getProfileFetch, logoutProfile } = require('./user');
+
+    beforeEach(() => {
+        sessionStorage.clear();
+    });
+
+    test('a login that is not remembered keeps the token for this browser session only', async () => {
+        localStorage.setItem('token', 'older');
+
+        await userPostFetch({ login: 'player', password: 'secret123' }, false)(jest.fn());
+
+        expect(sessionStorage.getItem('token')).toBe('fresh');
+        expect(localStorage.getItem('token')).toBeNull();
+        expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toEqual({ login: 'player', password: 'secret123' });
+    });
+
+    test('a remembered login keeps the token in localStorage and drops a session copy', async () => {
+        sessionStorage.setItem('token', 'older');
+
+        await userPostFetch({ login: 'player', password: 'secret123' }, true)(jest.fn());
+
+        expect(localStorage.getItem('token')).toBe('fresh');
+        expect(sessionStorage.getItem('token')).toBeNull();
+    });
+
+    test('registration keeps the token in localStorage', async () => {
+        sessionStorage.setItem('token', 'older');
+
+        await userPostRegisterFetch({ login: 'player', password: 'secret123', email: 'player@e.ua' })(jest.fn());
+
+        expect(localStorage.getItem('token')).toBe('fresh');
+        expect(sessionStorage.getItem('token')).toBeNull();
+    });
+
+    test('a session-only token loads the profile and is dropped when the server rejects it', async () => {
+        sessionStorage.setItem('token', 'this-tab');
+        global.fetch = jest.fn(() => Promise.resolve({ status: 401, json: () => Promise.resolve({ message: 'no' }) }));
+        const dispatch = jest.fn();
+
+        await getProfileFetch()(dispatch);
+
+        expect(global.fetch.mock.calls[0][1].headers.Authorization).toBe('Bearer this-tab');
+        expect(sessionStorage.getItem('token')).toBeNull();
+        expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'LOGOUT_USER' }));
+    });
+
+    test('logging out clears the token from both storages', () => {
+        jest.useFakeTimers();
+        try {
+            localStorage.setItem('token', 'remembered');
+            sessionStorage.setItem('token', 'this-tab');
+            const dispatch = jest.fn();
+
+            logoutProfile()(dispatch);
+
+            expect(localStorage.getItem('token')).toBeNull();
+            expect(sessionStorage.getItem('token')).toBeNull();
+            expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'LOGOUT_USER' }));
+        } finally {
+            jest.clearAllTimers();
+            jest.useRealTimers();
+        }
+    });
+});
+
 describe('the profile check on page load', () => {
     const { getProfileFetch } = require('./user');
     const run = async (response) => {

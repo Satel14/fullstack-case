@@ -35,6 +35,7 @@ const dropped = () => {
 beforeEach(() => {
     jest.useFakeTimers();
     localStorage.clear();
+    sessionStorage.clear();
     connected();
     jest.runOnlyPendingTimers();
     mockSocket.disconnect.mockReset();
@@ -165,6 +166,14 @@ test('a pending re-authentication is dropped when that handshake fails, since th
     jest.advanceTimersByTime(1000);
 
     expect(mockSocket.disconnect).not.toHaveBeenCalled();
+});
+
+test('the handshake carries a token kept for this browser session only', async () => {
+    dropped();
+    sessionStorage.setItem('token', 'this-tab');
+    connectSocket();
+
+    expect(await handshakeReadsToken()).toEqual({ token: 'this-tab' });
 });
 
 test('a token that changes while a handshake is in flight is picked up even without a login call, e.g. on logout', async () => {

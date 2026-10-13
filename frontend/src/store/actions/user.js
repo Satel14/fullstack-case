@@ -5,6 +5,7 @@ import {
 } from '../types';
 
 import { API_URL } from '../../api/config';
+import { getToken, setToken, removeToken } from '../../api/token';
 import userFields from '../config/userFields';
 import { editProfile } from '../../api/all/profile';
 import { redeemPromocode } from '../../api/all/other';
@@ -25,7 +26,7 @@ const readJsonOrNull = (resp) => resp.json().catch(() => null);
 const readWithStatus = async (resp) => ({ status: resp.status, data: await resp.json() });
 
 export const getProfileFetch = () => (dispatch) => {
-    const { token } = localStorage;
+    const token = getToken();
     if (token) {
         return fetch(`${API_URL}/profile/get`, {
             method: 'GET',
@@ -37,7 +38,7 @@ export const getProfileFetch = () => (dispatch) => {
         })
             .then(async (resp) => {
                 if (resp.status === 401) {
-                    localStorage.removeItem('token');
+                    removeToken();
                     dispatch(logoutUser());
                     return undefined;
                 }
@@ -53,7 +54,7 @@ export const getProfileFetch = () => (dispatch) => {
     return null;
 };
 
-export const userPostFetch = (body) => (dispatch) => fetch(`${API_URL}/profile/login`, {
+export const userPostFetch = (body, remember = true) => (dispatch) => fetch(`${API_URL}/profile/login`, {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
@@ -66,14 +67,14 @@ export const userPostFetch = (body) => (dispatch) => fetch(`${API_URL}/profile/l
         if (Object.prototype.hasOwnProperty.call(data, 'message')) {
             return { error: status, message: data.message };
         }
-        localStorage.setItem('token', data.jwt);
+        setToken(data.jwt, remember);
         dispatch(loginUser(data.user));
         reconnectSocket();
         return false;
     });
 
 export const logoutProfile = () => (dispatch) => {
-    localStorage.removeItem('token');
+    removeToken();
     dispatch(logoutUser());
     setTimeout(() => {
         window.location.href = '/';
@@ -99,7 +100,7 @@ export const userPostRegisterFetch = (body) => (dispatch) => fetch(`${API_URL}/p
                 : { error: status };
         }
 
-        localStorage.setItem('token', data.jwt);
+        setToken(data.jwt);
         dispatch(loginUser(data.user));
         reconnectSocket();
 
@@ -108,7 +109,7 @@ export const userPostRegisterFetch = (body) => (dispatch) => fetch(`${API_URL}/p
 
 export const confirmEmailFetch = (token) => async (dispatch) => {
     const data = await confirmEmail(token);
-    localStorage.setItem('token', data.jwt);
+    setToken(data.jwt);
     dispatch(loginUser(data.user));
     reconnectSocket();
     return data.user;
