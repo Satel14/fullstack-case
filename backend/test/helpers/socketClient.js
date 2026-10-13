@@ -95,6 +95,45 @@ const connectClient = (port, token) => new Promise((resolve, reject) => {
     });
 });
 
+const PACKET_SEPARATOR = '\x1e';
+
+const openPolling = async (port) => {
+    const base = `http://127.0.0.1:${port}/socket.io/?EIO=4&transport=polling`;
+    const opening = await (await fetch(base)).text();
+    const { sid } = JSON.parse(opening.slice(1));
+    const url = `${base}&sid=${sid}`;
+    const received = [];
+
+    const send = async (packets) => {
+        const res = await fetch(url, { method: 'POST', body: packets.join(PACKET_SEPARATOR) });
+        await res.text();
+        if (!res.ok) {
+            throw new Error(`the polling POST answered ${res.status}`);
+        }
+    };
+
+    const until = async (predicate, timeoutMs = 3000) => {
+        const deadline = Date.now() + timeoutMs;
+        while (!predicate(received)) {
+            const left = deadline - Date.now();
+            if (left <= 0) {
+                throw new Error(`gave up waiting after ${timeoutMs}ms, received ${JSON.stringify(received.slice(-5))}`);
+            }
+            const res = await fetch(url, { signal: AbortSignal.timeout(left) });
+            received.push(...(await res.text()).split(PACKET_SEPARATOR));
+        }
+        return received;
+    };
+
+    const close = () => send(['1']).catch(() => {});
+
+    return {
+        received, send, until, close,
+    };
+};
+
 const settle = (ms = 150) => new Promise((resolve) => setTimeout(resolve, ms));
 
-module.exports = { startChatServer, connectClient, settle };
+module.exports = {
+    startChatServer, connectClient, openPolling, settle,
+};

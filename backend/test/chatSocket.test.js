@@ -1,6 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { startChatServer, connectClient, settle } = require('./helpers/socketClient');
+const {
+    startChatServer, connectClient, openPolling, settle,
+} = require('./helpers/socketClient');
 
 const stub = (relative, exports) => {
     const resolved = require.resolve(relative);
@@ -15,6 +17,7 @@ const PLAYERS = {
 };
 
 const chatStore = { added: [], reads: 0 };
+const sessionLookups = [];
 
 stub('../src/services/chat', {
     add: async (message) => { chatStore.added.push(message); },
@@ -24,7 +27,13 @@ stub('../src/services/chat', {
     },
 });
 stub('../src/auth/token', {
-    userFromToken: async (token) => PLAYERS[token] || null,
+    userFromToken: async (token) => {
+        sessionLookups.push(token);
+        if (token === 'unreachable') {
+            throw new Error('the pool is exhausted');
+        }
+        return PLAYERS[token] || null;
+    },
     sessionUser: async (id) => Object.values(PLAYERS).find((p) => p.user_id === id) || null,
     tokenVersionOf: () => 0,
 });
@@ -37,6 +46,7 @@ const clients = [];
 const start = async () => {
     chatStore.added = [];
     chatStore.reads = 0;
+    sessionLookups.length = 0;
     const { port } = await startChatServer(chat);
     current = { io: chat.getIo(), port };
     return port;
@@ -147,4 +157,81 @@ test("a burst of 'user connected' reads the history at most once per second, and
 
     visitor.emit('user connected');
     await visitor.waitFor('chat messages', () => visitor.events('chat messages').length > answered, 1500);
+});
+
+const REPEATS = 200;
+const ALREADY_CONNECTED = '44{"message":"already connected"}';
+const namespaceAnswers = (packets) => packets.filter((p) => p.startsWith('40') || p.startsWith('44'));
+const acceptedAnswers = (packets) => namespaceAnswers(packets).filter((p) => p.startsWith('40'));
+const serverSockets = () => current.io.of('/').sockets.size;
+
+const openRawConnection = async () => {
+    const connection = await openPolling(current.port);
+    clients.push(connection);
+    return connection;
+};
+
+const answersAfter = (connection, count) => connection.until((packets) => namespaceAnswers(packets).length >= count);
+
+test('a connection repeating its namespace CONNECT gets one socket, and each repeat is refused', async () => {
+    await start();
+    const connection = await openRawConnection();
+
+    await connection.send(Array(REPEATS).fill('40'));
+    const answers = namespaceAnswers(await answersAfter(connection, REPEATS));
+
+    assert.strictEqual(acceptedAnswers(answers).length, 1, `${acceptedAnswers(answers).length} sockets were opened on one connection`);
+    assert.strictEqual(answers.filter((p) => p === ALREADY_CONNECTED).length, REPEATS - 1);
+    assert.strictEqual(serverSockets(), 1);
+    assert.strictEqual(chat.onlinePresence().count, 1);
+
+    current.io.emit('new-drop', { storage_id: 77 });
+    await connection.until((packets) => packets.some((p) => p.includes('"new-drop"')));
+    await settle();
+    assert.strictEqual(connection.received.filter((p) => p.includes('"new-drop"')).length, 1);
+});
+
+test('a token handshake repeated on one connection looks the session up once', async () => {
+    await start();
+    const connection = await openRawConnection();
+
+    await connection.send(Array(REPEATS).fill('40{"token":"alice"}'));
+    const answers = namespaceAnswers(await answersAfter(connection, REPEATS));
+
+    assert.strictEqual(sessionLookups.length, 1, `the session was looked up ${sessionLookups.length} times`);
+    assert.strictEqual(acceptedAnswers(answers).length, 1);
+    assert.strictEqual(serverSockets(), 1);
+    assert.deepStrictEqual(chat.onlinePresence(), { count: 1, userIds: [1] });
+});
+
+test('a connection that left the namespace can join it again', async () => {
+    await start();
+    const connection = await openRawConnection();
+
+    await connection.send(['40']);
+    await answersAfter(connection, 1);
+    await connection.send(['41']);
+    await settle();
+    assert.strictEqual(serverSockets(), 0);
+
+    await connection.send(['40{"token":"bob"}']);
+    const answers = namespaceAnswers(await answersAfter(connection, 2));
+
+    assert.strictEqual(acceptedAnswers(answers).length, 2, JSON.stringify(answers));
+    assert.deepStrictEqual(chat.onlinePresence(), { count: 1, userIds: [2] });
+});
+
+test('a connection whose handshake was refused can try again', async () => {
+    await start();
+    const connection = await openRawConnection();
+
+    await connection.send(['40{"token":"unreachable"}']);
+    const refused = namespaceAnswers(await answersAfter(connection, 1));
+    assert.deepStrictEqual(refused, ['44{"message":"session check failed"}']);
+
+    await connection.send(['40{"token":"alice"}']);
+    const answers = namespaceAnswers(await answersAfter(connection, 2));
+
+    assert.ok(answers[1].startsWith('40{"sid":'), JSON.stringify(answers));
+    assert.deepStrictEqual(chat.onlinePresence(), { count: 1, userIds: [1] });
 });

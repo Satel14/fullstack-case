@@ -3,6 +3,7 @@ const { userFromToken, sessionUser, tokenVersionOf } = require('../auth/token');
 const { postChatMessage } = require('./chatMessage');
 const { createRateLimiter, createTrailingThrottle } = require('./throttle');
 const { createPresence } = require('./presence');
+const { oncePerConnection } = require('./connectionClaim');
 
 let ioInstance = null;
 let presenceInstance = null;
@@ -61,7 +62,7 @@ module.exports = function (server) {
 
     ioInstance = io;
 
-    io.use(authenticateHandshake);
+    io.use(oncePerConnection(authenticateHandshake));
 
     const presence = createPresence();
     presenceInstance = presence;
