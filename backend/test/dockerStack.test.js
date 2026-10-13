@@ -27,6 +27,35 @@ const composeService = (name) => {
     return rest.slice(0, end === -1 ? rest.length : end).join('\n');
 };
 
+const unquote = (value) => value.trim().replace(/\s+#.*$/, '').replace(/^(['"])(.*)\1$/, '$2');
+
+const publishedPorts = (text) => {
+    const lines = text.split('\n');
+    const entries = [];
+    lines.forEach((line, i) => {
+        const header = line.match(/^(\s*)ports:\s*(.*)$/);
+        if (!header) {
+            return;
+        }
+        if (header[2]) {
+            entries.push(...header[2].replace(/^\[|\]$/g, '').split(',').map(unquote).filter(Boolean));
+            return;
+        }
+        const indent = header[1].length;
+        for (let j = i + 1; j < lines.length; j += 1) {
+            const next = lines[j];
+            if (next.trim() && !/^\s*#/.test(next)) {
+                if (next.search(/\S/) <= indent) {
+                    break;
+                }
+                const item = next.match(/^\s*-\s*(.*)$/);
+                entries.push(unquote(item ? item[1] : next));
+            }
+        }
+    });
+    return entries;
+};
+
 test('the frontend image is built to call the API and Socket.IO on the host it is served from', () => {
     const stage = frontendDockerfile.search(/^FROM \S+ AS build$/m);
     const build = frontendDockerfile.search(/^RUN npm run build$/m);
@@ -63,10 +92,31 @@ test('the backend refuses to start without a real JWT secret', () => {
     assert.doesNotMatch(compose, /^\s*JWT_SECRET:\s*(?!\$\{)\S/m, 'no secret-looking literal should be assigned to JWT_SECRET');
 });
 
+test('published ports are found however they are written', () => {
+    const sample = [
+        'services:',
+        '  a:',
+        '    ports:',
+        '      - "127.0.0.1:1:1"',
+        '      - 3307:3306',
+        "      - '6379:6379'",
+        '      - 8080:80 # admin',
+        '    volumes:',
+        '      - "./x:/x"',
+        '  b:',
+        '    ports: ["9000:9000", \'9001:9001\']',
+        '  c:',
+        '    ports:',
+        '      - target: 80',
+        '        published: 8081',
+    ].join('\n');
+    assert.deepStrictEqual(publishedPorts(sample), [
+        '127.0.0.1:1:1', '3307:3306', '6379:6379', '8080:80', '9000:9000', '9001:9001', 'target: 80', 'published: 8081',
+    ]);
+});
+
 test('every published port binds to loopback, except nginx\'s public port', () => {
-    const portLines = [...compose.matchAll(/^\s*- "([^"]+)"\s*$/gm)]
-        .map((m) => m[1])
-        .filter((p) => /^[0-9.]*:?\d+:\d+$/.test(p));
+    const portLines = publishedPorts(compose);
     assert.ok(portLines.length > 0, 'the compose file should publish at least one port');
     portLines.forEach((p) => {
         if (p === '3009:3009') {
