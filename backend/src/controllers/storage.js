@@ -185,7 +185,7 @@ module.exports.sellItemByStorageId = async (req, res) => {
 
         if (!price) {
             console.log('[SELL] No price for color:', color);
-            return res.status(422).json({ status: 422, message: 'No price for this item color' });
+            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NO_PRICE });
         }
 
         const rateModule = await ModuleService.findModuleById(UAH_CREDIT_RATE_MODULE);

@@ -77,6 +77,24 @@ test('selling works on a database with no uah-credit-rate module row, at the rat
     });
 });
 
+test('an item whose colour has no price is refused with a message the player can read', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedSellableItem(sequelize);
+    await sequelize.query(
+        "INSERT INTO storage (userId, itemId, color, caseId, status) VALUES (1, 707, 'gold', 'dust2', 'inventory')",
+    );
+    const MESSAGE = require('../src/constant/responseMessages');
+
+    const result = await sell(2);
+
+    assert.strictEqual(result.code, 422);
+    assert.strictEqual(result.payload.message, MESSAGE.ITEM.NO_PRICE);
+    assert.match(result.payload.message, /[а-яіїєґ]/i);
+    const [[storage]] = await sequelize.query('SELECT status FROM storage WHERE id = 2');
+    assert.strictEqual(storage.status, 'inventory');
+});
+
 test('selling applies the uah-credit-rate module when the row exists', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
