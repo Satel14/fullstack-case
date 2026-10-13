@@ -67,7 +67,7 @@
             "confirmRequired": "Repeat the password",
             "confirmMismatch": "Passwords do not match",
             "emailLabel": "E-mail",
-            "emailInvalid": "Invalid email",
+            "emailInvalid": "Enter the email address in Latin characters, e.g. name@example.com",
             "emailRequired": "Enter your email",
             "chooseAvatar": "Choose an avatar",
             "agreementRequired": "Check the box",

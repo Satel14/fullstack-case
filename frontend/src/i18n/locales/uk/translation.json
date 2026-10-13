@@ -67,7 +67,7 @@
             "confirmRequired": "Повторіть введений пароль",
             "confirmMismatch": "Пароль не співпадає",
             "emailLabel": "E-mail",
-            "emailInvalid": "Це не почта",
+            "emailInvalid": "Вкажіть адресу пошти латиницею, наприклад name@example.com",
             "emailRequired": "Введіть почту",
             "chooseAvatar": "Виберіть аватарку",
             "agreementRequired": "Поставте галочку",

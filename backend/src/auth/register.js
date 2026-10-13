@@ -21,10 +21,10 @@ const requestConfirmation = async (res, {
     }
 
     const passwordHash = await Encrypt.cryptPassword(password);
-    const owner = await Users.findOne({ where: { user_email: email }, attributes: ['user_login'] });
+    const owner = await Users.findOne({ where: { user_email: email }, attributes: ['user_login', 'user_email'] });
 
     if (owner) {
-        mailSender.registrationAttemptNotice(email, { login: owner.user_login });
+        mailSender.registrationAttemptNotice(owner.user_email, { login: owner.user_login });
     } else {
         const token = await EmailVerificationService.createPending({
             login, email, passwordHash, avatar: AVATAR_IDS.includes(avatar) ? avatar : 1,

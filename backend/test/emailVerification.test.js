@@ -140,6 +140,7 @@ require.cache[mailPath].exports = {
     ...realMail,
     isEnabled: () => true,
     userRegistered: (mailTo, data) => { mailLog.push({ kind: 'welcome', mailTo, ...data }); },
+    passwordResetLink: (mailTo, data) => { mailLog.push({ kind: 'reset', mailTo, ...data }); },
     emailConfirmationLink: (mailTo, data) => { mailLog.push({ kind: 'confirm', mailTo, ...data }); },
     registrationAttemptNotice: (mailTo, data) => { mailLog.push({ kind: 'attempt', mailTo, ...data }); },
 };
@@ -147,16 +148,20 @@ require.cache[mailPath].exports = {
 const routeHandlers = () => {
     const handlers = {};
     const app = { post: (path, ...chain) => { handlers[path] = chain[chain.length - 1]; } };
-    for (const route of ['../src/auth/register', '../src/auth/confirmEmail']) {
-        try {
-            delete require.cache[require.resolve(route)];
-            require(route)(app);
-        } catch (e) {
-            if (e.code !== 'MODULE_NOT_FOUND') {
-                throw e;
-            }
+
+    delete require.cache[require.resolve('../src/auth/register')];
+    require('../src/auth/register')(app);
+
+    const confirmEmailPath = '../src/auth/confirmEmail';
+    try {
+        delete require.cache[require.resolve(confirmEmailPath)];
+        require(confirmEmailPath)(app);
+    } catch (e) {
+        if (e.code !== 'MODULE_NOT_FOUND') {
+            throw e;
         }
     }
+
     return handlers;
 };
 
@@ -238,6 +243,33 @@ test('with mail, an odd avatar cannot make a new address answer differently', as
         assert.deepStrictEqual(free, taken, JSON.stringify(avatar));
     }
     assert.ok((await pendingRows(sequelize)).every((row) => row.avatar === 1));
+});
+
+test('with mail, the attempt notice goes to the owner\'s stored address, never a lookalike or case variant typed by someone else', async () => {
+    const sequelize = await fresh();
+    await withOwner(sequelize);
+    mailLog.length = 0;
+
+    const result = await register({ login: 'someone', email: 'OWNER@E.UA' });
+
+    assert.strictEqual(result.code, 202);
+    assert.deepStrictEqual(mailLog.map((m) => [m.kind, m.mailTo, m.login]), [['attempt', 'owner@e.ua', 'owner']]);
+    assert.deepStrictEqual(await pendingRows(sequelize), []);
+});
+
+test('with mail, a non-ASCII lookalike of an address is refused as invalid before anything is stored or mailed', async () => {
+    const sequelize = await fresh();
+    await withOwner(sequelize);
+    const MESSAGE = require('../src/constant/responseMessages');
+    mailLog.length = 0;
+
+    for (const email of ['owner@é.ua', 'öwner@e.ua', 'ｏwner@e.ua']) {
+        const result = await register({ login: `l${String(Math.random()).slice(2)}`, email });
+        assert.strictEqual(result.code, 422, JSON.stringify(email));
+        assert.strictEqual(result.payload.message, MESSAGE.AUTH.EMAIL_INVALID, JSON.stringify(email));
+    }
+    assert.deepStrictEqual(await pendingRows(sequelize), []);
+    assert.deepStrictEqual(mailLog, []);
 });
 
 test('the confirmation and registration-attempt letters escape what the player typed', () => {
