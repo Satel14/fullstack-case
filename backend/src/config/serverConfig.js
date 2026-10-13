@@ -20,7 +20,7 @@ const config = {
             username: process.env.PROD_DB_USER || 'fullstack',
             password: process.env.PROD_DB_PASS,
         },
-        port: process.env.SERVER_PORT,
+        port: process.env.SERVER_PORT || '3003',
     }
 }
 

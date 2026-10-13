@@ -40,3 +40,26 @@ test('NODE_ENV set only in a .env file selects the matching config block', () =>
         fs.rmSync(tmpDir, { recursive: true, force: true });
     }
 });
+
+test('production defaults the port to 3003 when SERVER_PORT is unset', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'serverconfig-port-'));
+    try {
+        const script = `console.log(JSON.stringify(require(${JSON.stringify(SERVER_CONFIG_PATH)})));`;
+        const result = spawnSync(process.execPath, ['-e', script], {
+            cwd: tmpDir,
+            encoding: 'utf8',
+            env: {
+                PATH: process.env.PATH,
+                SystemRoot: process.env.SystemRoot,
+                NODE_ENV: 'production',
+                PROD_DB_PASS: 'irrelevant',
+            },
+        });
+
+        assert.strictEqual(result.status, 0, result.stderr);
+        const config = JSON.parse(result.stdout.trim());
+        assert.strictEqual(config.port, '3003');
+    } finally {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+});

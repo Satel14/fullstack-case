@@ -93,3 +93,13 @@ test('the backend container receives the Resend settings', () => {
     assert.match(composeService('backend'), /^ {6}RESEND_API_KEY: \$\{RESEND_API_KEY:-\}$/m);
     assert.match(composeService('backend'), /^ {6}RESEND_FROM: \$\{RESEND_FROM:-\}$/m);
 });
+
+test('the backend Dockerfile exposes the real port, not the unused default of 80', () => {
+    const backendDockerfile = read('backend/Dockerfile');
+    assert.doesNotMatch(
+        backendDockerfile,
+        /^\s*(ARG|ENV)\s+PORT\b/m,
+        'PORT is not read by the app and should not be declared',
+    );
+    assert.match(backendDockerfile, /^EXPOSE 3003 9229 9230$/m);
+});
