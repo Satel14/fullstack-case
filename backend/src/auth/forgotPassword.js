@@ -6,7 +6,7 @@ const PasswordResetService = require('../services/passwordReset');
 const { authLimiter } = require('../middleware/rateLimiters');
 const { isAcceptablePassword } = require('./credentials');
 
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
+const CLIENT_ORIGIN = (process.env.CLIENT_ORIGIN || 'http://localhost:3000').replace(/\/+$/, '');
 
 module.exports = (app) => {
     app.post('/api/profile/forgotpassword', authLimiter, async (req, res) => {

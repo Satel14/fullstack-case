@@ -52,6 +52,39 @@ test('without a mail provider the password is left alone and the reset is report
     assert.strictEqual(rows[0].password, hash, 'the password must not change when no email can carry the new one');
 });
 
+test('a site address ending in a slash still gives a reset link the site can open', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await sequelize.query(
+        "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES ('player', 'x', 'player@e.ua', 0, 0, 1)",
+    );
+
+    const mailSender = require('../src/modules/mailSender');
+    const routePath = require.resolve('../src/auth/forgotPassword');
+    const saved = { origin: process.env.CLIENT_ORIGIN, isEnabled: mailSender.isEnabled, send: mailSender.passwordResetLink };
+    const links = [];
+    process.env.CLIENT_ORIGIN = 'http://192.168.1.10:3009/';
+    mailSender.isEnabled = () => true;
+    mailSender.passwordResetLink = (to, data) => { links.push(data.link); };
+    delete require.cache[routePath];
+    try {
+        const result = await call(forgotPasswordHandler(), { email: 'player@e.ua' });
+
+        assert.strictEqual(result.code, 200);
+        assert.strictEqual(links.length, 1);
+        assert.match(links[0], /^http:\/\/192\.168\.1\.10:3009\/reset-password\?token=[^/]+$/);
+    } finally {
+        if (saved.origin === undefined) {
+            delete process.env.CLIENT_ORIGIN;
+        } else {
+            process.env.CLIENT_ORIGIN = saved.origin;
+        }
+        mailSender.isEnabled = saved.isEnabled;
+        mailSender.passwordResetLink = saved.send;
+        delete require.cache[routePath];
+    }
+});
+
 test('the mail sender loads and reports itself disabled without an API key', () => {
     const savedKey = process.env.RESEND_API_KEY;
     process.env.RESEND_API_KEY = '';
