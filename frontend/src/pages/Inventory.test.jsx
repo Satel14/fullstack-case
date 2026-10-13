@@ -46,8 +46,9 @@ const inventoryRows = (count) => Array.from({ length: count }, (_, i) => ({
 
 beforeEach(() => {
     openNotification.mockReset();
-    getItemsInfo.mockImplementation((ids) => Promise.resolve({ data: Object.fromEntries(ids.map((id) => [id, { item_name: `Item ${id}` }])) }));
-    getItemPriceById.mockResolvedValue({ prices: { default: 10 } });
+    getItemsInfo.mockImplementation((ids) => Promise.resolve({
+        data: Object.fromEntries(ids.map((id) => [id, { item_name: `Item ${id}`, pricesInCredits: { default: 10 } }])),
+    }));
     server.sold = [];
     server.balance = 0;
     getProfileStorage.mockImplementation(({ status, limit, offset = 0 }) => {
@@ -86,6 +87,27 @@ test('selling one item puts the new balance into the store', async () => {
     fireEvent.click(first);
 
     await waitFor(() => expect(store.getState().user.balance).toBe('10.00'));
+});
+
+test('sell prices come with the item info, without a price request per row', async () => {
+    server.inventory = [[3, 1, 'default'], [2, 2, 'painted'], [1, 3, 'default']].map(([storageId, itemId, color]) => ({
+        storage_id: storageId, storage_itemId: itemId, storage_color: color, storage_status: 'inventory',
+    }));
+    getItemsInfo.mockImplementation(() => Promise.resolve({
+        data: {
+            1: { item_name: 'One', pricesInCredits: { default: 10, painted: 20 } },
+            2: { item_name: 'Two', pricesInCredits: { default: 30, painted: 45.5 } },
+            3: { item_name: 'Three', pricesInCredits: null },
+        },
+    }));
+    renderInventory();
+
+    expect(await screen.findByText('openCase.sellFor {"price":10}')).toBeInTheDocument();
+    expect(screen.getByText('openCase.sellFor {"price":45.5}')).toBeInTheDocument();
+    expect(screen.getByText('inventory.sell')).toBeInTheDocument();
+    expect(getItemsInfo).toHaveBeenCalledTimes(1);
+    expect(getItemsInfo.mock.calls[0][0].sort()).toEqual(['1', '2', '3']);
+    expect(getItemPriceById).not.toHaveBeenCalled();
 });
 
 const clickSellAll = async () => {

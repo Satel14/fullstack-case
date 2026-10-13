@@ -7,7 +7,6 @@ import map from 'lodash/map';
 import {
     getProfileStorage, sellItemByStorageId, receiveItemByStorageId, cancelWithdrawalByStorageId,
 } from '../api/all/storage';
-import { getItemPriceById } from '../api/all/item';
 import { itemInfoFetch } from '../store/actions/itemCache';
 import { updateBalance } from '../store/actions/user';
 import { computeItemPriceUAH } from '../helpers/price';
@@ -42,7 +41,6 @@ const Inventory = ({
     const [sold, setSold] = useState([]);
     const [pending, setPending] = useState([]);
     const [withdrawn, setWithdrawn] = useState([]);
-    const [prices, setPrices] = useState({});
     const [loading, setLoading] = useState(true);
     const [selling, setSelling] = useState(false);
     const [now, setNow] = useState(Date.now());
@@ -60,26 +58,7 @@ const Inventory = ({
 
     const rate = (modules && modules['uah-credit-rate']) ? modules['uah-credit-rate'].extraData : 1;
 
-    const cacheItems = (rows) => {
-        rows.forEach((r) => {
-            if (!itemCache[r.storage_itemId]) {
-                fetchItem(r.storage_itemId);
-            }
-        });
-    };
-
-    const loadPrices = async (rows) => {
-        const entries = await Promise.all(rows.map(async (r) => {
-            try {
-                const res = await getItemPriceById(r.storage_itemId);
-                const p = typeof res.prices === 'string' ? JSON.parse(res.prices) : res.prices;
-                return [r.storage_id, computeItemPriceUAH(p, r.storage_color, rate)];
-            } catch (e) {
-                return [r.storage_id, null];
-            }
-        }));
-        setPrices((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
-    };
+    const cacheItems = (rows) => Promise.all(rows.map((r) => fetchItem(r.storage_itemId)));
 
     const loadWithdrawals = async () => {
         const generation = epoch.current;
@@ -108,10 +87,9 @@ const Inventory = ({
             ]);
             const invRows = inv.data || [];
             const moneyRows = money.data || [];
-            cacheItems([...invRows, ...moneyRows]);
+            await cacheItems([...invRows, ...moneyRows]);
             setActive(invRows);
             setSold(moneyRows);
-            await loadPrices(invRows);
             await loadWithdrawals();
         } catch (e) {
             openNotification('error', t('common.error'), t('common.serverError'));
@@ -136,6 +114,8 @@ const Inventory = ({
     }, [pending.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const info = (id, field) => (itemCache[id] ? itemCache[id][field] : '');
+
+    const priceOf = (row) => computeItemPriceUAH(info(row.storage_itemId, 'pricesInCredits'), row.storage_color, rate);
 
     const onSell = async (row) => {
         if (selling) {
@@ -320,7 +300,7 @@ const Inventory = ({
         </div>
     );
 
-    const activeActions = (row) => (
+    const activeActions = (row, price) => (
         <>
             <Button
                 type="primary"
@@ -330,9 +310,7 @@ const Inventory = ({
                 disabled={selling || acting}
                 onClick={() => onSell(row)}
             >
-                {prices[row.storage_id]
-                    ? t('openCase.sellFor', { price: prices[row.storage_id] })
-                    : t('inventory.sell')}
+                {price ? t('openCase.sellFor', { price }) : t('inventory.sell')}
             </Button>
             <Button icon={<ExportOutlined />} size="small" disabled={selling || acting} onClick={() => onWithdraw(row)}>
                 {t('inventory.withdraw')}
@@ -369,7 +347,7 @@ const Inventory = ({
                                     {t('inventory.sellAll')}
                                 </Button>
                             </div>
-                            <div className="inventorypage-grid">{map(active, (r) => card(r, activeActions(r)))}</div>
+                            <div className="inventorypage-grid">{map(active, (r) => card(r, activeActions(r, priceOf(r))))}</div>
                         </>
                     ) : (
                         <Empty description={t('inventory.emptyActive')} />

@@ -22,7 +22,7 @@ jest.mock('react-i18next', () => ({
 
 jest.mock('../api/all/ws', () => ({ __esModule: true, default: {}, reconnectSocket: jest.fn() }));
 jest.mock('../components/mini/openNotification', () => jest.fn());
-jest.mock('../api/all/item', () => ({ getItemsInfo: jest.fn(), getItemPriceById: jest.fn() }));
+jest.mock('../api/all/item', () => ({ getItemsInfo: jest.fn() }));
 jest.mock('../api/all/storage', () => ({
     getProfileStorage: jest.fn(),
     sellItemByStorageId: jest.fn(),
@@ -36,7 +36,7 @@ const {
 } = require('../api/all/storage');
 
 const sellItemByStorageIdMock = () => sellItemByStorageId;
-const { getItemsInfo, getItemPriceById } = require('../api/all/item');
+const { getItemsInfo } = require('../api/all/item');
 
 const server = { rows: [], clockAhead: 0 };
 const serverNow = () => new Date(Date.now() + server.clockAhead).toISOString();
@@ -48,7 +48,6 @@ beforeEach(() => {
     server.clockAhead = 0;
     openNotification.mockReset();
     getItemsInfo.mockImplementation((ids) => Promise.resolve({ data: Object.fromEntries(ids.map((id) => [id, { item_name: `Item ${id}` }])) }));
-    getItemPriceById.mockResolvedValue({ prices: { default: 10 } });
     getProfileStorage.mockImplementation(({ status }) => Promise.resolve({
         status: 200, data: server.rows.filter((r) => r.storage_status === status), serverNow: serverNow(),
     }));
