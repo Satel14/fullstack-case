@@ -41,6 +41,10 @@ test('nginx sends the API to the backend and everything else to the frontend', (
     assert.match(composeService('nginx'), /ports:\s*\n\s*- "3009:3009"/);
 });
 
+test('the site address used in password-reset links can be set to the one players open', () => {
+    assert.match(composeService('backend'), /^ {6}CLIENT_ORIGIN: \$\{CLIENT_ORIGIN:-http:\/\/localhost:3009\}$/m);
+});
+
 test('the frontend container is reached only through nginx', () => {
     assert.doesNotMatch(composeService('frontend'), /^\s+ports:/m);
 });
