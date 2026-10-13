@@ -13,7 +13,9 @@ import roles from '../enum/role';
 import Profile from './Profile';
 
 jest.mock('react-i18next', () => ({
-    withTranslation: () => (Component) => (props) => <Component {...props} t={(key) => key} />,
+    withTranslation: () => (Component) => (props) => (
+        <Component {...props} t={(key, options) => (options ? `${key} ${JSON.stringify(options)}` : key)} />
+    ),
     useTranslation: () => ({ t: (key) => key }),
     initReactI18next: { type: '3rdParty', init: () => {} },
 }));
@@ -191,6 +193,30 @@ test('an answer for a player the page has already left does not replace the play
     expect(screen.queryByText('first')).toBeNull();
     expect(screen.getByText('second')).toBeInTheDocument();
     expect(avatarUrls(container)).toEqual(['url(/img/avatars/4.png)']);
+});
+
+test('an item without a name is shown under the translated item placeholder', async () => {
+    getUserById.mockResolvedValue({
+        data: {
+            user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
+        },
+    });
+    getStorageLastItemsByUserId.mockResolvedValue({
+        data: [{
+            storage_id: 1, storage_itemId: 1507, storage_color: 'default', storage_caseId: 1,
+        }],
+    });
+    getItemsInfo.mockResolvedValue({
+        data: { 1507: { item_name: '', item_imagePath: '/img/items/x.png', pricesInCredits: { default: 7 } } },
+    });
+
+    const { container } = renderProfile('5');
+
+    await screen.findByText('testopen');
+    const placeholderName = 'item.placeholder {"id":1507}';
+    expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe(placeholderName);
+    expect(container.querySelector('.casehistory-itemlist_item span').textContent).toBe(placeholderName);
+    expect(screen.queryByText('Item #1507')).toBeNull();
 });
 
 test('every item of the history is loaded with one request', async () => {

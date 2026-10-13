@@ -52,7 +52,9 @@ const parsePrices = (prices) => {
 
 const dropValue = (item, color) => computeItemPriceUAH(parsePrices(item.pricesInCredits), color) || 0;
 
-const pickBestDrop = (storageItems, itemInfoById) => {
+const itemName = (item, storageItem, t) => item.item_name || t('item.placeholder', { id: storageItem.storage_itemId });
+
+const pickBestDrop = (storageItems, itemInfoById, t) => {
     let best = null;
 
     storageItems.forEach((storageItem) => {
@@ -64,7 +66,7 @@ const pickBestDrop = (storageItems, itemInfoById) => {
         const candidate = {
             storageId: Number(storageItem.storage_id || 0),
             rank: dropValue(item, storageItem.storage_color),
-            name: item.item_name || `Item #${storageItem.storage_itemId}`,
+            name: itemName(item, storageItem, t),
             imagePath: item.item_imagePath || '',
         };
 
@@ -86,7 +88,7 @@ const pickBestDrop = (storageItems, itemInfoById) => {
     return best;
 };
 
-const buildHistoryItems = (storageItems, itemInfoById) => storageItems
+const buildHistoryItems = (storageItems, itemInfoById, t) => storageItems
     .map((storageItem) => {
         const item = itemInfoById[storageItem.storage_itemId];
         if (!item) {
@@ -95,7 +97,7 @@ const buildHistoryItems = (storageItems, itemInfoById) => storageItems
 
         return {
             key: storageItem.storage_id,
-            name: item.item_name || `Item #${storageItem.storage_itemId}`,
+            name: itemName(item, storageItem, t),
             imagePath: item.item_imagePath || '',
         };
     })
@@ -183,8 +185,9 @@ class Profile extends Component {
             .map((itemId, index) => [itemId, items[index]])
             .filter(([, item]) => !item.placeholder));
 
-        const bestDrop = pickBestDrop(storageItems, itemInfoById);
-        const historyItems = buildHistoryItems(storageItems, itemInfoById);
+        const { t } = this.props;
+        const bestDrop = pickBestDrop(storageItems, itemInfoById, t);
+        const historyItems = buildHistoryItems(storageItems, itemInfoById, t);
 
         if (!isCurrent()) {
             return;
