@@ -29,6 +29,13 @@ test('the committed casePrices.json holds the prices the committed priceMap.json
     assert.deepStrictEqual(generated().casePrices, readJson('casePrices.json'));
 });
 
+test('the committed priceMap.json prices every item of the image tree under its id', () => {
+    const { enumerateItems } = require('../scripts/lib/enumerateItems');
+    const { priceMapGaps } = require('../scripts/lib/priceMapCoverage');
+
+    assert.deepStrictEqual(priceMapGaps(enumerateItems(), readJson('priceMap.json')), { missing: [], mismatched: [] });
+});
+
 test('the committed casePrices.json prices every case in _all.js and nothing else', () => {
     const allCases = require('../src/constant/cases/_all');
     assert.deepStrictEqual(Object.keys(readJson('casePrices.json')).sort(), Object.keys(allCases).sort());

@@ -2,19 +2,16 @@ const fs = require('fs');
 const path = require('path');
 const { enumerateItems } = require('./lib/enumerateItems');
 const { buildPriceEntry, serializePriceMap } = require('./lib/priceEntry');
+const { requirePriceMapCoverage } = require('./lib/priceMapCoverage');
 const { assertMigrationsApplied } = require('../src/db/migrator');
 
 const DATA_DIR = path.join(__dirname, 'data');
 const MARKET_FILE = path.join(DATA_DIR, 'market-usd.json');
-const OUT_FILE = path.join(DATA_DIR, 'priceMap.json');
+const PRICE_MAP_FILE = path.join(DATA_DIR, 'priceMap.json');
 const FALLBACK_RATE = 41;
 
-const loadMarket = () => {
-    if (!fs.existsSync(MARKET_FILE)) {
-        console.warn(`⚠ ${MARKET_FILE} not found — every item will use the fallback model.`);
-        return { rate: FALLBACK_RATE, index: new Map() };
-    }
-    const raw = JSON.parse(fs.readFileSync(MARKET_FILE, 'utf8'));
+const loadMarket = (marketFile) => {
+    const raw = JSON.parse(fs.readFileSync(marketFile, 'utf8'));
     const index = new Map();
     for (const it of raw.items) {
         const price = parseFloat(it.price);
@@ -23,36 +20,10 @@ const loadMarket = () => {
     return { rate: raw.rate || FALLBACK_RATE, index };
 };
 
-const upsertPrices = async (priceMap) => {
-    let InsiderPrices;
-    let sequelize;
-    try {
-        InsiderPrices = require('../src/models/insiderPrices');
-        sequelize = require('../src/config/db');
-        await sequelize.authenticate();
-    } catch (e) {
-        console.warn(`⚠ DB not reachable (${e.message}); skipping insiderPrices upsert. priceMap.json is still written.`);
-        return;
-    }
-    await assertMigrationsApplied(sequelize);
-    let n = 0;
-    for (const id of Object.keys(priceMap)) {
-        const p = priceMap[id];
-        await InsiderPrices.upsert({
-            name: p.name,
-            pricesInCredits: JSON.stringify({ default: p.default, painted: p.painted }),
-        });
-        if (++n % 200 === 0) console.log(`  ✓ ${n} prices upserted...`);
-    }
-    console.log(`✓ Upserted ${n} insiderPrices rows`);
-    await sequelize.close();
-};
+const rebuildPriceMap = ({ marketFile, priceMapFile, items, log }) => {
+    const { rate, index } = loadMarket(marketFile);
+    log.log(`💱 rate=${rate}, market entries=${index.size}`);
 
-const main = async () => {
-    const { rate, index } = loadMarket();
-    console.log(`💱 rate=${rate}, market entries=${index.size}`);
-
-    const items = enumerateItems();
     const priceMap = {};
     let matched = 0;
     for (const item of items) {
@@ -67,15 +38,75 @@ const main = async () => {
         };
     }
 
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(OUT_FILE, serializePriceMap(priceMap));
+    fs.mkdirSync(path.dirname(priceMapFile), { recursive: true });
+    fs.writeFileSync(priceMapFile, serializePriceMap(priceMap));
     const pct = ((matched / items.length) * 100).toFixed(1);
-    console.log(`✅ priceMap.json: ${items.length} items, ${matched} matched to market (${pct}%), ${items.length - matched} fallback`);
-
-    await upsertPrices(priceMap);
+    log.log(`✅ priceMap.json: ${items.length} items, ${matched} matched to market (${pct}%), ${items.length - matched} fallback`);
+    return priceMap;
 };
 
-main().catch((e) => {
-    console.error('❌ buildPriceMap failed:', e.message);
-    process.exit(1);
-});
+const committedPriceMap = ({ marketFile, priceMapFile, items, log }) => {
+    if (!fs.existsSync(priceMapFile)) {
+        throw new Error(
+            `Neither ${marketFile} nor ${priceMapFile} exists. `
+            + 'Run node scripts/fetchMarketPrices.js first; no item is priced without market data.',
+        );
+    }
+    const priceMap = JSON.parse(fs.readFileSync(priceMapFile, 'utf8'));
+    requirePriceMapCoverage(items, priceMap);
+    log.log(`📄 No market-usd.json, so priceMap.json is not rebuilt: loading its ${Object.keys(priceMap).length} committed prices.`);
+    return priceMap;
+};
+
+const pricesFor = ({
+    marketFile = MARKET_FILE, priceMapFile = PRICE_MAP_FILE, items = enumerateItems(), log = console,
+} = {}) => (
+    fs.existsSync(marketFile)
+        ? { priceMap: rebuildPriceMap({ marketFile, priceMapFile, items, log }), source: 'market' }
+        : { priceMap: committedPriceMap({ marketFile, priceMapFile, items, log }), source: 'committed' }
+);
+
+const upsertPrices = async (priceMap, { required, log = console }) => {
+    const InsiderPrices = require('../src/models/insiderPrices');
+    const sequelize = require('../src/config/db');
+    try {
+        await sequelize.authenticate();
+    } catch (e) {
+        const reason = e.message || e.name;
+        if (required) {
+            throw new Error(`DB not reachable (${reason}); the committed prices were not loaded into insiderPrices.`);
+        }
+        log.warn(`⚠ DB not reachable (${reason}); skipping insiderPrices upsert. priceMap.json is still written.`);
+        return;
+    }
+    await assertMigrationsApplied(sequelize);
+    let n = 0;
+    for (const id of Object.keys(priceMap)) {
+        const p = priceMap[id];
+        await InsiderPrices.upsert({
+            name: p.name,
+            pricesInCredits: JSON.stringify({ default: p.default, painted: p.painted }),
+        });
+        if (++n % 200 === 0) log.log(`  ✓ ${n} prices upserted...`);
+    }
+    log.log(`✓ Upserted ${n} insiderPrices rows`);
+};
+
+const main = async () => {
+    const sequelize = require('../src/config/db');
+    try {
+        const { priceMap, source } = pricesFor();
+        await upsertPrices(priceMap, { required: source === 'committed' });
+    } finally {
+        await sequelize.close();
+    }
+};
+
+if (require.main === module) {
+    main().catch((e) => {
+        console.error('❌ buildPriceMap failed:', e.message);
+        process.exit(1);
+    });
+}
+
+module.exports = { pricesFor, upsertPrices };

@@ -20,6 +20,7 @@ The backend applies migrations on start. The database starts empty, so fill it o
 <code>docker exec fullstack_case_backend sh -c "npm run seed && node scripts/buildPriceMap.js && node scripts/seedCases.js"</code>
 
 then <code>docker compose restart backend</code> to load the items into Redis. `seedCases.js` resets case counters and
-admin edits, so run it only on a fresh database. `buildPriceMap.js` needs `backend/scripts/data/market-usd.json`
-(gitignored, produced by `node scripts/fetchMarketPrices.js`). Email is off unless `RESEND_API_KEY` is set on the
-backend service, and password recovery is unavailable while it is off.
+admin edits, so run it only on a fresh database. Without `backend/scripts/data/market-usd.json` (gitignored, produced
+by `node scripts/fetchMarketPrices.js`) `buildPriceMap.js` loads the committed `priceMap.json` instead of rebuilding
+it. Email is off unless `RESEND_API_KEY` is set on the backend service, and password recovery is unavailable while it
+is off.
