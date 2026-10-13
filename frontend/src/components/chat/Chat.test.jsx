@@ -134,6 +134,23 @@ test('a message that is not a string does not crash the chat', () => {
     expect(screen.getByText('still here')).toBeInTheDocument();
 });
 
+test('the online list follows the roster the server sends', () => {
+    const handlers = renderLive();
+
+    act(() => { handlers['user-on'](['alice', 'bob']); });
+    fireEvent.click(screen.getByText('chat.whoIsHere'));
+
+    expect(screen.getByText('alice')).toBeInTheDocument();
+    expect(screen.getByText('bob')).toBeInTheDocument();
+
+    act(() => { handlers['user-on'](['bob', 'carol']); });
+
+    expect(screen.queryByText('alice')).toBeNull();
+    expect(screen.getByText('bob')).toBeInTheDocument();
+    expect(screen.getByText('carol')).toBeInTheDocument();
+    expect(document.querySelector('.chat-header_name__online').textContent).toBe('2');
+});
+
 test('smileys and image links still render after escaping', () => {
     serverReplies({ ok: true });
 

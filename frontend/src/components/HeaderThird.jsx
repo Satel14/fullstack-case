@@ -8,7 +8,7 @@ import { renderItemProp } from '../helpers/Case';
 import ItemColor from './mini/ItemColor';
 import { getStorageLastItemsWithUserInfo } from '../api/all/storage';
 import { itemInfoFetch, addItemsToCache } from '../store/actions/itemCache';
-import { default as socket } from '../api/all/ws';
+import socket from '../api/all/ws';
 
 const { Header } = Layout;
 

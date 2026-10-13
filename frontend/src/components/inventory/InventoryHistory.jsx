@@ -32,7 +32,12 @@ class InventoryHistory extends React.Component {
     };
   }
 
-  // eslint-disable-next-line react/sort-comp
+  async componentDidMount() {
+    if (this.state.id) {
+      await this.getData();
+    }
+  }
+
   getShortInfoItem(id, fieldName = null) {
     const { itemCache } = this.props;
 
@@ -44,44 +49,6 @@ class InventoryHistory extends React.Component {
     }
 
     return '';
-  }
-
-  itemImage(id) {
-    const imagePath = this.getShortInfoItem(id, 'item_imagePath');
-    return imagePath ? `url(${encodeURI(imagePath)})` : 'none';
-  }
-
-  addItemsToCache(arrayItemIds) {
-    arrayItemIds.forEach((id) => this.props.itemInfoFetch(id));
-  }
-
-  async componentDidMount() {
-    if (this.state.id) {
-      await this.getData();
-    }
-  }
-
-  async loadMore() {
-    const { offset, openCaseHistory, id } = this.state;
-    const historyItems = await getStorageLastItemsByUserId(
-      id,
-      loadItemsCount,
-      offset,
-    ).then(({ data }) => data);
-
-    const massiveIds = [];
-
-    historyItems.forEach((element) => {
-      massiveIds.push(element.storage_itemId);
-    });
-
-    this.addItemsToCache(massiveIds);
-
-    this.setState({
-      openCaseHistory: [...openCaseHistory, ...historyItems],
-      offset: offset + loadItemsCount,
-      loadMoreButton: !(historyItems.length < loadItemsCount),
-    });
   }
 
   async getData() {
@@ -106,6 +73,38 @@ class InventoryHistory extends React.Component {
       openCaseHistory: historyItems,
       fetching: false,
       offset: loadItemsCount,
+      loadMoreButton: !(historyItems.length < loadItemsCount),
+    });
+  }
+
+  itemImage(id) {
+    const imagePath = this.getShortInfoItem(id, 'item_imagePath');
+    return imagePath ? `url(${encodeURI(imagePath)})` : 'none';
+  }
+
+  addItemsToCache(arrayItemIds) {
+    arrayItemIds.forEach((id) => this.props.itemInfoFetch(id));
+  }
+
+  async loadMore() {
+    const { offset, openCaseHistory, id } = this.state;
+    const historyItems = await getStorageLastItemsByUserId(
+      id,
+      loadItemsCount,
+      offset,
+    ).then(({ data }) => data);
+
+    const massiveIds = [];
+
+    historyItems.forEach((element) => {
+      massiveIds.push(element.storage_itemId);
+    });
+
+    this.addItemsToCache(massiveIds);
+
+    this.setState({
+      openCaseHistory: [...openCaseHistory, ...historyItems],
+      offset: offset + loadItemsCount,
       loadMoreButton: !(historyItems.length < loadItemsCount),
     });
   }

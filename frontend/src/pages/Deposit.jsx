@@ -51,6 +51,11 @@ class Deposit extends Component {
         this.loadHistory();
     }
 
+    getPromocodePage() {
+        const { history } = this.props;
+        history.push('/promocode');
+    }
+
     async loadHistory() {
         try {
             const resp = await getDepositHistory();
@@ -77,11 +82,6 @@ class Deposit extends Component {
         }
 
         this.props.history.push('/payment', { amount });
-    }
-
-    getPromocodePage() {
-        const { history } = this.props;
-        history.push('/promocode');
     }
 
     render() {

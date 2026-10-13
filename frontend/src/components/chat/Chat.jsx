@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { CommentOutlined, SendOutlined, SmileOutlined } from '@ant-design/icons';
 import UserOnline from './UserOnline';
 import roles from '../../enum/role';
-import { default as socket, connectSocket } from '../../api/all/ws';
+import socket, { connectSocket } from '../../api/all/ws';
 import smiles from '../../data/smiles';
 import { Rules } from './Rules';
 import { getProfileFetch } from '../../store/actions/user';
@@ -52,12 +52,13 @@ function TextFilter(raw) {
     return value;
 }
 
-const MessageBlock = ({ message, id, nickname }) => (
+const MessageBlock = ({ message: text, id, nickname }) => (
     <div className="chat-messages-list_item__msg">
         <Link to={`/profile/${id}`}>{nickname}</Link>
         <div
+            // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{
-                __html: TextFilter(message),
+                __html: TextFilter(text),
             }}
         />
     </div>
@@ -143,17 +144,17 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             return undefined;
         }
         const handler = ({
- login, msg, id, avatar, time,
-}) => {
+            login: author, msg: text, id: authorId, avatar: authorAvatar, time,
+        }) => {
             setChat((prev) => {
                 const base = prev.length > 150 ? prev.slice(prev.length - 150) : prev;
                 return [
                     ...base,
                     {
-                        login,
-                        msg,
-                        id,
-                        avatar,
+                        login: author,
+                        msg: text,
+                        id: authorId,
+                        avatar: authorAvatar,
                         time,
                     },
                 ];
@@ -256,8 +257,8 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                             content={(
                                 <div className="online-users-popover">
                                     {usersOnline && usersOnline.length > 0
-                                        ? usersOnline.map((el, index) => (
-                                            <div key={index}>
+                                        ? usersOnline.map((el) => (
+                                            <div key={el}>
                                                 <UserOnline nickname={el} />
                                             </div>
                                         ))
@@ -286,6 +287,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             <div className="chat-messages" id="msg-scroll">
                 <ul className="chat-messages-list">
                     {chat.map((el, index) => (
+                        // eslint-disable-next-line react/no-array-index-key
                         <li key={`chat${index}`} className="chat-messages-list_item">
                             <MessageBlock nickname={el.login} id={el.id} message={el.msg} />
                         </li>
@@ -314,6 +316,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                                         <div className="smiles-list">
                                             {smiles.map((smile, i) => (
                                                 <div
+                                                    // eslint-disable-next-line react/no-array-index-key
                                                     key={`smile${i}`}
                                                     style={{
                                                         backgroundImage: `url(${smile.url})`,

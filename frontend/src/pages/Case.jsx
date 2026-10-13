@@ -127,6 +127,15 @@ class Case extends Component {
         });
     }
 
+    async getProvablyFairInfo() {
+        try {
+            const res = await getProvablyFairState();
+            this.setState({ serverSeedHash: res.data.active.serverSeedHash });
+        } catch (e) {
+            // anonymous users get 401/403 here - render no badge
+        }
+    }
+
     async refreshCase() {
         const { id } = this.state;
         try {
@@ -138,15 +147,6 @@ class Case extends Component {
             return false;
         } catch (e) {
             return false;
-        }
-    }
-
-    async getProvablyFairInfo() {
-        try {
-            const res = await getProvablyFairState();
-            this.setState({ serverSeedHash: res.data.active.serverSeedHash });
-        } catch (e) {
-            // anonymous users get 401/403 here - render no badge
         }
     }
 

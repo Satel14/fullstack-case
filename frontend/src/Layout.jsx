@@ -1,13 +1,12 @@
-/* eslint-disable-next-line react/no-children-prop */
 import React from 'react';
 import { Layout } from 'antd';
+import { Link } from 'react-router-dom';
 import ContentLayout from './components/ContentLayout';
 import MenuLayoutSlider from './components/MenuLayoutSlider';
 import HeaderSecond from './components/HeaderSecond';
 import FooterLayout from './components/FooterLayout';
 import HeaderThird from './components/HeaderThird';
-import Chat from './components/chat/Chat';
-import { Link } from 'react-router-dom';
+import ConnectedChat from './components/chat/Chat';
 
 const { Sider, Content } = Layout;
 export default class App extends React.Component {
@@ -81,7 +80,7 @@ export default class App extends React.Component {
             <Content className="layout-content-max">
               <HeaderSecond />
               <HeaderThird />
-              <ContentLayout children={this.props.children} />
+              <ContentLayout>{this.props.children}</ContentLayout>
               <FooterLayout />
             </Content>
             <Sider
@@ -93,7 +92,7 @@ export default class App extends React.Component {
               trigger={null}
               collapsedWidth={0}
             >
-              <Chat enabled={!collapsedChat} />
+              <ConnectedChat enabled={!collapsedChat} />
             </Sider>
           </Layout>
         </Layout>

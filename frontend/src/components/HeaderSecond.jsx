@@ -10,7 +10,7 @@ import { withTranslation } from 'react-i18next';
 import { isAuthorized } from '../helpers/Player';
 import { logoutProfile, updateBalance } from '../store/actions/user';
 import { API_URL } from '../api/config';
-import { default as socket } from '../api/all/ws';
+import socket from '../api/all/ws';
 
 const { Header } = Layout;
 

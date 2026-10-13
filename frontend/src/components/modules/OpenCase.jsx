@@ -131,31 +131,21 @@ class OpenCase extends Component {
         this.blockRef = React.createRef();
         this.timers = [];
         this.rafId = null;
-        this._mounted = false;
+        this.mounted = false;
     }
 
     componentDidMount() {
-        this._mounted = true;
+        this.mounted = true;
     }
 
     componentWillUnmount() {
-        this._mounted = false;
+        this.mounted = false;
         this.clearTimers();
     }
 
-    clearTimers() {
-        this.timers.forEach((id) => clearTimeout(id));
-        this.timers = [];
-        if (this.rafId) {
-            cancelAnimationFrame(this.rafId);
-            this.rafId = null;
-        }
-    }
-
-    safeSetState(patch) {
-        if (this._mounted) {
-            this.setState(patch);
-        }
+    onChangeRadio(e) {
+        const { value } = e.target;
+        this.setState({ openCount: value });
     }
 
     getShortInfoItem(id, fieldName) {
@@ -176,6 +166,65 @@ class OpenCase extends Component {
         }
 
         return '';
+    }
+
+    getBack() {
+        this.clearTimers();
+        this.setState({
+            openMethod: '',
+            load: false,
+            randomItemsList: [],
+            winner: null,
+            positions: [],
+            recenter: false,
+            sold: [],
+            loadIndex: null,
+            loadItem: false,
+            loadAll: false,
+            clicked: false,
+            openCount: '1',
+            prices: [],
+        });
+    }
+
+    getLoginPage() {
+        const { history } = this.props;
+        if (history) {
+            history.push('/login');
+        }
+    }
+
+    getSummAll() {
+        const { prices } = this.state;
+        let sum = 0.0;
+
+        for (let index = 0; index < prices.length; index++) {
+            const element = parseFloat(prices[index]);
+            if (element) {
+                sum += element;
+            }
+        }
+
+        if (sum === 0.0) {
+            return null;
+        }
+
+        return sum.toFixed(2);
+    }
+
+    clearTimers() {
+        this.timers.forEach((id) => clearTimeout(id));
+        this.timers = [];
+        if (this.rafId) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
+        }
+    }
+
+    safeSetState(patch) {
+        if (this.mounted) {
+            this.setState(patch);
+        }
     }
 
     async openFastMethod() {
@@ -205,25 +254,6 @@ class OpenCase extends Component {
                 loading: false,
             });
         }));
-    }
-
-    getBack() {
-        this.clearTimers();
-        this.setState({
-            openMethod: '',
-            load: false,
-            randomItemsList: [],
-            winner: null,
-            positions: [],
-            recenter: false,
-            sold: [],
-            loadIndex: null,
-            loadItem: false,
-            loadAll: false,
-            clicked: false,
-            openCount: '1',
-            prices: [],
-        });
     }
 
     resetView() {
@@ -261,13 +291,6 @@ class OpenCase extends Component {
         const { onCaseChanged } = this.props;
         if (onCaseChanged) {
             onCaseChanged();
-        }
-    }
-
-    getLoginPage() {
-        const { history } = this.props;
-        if (history) {
-            history.push('/login');
         }
     }
 
@@ -372,29 +395,6 @@ class OpenCase extends Component {
         window.HeaderSecond.changeBalance(result.balance);
         this.caseChanged();
         return true;
-    }
-
-    onChangeRadio(e) {
-        const { value } = e.target;
-        this.setState({ openCount: value });
-    }
-
-    getSummAll() {
-        const { prices } = this.state;
-        let sum = 0.0;
-
-        for (let index = 0; index < prices.length; index++) {
-            const element = parseFloat(prices[index]);
-            if (element) {
-                sum += element;
-            }
-        }
-
-        if (sum === 0.0) {
-            return null;
-        }
-
-        return sum.toFixed(2);
     }
 
     async openScrollMethod() {
@@ -671,7 +671,7 @@ class OpenCase extends Component {
                                         {winner && winner.map((w, i) => {
                                             const isSold = this.state.sold.includes(i);
                                             return (
-                                            <div key={`winner-${i}`} className={`opencase-result__item${isSold ? ' selled' : ''}`}>
+                                            <div key={`winner-${w.storageId}`} className={`opencase-result__item${isSold ? ' selled' : ''}`}>
                                                 <div
                                                     className="opencase-result__img"
                                                     style={{
@@ -772,6 +772,7 @@ class OpenCase extends Component {
                                                     const pos = this.state.positions[listIndex] || { spin: 140, center: 140 };
                                                     return (
                                                     <div
+                                                        // eslint-disable-next-line react/no-array-index-key
                                                         key={`case-block-${listIndex}`}
                                                         className="opencase-block"
                                                         ref={listIndex === 0 ? this.blockRef : null}
@@ -787,6 +788,7 @@ class OpenCase extends Component {
                                                         >
                                                             {randomList.map((item, i) => (
                                                                 <div
+                                                                    // eslint-disable-next-line react/no-array-index-key
                                                                     key={`scroll-item-${listIndex}-${i}`}
                                                                     className={`casepage-itemlist_item rc-${item.rare}`}
                                                                     style={{ backgroundImage: `url(${this.getImagePath(item.id)})` }}

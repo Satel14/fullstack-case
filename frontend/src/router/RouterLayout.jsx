@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import { BrowserRouter } from 'react-router-dom';
+import { connect } from 'react-redux';
 import routes from './routes';
 import AppSwitch from './AppSwitch';
 import Layout from '../Layout.jsx';
-import { connect } from 'react-redux';
 import { isAuthorized } from '../helpers/Player';
 import Banned from '../components/Banned';
 import ErrorPage from '../pages/ErrorPage';
@@ -25,17 +25,9 @@ class RouterLayout extends Component {
     async componentDidMount() {
         try {
             await this.props.getAllModules();
-            this.updateOnline();
             await this.props.getProfileFetch();
         } catch (error) {
             console.error('Error fetching modules or profile:', error);
-        }
-    }
-
-    updateOnline() {
-        const { user } = this.props;
-        if (isAuthorized(user)) {
-            console.log('profileIsOnline');
         }
     }
 

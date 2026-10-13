@@ -3,14 +3,14 @@ import {
  Input, Radio, Checkbox, Button,
 } from 'antd';
 import map from 'lodash/map';
-import { getAllCases } from '../api/all/cases';
-import Loader from '../components/mini/Loader';
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { withTranslation } from 'react-i18next';
+import Flip from 'react-reveal/Flip';
+import { getAllCases } from '../api/all/cases';
+import Loader from '../components/mini/Loader';
 import H2A from '../components/mini/H2A';
 import CaseMini from '../components/mini/CaseMini';
 import { effectivePrice, hasDiscount } from '../components/mini/CasePrice';
-import Flip from 'react-reveal/Flip';
 
 const filteredCases = (categoryId, cases) => cases.filter((item) => item.case_categoryId === categoryId);
 
@@ -39,12 +39,54 @@ class Cases extends Component {
         this.getData();
     }
 
+    componentWillUnmount() {
+        this.mounted = false;
+    }
+
+    onChangeText(e) {
+        const { value } = e.target;
+        const { sortOptions } = this.state;
+
+        this.setState({
+            sortOptions: { ...sortOptions, text: value },
+        }, () => this.updateSorts());
+    }
+
+    onChangeCheckbox(e) {
+        const { checked } = e.target;
+        const { sortOptions } = this.state;
+
+        this.setState({
+            sortOptions: { ...sortOptions, discount: checked },
+        }, () => this.updateSorts());
+    }
+
+    onChangeRadio(e) {
+        const { value } = e.target;
+        const { sortOptions } = this.state;
+
+        this.setState({
+            sortOptions: { ...sortOptions, price: value },
+        }, () => this.updateSorts());
+    }
+
+    onClickRadio(e) {
+        const { value } = e.target;
+        if (this.state.sortOptions.price === value) {
+            const { sortOptions } = this.state;
+
+            this.setState({
+                sortOptions: { ...sortOptions, price: '' },
+            },
+                () => this.updateSorts());
+        }
+    }
+
     getData() {
         this.setState({ fetching: true });
 
         getAllCases().then((data) => {
            if (this.mounted) {
-              console.log('Cases data received:', data);
               this.setState({
                   allCases: data.data || [],
                   categories: data.categories || [],
@@ -60,10 +102,6 @@ class Cases extends Component {
                this.setState({ fetching: false });
            }
         });
-    }
-
-    componentWillUnmount() {
-        this.mounted = false;
     }
 
     setInitialSortOptions() {
@@ -142,45 +180,6 @@ class Cases extends Component {
             sortedCases: newBobi,
             sortOptions: { ...sortOptions, resetButton: true },
         });
-    }
-
-    onChangeText(e) {
-        const { value } = e.target;
-        const { sortOptions } = this.state;
-
-        this.setState({
-            sortOptions: { ...sortOptions, text: value },
-        }, () => this.updateSorts());
-    }
-
-    onChangeCheckbox(e) {
-        const { checked } = e.target;
-        const { sortOptions } = this.state;
-
-        this.setState({
-            sortOptions: { ...sortOptions, discount: checked },
-        }, () => this.updateSorts());
-    }
-
-    onChangeRadio(e) {
-        const { value } = e.target;
-        const { sortOptions } = this.state;
-
-        this.setState({
-            sortOptions: { ...sortOptions, price: value },
-        }, () => this.updateSorts());
-    }
-
-    onClickRadio(e) {
-        const { value } = e.target;
-        if (this.state.sortOptions.price === value) {
-            const { sortOptions } = this.state;
-
-            this.setState({
-                sortOptions: { ...sortOptions, price: '' },
-            },
-                () => this.updateSorts());
-        }
     }
 
     renderCatalogue() {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Fade from 'react-reveal/Fade';
 import { Link } from 'react-router-dom';
-import Loader from '../components/mini/Loader';
 import { useTranslation } from 'react-i18next';
+import Loader from '../components/mini/Loader';
 import { getArticleById } from '../api/all/article';
 
 const formatDate = (value) => {
