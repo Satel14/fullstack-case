@@ -11,7 +11,8 @@
         "name": "Назва",
         "type": "Тип",
         "rarity": "Рідкість",
-        "color": "Колір"
+        "color": "Колір",
+        "placeholder": "Предмет #{{id}}"
     },
     "menu": {
         "cases": "Кейси",

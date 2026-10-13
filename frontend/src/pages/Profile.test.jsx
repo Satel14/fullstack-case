@@ -150,7 +150,7 @@ test('items that could not be loaded are left out of the history and the best dr
     await screen.findByText('testopen');
     expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('profile.noDrop');
     expect(container.querySelectorAll('.casehistory-itemlist_item')).toHaveLength(0);
-    expect(screen.queryByText('Item 4242')).toBeNull();
+    expect(screen.queryByText(/4242/)).toBeNull();
 });
 
 test('an answer for a player the page has already left does not replace the player now shown', async () => {

@@ -1,5 +1,6 @@
 import { itemInfoFetch, addItemsToCache } from './itemCache';
 import { ADD_ITEM_LIST_CACHE } from '../types';
+import i18n from '../../i18n';
 
 jest.mock('../../api/all/item', () => ({
     getItemsInfo: jest.fn(),
@@ -32,7 +33,8 @@ const requestedIds = () => getItemsInfo.mock.calls.map(([ids]) => ids);
 
 const storeUpdates = (dispatch) => dispatch.mock.calls.filter(([action]) => typeof action !== 'function').length;
 
-beforeEach(() => {
+beforeEach(async () => {
+    await i18n.changeLanguage('uk');
     getItemsInfo.mockImplementation(answerWith(named(Array.from({ length: 500 }, (_, i) => String(i + 1)))));
 });
 
@@ -92,8 +94,25 @@ test('an item the server does not know gets a placeholder', async () => {
     const [known, unknown] = await Promise.all([dispatch(itemInfoFetch(1)), dispatch(itemInfoFetch(999))]);
 
     expect(known.item_name).toBe('name 1');
-    expect(unknown.item_name).toBe('Item 999');
-    expect(state.itemCache[999].item_name).toBe('Item 999');
+    expect(unknown.item_name).toBe('Предмет #999');
+    expect(state.itemCache[999].item_name).toBe('Предмет #999');
+});
+
+test('an item that cannot be loaded is named in the player\'s language, without a made-up wear or type', async () => {
+    getItemsInfo.mockRejectedValue({ error: 500 });
+    const { dispatch } = makeStore();
+
+    await i18n.changeLanguage('uk');
+    const inUkrainian = await dispatch(itemInfoFetch(41));
+    await i18n.changeLanguage('en');
+    const inEnglish = await dispatch(itemInfoFetch(42));
+
+    expect(inUkrainian).toEqual({
+        item_itemId: 41, item_name: 'Предмет #41', item_rare: '', item_type: '', placeholder: 'failed',
+    });
+    expect(inEnglish).toEqual({
+        item_itemId: 42, item_name: 'Item #42', item_rare: '', item_type: '', placeholder: 'failed',
+    });
 });
 
 test('an id the server would refuse gets a placeholder without spoiling the request for the others', async () => {
@@ -102,7 +121,7 @@ test('an id the server would refuse gets a placeholder without spoiling the requ
     const results = await Promise.all([1, undefined, 'abc', 0, 2].map((id) => dispatch(itemInfoFetch(id))));
 
     expect(requestedIds()).toEqual([['1', '2']]);
-    expect(results.map((r) => r.item_name)).toEqual(['name 1', 'Item undefined', 'Item abc', 'Item 0', 'name 2']);
+    expect(results.map((r) => r.item_name)).toEqual(['name 1', 'Предмет #undefined', 'Предмет #abc', 'Предмет #0', 'name 2']);
 });
 
 test('nothing is requested when every id is one the server would refuse', async () => {
@@ -110,7 +129,7 @@ test('nothing is requested when every id is one the server would refuse', async 
 
     const result = await dispatch(itemInfoFetch('x'));
 
-    expect(result.item_name).toBe('Item x');
+    expect(result.item_name).toBe('Предмет #x');
     expect(getItemsInfo).not.toHaveBeenCalled();
 });
 
@@ -119,8 +138,8 @@ test('a failed request gives every item in it a placeholder that the next lookup
     const { state, dispatch } = makeStore();
 
     const failed = await Promise.all([dispatch(itemInfoFetch(1)), dispatch(itemInfoFetch(2))]);
-    expect(failed.map((r) => r.item_name)).toEqual(['Item 1', 'Item 2']);
-    expect(state.itemCache[2].item_name).toBe('Item 2');
+    expect(failed.map((r) => r.item_name)).toEqual(['Предмет #1', 'Предмет #2']);
+    expect(state.itemCache[2].item_name).toBe('Предмет #2');
 
     expect((await dispatch(itemInfoFetch(2))).item_name).toBe('name 2');
     expect(state.itemCache[2].item_name).toBe('name 2');
@@ -132,7 +151,7 @@ test('an item the server does not know is not asked for again', async () => {
     const { dispatch } = makeStore();
 
     await dispatch(itemInfoFetch(999));
-    expect((await dispatch(itemInfoFetch(999))).item_name).toBe('Item 999');
+    expect((await dispatch(itemInfoFetch(999))).item_name).toBe('Предмет #999');
 
     expect(getItemsInfo).toHaveBeenCalledTimes(1);
 });

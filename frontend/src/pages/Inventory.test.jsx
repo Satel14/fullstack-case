@@ -9,6 +9,7 @@ import usersReducer from '../store/reducers/user';
 import itemCacheReducer from '../store/reducers/itemCache';
 import moduleReducer from '../store/reducers/module';
 import { LOGIN_USER } from '../store/types';
+import i18n from '../i18n';
 import Inventory from './Inventory';
 
 jest.setTimeout(20000);
@@ -109,12 +110,15 @@ test('sell prices come with the item info, without a price request per row', asy
 });
 
 test('the inventory still opens when the item lookup fails, with plain sell buttons', async () => {
+    await i18n.changeLanguage('uk');
     server.inventory = inventoryRows(2);
     getItemsInfo.mockRejectedValue({ error: 500 });
     renderInventory();
 
     expect(await screen.findAllByText('inventory.sell')).toHaveLength(2);
-    expect(screen.getAllByText('Item 1')).toHaveLength(2);
+    expect(screen.getAllByText('Предмет #1')).toHaveLength(2);
+    const metas = [...document.querySelectorAll('.inventorypage-card__meta')].map((meta) => meta.textContent.trim());
+    expect(metas).toEqual(['', '']);
     expect(screen.queryByText(/openCase.sellFor/)).toBeNull();
 });
 

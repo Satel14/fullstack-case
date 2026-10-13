@@ -15,6 +15,7 @@ jest.mock('react-i18next', () => {
     return {
         useTranslation: () => ({ t }),
         withTranslation: () => (Component) => (props) => mockReact.createElement(Component, { ...props, t }),
+        initReactI18next: { type: '3rdParty', init: () => {} },
     };
 });
 
