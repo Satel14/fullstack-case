@@ -58,6 +58,7 @@ const ProvablyFair = () => {
     const [calcResult, setCalcResult] = useState(null);
     const [calcError, setCalcError] = useState(null);
     const generation = useRef(0);
+    const mounted = useRef(true);
 
     const loadHistory = useCallback(async (mine, loaded = [], offset = 0) => {
         setHistoryLoading(true);
@@ -84,6 +85,9 @@ const ProvablyFair = () => {
     }, []);
 
     const load = useCallback(async () => {
+        if (!mounted.current) {
+            return;
+        }
         generation.current += 1;
         const mine = generation.current;
         setLoadFailed(false);
@@ -108,8 +112,12 @@ const ProvablyFair = () => {
     const loadMoreHistory = () => loadHistory(generation.current, history, historyOffset);
 
     useEffect(() => {
+        mounted.current = true;
         load();
-        return () => { generation.current += 1; };
+        return () => {
+            mounted.current = false;
+            generation.current += 1;
+        };
     }, [load]);
 
     const reportFailure = (failure) => {
@@ -170,9 +178,13 @@ const ProvablyFair = () => {
                 payload.openId = calc.openId;
             }
             const res = await verifyOpen(payload);
-            setCalcResult(res.data);
+            if (mounted.current) {
+                setCalcResult(res.data);
+            }
         } catch (e) {
-            setCalcError(isRefusal(e) ? t('provablyFair.verifyFailed') : t('common.serverError'));
+            if (mounted.current) {
+                setCalcError(isRefusal(e) ? t('provablyFair.verifyFailed') : t('common.serverError'));
+            }
         }
     };
 

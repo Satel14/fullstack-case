@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    render, screen, fireEvent, waitFor, within,
+    render, screen, fireEvent, waitFor, within, act,
 } from '@testing-library/react';
 import { Modal } from 'antd';
 import ProvablyFair from './ProvablyFair';
@@ -159,6 +159,64 @@ test('a rotation stopped by the limiter shows its reason in a single toast', asy
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Забагато запитів. Зачекайте трохи.'));
     expect(openNotification).toHaveBeenCalledTimes(1);
+});
+
+const deferred = () => {
+    let settle;
+    const promise = new Promise((resolve) => { settle = resolve; });
+    return { promise, settle };
+};
+
+let pageRenders = 0;
+
+const renderNamedPage = () => {
+    pageRenders += 1;
+    ProvablyFair.displayName = `ProvablyFairPage${pageRenders}`;
+    return render(<ProvablyFair />);
+};
+
+const settleAfterUnmount = async (unmount, pending, value) => {
+    const errors = jest.spyOn(console, 'error');
+    try {
+        unmount();
+        await act(async () => {
+            pending.settle(value);
+            await new Promise((resolve) => { setTimeout(resolve, 0); });
+        });
+        return errors.mock.calls.filter((call) => /unmounted component/.test(String(call[0]))).length;
+    } finally {
+        errors.mockRestore();
+        delete ProvablyFair.displayName;
+    }
+};
+
+test('a client seed save that finishes after the page closed loads nothing and sets no state', async () => {
+    const save = deferred();
+    api.setClientSeed.mockReturnValue(save.promise);
+    const { unmount } = renderNamedPage();
+    await screen.findAllByText('dust2');
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.save' }));
+
+    const updatesAfterUnmount = await settleAfterUnmount(unmount, save, { status: 200 });
+
+    expect(api.getProvablyFairState).toHaveBeenCalledTimes(1);
+    expect(api.getOpenHistory).toHaveBeenCalledTimes(1);
+    expect(updatesAfterUnmount).toBe(0);
+});
+
+test('a rotation that finishes after the page closed loads nothing and sets no state', async () => {
+    const rotation = deferred();
+    api.rotateSeed.mockReturnValue(rotation.promise);
+    const { unmount } = renderNamedPage();
+    await screen.findAllByText('dust2');
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.rotate' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'OK' }));
+
+    const updatesAfterUnmount = await settleAfterUnmount(unmount, rotation, { status: 200, data: {} });
+
+    expect(api.getProvablyFairState).toHaveBeenCalledTimes(1);
+    expect(api.getOpenHistory).toHaveBeenCalledTimes(1);
+    expect(updatesAfterUnmount).toBe(0);
 });
 
 const opensFrom = (firstId, count) => Array.from({ length: count }, (_, i) => ({
@@ -424,4 +482,20 @@ test('a verification the server cannot run is reported once, under the calculato
 
     expect(await screen.findByText('common.serverError')).toBeInTheDocument();
     expect(openNotification).not.toHaveBeenCalled();
+});
+
+test('a verification that finishes after the page closed sets no state', async () => {
+    const verification = deferred();
+    api.verifyOpen.mockReturnValue(verification.promise);
+    const { unmount } = renderNamedPage();
+    fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+
+    const updatesAfterUnmount = await settleAfterUnmount(unmount, verification, {
+        data: {
+            itemId: 10, color: 'default', rarity: 'Factory New', source: 'snapshot', seedMatches: true, matchesRecord: true,
+        },
+    });
+
+    expect(updatesAfterUnmount).toBe(0);
 });
