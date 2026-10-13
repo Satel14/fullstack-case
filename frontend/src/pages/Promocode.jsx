@@ -48,7 +48,7 @@ const Promocode = (props) => {
                         title={t('promocode.tooltip')}
                     >
                         {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                        <a href="#">{t('promocode.whereToGet')}</a>
+                        <a href="#" onClick={(e) => e.preventDefault()}>{t('promocode.whereToGet')}</a>
                     </Tooltip>
                 )}
             >
