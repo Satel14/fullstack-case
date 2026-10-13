@@ -133,7 +133,8 @@ class HeaderThird extends React.Component {
                                     this.getShortInfoItem(item.storage_itemId, null),
                                     item.storage_color,
                                     this.props.t,
-                                )}>
+                                )}
+                            >
                                 <Link to={`/profile/${item.storage_userId}`}>
                                     <div
                                         className={`casepage-itemlist_item r-${this.getShortInfoItem(item.storage_itemId, 'item_rare')}`}

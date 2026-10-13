@@ -19,7 +19,7 @@ const AppSwitch = ({ routes, user, fallback }) => (
                 component={route.component}
             />
         )))}
-        <Route key="404-fallback" component={fallback}/>
+        <Route key="404-fallback" component={fallback} />
     </Switch>
 );
 

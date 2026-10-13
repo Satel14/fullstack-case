@@ -120,9 +120,6 @@ export const updateBalance = (balance) => async (dispatch) => {
     dispatch({ type: UPDATE_USER_FIELD, payloadKey: 'balance', payloadData: balance });
 };
 
-
-
-
 export const updateProfileField = (fieldReduxName, fieldData) => (dispatch) => {
     let fieldRealName;
 

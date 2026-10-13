@@ -114,7 +114,7 @@ export default {
             path: '/article',
             exact: true,
             layout: Layout,
-            component: () => <Redirect to="/404"/>,
+            component: () => <Redirect to="/404" />,
         },
         {
             path: '/case/:id',
@@ -125,7 +125,7 @@ export default {
             path: '/case',
             exact: true,
             layout: Layout,
-            component: () => <Redirect to="/"/>,
+            component: () => <Redirect to="/" />,
         },
         {
             path: '/profile/:id',
@@ -136,7 +136,7 @@ export default {
             path: '/profile',
             exact: true,
             layout: Layout,
-            component: () => <Redirect to="/404"/>,
+            component: () => <Redirect to="/404" />,
         },
         {
             path: '/top',

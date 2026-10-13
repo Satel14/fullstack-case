@@ -44,4 +44,3 @@ const usersReducer = (prevState = initialState, action) => {
 };
 
 export default usersReducer;
-

@@ -27,11 +27,21 @@ const openNotification = require('../components/mini/openNotification');
 const { getBonusList, activateBonus } = require('../api/all/bonus');
 
 const catalogue = (overrides = {}) => [
-    { id: 'daily', kind: 'daily', amount: 50, claimed: false, available: true },
-    { id: 'welcome', kind: 'once', amount: 100, claimed: false, available: true },
-    { id: 'receive-info', kind: 'once', amount: 50, claimed: false, available: false },
-    { id: 'first-case', kind: 'once', amount: 100, claimed: false, available: false },
-    { id: 'first-withdrawal', kind: 'once', amount: 200, claimed: false, available: false },
+    {
+ id: 'daily', kind: 'daily', amount: 50, claimed: false, available: true,
+},
+    {
+ id: 'welcome', kind: 'once', amount: 100, claimed: false, available: true,
+},
+    {
+ id: 'receive-info', kind: 'once', amount: 50, claimed: false, available: false,
+},
+    {
+ id: 'first-case', kind: 'once', amount: 100, claimed: false, available: false,
+},
+    {
+ id: 'first-withdrawal', kind: 'once', amount: 200, claimed: false, available: false,
+},
 ].map((bonus) => ({ ...bonus, ...(overrides[bonus.id] || {}) }));
 
 const deferred = () => {
@@ -105,7 +115,9 @@ test('a list that fails to load offers a retry', async () => {
 test('a bonus the page has no text for is not shown', async () => {
     getBonusList.mockImplementation(() => Promise.resolve({
         status: 200,
-        data: [...catalogue(), { id: 'new-thing', kind: 'once', amount: 5, claimed: false, available: true }],
+        data: [...catalogue(), {
+ id: 'new-thing', kind: 'once', amount: 5, claimed: false, available: true,
+}],
     }));
     renderBonus();
 

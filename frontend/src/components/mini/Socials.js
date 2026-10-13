@@ -7,6 +7,6 @@ const Socials = () => (
         <a>Some socials</a>
       </Tooltip>
     </>
-)
+);
 
 export default Socials;

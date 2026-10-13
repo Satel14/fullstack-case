@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {Modal, Button} from 'antd';
+import React, { useState } from 'react';
+import { Modal, Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 
 export const Rules = () => {

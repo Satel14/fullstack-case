@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Table, Input, Button, Tag } from 'antd';
+import {
+ Modal, Table, Input, Button, Tag,
+} from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
     getProvablyFairState,

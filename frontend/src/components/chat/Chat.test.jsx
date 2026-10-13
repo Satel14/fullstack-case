@@ -1,5 +1,7 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import {
+ render, screen, fireEvent, act,
+} from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { message } from 'antd';
 import { Chat } from './Chat';

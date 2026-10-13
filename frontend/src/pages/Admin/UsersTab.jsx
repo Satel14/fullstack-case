@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Input, Select, Button, Space, Alert } from 'antd';
+import {
+ Table, Input, Select, Button, Space, Alert,
+} from 'antd';
 import { useTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import { getAdminUsers, setUserRole } from '../../api/all/admin';

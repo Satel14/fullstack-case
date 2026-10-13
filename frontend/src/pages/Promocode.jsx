@@ -75,4 +75,3 @@ const Promocode = (props) => {
 };
 
 export default connect(null, mapDispatchToProps)(Promocode);
-

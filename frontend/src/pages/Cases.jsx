@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
-import { Input, Tooltip, Radio, Checkbox, Button } from 'antd';
+import {
+ Input, Tooltip, Radio, Checkbox, Button,
+} from 'antd';
 import map from 'lodash/map';
 import { getAllCases } from '../api/all/cases';
-import Loader from '../components/mini/Loader'
+import Loader from '../components/mini/Loader';
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { withTranslation } from 'react-i18next';
 import H2A from '../components/mini/H2A';
@@ -77,7 +79,7 @@ class Cases extends Component {
     }
 
     updateSorts() {
-        const {allCases, sortOptions} = this.state;
+        const { allCases, sortOptions } = this.state;
         let newBobi = [];
 
         let optionCounter = 0;
@@ -157,51 +159,53 @@ class Cases extends Component {
 
         this.setState({
             sortedCases: newBobi,
-            sortOptions: {...sortOptions, resetButton: true }
-        })
+            sortOptions: { ...sortOptions, resetButton: true },
+        });
     }
 
     onChangeText(e) {
-        const {value} = e.target;
-        const {sortOptions} = this.state;
+        const { value } = e.target;
+        const { sortOptions } = this.state;
 
         this.setState({
-            sortOptions: { ...sortOptions, text: value}
-        }, () => this.updateSorts())
+            sortOptions: { ...sortOptions, text: value },
+        }, () => this.updateSorts());
     }
 
     onChangeCheckbox(e) {
-        const {checked} = e.target;
-        const {sortOptions} = this.state;
+        const { checked } = e.target;
+        const { sortOptions } = this.state;
 
         this.setState({
-            sortOptions: { ...sortOptions, discount: checked}
-        }, () => this.updateSorts())
+            sortOptions: { ...sortOptions, discount: checked },
+        }, () => this.updateSorts());
     }
 
     onChangeRadio(e) {
-        const {value} = e.target;
-        const {sortOptions} = this.state;
+        const { value } = e.target;
+        const { sortOptions } = this.state;
 
         this.setState({
-            sortOptions: { ...sortOptions, price: value}
-        }, () => this.updateSorts())
+            sortOptions: { ...sortOptions, price: value },
+        }, () => this.updateSorts());
     }
 
     onClickRadio(e) {
-        const {value} = e.target;
-        if(this.state.sortOptions.price === value) {
-            const {sortOptions} = this.state;
+        const { value } = e.target;
+        if (this.state.sortOptions.price === value) {
+            const { sortOptions } = this.state;
 
             this.setState({
-                sortOptions: { ...sortOptions, price: ''}
+                sortOptions: { ...sortOptions, price: '' },
             },
-                () => this.updateSorts())
+                () => this.updateSorts());
         }
     }
 
     render() {
-        const { fetching, categories, sortedCases, allCases, sortOptions } = this.state;
+        const {
+ fetching, categories, sortedCases, allCases, sortOptions,
+} = this.state;
         const { t } = this.props;
         return (
             <div className="casepage">
@@ -212,7 +216,7 @@ class Cases extends Component {
                         <div className="casespage sortblock">
                             <Input
                                 placeholder={t('cases.searchPlaceholder')}
-                                prefix={<SearchOutlined/>}
+                                prefix={<SearchOutlined />}
                                 onChange={(e) => this.onChangeText(e)}
                             />
                             <Radio.Group
@@ -259,7 +263,7 @@ class Cases extends Component {
                             {sortOptions.resetButton && (
                                 <Button
                                 type="primary"
-                                icon={<CloseOutlined/>}
+                                icon={<CloseOutlined />}
                                 className="color-red"
                                 onClick={() => this.setInitialSortOptions()}
                                 >
@@ -274,7 +278,7 @@ class Cases extends Component {
                                 <div className="caselist">
                                     {map(sortedCases, (item, index) => (
                                         <div style={{ position: 'relative' }} key={`caselist-sorted-${item.case_id}-${index}`}>
-                                            <CaseMini data={item}/>
+                                            <CaseMini data={item} />
                                         </div>
                                     ))}
                                 </div>
@@ -289,15 +293,14 @@ class Cases extends Component {
                                                     title={splitTitle(category.category_title, 0)}
                                                     subTitle={splitTitle(category.category_title, 1)}
                                                     help={category.category_titleHelp}
-                                                    />
+                                                />
                                                 <div className="caselist">
                                                     {map(filteredCases(category.category_id, allCases),
                                                         (item, i) => (
                                                             <Flip bottom delay={i * 30} key={`caselistfiltered-${category.category_id}-${item.case_id}`}>
                                                                 <CaseMini data={item} />
                                                             </Flip>
-                                                        )
-                                                    )}
+                                                        ))}
                                                 </div>
                                             </div>
                                         ))}

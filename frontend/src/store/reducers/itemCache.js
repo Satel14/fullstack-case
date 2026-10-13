@@ -15,4 +15,3 @@ const itemCacheReducer = (prevState = initialState, action) => {
 };
 
 export default itemCacheReducer;
-

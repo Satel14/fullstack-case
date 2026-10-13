@@ -20,16 +20,37 @@ const api = require('../api/all/provablyFair');
 
 const ROWS = [
     {
-        id: 5, caseId: 'dust2', nonce: 1, clientSeed: 'client', resultItemId: 10, resultColor: 'default',
-        revealedServerSeed: 'server', hasSnapshot: true, verification: 'snapshot',
+        id: 5,
+caseId: 'dust2',
+nonce: 1,
+clientSeed: 'client',
+resultItemId: 10,
+resultColor: 'default',
+        revealedServerSeed: 'server',
+hasSnapshot: true,
+verification: 'snapshot',
     },
     {
-        id: 4, caseId: 'dust2', nonce: 0, clientSeed: 'client', resultItemId: 11, resultColor: 'default',
-        revealedServerSeed: 'server', hasSnapshot: false, verification: 'none',
+        id: 4,
+caseId: 'dust2',
+nonce: 0,
+clientSeed: 'client',
+resultItemId: 11,
+resultColor: 'default',
+        revealedServerSeed: 'server',
+hasSnapshot: false,
+verification: 'none',
     },
     {
-        id: 3, caseId: 'train', nonce: 7, clientSeed: 'client', resultItemId: 12, resultColor: 'default',
-        revealedServerSeed: 'server', hasSnapshot: false, verification: 'current',
+        id: 3,
+caseId: 'train',
+nonce: 7,
+clientSeed: 'client',
+resultItemId: 12,
+resultColor: 'default',
+        revealedServerSeed: 'server',
+hasSnapshot: false,
+verification: 'current',
     },
 ];
 
@@ -91,7 +112,11 @@ test('a result that does not match the recorded drop is reported as such', async
 });
 
 test('editing the case id by hand drops the open id and verifies against the current case', async () => {
-    api.verifyOpen.mockResolvedValue({ data: { itemId: 10, color: 'default', rarity: 'Factory New', source: 'current' } });
+    api.verifyOpen.mockResolvedValue({
+ data: {
+ itemId: 10, color: 'default', rarity: 'Factory New', source: 'current',
+},
+});
     render(<ProvablyFair />);
 
     fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
@@ -106,7 +131,11 @@ test('editing the case id by hand drops the open id and verifies against the cur
 });
 
 test('an old open that the current case still reproduces can be verified against it', async () => {
-    api.verifyOpen.mockResolvedValue({ data: { itemId: 12, color: 'default', rarity: 'Factory New', source: 'current' } });
+    api.verifyOpen.mockResolvedValue({
+ data: {
+ itemId: 12, color: 'default', rarity: 'Factory New', source: 'current',
+},
+});
     render(<ProvablyFair />);
 
     const row = await rowOf(7);
@@ -120,7 +149,11 @@ test('an old open that the current case still reproduces can be verified against
 });
 
 test('editing the nonce or seeds by hand drops the open id', async () => {
-    api.verifyOpen.mockResolvedValue({ data: { itemId: 10, color: 'default', rarity: 'Factory New', source: 'current' } });
+    api.verifyOpen.mockResolvedValue({
+ data: {
+ itemId: 10, color: 'default', rarity: 'Factory New', source: 'current',
+},
+});
     render(<ProvablyFair />);
 
     fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
@@ -134,7 +167,11 @@ test('editing the nonce or seeds by hand drops the open id', async () => {
 
 test('when the server cannot tell whether an old open replays, the row says so and still offers a check', async () => {
     api.getOpenHistory.mockResolvedValue({ data: [{ ...ROWS[2], verification: 'unknown' }] });
-    api.verifyOpen.mockResolvedValue({ data: { itemId: 12, color: 'default', rarity: 'Factory New', source: 'current' } });
+    api.verifyOpen.mockResolvedValue({
+ data: {
+ itemId: 12, color: 'default', rarity: 'Factory New', source: 'current',
+},
+});
     render(<ProvablyFair />);
 
     const row = await rowOf(7);

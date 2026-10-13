@@ -1,4 +1,4 @@
-import io from "socket.io-client";
+import io from 'socket.io-client';
 
 const WS_URL = process.env.REACT_APP_WS_URL || 'http://localhost:3003';
 
@@ -13,7 +13,7 @@ const storedToken = () => {
 let handshakeToken = null;
 
 const ws = io(WS_URL, {
-    transports: ["websocket"],
+    transports: ['websocket'],
     withCredentials: true,
     auth: (cb) => {
         handshakeToken = storedToken();

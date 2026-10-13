@@ -29,21 +29,21 @@ function TextFilter(raw) {
     if (value.length > 2) {
         value = value.replace(
             /(https?:\/\/.*\.(?:png|jpg|jpeg|gif))/gm,
-            '<img src="$1" className="foto-chat"/>'
+            '<img src="$1" className="foto-chat"/>',
         );
 
         value = value.replace(
             /https:\/\/(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/watch(?:\?|#)v=)([\w-]{11}).*/gi,
 
-            '<iframe width="500" height="282"  frameborder="0" src="http://www.youtube.com/embed/$1"/>'
+            '<iframe width="500" height="282"  frameborder="0" src="http://www.youtube.com/embed/$1"/>',
         );
 
         smiles.forEach((smile) => {
             if (value.indexOf(smile.name) + 1) {
                 value = value.replace(
-                    new RegExp(smile.name, "g"),
+                    new RegExp(smile.name, 'g'),
 
-                    `<img className="smile-img" src="${smile.url}"/>`
+                    `<img className="smile-img" src="${smile.url}"/>`,
                 );
             }
         });
@@ -81,10 +81,12 @@ const CHAT_REJECTIONS = {
 
 export const Chat = ({ user, enabled, refreshProfile }) => {
     const { t } = useTranslation();
-    const { id, avatar, role, login } = user;
+    const {
+ id, avatar, role, login,
+} = user;
     const [usersOnline, setUsersOnline] = useState([]);
     const [chat, setChat] = useState([]);
-    const [msg, setMsg] = useState("");
+    const [msg, setMsg] = useState('');
     const [visible, setVisible] = useState(false);
     const pendingAck = useRef(null);
 
@@ -97,7 +99,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
         }
 
         const onConnect = () => {
-            socket.emit("user connected");
+            socket.emit('user connected');
             if (login) {
                 socket.emit('new-user', login);
             }
@@ -110,19 +112,19 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
         };
 
         connectSocket();
-        socket.on("connect", onConnect);
-        socket.on("chat messages", onChatMessages);
-        socket.on("user-on", onUsersOn);
+        socket.on('connect', onConnect);
+        socket.on('chat messages', onChatMessages);
+        socket.on('user-on', onUsersOn);
         if (socket.connected) {
-            socket.emit("user connected");
+            socket.emit('user connected');
         }
 
         // Remove only OUR listeners on cleanup — never socket.off() (no-arg) or
         // socket.disconnect(), which would also kill HeaderThird's shared 'new-drop' feed.
         return () => {
-            socket.off("connect", onConnect);
-            socket.off("chat messages", onChatMessages);
-            socket.off("user-on", onUsersOn);
+            socket.off('connect', onConnect);
+            socket.off('chat messages', onChatMessages);
+            socket.off('user-on', onUsersOn);
         };
     }, [enabled]);
 
@@ -137,18 +139,20 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             registerUser();
         }
 
-        socket.on("connect", registerUser);
+        socket.on('connect', registerUser);
 
         return () => {
-            socket.off("connect", registerUser);
-        }
+            socket.off('connect', registerUser);
+        };
     }, [login, enabled]);
 
     useEffect(() => {
         if (!enabled) {
             return undefined;
         }
-        const handler = ({ login, msg, id, avatar, time }) => {
+        const handler = ({
+ login, msg, id, avatar, time,
+}) => {
             setChat((prev) => {
                 const base = prev.length > 150 ? prev.slice(prev.length - 150) : prev;
                 return [
@@ -158,35 +162,35 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                         msg,
                         id,
                         avatar,
-                        time
-                    }
+                        time,
+                    },
                 ];
             });
         };
-        socket.on("chat message", handler);
+        socket.on('chat message', handler);
         return () => {
-            socket.off("chat message", handler);
+            socket.off('chat message', handler);
         };
-    }, [enabled])
+    }, [enabled]);
 
     useEffect(() => {
-        const objDiv = document.getElementById("msg-scroll");
+        const objDiv = document.getElementById('msg-scroll');
         if (objDiv) {
             objDiv.scrollTop = objDiv.scrollHeight;
         }
-    }, [chat])
+    }, [chat]);
 
     const submitMsg = (e) => {
         e.preventDefault();
 
         if (!id || !login) {
-            message.error(t('chat.notAuthorized'))
+            message.error(t('chat.notAuthorized'));
             return;
         }
 
-        const checkMsg = msg.replace(/\s/g, "");
+        const checkMsg = msg.replace(/\s/g, '');
 
-        if (msg === "" || checkMsg.length === 0) {
+        if (msg === '' || checkMsg.length === 0) {
             message.error(t('chat.writeMessage'));
             return;
         }
@@ -205,7 +209,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             msg,
             id,
             avatar,
-            time: Math.round(Date.now() / 1000)
+            time: Math.round(Date.now() / 1000),
         };
 
         const timer = setTimeout(() => {
@@ -216,7 +220,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
         }, ACK_TIMEOUT_MS);
         pendingAck.current = timer;
 
-        socket.emit("chat message", outgoing, (response) => {
+        socket.emit('chat message', outgoing, (response) => {
             if (pendingAck.current !== timer) {
                 return;
             }
@@ -228,7 +232,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                     ...(current.length > 150 ? current.slice(current.length - 150) : current),
                     outgoing,
                 ]);
-                setMsg("");
+                setMsg('');
                 return;
             }
 
@@ -238,7 +242,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                 refreshProfile();
             }
         });
-    }
+    };
 
     return (
         <div className="chat">
@@ -250,14 +254,14 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                     {t('chat.title')}
                     <div className="chat-header_name__online">
                         <i className="blink" />
-                        {usersOnline !== null ? usersOnline.length : "0"}
+                        {usersOnline !== null ? usersOnline.length : '0'}
                     </div>
                 </div>
                 <div className="chat-header_sub">
                     <div className="chat-header_sub_whos">
                         <Popover
                             placement="bottom"
-                            content={
+                            content={(
                                 <div className="online-users-popover">
                                     {usersOnline && usersOnline.length > 0
                                         ? usersOnline.map((el, index) => (
@@ -267,7 +271,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                                         ))
                                         : t('chat.noUsers')}
                                 </div>
-                            }
+                              )}
                             trigger="click"
                         >
                             <Button className="color-white small">{t('chat.whoIsHere')}</Button>
@@ -290,11 +294,11 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             <div className="chat-messages" id="msg-scroll">
                 <ul className="chat-messages-list">
                     {chat.map((el, index) => (
-                        <li key={"chat" + index} className="chat-messages-list_item">
+                        <li key={`chat${index}`} className="chat-messages-list_item">
                             <MessageBlock nickname={el.login} id={el.id} message={el.msg} />
                         </li>
                     ))}
-                </ul>{" "}
+                </ul>{' '}
             </div>
             <div className="chat-form">
                 {role && (
@@ -314,11 +318,11 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                                     placement="topLeft"
                                     open={visible}
                                     onOpenChange={(e) => setVisible(e)}
-                                    content={
+                                    content={(
                                         <div className="smiles-list">
                                             {smiles.map((smile, i) => (
                                                 <div
-                                                    key={"smile" + i}
+                                                    key={`smile${i}`}
                                                     style={{
                                                         backgroundImage: `url(${smile.url})`,
                                                     }}
@@ -328,11 +332,11 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                                                 />
                                             ))}
                                         </div>
-                                    }
+                                      )}
                                     trigger="click"
                                 >
                                     <Button
-                                        style={{ marginRight: "4%", width: "16%" }}
+                                        style={{ marginRight: '4%', width: '16%' }}
                                         className="color-black"
                                     >
                                         <SmileOutlined />
@@ -340,7 +344,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                                     </Button>
                                 </Popover>
                                 <Button
-                                    style={{ width: "80%" }}
+                                    style={{ width: '80%' }}
                                     className="color-skyblue"
                                     onClick={(e) => submitMsg(e)}
                                     disabled={!login}
@@ -352,9 +356,9 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                             <div
                                 className="flex"
                                 style={{
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    height: "110px",
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    height: '110px',
                                 }}
                             >
                                 {t('chat.banned')}
@@ -364,8 +368,8 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                 )}
             </div>
         </div>
-    )
-}
+    );
+};
 
 const mapStateToProps = (state) => ({
     user: state.user,

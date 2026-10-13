@@ -21,7 +21,9 @@ const parseDelta = (raw) => {
     return value;
 };
 
-const BalanceModal = ({ user, visible, onClose, onDone }) => {
+const BalanceModal = ({
+ user, visible, onClose, onDone,
+}) => {
     const { t } = useTranslation();
     const [delta, setDelta] = useState('');
     const [reason, setReason] = useState('');

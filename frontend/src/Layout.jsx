@@ -1,12 +1,12 @@
 /* eslint-disable-next-line react/no-children-prop */
-import React from "react";
-import { Layout, Button } from "antd";
-import ContentLayout from "./components/ContentLayout";
-import MenuLayoutSlider from "./components/MenuLayoutSlider";
-import HeaderSecond from "./components/HeaderSecond";
-import FooterLayout from "./components/FooterLayout";
-import HeaderThird from './components/HeaderThird'
-import Chat from './components/chat/Chat'
+import React from 'react';
+import { Layout, Button } from 'antd';
+import ContentLayout from './components/ContentLayout';
+import MenuLayoutSlider from './components/MenuLayoutSlider';
+import HeaderSecond from './components/HeaderSecond';
+import FooterLayout from './components/FooterLayout';
+import HeaderThird from './components/HeaderThird';
+import Chat from './components/chat/Chat';
 import { Link } from 'react-router-dom';
 
 const { Sider, Content } = Layout;
@@ -15,7 +15,7 @@ export default class App extends React.Component {
     super(props);
     this.state = {
       collapsed: false,
-      collapsedChat: true
+      collapsedChat: true,
     };
 
     window.Layout = this;
@@ -29,21 +29,21 @@ export default class App extends React.Component {
 
     this.setState({
       collapsed: isCollapsed || false,
-      collapsedChat: isCollapsedChat || false
-    })
+      collapsedChat: isCollapsedChat || false,
+    });
 
     window.HeaderSecond.chatButtonStatusHeader(isCollapsedChat);
   }
 
   onCollapse(collapsed) {
     this.setState({ collapsed });
-    localStorage.setItem('menuCollapse', collapsed)
+    localStorage.setItem('menuCollapse', collapsed);
   }
 
   onCollapseChat(collapsedChat) {
     this.setState({ collapsedChat });
     window.HeaderSecond.chatButtonStatusHeader(collapsedChat);
-    localStorage.setItem('collapsedChat', collapsedChat)
+    localStorage.setItem('collapsedChat', collapsedChat);
   }
 
   render() {
@@ -62,7 +62,7 @@ export default class App extends React.Component {
             height: '100vh',
             position: 'sticky',
             top: 0,
-            left: 0
+            left: 0,
           }}
         >
           <div className="header-sitename">

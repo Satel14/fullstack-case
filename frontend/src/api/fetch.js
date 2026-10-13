@@ -1,19 +1,19 @@
-import { API_URL } from './config'
-import { getToken } from './token'
+import { API_URL } from './config';
+import { getToken } from './token';
 import openNotification from '../components/mini/openNotification';
 import i18n from '../i18n';
 
 const getHeaders = async () => {
-    const token = await getToken()
+    const token = await getToken();
     const headers = {
-        Accept: "application/json",
-        "Content-type": "application/json",
-    }
+        Accept: 'application/json',
+        'Content-type': 'application/json',
+    };
     if (token) {
         headers.Authorization = `Bearer ${token}`;
     }
     return headers;
-}
+};
 
 const endSessionIfRevoked = (result, headers) => {
     if (result.status !== 401 || !headers.Authorization) {
@@ -51,7 +51,7 @@ export const post = async (destination, body, notificationErr = false) => {
     }
     endSessionIfRevoked(result, headers);
     if (notificationErr) {
-        openNotification('error', i18n.t('common.error'), i18n.t('common.serverError'))
+        openNotification('error', i18n.t('common.error'), i18n.t('common.serverError'));
     }
 
     const failure = await errorPayload(result);
@@ -81,11 +81,11 @@ export const put = async (destination, body, notificationErr = false) => {
 export const get = async (destination) => {
     const headers = await getHeaders();
     const result = await fetch(`${API_URL}${destination}`, {
-        method: "GET",
+        method: 'GET',
         headers,
     });
     if (result.ok) {
-        return result.json()
+        return result.json();
     }
     endSessionIfRevoked(result, headers);
     // eslint-disable-next-line no-throw-literal

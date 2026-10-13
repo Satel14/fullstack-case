@@ -32,12 +32,12 @@ function H2Component({ title, subTitle, help }) {
 H2Component.propTypes = {
     title: PropTypes.string,
     subTitle: PropTypes.string,
-    help: PropTypes.string
+    help: PropTypes.string,
 };
 
 H2Component.defaultProps = {
     title: '',
     subTitle: '',
-    help: ''
+    help: '',
 };
 export default H2Component;

@@ -3,8 +3,7 @@ import { Tooltip } from 'antd';
 import { capitalize } from 'lodash';
 import { getItemColor } from '../../helpers/Case';
 
-const ItemColor = ({ color }) => {
-    return (
+const ItemColor = ({ color }) => (
         <>
             {color !== 'default'
                 && (
@@ -13,7 +12,6 @@ const ItemColor = ({ color }) => {
                     </Tooltip>
                 )}
         </>
-    )
-}
+    );
 
 export default ItemColor;

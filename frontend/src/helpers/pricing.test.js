@@ -17,7 +17,11 @@ describe('valueGrade', () => {
 describe('itemDropChance', () => {
   const caseCollection = {
     CHANCES: {
-      'Factory New': 55, 'Minimal wear': 28, 'Field Tested': 12, 'Well Worn': 4, 'Battle Scarred': 1,
+      'Factory New': 55,
+'Minimal wear': 28,
+'Field Tested': 12,
+'Well Worn': 4,
+'Battle Scarred': 1,
       COLORS: { DEFAULT: 90, PAINTED: 10 },
     },
     ITEMS: [

@@ -39,7 +39,6 @@ class RouterLayout extends Component {
         }
     }
 
-
     updateOnline() {
         const { user } = this.props;
         if (isAuthorized(user)) {
@@ -48,17 +47,16 @@ class RouterLayout extends Component {
     }
 
     render() {
-
         const { user } = this.props;
         if (isAuthorized(user)) {
             if (roles.BANNED === user.role) {
-                return <Banned/>;
+                return <Banned />;
             }
         }
         return (
             <BrowserRouter>
                 <Layout>
-                    <AppSwitch routes={routes} user={user} fallback={ErrorPage}/>
+                    <AppSwitch routes={routes} user={user} fallback={ErrorPage} />
                 </Layout>
             </BrowserRouter>
         );

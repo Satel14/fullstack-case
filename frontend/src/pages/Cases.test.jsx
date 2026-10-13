@@ -20,10 +20,18 @@ jest.mock('../components/mini/CaseMini', () => ({ data }) => <div className="min
 const { getAllCases } = require('../api/all/cases');
 
 const CASES = [
-    { case_id: 'onsale', case_title: 'On sale', case_price: 150, case_discount: 40, case_categoryId: 1 },
-    { case_id: 'cheap', case_title: 'Cheap', case_price: 30, case_discount: 0, case_categoryId: 1 },
-    { case_id: 'mid', case_title: 'Mid', case_price: 60, case_discount: null, case_categoryId: 1 },
-    { case_id: 'marked-up', case_title: 'Marked up', case_price: 10, case_discount: 45, case_categoryId: 1 },
+    {
+ case_id: 'onsale', case_title: 'On sale', case_price: 150, case_discount: 40, case_categoryId: 1,
+},
+    {
+ case_id: 'cheap', case_title: 'Cheap', case_price: 30, case_discount: 0, case_categoryId: 1,
+},
+    {
+ case_id: 'mid', case_title: 'Mid', case_price: 60, case_discount: null, case_categoryId: 1,
+},
+    {
+ case_id: 'marked-up', case_title: 'Marked up', case_price: 10, case_discount: 45, case_categoryId: 1,
+},
 ];
 
 const shownTitles = () => Array.from(document.querySelectorAll('.mini')).map((node) => node.textContent);

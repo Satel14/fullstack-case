@@ -1,5 +1,7 @@
 import React from 'react';
-import { Button, Dropdown, Layout, Tooltip } from 'antd';
+import {
+ Button, Dropdown, Layout, Tooltip,
+} from 'antd';
 import { DollarOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import CountUp from 'react-countup';

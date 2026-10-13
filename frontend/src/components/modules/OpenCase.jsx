@@ -1,4 +1,4 @@
-﻿/* eslint-disable guard-for-in */
+/* eslint-disable guard-for-in */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
@@ -76,9 +76,9 @@ const getColorRariest = (rare) => {
         'Consumer Grade': '#B0C3D9',
         'Industrial Grade': '#5E98D9',
         'Mil-Spec': '#4B69FF',
-        'Restricted': '#8847FF',
-        'Classified': '#D32CE6',
-        'Covert': '#EB4B4B',
+        Restricted: '#8847FF',
+        Classified: '#D32CE6',
+        Covert: '#EB4B4B',
     };
     return colors[rare] || '#B0C3D9';
 };
@@ -844,5 +844,3 @@ class OpenCase extends Component {
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withTranslation()(OpenCase));
-
-
