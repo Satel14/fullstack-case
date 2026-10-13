@@ -171,7 +171,9 @@ class Profile extends Component {
 
         const uniqueItemIds = [...new Set(storageItems.map((item) => item.storage_itemId).filter(Boolean))];
         const items = await Promise.all(uniqueItemIds.map((itemId) => this.props.itemInfoFetch(itemId)));
-        const itemInfoById = Object.fromEntries(uniqueItemIds.map((itemId, index) => [itemId, items[index]]));
+        const itemInfoById = Object.fromEntries(uniqueItemIds
+            .map((itemId, index) => [itemId, items[index]])
+            .filter(([, item]) => !item.placeholder));
 
         const bestDrop = pickBestDrop(storageItems, itemInfoById);
         const historyItems = buildHistoryItems(storageItems, itemInfoById);

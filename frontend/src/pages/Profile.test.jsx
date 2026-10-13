@@ -130,6 +130,27 @@ test('the best drop is the most valuable item, not the one with the rarest wear 
     expect(bestDrop.textContent).toBe('AWP | Worm God');
 });
 
+test('items that could not be loaded are left out of the history and the best drop', async () => {
+    getUserById.mockResolvedValue({
+        data: {
+            user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
+        },
+    });
+    getStorageLastItemsByUserId.mockResolvedValue({
+        data: [{
+            storage_id: 1, storage_itemId: 4242, storage_color: 'default', storage_caseId: 1,
+        }],
+    });
+    getItemsInfo.mockRejectedValue({ error: 500 });
+
+    const { container } = renderProfile('5');
+
+    await screen.findByText('testopen');
+    expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('profile.noDrop');
+    expect(container.querySelectorAll('.casehistory-itemlist_item')).toHaveLength(0);
+    expect(screen.queryByText('Item 4242')).toBeNull();
+});
+
 test('every item of the history is loaded with one request', async () => {
     getUserById.mockResolvedValue({
         data: {
