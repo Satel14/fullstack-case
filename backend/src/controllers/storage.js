@@ -11,6 +11,7 @@ const UserService = require('../services/user');
 const BalanceHistoryService = require('../services/balanceHistory');
 const WithdrawalService = require('../services/withdrawal');
 const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
+const { salePayout } = require('../helpers/salePayout');
 
 const MESSAGE = require('../constant/responseMessages');
 const sequelize = require('../config/db');
@@ -198,7 +199,7 @@ module.exports.sellItemByStorageId = async (req, res) => {
 
         console.log('[SELL] Rate extraData:', rate);
 
-        const actualPrice = (parseInt(price * parseFloat(rate) * 100, 10)) / 100;
+        const actualPrice = salePayout(price, parseFloat(rate));
 
         console.log('[SELL] actualPrice:', actualPrice);
 

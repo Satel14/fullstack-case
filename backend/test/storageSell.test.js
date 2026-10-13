@@ -95,6 +95,25 @@ test('an item whose colour has no price is refused with a message the player can
     assert.strictEqual(storage.status, 'inventory');
 });
 
+test('selling at a fractional rate pays the exact value floored to kopiyky, not a kopiyka less', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedSellableItem(sequelize);
+    await sequelize.query(
+        "UPDATE insider_prices SET pricesInCredits = JSON_QUOTE('{\"default\":227,\"painted\":300}') WHERE name = 'AK-47 | Redline'",
+    );
+    await sequelize.query("UPDATE modules SET extraData = '0.7' WHERE param = 'uah-credit-rate'");
+
+    const result = await sell(1);
+
+    assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
+    assert.deepStrictEqual(await sellOutcome(sequelize), {
+        balance: 158.9,
+        status: 'money',
+        history: [['sellitem', 158.9]],
+    });
+});
+
 test('selling applies the uah-credit-rate module when the row exists', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
