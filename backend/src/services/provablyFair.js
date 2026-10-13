@@ -88,11 +88,17 @@ module.exports.getState = async (userId) => {
     };
 };
 
+const lockPlayer = (userId, t) => User.findByPk(userId, { attributes: ['user_id'], transaction: t, lock: t.LOCK.UPDATE });
+
 module.exports.setClientSeed = async (userId, clientSeed) => {
-    const active = await module.exports.ensureActiveSeed(userId);
-    active.pf_clientSeed = String(clientSeed).trim();
-    await active.save();
-    return { clientSeed: active.pf_clientSeed };
+    const prepared = await module.exports.ensureActiveSeed(userId);
+    return sequelize.transaction(async (t) => {
+        await lockPlayer(userId, t);
+        const active = await module.exports.lockActiveSeed(userId, t, prepared.pf_id);
+        active.pf_clientSeed = String(clientSeed).trim();
+        await active.save({ transaction: t });
+        return { clientSeed: active.pf_clientSeed };
+    });
 };
 
 module.exports.rotateSeed = async (userId) => {
@@ -101,7 +107,7 @@ module.exports.rotateSeed = async (userId) => {
 };
 
 const rotateLocked = async (userId, preparedSeedId, t) => {
-    await User.findByPk(userId, { attributes: ['user_id'], transaction: t, lock: t.LOCK.UPDATE });
+    await lockPlayer(userId, t);
     const active = await module.exports.lockActiveSeed(userId, t, preparedSeedId);
     const carriedClientSeed = active.pf_clientSeed;
     active.pf_status = 'revealed';

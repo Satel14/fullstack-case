@@ -265,3 +265,94 @@ test('a rotation waits for the player row before it touches any seed, the same l
     const [[active]] = await sequelize.query("SELECT COUNT(*) AS n FROM provably_fair_seeds WHERE userId = 1 AND status = 'active'");
     assert.strictEqual(Number(active.n), 1);
 });
+
+const waitUntilSomeoneWaitsForALock = async (sequelize, transaction) => {
+    for (let attempt = 0; attempt < 50; attempt += 1) {
+        const [waiting] = await sequelize.query(
+            "SELECT OBJECT_NAME FROM performance_schema.data_locks WHERE OBJECT_SCHEMA = DATABASE() AND LOCK_STATUS = 'WAITING'",
+            { transaction },
+        );
+        if (waiting.length > 0) {
+            return;
+        }
+        await new Promise((resolve) => { setTimeout(resolve, 50); });
+    }
+    assert.fail('the client seed change never started waiting for a lock');
+};
+
+test('a client seed change racing a rotation lands on the new active seed and answers what was stored', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await addUser(sequelize);
+    const PFService = require('../src/services/provablyFair');
+    const first = await PFService.ensureActiveSeed(1);
+
+    const rotation = await sequelize.transaction();
+    let change;
+    try {
+        await sequelize.query('SELECT id FROM users WHERE id = 1 FOR UPDATE', { transaction: rotation });
+        await sequelize.query(
+            'SELECT id FROM provably_fair_seeds WHERE id = ? FOR UPDATE',
+            { replacements: [first.pf_id], transaction: rotation },
+        );
+
+        change = PFService.setClientSeed(1, 'chosen during rotation');
+        await waitUntilSomeoneWaitsForALock(sequelize, rotation);
+
+        await sequelize.query(
+            "UPDATE provably_fair_seeds SET status = 'revealed', revealed_at = NOW() WHERE id = ?",
+            { replacements: [first.pf_id], transaction: rotation },
+        );
+        await sequelize.query(
+            'INSERT INTO provably_fair_seeds (userId, serverSeed, serverSeedHash, clientSeed, nonce, status, created_at) '
+            + "VALUES (1, 'next', 'next-hash', ?, 0, 'active', NOW())",
+            { replacements: [first.pf_clientSeed], transaction: rotation },
+        );
+    } finally {
+        await rotation.commit();
+    }
+    const answer = await change;
+
+    const [[active]] = await sequelize.query("SELECT clientSeed FROM provably_fair_seeds WHERE userId = 1 AND status = 'active'");
+    const [[revealed]] = await sequelize.query('SELECT clientSeed FROM provably_fair_seeds WHERE id = ?', { replacements: [first.pf_id] });
+    assert.strictEqual(active.clientSeed, 'chosen during rotation');
+    assert.strictEqual(answer.clientSeed, active.clientSeed);
+    assert.strictEqual(revealed.clientSeed, first.pf_clientSeed);
+});
+
+test('client seed changes mixed with rotations and opens, more than the pool holds, never deadlock', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await addUser(sequelize);
+    const PFService = require('../src/services/provablyFair');
+    const UserService = require('../src/services/user');
+    await PFService.ensureActiveSeed(1);
+    const callers = sequelize.connectionManager.pool.maxSize + 4;
+
+    const openLike = async () => {
+        const prepared = await PFService.ensureActiveSeed(1);
+        return sequelize.transaction(async (t) => {
+            await UserService.getBalanceByUserId(1, { transaction: t, lock: t.LOCK.UPDATE });
+            const seed = await PFService.lockActiveSeed(1, t, prepared.pf_id);
+            await PFService.bumpNonce(seed.pf_id, seed.pf_nonce + 1, { transaction: t });
+        });
+    };
+    const kinds = [
+        () => PFService.rotateSeed(1),
+        openLike,
+        () => PFService.setClientSeed(1, 'burst seed'),
+    ];
+
+    const results = await withinSeconds(
+        Promise.allSettled(Array.from({ length: callers }, (_, i) => kinds[i % kinds.length]())),
+        15,
+        `${callers} mixed seed requests`,
+    );
+
+    assert.deepStrictEqual(results.filter((r) => r.status === 'rejected').map((r) => r.reason.message), []);
+    const [[active]] = await sequelize.query(
+        "SELECT COUNT(*) AS n, MAX(clientSeed) AS clientSeed FROM provably_fair_seeds WHERE userId = 1 AND status = 'active'",
+    );
+    assert.strictEqual(Number(active.n), 1);
+    assert.strictEqual(active.clientSeed, 'burst seed');
+});
