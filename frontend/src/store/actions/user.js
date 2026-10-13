@@ -38,7 +38,11 @@ export const getProfileFetch = () => (dispatch) => {
         })
             .then(async (resp) => {
                 if (resp.status === 401) {
-                    removeToken();
+                    removeToken(token);
+                    const next = getToken();
+                    if (next && next !== token) {
+                        return dispatch(getProfileFetch());
+                    }
                     dispatch(logoutUser());
                     return undefined;
                 }
@@ -74,7 +78,7 @@ export const userPostFetch = (body, remember = true) => (dispatch) => fetch(`${A
     });
 
 export const logoutProfile = () => (dispatch) => {
-    removeToken();
+    removeToken(getToken());
     dispatch(logoutUser());
     setTimeout(() => {
         window.location.href = '/';

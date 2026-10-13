@@ -18,11 +18,11 @@ const endSessionIfRevoked = (result, headers) => {
         return;
     }
     const sentToken = headers.Authorization.slice('Bearer '.length);
-    if (getToken() !== sentToken) {
-        return;
+    const sessionEnded = getToken() === sentToken;
+    removeToken(sentToken);
+    if (sessionEnded) {
+        window.location.reload();
     }
-    removeToken();
-    window.location.reload();
 };
 
 const errorPayload = async (result) => {

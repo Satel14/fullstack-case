@@ -23,17 +23,19 @@ const removeFrom = (storage) => {
 export const getToken = () => readFrom(perSession) || readFrom(persistent) || null;
 
 export const setToken = (token, remember = true) => {
-    const [keep, drop] = remember ? [persistent, perSession] : [perSession, persistent];
-    removeFrom(drop);
     try {
-        keep().setItem(TOKEN_KEY, token);
+        (remember ? persistent : perSession)().setItem(TOKEN_KEY, token);
     } catch (e) {
         return false;
+    }
+    if (remember) {
+        removeFrom(perSession);
     }
     return true;
 };
 
-export const removeToken = () => {
-    removeFrom(persistent);
-    removeFrom(perSession);
+export const removeToken = (token) => {
+    [perSession, persistent]
+        .filter((storage) => token && readFrom(storage) === token)
+        .forEach(removeFrom);
 };
