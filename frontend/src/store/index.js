@@ -12,9 +12,8 @@ const rootReducer = combineReducers({
     modules: moduleReducer,
 });
 
-const composeEnhancers = typeof window === 'object' && window.REDUX_DEVTOOLS_EXTENSION_COMPOSE
-    ? window.REDUX_DEVTOOLS_EXTENSION_COMPOSE({
-    })
+const composeEnhancers = typeof window === 'object' && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
+    ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({})
     : compose;
 
 export default createStore(
