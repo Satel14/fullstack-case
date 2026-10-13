@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    render, screen, fireEvent, waitFor,
+    act, render, screen, fireEvent, waitFor,
 } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
@@ -65,12 +65,17 @@ beforeEach(() => {
     });
 });
 
-const renderInventory = () => {
+const makeStore = () => {
     const store = createStore(
         combineReducers({ user: usersReducer, itemCache: itemCacheReducer, modules: moduleReducer }),
         applyMiddleware(thunk),
     );
     store.dispatch({ type: LOGIN_USER, payloadUser: { user_id: 7, user_login: 'player', user_balance: '0.00' } });
+    return store;
+};
+
+const renderInventory = () => {
+    const store = makeStore();
     render(
         <Provider store={store}>
             <Inventory />
@@ -120,6 +125,29 @@ test('the inventory still opens when the item lookup fails, with plain sell butt
     const metas = [...document.querySelectorAll('.inventorypage-card__meta')].map((meta) => meta.textContent.trim());
     expect(metas).toEqual(['', '']);
     expect(screen.queryByText(/openCase.sellFor/)).toBeNull();
+});
+
+test('a load that finishes after the page closed updates nothing', async () => {
+    const consoleError = jest.spyOn(console, 'error');
+    let answerInventory;
+    getProfileStorage.mockImplementation(({ status }) => (status === 'inventory'
+        ? new Promise((resolve) => { answerInventory = resolve; })
+        : Promise.resolve({ status: 200, data: [] })));
+    const { unmount } = render(
+        <Provider store={makeStore()}>
+            <Inventory />
+        </Provider>,
+    );
+
+    unmount();
+    await act(async () => {
+        answerInventory({ status: 200, data: inventoryRows(2) });
+        await new Promise((resolve) => { setTimeout(resolve, 50); });
+    });
+
+    const unmountedUpdates = consoleError.mock.calls.filter(([message]) => String(message).includes('unmounted component'));
+    consoleError.mockRestore();
+    expect(unmountedUpdates).toEqual([]);
 });
 
 const clickSellAll = async () => {

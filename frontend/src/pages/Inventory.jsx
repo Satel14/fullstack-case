@@ -79,6 +79,8 @@ const Inventory = ({
     };
 
     const load = async () => {
+        const generation = epoch.current;
+        const isCurrent = () => generation === epoch.current;
         setLoading(true);
         try {
             const [inv, money] = await Promise.all([
@@ -88,13 +90,18 @@ const Inventory = ({
             const invRows = inv.data || [];
             const moneyRows = money.data || [];
             await cacheItems([...invRows, ...moneyRows]);
+            if (!isCurrent()) {
+                return;
+            }
             setActive(invRows);
             setSold(moneyRows);
             await loadWithdrawals();
         } catch (e) {
             openNotification('error', t('common.error'), t('common.serverError'));
         }
-        setLoading(false);
+        if (isCurrent()) {
+            setLoading(false);
+        }
     };
 
     useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
