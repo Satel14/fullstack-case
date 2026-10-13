@@ -1,4 +1,5 @@
 const Item = require("../models/item");
+const sequelize = require("../config/db");
 const MESSAGE = require("../constant/responseMessages");
 const InsiderService = require("./insiderPrices");
 
@@ -26,6 +27,40 @@ module.exports.getItemWithPrices = async (itemId) => {
     }
 
     return { ...itemInfo, pricesInCredits };
+};
+
+const parsePrices = (raw) => {
+    if (!raw) {
+        return null;
+    }
+    if (typeof raw !== "string") {
+        return raw;
+    }
+    try {
+        return JSON.parse(raw);
+    } catch (e) {
+        return null;
+    }
+};
+
+module.exports.getItemsWithPrices = async (itemIds) => {
+    const items = await Item.findAll({ where: { item_itemId: itemIds } });
+
+    if (!items.length) {
+        return {};
+    }
+
+    const [prices] = await sequelize.query(
+        "SELECT items.itemId, insider_prices.pricesInCredits FROM items "
+        + "JOIN insider_prices ON insider_prices.name = items.name WHERE items.itemId IN (?)",
+        { replacements: [itemIds] },
+    );
+    const pricesById = new Map(prices.map((row) => [row.itemId, row.pricesInCredits]));
+
+    return Object.fromEntries(items.map((item) => [
+        item.item_itemId,
+        { ...item.dataValues, pricesInCredits: parsePrices(pricesById.get(item.item_itemId)) },
+    ]));
 };
 
 module.exports.getAllItems = async () => {

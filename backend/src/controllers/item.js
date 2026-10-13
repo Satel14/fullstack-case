@@ -1,10 +1,22 @@
-const { check, validationResult } = require("express-validator");
+const { check, query, validationResult } = require("express-validator");
 const MESSAGE = require('../constant/responseMessages');
 const ItemService = require('../services/item');
 const InsiderService = require('../services/insiderPrices');
 const RedisManager = require('../redis/manager');
 
 const ITEM_HASH = "item_hash";
+const ITEMS_PER_REQUEST = 200;
+const ITEM_ID = /^[1-9]\d{0,9}$/;
+
+const distinctIds = (raw) => [...new Set(raw.split(","))];
+
+const isItemIdList = (raw) => {
+    if (typeof raw !== "string") {
+        return false;
+    }
+    const ids = distinctIds(raw);
+    return ids.length <= ITEMS_PER_REQUEST && ids.every((id) => ITEM_ID.test(id));
+};
 
 module.exports.getItemById = async (req, res) => {
     try {
@@ -22,6 +34,25 @@ module.exports.getItemById = async (req, res) => {
         return res.status(200).json({ status: 200, data });
     } catch (e) {
         return res.status(400).json({ status: 400, message: e.message });
+    }
+};
+
+module.exports.getItemsByIds = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+            return res
+                .status(422)
+                .json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
+        }
+
+        const ids = distinctIds(req.query.ids).map(Number);
+        const data = await ItemService.getItemsWithPrices(ids);
+
+        return res.status(200).json({ status: 200, data });
+    } catch (e) {
+        return res.status(500).json({ status: 500, message: e.message });
     }
 };
 
@@ -87,6 +118,9 @@ module.exports.validate = (method) => {
         }
         case "getItemPriceById": {
             return [check("id").exists()];
+        }
+        case "getItemsByIds": {
+            return [query("ids").custom(isItemIdList)];
         }
         default:
             break;
