@@ -15,10 +15,10 @@ jest.mock('react-i18next', () => ({
 
 jest.mock('../../api/all/storage', () => ({ getStorageLastItemsByUserId: jest.fn() }));
 
-jest.mock('../../api/all/item', () => ({ getItemInfoById: jest.fn() }));
+jest.mock('../../api/all/item', () => ({ getItemsInfo: jest.fn() }));
 
 const { getStorageLastItemsByUserId } = require('../../api/all/storage');
-const { getItemInfoById } = require('../../api/all/item');
+const { getItemsInfo } = require('../../api/all/item');
 
 beforeEach(() => {
     getStorageLastItemsByUserId.mockResolvedValue({
@@ -31,7 +31,7 @@ beforeEach(() => {
             },
         ],
     });
-    getItemInfoById.mockReturnValue(new Promise(() => {}));
+    getItemsInfo.mockReturnValue(new Promise(() => {}));
 });
 
 const imagePath = '/img/items/Rifles/AK-47/AK-47 Redline.png';

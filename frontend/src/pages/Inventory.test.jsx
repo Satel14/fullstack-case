@@ -25,7 +25,7 @@ jest.mock('../api/all/ws', () => ({ __esModule: true, default: {}, reconnectSock
 jest.mock('../components/mini/openNotification', () => jest.fn());
 
 jest.mock('../api/all/item', () => ({
-    getItemInfoById: jest.fn(),
+    getItemsInfo: jest.fn(),
     getItemPriceById: jest.fn(),
 }));
 
@@ -36,7 +36,7 @@ jest.mock('../api/all/storage', () => ({
 
 const openNotification = require('../components/mini/openNotification');
 const { getProfileStorage, sellItemByStorageId } = require('../api/all/storage');
-const { getItemInfoById, getItemPriceById } = require('../api/all/item');
+const { getItemsInfo, getItemPriceById } = require('../api/all/item');
 
 const server = { inventory: [], sold: [], balance: 0 };
 
@@ -46,7 +46,7 @@ const inventoryRows = (count) => Array.from({ length: count }, (_, i) => ({
 
 beforeEach(() => {
     openNotification.mockReset();
-    getItemInfoById.mockImplementation((id) => Promise.resolve({ data: { item_name: `Item ${id}` } }));
+    getItemsInfo.mockImplementation((ids) => Promise.resolve({ data: Object.fromEntries(ids.map((id) => [id, { item_name: `Item ${id}` }])) }));
     getItemPriceById.mockResolvedValue({ prices: { default: 10 } });
     server.sold = [];
     server.balance = 0;
