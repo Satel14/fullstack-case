@@ -121,37 +121,100 @@ test('two confirmations at once create exactly one account', async () => {
     assert.strictEqual((await users(sequelize)).length, 1);
 });
 
-const deadlockCount = async (sequelize) => {
-    const [[row]] = await sequelize.query(
-        "SELECT `COUNT` AS n FROM information_schema.INNODB_METRICS WHERE NAME = 'lock_deadlocks'",
-    );
-    return Number(row.n);
+const deadlockError = () => {
+    const e = new Error('Deadlock found when trying to get lock; try restarting transaction');
+    e.original = { code: 'ER_LOCK_DEADLOCK' };
+    return e;
 };
+
+test('a confirmation that deadlocks once is retried and still creates the account', async () => {
+    const sequelize = await fresh();
+    const Service = require('../src/services/emailVerification');
+    const EmailVerification = require('../src/models/emailVerification');
+    const token = await Service.createPending(pending());
+    const real = EmailVerification.findAll;
+    let calls = 0;
+    EmailVerification.findAll = function findAll(...args) {
+        calls += 1;
+        if (calls === 1) {
+            return Promise.reject(deadlockError());
+        }
+        return real.apply(this, args);
+    };
+
+    let result;
+    try {
+        result = await Service.confirm(token);
+    } finally {
+        EmailVerification.findAll = real;
+    }
+
+    assert.strictEqual(result.outcome, 'created');
+    assert.ok(calls > 1, 'the deadlocked attempt must be retried');
+    assert.strictEqual((await users(sequelize)).length, 1);
+});
+
+test('a confirmation that deadlocks on every attempt is rejected, not guessed as email-taken', async () => {
+    const sequelize = await fresh();
+    const Service = require('../src/services/emailVerification');
+    const EmailVerification = require('../src/models/emailVerification');
+    const token = await Service.createPending(pending());
+    const real = EmailVerification.findAll;
+    let calls = 0;
+    EmailVerification.findAll = () => {
+        calls += 1;
+        return Promise.reject(deadlockError());
+    };
+
+    try {
+        await assert.rejects(
+            () => Service.confirm(token),
+            (e) => e.original && e.original.code === 'ER_LOCK_DEADLOCK',
+        );
+    } finally {
+        EmailVerification.findAll = real;
+    }
+
+    assert.strictEqual(calls, 3);
+    assert.strictEqual((await users(sequelize)).length, 0);
+});
 
 test('two links of one address confirmed at once create one account and send the other to sign in', async () => {
     const sequelize = await fresh();
     const Service = require('../src/services/emailVerification');
-    const deadlocksBefore = await deadlockCount(sequelize);
+    const db = require('../src/config/db');
+    const realQuery = db.query.bind(db);
+    let deadlocks = 0;
+    db.query = (...args) => realQuery(...args).catch((e) => {
+        if (e && e.original && e.original.code === 'ER_LOCK_DEADLOCK') {
+            deadlocks += 1;
+        }
+        throw e;
+    });
 
-    for (let round = 0; round < 10; round += 1) {
-        const email = `round${round}@e.ua`;
-        const login = (n) => (round % 2 ? `r${round}` : `r${round}x${n}`);
-        const first = await Service.createPending(pending({ login: login(1), email }));
-        const second = await Service.createPending(pending({ login: login(2), email }));
+    try {
+        for (let round = 0; round < 10; round += 1) {
+            const email = `round${round}@e.ua`;
+            const login = (n) => (round % 2 ? `r${round}` : `r${round}x${n}`);
+            const first = await Service.createPending(pending({ login: login(1), email }));
+            const second = await Service.createPending(pending({ login: login(2), email }));
 
-        const settled = await Promise.allSettled([Service.confirm(first), Service.confirm(second)]);
+            const settled = await Promise.allSettled([Service.confirm(first), Service.confirm(second)]);
 
-        const failures = settled.filter((s) => s.status === 'rejected').map((s) => s.reason && s.reason.message);
-        assert.deepStrictEqual(failures, [], `round ${round}`);
-        const outcomes = settled.map((s) => s.value.outcome).sort();
-        assert.deepStrictEqual(outcomes, ['created', 'email-taken'], `round ${round}`);
+            const failures = settled.filter((s) => s.status === 'rejected').map((s) => s.reason && s.reason.message);
+            assert.deepStrictEqual(failures, [], `round ${round}`);
+            const outcomes = settled.map((s) => s.value.outcome).sort();
+            assert.deepStrictEqual(outcomes, ['created', 'email-taken'], `round ${round}`);
+        }
+    } finally {
+        db.query = realQuery;
     }
 
     const created = await users(sequelize);
     assert.strictEqual(created.length, 10);
     assert.strictEqual(new Set(created.map((u) => u.email)).size, 10);
     assert.ok((await pendingRows(sequelize)).every((row) => row.usedAt !== null));
-    assert.strictEqual(await deadlockCount(sequelize), deadlocksBefore, 'the confirmations must not deadlock at all');
+    assert.strictEqual(deadlocks, 0, 'the confirmations must not deadlock at all');
 });
 
 test('a used link of an address that has an account sends the player to sign in, otherwise it is invalid', async () => {
