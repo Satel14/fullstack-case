@@ -69,8 +69,15 @@ const send = (mailTo, message, sentLog, failedLog) => {
         .catch((err) => console.error(failedLog, err.message));
 };
 
+const senderDomain = (from) => {
+    const match = /@([^\s<>@]+)>?\s*$/.exec(from);
+    return match ? match[1].toLowerCase() : '';
+};
+
 if (!isEnabled()) {
     console.warn('[mail] RESEND_API_KEY is not set: emails are disabled, password recovery is unavailable and registration signs in without confirming the email');
+} else if (senderDomain(FROM) === 'resend.dev') {
+    console.warn(`[mail] the sender ${FROM} is on resend.dev, Resend's testing domain, which delivers only to the Resend account owner: registration confirmations and reset links to any other address will not arrive. Verify a sending domain in Resend and set RESEND_FROM to an address on it`);
 }
 
 module.exports = {

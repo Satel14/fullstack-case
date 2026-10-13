@@ -97,6 +97,46 @@ test('the mail sender loads and reports itself disabled without an API key', () 
     }
 });
 
+const warningsWhenLoaded = (env) => {
+    const mailPath = require.resolve('../src/modules/mailSender');
+    const cached = require.cache[mailPath];
+    const saved = Object.fromEntries(Object.keys(env).map((name) => [name, process.env[name]]));
+    const originalWarn = console.warn;
+    const warnings = [];
+    Object.entries(env).forEach(([name, value]) => restoreEnv(name, value));
+    console.warn = (...args) => { warnings.push(args.join(' ')); };
+    delete require.cache[mailPath];
+    try {
+        require('../src/modules/mailSender');
+    } finally {
+        console.warn = originalWarn;
+        Object.entries(saved).forEach(([name, value]) => restoreEnv(name, value));
+        if (cached) {
+            require.cache[mailPath] = cached;
+        } else {
+            delete require.cache[mailPath];
+        }
+    }
+    return warnings;
+};
+
+test('a sender on Resend\'s testing domain is warned about once at load, since only the account owner gets its mail', () => {
+    const aboutTestingDomain = (warnings) => warnings.filter((line) => line.includes('resend.dev'));
+
+    for (const from of [undefined, 'caseUA <onboarding@resend.dev>', 'onboarding@Resend.Dev']) {
+        const warnings = aboutTestingDomain(warningsWhenLoaded({ RESEND_API_KEY: 'test-key', RESEND_FROM: from }));
+        assert.strictEqual(warnings.length, 1, `RESEND_FROM ${JSON.stringify(from)}: ${JSON.stringify(warnings)}`);
+        assert.match(warnings[0], /owner/);
+        assert.match(warnings[0], /RESEND_FROM/);
+    }
+
+    for (const from of ['caseUA <noreply@case.example>', 'noreply@notresend.dev']) {
+        const warnings = warningsWhenLoaded({ RESEND_API_KEY: 'test-key', RESEND_FROM: from });
+        assert.deepStrictEqual(warnings, [], `RESEND_FROM ${JSON.stringify(from)}`);
+    }
+    assert.deepStrictEqual(aboutTestingDomain(warningsWhenLoaded({ RESEND_API_KEY: '', RESEND_FROM: undefined })), []);
+});
+
 test('user-controlled values are escaped in the email HTML', () => {
     const { passwordResetEmail, welcomeEmail } = require('../src/modules/mailSender');
     const login = '<a href="https://evil.example">claim your prize</a>';
