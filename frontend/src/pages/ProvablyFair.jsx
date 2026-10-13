@@ -19,9 +19,26 @@ import {
 
 const HISTORY_PAGE = 50;
 
-const appendOpens = (loaded, page) => {
-    const known = new Set(loaded.map((open) => open.id));
-    return [...loaded, ...page.filter((open) => !known.has(open.id))];
+const olderThanShown = (shown, page) => {
+    if (!shown.length) {
+        return page;
+    }
+    const oldestShownId = shown[shown.length - 1].id;
+    return page.filter((open) => open.id < oldestShownId);
+};
+
+const fetchOlderOpens = async (shown, offset, stillWanted) => {
+    const h = await getOpenHistory(HISTORY_PAGE, offset);
+    const page = h.data || [];
+    const next = {
+        opens: olderThanShown(shown, page),
+        offset: offset + page.length,
+        more: page.length === HISTORY_PAGE,
+    };
+    if (next.opens.length || !next.more || !stillWanted()) {
+        return next;
+    }
+    return fetchOlderOpens(shown, next.offset, stillWanted);
 };
 
 const ProvablyFair = () => {
@@ -34,6 +51,7 @@ const ProvablyFair = () => {
     const [historyFailed, setHistoryFailed] = useState(false);
     const [historyLoading, setHistoryLoading] = useState(false);
     const [hasMoreHistory, setHasMoreHistory] = useState(false);
+    const [historyOffset, setHistoryOffset] = useState(0);
     const [calc, setCalc] = useState({
         serverSeed: '', clientSeed: '', nonce: '', caseId: '', openId: null,
     });
@@ -41,14 +59,14 @@ const ProvablyFair = () => {
     const [calcError, setCalcError] = useState(null);
     const generation = useRef(0);
 
-    const loadHistory = useCallback(async (mine, loaded = []) => {
+    const loadHistory = useCallback(async (mine, loaded = [], offset = 0) => {
         setHistoryLoading(true);
         try {
-            const h = await getOpenHistory(HISTORY_PAGE, loaded.length);
+            const next = await fetchOlderOpens(loaded, offset, () => mine === generation.current);
             if (mine === generation.current) {
-                const page = h.data || [];
-                setHistory(appendOpens(loaded, page));
-                setHasMoreHistory(page.length === HISTORY_PAGE);
+                setHistory([...loaded, ...next.opens]);
+                setHistoryOffset(next.offset);
+                setHasMoreHistory(next.more);
                 setHistoryLoaded(true);
                 setHistoryFailed(false);
             }
@@ -87,7 +105,7 @@ const ProvablyFair = () => {
 
     const reloadHistory = () => loadHistory(generation.current);
 
-    const loadMoreHistory = () => loadHistory(generation.current, history);
+    const loadMoreHistory = () => loadHistory(generation.current, history, historyOffset);
 
     useEffect(() => {
         load();

@@ -198,6 +198,46 @@ test('an open that shifted onto the next page while loading is listed once', asy
     expect(screen.getAllByRole('button', { name: 'provablyFair.verify' })).toHaveLength(60);
 });
 
+const serveHistory = (opens) => {
+    const server = { opens };
+    api.getOpenHistory.mockImplementation((limit, offset) => Promise.resolve({ data: server.opens.slice(offset, offset + limit) }));
+    return server;
+};
+
+const pressLoadMoreUntil = async (caseId) => {
+    fireEvent.click(screen.getByRole('button', { name: /provablyFair\.loadMore/ }));
+    expect(await screen.findByText(caseId)).toBeInTheDocument();
+};
+
+const shownCases = () => screen.getAllByText(/^case-\d+$/).map((cell) => cell.textContent);
+
+test('"load more" reaches every older open, newest first and once each, after 60 new opens since the list loaded', async () => {
+    const server = serveHistory(opensFrom(120, 120));
+    render(<ProvablyFair />);
+    await screen.findByText('case-71');
+
+    server.opens = [...opensFrom(180, 60), ...server.opens];
+
+    await pressLoadMoreUntil('case-31');
+    await pressLoadMoreUntil('case-1');
+
+    expect(shownCases()).toEqual(opensFrom(120, 120).map((open) => open.caseId));
+    expect(screen.queryByRole('button', { name: /provablyFair\.loadMore/ })).toBeNull();
+});
+
+test('"load more" still reaches the older opens when exactly a page of new opens pushed the shown ones down', async () => {
+    const server = serveHistory(opensFrom(80, 80));
+    render(<ProvablyFair />);
+    await screen.findByText('case-31');
+
+    server.opens = [...opensFrom(130, 50), ...server.opens];
+
+    await pressLoadMoreUntil('case-1');
+
+    expect(shownCases()).toEqual(opensFrom(80, 80).map((open) => open.caseId));
+    expect(screen.queryByRole('button', { name: /provablyFair\.loadMore/ })).toBeNull();
+});
+
 test('a "load more" that fails keeps the loaded opens and can be pressed again', async () => {
     api.getOpenHistory
         .mockResolvedValueOnce({ data: opensFrom(60, 50) })
