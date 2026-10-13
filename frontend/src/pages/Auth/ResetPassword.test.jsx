@@ -90,6 +90,20 @@ test('a refused link reports the server message and stays on the page', async ()
     expect(screen.getByLabelText('auth.reset.passwordLabel')).toBeInTheDocument();
 });
 
+test.each([
+    ['a server failure with raw text', { error: 500, message: 'ER_LOCK_WAIT_TIMEOUT raw database text' }],
+    ['a network failure', new TypeError('Failed to fetch')],
+    ['an answer without a readable body', { error: 502 }],
+])('%s is reported as a server error, never with its own text', async (name, failure) => {
+    resetPassword.mockRejectedValue(failure);
+    renderAt(`/reset-password?token=${TOKEN}`);
+
+    fill('brand-new-1', 'brand-new-1');
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.reset.errorTitle', 'common.serverError'));
+    expect(screen.queryByText('login page')).toBeNull();
+});
+
 test('a password over 72 bytes is refused before the server, even when it is under 72 letters', async () => {
     renderAt(`/reset-password?token=${TOKEN}`);
     const cyrillic = 'пароль'.repeat(7);

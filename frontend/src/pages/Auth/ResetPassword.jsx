@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { resetPassword } from '../../api/all/user';
 import openNotification from '../../components/mini/openNotification';
 import { acceptablePassword } from '../../helpers/credentials';
+import { clientErrorMessage } from '../../helpers/serverMessage';
 
 const ResetPassword = () => {
     const { t } = useTranslation();
@@ -30,7 +31,7 @@ const ResetPassword = () => {
             openNotification('success', t('auth.reset.successTitle'), result.message);
             history.push('/login');
         } catch (failure) {
-            openNotification('error', t('auth.reset.errorTitle'), (failure && failure.message) || t('common.serverError'));
+            openNotification('error', t('auth.reset.errorTitle'), clientErrorMessage(failure) || t('common.serverError'));
             setLoading(false);
         }
     };

@@ -13,6 +13,7 @@ import { Link } from 'react-router-dom';
 import { userPostRegisterFetch } from '../../store/actions/user';
 import openNotification from '../../components/mini/openNotification';
 import { LOGIN_PATTERN, acceptablePassword, acceptableEmail } from '../../helpers/credentials';
+import { clientErrorMessage } from '../../helpers/serverMessage';
 
 const formItemLayout = {
     labelCol: {
@@ -70,7 +71,7 @@ const Registration = (props) => {
                 return undefined;
             }
             if (result) {
-                openNotification('error', t('auth.register.errorTitle'), result.message || t('common.serverError'));
+                openNotification('error', t('auth.register.errorTitle'), clientErrorMessage(result) || t('common.serverError'));
                 return undefined;
             }
             props.history.push('/');

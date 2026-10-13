@@ -77,6 +77,16 @@ test('an answer without a readable body stops the spinner and says the server fa
     expect(screen.queryByText('home page')).toBeNull();
 });
 
+test('a server failure is reported as a server error, never with its raw text', async () => {
+    userPostRegisterFetch.mockImplementation(() => () => Promise.resolve({ error: 500, message: 'ER_DUP_ENTRY raw database text' }));
+    renderForm();
+
+    fill();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.register.errorTitle', 'common.serverError'));
+    expect(openNotification).not.toHaveBeenCalledWith('error', 'auth.register.errorTitle', 'ER_DUP_ENTRY raw database text');
+});
+
 test('a refused registration shows the reason the server gave', async () => {
     userPostRegisterFetch.mockImplementation(() => () => Promise.resolve({ error: 422, message: 'Такий логін уже зайнятий' }));
     renderForm();
