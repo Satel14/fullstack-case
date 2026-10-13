@@ -57,3 +57,8 @@ test('the site address used in password-reset links can be set to the one player
 test('the frontend container is reached only through nginx', () => {
     assert.doesNotMatch(composeService('frontend'), /^\s+ports:/m);
 });
+
+test('the backend refuses to start without a real JWT secret', () => {
+    assert.match(composeService('backend'), /^ {6}JWT_SECRET: \$\{JWT_SECRET:\?[^}]+\}$/m);
+    assert.doesNotMatch(compose, /^\s*JWT_SECRET:\s*(?!\$\{)\S/m, 'no secret-looking literal should be assigned to JWT_SECRET');
+});
