@@ -57,12 +57,13 @@ export const addItemsToCache = (itemList) => (dispatch) => {
 
 export const itemInfoFetch = (id) => (dispatch, getState) => {
     const { itemCache } = getState();
+    const key = String(id);
 
     if (itemCache[id]) {
         return Promise.resolve(itemCache[id]);
     }
-    if (pending.has(id)) {
-        return pending.get(id);
+    if (pending.has(key)) {
+        return pending.get(key);
     }
 
     const request = enqueue(id)
@@ -71,9 +72,9 @@ export const itemInfoFetch = (id) => (dispatch, getState) => {
             return itemInfo;
         })
         .finally(() => {
-            pending.delete(id);
+            pending.delete(key);
         });
 
-    pending.set(id, request);
+    pending.set(key, request);
     return request;
 };

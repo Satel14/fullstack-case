@@ -124,6 +124,15 @@ test('a failed request gives every item in it a placeholder and lets a later req
     expect(getItemsInfo).toHaveBeenCalledTimes(2);
 });
 
+test('the same id as a number and as a string is looked up once', async () => {
+    const { dispatch } = makeStore();
+    const ids = Array.from({ length: 199 }, (_, i) => i + 1);
+
+    await Promise.all([...ids, 300, '300'].map((id) => dispatch(itemInfoFetch(id))));
+
+    expect(requestedIds().map((batch) => batch.length)).toEqual([200]);
+});
+
 test('items delivered with the drop feed fill the cache without any request', async () => {
     const { state, dispatch } = makeStore();
 
