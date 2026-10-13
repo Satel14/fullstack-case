@@ -28,6 +28,7 @@ jest.mock('../../api/all/item', () => ({ getItemsInfo: jest.fn() }));
 jest.mock('../mini/openNotification', () => jest.fn());
 
 const { openCaseById } = require('../../api/all/cases');
+const { sellItemByStorageId } = require('../../api/all/storage');
 const { getItemsInfo } = require('../../api/all/item');
 const openNotification = require('../mini/openNotification');
 
@@ -237,6 +238,88 @@ test('a won item without a price offers no sell button for it', async () => {
     expect(await screen.findByText('openCase.sellFor {"price":25}')).toBeInTheDocument();
     expect(screen.getAllByText(/openCase\.sellFor/)).toHaveLength(1);
     expect(screen.getByText('openCase.sellAllFor {"sum":"25.00"}')).toBeInTheDocument();
+});
+
+const deferred = () => {
+    let settle;
+    const promise = new Promise((resolve) => { settle = resolve; });
+    return { promise, resolve: settle };
+};
+
+const soldAnswer = (balance) => ({ status: 200, balance });
+
+const openTwoAndShowResult = async () => {
+    openTwo();
+    renderOpenCase(baseCase, {}, cachedGuns);
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.fast$/ }));
+    await screen.findByText('openCase.sellFor {"price":25}');
+};
+
+test('a sell button cannot sell the same item twice while its sale is in flight', async () => {
+    const sale = deferred();
+    sellItemByStorageId.mockReturnValue(sale.promise);
+    await openTwoAndShowResult();
+
+    const sellButton = screen.getByRole('button', { name: /openCase\.sellFor \{"price":25\}/ });
+    fireEvent.click(sellButton);
+    fireEvent.click(sellButton);
+
+    expect(sellItemByStorageId).toHaveBeenCalledTimes(1);
+    expect(sellItemByStorageId).toHaveBeenCalledWith(50);
+
+    await act(async () => { sale.resolve(soldAnswer(925)); });
+
+    expect(screen.getAllByText('inventory.soldLabel')).toHaveLength(1);
+    expect(window.HeaderSecond.changeBalance).toHaveBeenLastCalledWith(925);
+});
+
+test('sell all cannot run twice at once, and single sells wait for it', async () => {
+    const first = deferred();
+    const second = deferred();
+    sellItemByStorageId.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
+    await openTwoAndShowResult();
+
+    const sellAll = screen.getByRole('button', { name: /openCase\.sellAllFor/ });
+    fireEvent.click(sellAll);
+    fireEvent.click(sellAll);
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.sellFor \{"price":4\}/ }));
+
+    expect(sellItemByStorageId).toHaveBeenCalledTimes(1);
+
+    await act(async () => { first.resolve(soldAnswer(925)); });
+    expect(sellItemByStorageId).toHaveBeenCalledTimes(2);
+    expect(sellItemByStorageId).toHaveBeenLastCalledWith(51);
+
+    await act(async () => { second.resolve(soldAnswer(929)); });
+
+    expect(screen.getAllByText('inventory.soldLabel')).toHaveLength(2);
+    expect(openNotification).toHaveBeenCalledWith('success', 'openCase.allSold');
+    expect(openNotification).not.toHaveBeenCalledWith('error', expect.anything(), expect.anything());
+});
+
+test('sales that finish after "Try again" do not mark items of the next result as sold', async () => {
+    const first = deferred();
+    const second = deferred();
+    sellItemByStorageId.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
+    await openTwoAndShowResult();
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.sellAllFor/ }));
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.tryAgain/ }));
+    await act(async () => { first.resolve(soldAnswer(925)); });
+    await act(async () => { second.resolve(soldAnswer(929)); });
+
+    const items = [wonItem(101, 'default'), wonItem(102, 'painted')];
+    openCaseById.mockResolvedValue({
+        status: 200,
+        balance: 829,
+        data: items.map((item, i) => ({ winner: { item, winIndex: 71, storageId: 60 + i }, resultWithItem: [item] })),
+    });
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.fast$/ }));
+
+    expect(await screen.findByText('openCase.sellFor {"price":10}')).toBeInTheDocument();
+    expect(screen.getByText('openCase.sellFor {"price":6}')).toBeInTheDocument();
+    expect(screen.getByText('openCase.sellAllFor {"sum":"16.00"}')).toBeInTheDocument();
+    expect(screen.queryByText('inventory.soldLabel')).toBeNull();
 });
 
 const blockTiles = () => Array.from(document.querySelectorAll('.opencase-blocklist .front'));

@@ -115,6 +115,8 @@ class OpenCase extends Component {
             processWorking: false,
             loading: false,
             openCount: '1',
+            selling: [],
+            sellingAll: false,
         };
 
         this.openBlockMethod = this.openBlockMethod.bind(this);
@@ -127,6 +129,9 @@ class OpenCase extends Component {
         this.timers = [];
         this.rafId = null;
         this.mounted = false;
+        this.resultGeneration = 0;
+        this.pendingSells = new Set();
+        this.sellingAll = false;
     }
 
     componentDidMount() {
@@ -175,6 +180,7 @@ class OpenCase extends Component {
 
     getBack() {
         this.clearTimers();
+        this.dropResult();
         this.setState({
             openMethod: '',
             load: false,
@@ -189,6 +195,8 @@ class OpenCase extends Component {
             clicked: false,
             openCount: '1',
             prices: [],
+            selling: [],
+            sellingAll: false,
         });
     }
 
@@ -215,6 +223,12 @@ class OpenCase extends Component {
         }
 
         return sum.toFixed(2);
+    }
+
+    dropResult() {
+        this.resultGeneration += 1;
+        this.pendingSells.clear();
+        this.sellingAll = false;
     }
 
     clearTimers() {
@@ -263,6 +277,7 @@ class OpenCase extends Component {
 
     resetView() {
         this.clearTimers();
+        this.dropResult();
         this.safeSetState({
             openMethod: '',
             load: false,
@@ -278,6 +293,8 @@ class OpenCase extends Component {
             processWorking: false,
             loading: false,
             prices: [],
+            selling: [],
+            sellingAll: false,
         });
     }
 
@@ -299,9 +316,24 @@ class OpenCase extends Component {
         }
     }
 
-    async sellItem(storageId, i, notify = true) {
-        const { prices } = this.state;
+    sellOne(storageId, i) {
+        if (this.sellingAll) {
+            return;
+        }
+        this.sellItem(storageId, i);
+    }
 
+    async sellItem(storageId, i, notify = true, generation = this.resultGeneration) {
+        if (this.pendingSells.has(storageId)) {
+            return false;
+        }
+        const isCurrent = () => generation === this.resultGeneration;
+        if (isCurrent()) {
+            this.pendingSells.add(storageId);
+            this.safeSetState((prev) => ({ selling: [...prev.selling, storageId] }));
+        }
+
+        let sold = false;
         try {
             const result = await sellItemByStorageId(storageId);
             if (result.status === 200) {
@@ -311,20 +343,27 @@ class OpenCase extends Component {
                 if (notify) {
                     openNotification('success', this.props.t('openCase.sold'));
                 }
-                delete prices[i];
-                this.setState((prev) => ({ prices, sold: [...prev.sold, i] }));
-                return true;
-            }
-            if (notify) {
+                sold = true;
+            } else if (notify) {
                 openNotification('error', this.props.t('openCase.sellErrorTitle'), result.message || this.props.t('openCase.sellErrorText'));
             }
-            return false;
         } catch (e) {
             if (notify) {
                 openNotification('error', this.props.t('common.error'), this.props.t('openCase.sellErrorText'));
             }
-            return false;
         }
+
+        if (isCurrent()) {
+            this.pendingSells.delete(storageId);
+            this.safeSetState((prev) => ({
+                selling: prev.selling.filter((id) => id !== storageId),
+                ...(sold && {
+                    prices: prev.prices.map((price, index) => (index === i ? undefined : price)),
+                    sold: [...prev.sold, i],
+                }),
+            }));
+        }
+        return sold;
     }
 
     async open() {
@@ -502,7 +541,14 @@ class OpenCase extends Component {
     }
 
     async sellItemAll() {
+        if (this.sellingAll || this.pendingSells.size) {
+            return;
+        }
         const { winner, sold } = this.state;
+        const generation = this.resultGeneration;
+        this.sellingAll = true;
+        this.setState({ sellingAll: true });
+
         let failed = 0;
         for (let index = 0; index < winner.length; index++) {
             if (sold.includes(index)) {
@@ -510,10 +556,15 @@ class OpenCase extends Component {
                 continue;
             }
             // eslint-disable-next-line no-await-in-loop
-            const ok = await this.sellItem(winner[index].storageId, index, false);
+            const ok = await this.sellItem(winner[index].storageId, index, false, generation);
             if (!ok) {
                 failed += 1;
             }
+        }
+
+        if (generation === this.resultGeneration) {
+            this.sellingAll = false;
+            this.safeSetState({ sellingAll: false });
         }
         if (failed) {
             openNotification('error', this.props.t('openCase.sellErrorTitle'), this.props.t('openCase.sellErrorText'));
@@ -606,6 +657,8 @@ class OpenCase extends Component {
             winner,
             loading,
             openCount,
+            selling,
+            sellingAll,
         } = this.state;
         const { data, user, t } = this.props;
 
@@ -707,7 +760,9 @@ class OpenCase extends Component {
                                                         icon={<DollarOutlined />}
                                                         ghost
                                                         size="small"
-                                                        onClick={() => this.sellItem(w.storageId, i)}
+                                                        loading={selling.includes(w.storageId)}
+                                                        disabled={sellingAll}
+                                                        onClick={() => this.sellOne(w.storageId, i)}
                                                         style={{ marginTop: 8 }}
                                                     >
                                                         {t('openCase.sellFor', { price: this.state.prices[i] })}
@@ -742,6 +797,8 @@ class OpenCase extends Component {
                                                     icon={<DollarOutlined />}
                                                     ghost
                                                     size="large"
+                                                    loading={sellingAll}
+                                                    disabled={!sellingAll && selling.length > 0}
                                                     onClick={() => this.sellItemAll()}
                                                 >
                                                     {t('openCase.sellAllFor', { sum: this.getSummAll() })}

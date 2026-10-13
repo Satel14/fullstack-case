@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import {
  Form, Input, Button, Tooltip, Card,
 } from 'antd';
@@ -13,12 +13,24 @@ const mapDispatchToProps = (dispatch) => ({
 
 const Promocode = (props) => {
   const { t } = useTranslation();
+  const [pending, setPending] = useState(false);
+  const inFlight = useRef(false);
+  const release = () => {
+    inFlight.current = false;
+    setPending(false);
+  };
   const onFinish = (values) => {
+    if (inFlight.current) {
+      return;
+    }
+    inFlight.current = true;
+    setPending(true);
     props
       .redeemPromocodeFetch({
         promocode: values.promocode,
       })
       .then((data) => {
+        release();
         // eslint-disable-next-line promise/always-return
         if (!data.balance) {
           openNotification('error', t('promocode.errorTitle'), data.message);
@@ -27,6 +39,7 @@ const Promocode = (props) => {
         openNotification('success', t('promocode.successTitle'), data.message);
       })
       .catch(() => {
+        release();
         openNotification('error', t('promocode.errorTitle'), t('promocode.failed'));
       });
   };
@@ -58,7 +71,7 @@ const Promocode = (props) => {
           <Input placeholder={t('promocode.placeholder')} style={{ minWidth: '200px' }} />
         </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit" className="color-green">
+          <Button type="primary" htmlType="submit" className="color-green" loading={pending}>
             {t('promocode.submit')}
           </Button>
         </Form.Item>
