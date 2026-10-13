@@ -15,7 +15,6 @@ import {
     SettingOutlined,
 } from '@ant-design/icons';
 
-import Socials from './mini/Socials';
 import LanguageSwitcher from './LanguageSwitcher';
 import { isAuthorized } from '../helpers/Player';
 import { isAdmin } from '../helpers/permissions';
@@ -104,10 +103,6 @@ class MenuLayoutSlider extends React.Component {
                 />
 
                 <LanguageSwitcher />
-
-                <div className="custom social">
-                    <Socials />
-                </div>
             </>
         );
     }
