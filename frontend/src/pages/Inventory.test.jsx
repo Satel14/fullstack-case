@@ -150,6 +150,33 @@ test('a load that finishes after the page closed updates nothing', async () => {
     expect(unmountedUpdates).toEqual([]);
 });
 
+test('a load that fails after the page closed does not report an error on the page the player went to', async () => {
+    let failInventory;
+    getProfileStorage.mockImplementation(({ status }) => (status === 'inventory'
+        ? new Promise((resolve, reject) => { failInventory = reject; })
+        : Promise.resolve({ status: 200, data: [] })));
+    const { unmount } = render(
+        <Provider store={makeStore()}>
+            <Inventory />
+        </Provider>,
+    );
+
+    unmount();
+    await act(async () => {
+        failInventory({ error: 500 });
+        await new Promise((resolve) => { setTimeout(resolve, 50); });
+    });
+
+    expect(openNotification).not.toHaveBeenCalled();
+});
+
+test('a load that fails while the page is open still reports the error', async () => {
+    getProfileStorage.mockImplementation(() => Promise.reject({ error: 500 }));
+    renderInventory();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'common.serverError'));
+});
+
 const clickSellAll = async () => {
     fireEvent.click(await screen.findByRole('button', { name: /inventory.sellAll/ }));
 };

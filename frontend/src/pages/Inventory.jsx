@@ -97,6 +97,9 @@ const Inventory = ({
             setSold(moneyRows);
             await loadWithdrawals();
         } catch (e) {
+            if (!isCurrent()) {
+                return;
+            }
             openNotification('error', t('common.error'), t('common.serverError'));
         }
         if (isCurrent()) {
