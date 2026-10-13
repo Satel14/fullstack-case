@@ -29,6 +29,16 @@ module.exports.getUserById = async (id) => {
     }
 };
 
+module.exports.getUsersByIds = async (ids) => {
+    if (!ids.length) {
+        return [];
+    }
+    return User.findAll({
+        where: { user_id: ids },
+        attributes: [...PUBLIC_FIELDS, "updated_at", "created_at"],
+    });
+};
+
 module.exports.getUserFullInfoById = async (id, options = {}) => {
     try {
         const user = await User.findByPk(id, options);

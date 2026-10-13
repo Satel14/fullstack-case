@@ -10,6 +10,14 @@ test.after(async () => {
     }
 });
 
+const managerPath = require.resolve('../src/redis/manager');
+require.cache[managerPath] = {
+    id: managerPath,
+    filename: managerPath,
+    loaded: true,
+    exports: { getAllDataHashWithKey: async () => ({}) },
+};
+
 const respond = (handler, req) => new Promise((resolve) => {
     const res = {
         statusCode: 200,
@@ -41,14 +49,6 @@ test('the drop feed carries each dropped item once, in the same shape as GET /ap
         + "(1, 707, 'default', 'dust2', 'inventory')",
     );
 
-    const managerPath = require.resolve('../src/redis/manager');
-    require.cache[managerPath] = {
-        id: managerPath,
-        filename: managerPath,
-        loaded: true,
-        exports: { getAllDataHashWithKey: async () => ({}) },
-    };
-
     const StorageController = require('../src/controllers/storage');
     const ItemController = require('../src/controllers/item');
 
@@ -64,4 +64,87 @@ test('the drop feed carries each dropped item once, in the same shape as GET /ap
     }
     assert.deepStrictEqual(feed.payload.itemList[707].pricesInCredits, { default: 120, painted: 150 });
     assert.strictEqual(feed.payload.itemList[708].pricesInCredits, null);
+});
+
+const asJson = (value) => JSON.parse(JSON.stringify(value));
+
+const seedFeed = async (sequelize, count) => {
+    const range = Array.from({ length: count }, (_, i) => i + 1);
+    await sequelize.query(`INSERT INTO users (login, password, email, balance, \`rank\`, role) VALUES ${
+        range.map((i) => `('player${i}', 'x', 'player${i}@e.ua', 0, 0, 1)`).join(', ')}`);
+    await sequelize.query(`INSERT INTO items (itemId, name, rare, colors, type, imagePath) VALUES ${
+        range.map((i) => `(${700 + i}, 'Gun ${i}', 'Field Tested', '[]', 'rifles', '')`).join(', ')}`);
+    await sequelize.query(`INSERT INTO insider_prices (name, pricesInCredits) VALUES ${
+        range.map((i) => `('Gun ${i}', JSON_QUOTE('{"default":${i}}'))`).join(', ')}`);
+    await sequelize.query(`INSERT INTO cases (id, title, price, discount, categoryId, published, img, openedCount, type, openLimit) VALUES ${
+        range.map((i) => `('case${i}', 'Case ${i}', 100, 100, 1, 1, '', 0, 'default', 1000)`).join(', ')}`);
+    await sequelize.query(`INSERT INTO storage (userId, itemId, color, caseId, status) VALUES ${
+        range.map((i) => `(${i}, ${700 + i}, 'default', 'case${i}', 'inventory')`).join(', ')}`);
+};
+
+const countQueries = async (sequelize, work) => {
+    const original = sequelize.query;
+    let queries = 0;
+    sequelize.query = function countedQuery(...args) {
+        queries += 1;
+        return original.apply(this, args);
+    };
+    try {
+        return { result: await work(), queries };
+    } finally {
+        sequelize.query = original;
+    }
+};
+
+test('the drop feed lists each player and case once, as the single lookups do, and null for missing ones', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedFeed(sequelize, 2);
+    await sequelize.query(
+        "INSERT INTO storage (userId, itemId, color, caseId, status) VALUES (99, 701, 'default', 'gone', 'inventory'), "
+        + "(1, 702, 'default', 'case2', 'inventory')",
+    );
+
+    const StorageController = require('../src/controllers/storage');
+    const UserService = require('../src/services/user');
+    const CaseService = require('../src/services/case');
+
+    const feed = await respond(StorageController.getStorageLastItemsWithUserInfo, { params: { limit: 40 } });
+
+    assert.strictEqual(feed.code, 200);
+    assert.strictEqual(feed.payload.data.length, 4);
+    assert.deepStrictEqual(Object.keys(feed.payload.userList).sort(), ['1', '2', '99']);
+    assert.deepStrictEqual(Object.keys(feed.payload.caseList).sort(), ['case1', 'case2', 'gone']);
+    for (const id of [1, 2]) {
+        assert.deepStrictEqual(asJson(feed.payload.userList[id]), asJson(await UserService.getUserById(id)), `user ${id}`);
+    }
+    for (const id of ['case1', 'case2']) {
+        assert.deepStrictEqual(asJson(feed.payload.caseList[id]), asJson(await CaseService.getCaseById(id)), `case ${id}`);
+    }
+    assert.strictEqual(feed.payload.userList[99], null);
+    assert.strictEqual(feed.payload.caseList.gone, null);
+    assert.ok(!JSON.stringify(feed.payload.userList).includes('player1@e.ua'), 'no private user fields');
+});
+
+test('the number of database queries of the drop feed does not grow with the number of drops', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedFeed(sequelize, 40);
+
+    const StorageController = require('../src/controllers/storage');
+    const few = await countQueries(
+        sequelize, () => respond(StorageController.getStorageLastItemsWithUserInfo, { params: { limit: 2 } }),
+    );
+    const many = await countQueries(
+        sequelize, () => respond(StorageController.getStorageLastItemsWithUserInfo, { params: { limit: 40 } }),
+    );
+
+    assert.strictEqual(many.result.code, 200);
+    assert.strictEqual(many.result.payload.data.length, 40);
+    assert.strictEqual(Object.keys(many.result.payload.itemList).length, 40);
+    assert.strictEqual(Object.keys(many.result.payload.userList).length, 40);
+    assert.strictEqual(Object.keys(many.result.payload.caseList).length, 40);
+    assert.ok(few.queries > 0, 'the queries are counted');
+    assert.ok(many.queries <= 5, `${many.queries} queries for 40 drops`);
+    assert.strictEqual(many.queries, few.queries);
 });

@@ -2,6 +2,13 @@ const MESSAGE = require('../constant/responseMessages');
 const Case = require('../models/case')
 const Category = require('../models/category');
 
+module.exports.getCasesByIds = async (ids) => {
+    if (!ids.length) {
+        return [];
+    }
+    return Case.findAll({ where: { case_id: ids } });
+};
+
 module.exports.getCaseById = async (id, options = {}) => {
     try {
         const getCase = await Case.findOne({

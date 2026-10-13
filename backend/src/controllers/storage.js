@@ -270,40 +270,24 @@ module.exports.getStorageLastItems = async (req, res) => {
     }
 };
 
+const listByKey = (keys, found) => Object.fromEntries(keys.map((key) => [key, found.get(String(key)) || null]));
+
 module.exports.getStorageLastItemsWithUserInfo = async (req, res) => {
     try {
         const { limit } = req.params;
         const items = await StorageService.getStorageLastItems(limit);
+        const distinct = (field) => [...new Set(items.map((item) => item[field]))];
+        const itemIds = distinct('storage_itemId');
+        const userIds = distinct('storage_userId');
+        const caseIds = distinct('storage_caseId');
 
-        const userList = {};
-        const caseList = {};
-        const itemList = {};
+        const itemsById = itemIds.length ? await ItemService.getItemsWithPrices(itemIds) : {};
+        const users = await UserService.getUsersByIds(userIds);
+        const cases = await CaseService.getCasesByIds(caseIds);
 
-        for (const key in items) {
-            const element = items[key];
-
-            if (!itemList[element.storage_itemId]) {
-                itemList[element.storage_itemId] = await ItemService.getItemWithPrices(element.storage_itemId).catch(() => null);
-            }
-
-            if (!userList[element.storage_userId]) {
-                const userInfo = await UserService.getUserById(element.storage_userId).catch(() => null);
-                userList[element.storage_userId] = userInfo;
-            }
-            if (!caseList[element.storage_caseId]) {
-                const caseInfo = await CaseService.getCaseById(element.storage_caseId).catch(() => null);
-                caseList[element.storage_caseId] = caseInfo;
-            }
-        }
-
-        const promises = [];
-
-        for (const key in userList) {
-            const element = userList[key];
-            promises.push(element);
-        }
-
-        await Promise.all(promises);
+        const itemList = listByKey(itemIds, new Map(Object.entries(itemsById)));
+        const userList = listByKey(userIds, new Map(users.map((user) => [String(user.user_id), user])));
+        const caseList = listByKey(caseIds, new Map(cases.map((caseRow) => [String(caseRow.case_id), caseRow])));
 
         return res.status(200).json({ status: 200, data: items, userList, caseList, itemList });
     } catch (e) {
