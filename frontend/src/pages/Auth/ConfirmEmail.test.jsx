@@ -48,6 +48,29 @@ test('a refused link shows the server reason with ways forward', async () => {
     expect(await screen.findByText('Посилання недійсне')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'auth.confirm.toRegister' })).toHaveAttribute('href', '/registration');
     expect(screen.getByRole('link', { name: 'auth.confirm.toLogin' })).toHaveAttribute('href', '/login');
+    expect(screen.queryByRole('button', { name: 'auth.confirm.submit' })).toBeNull();
+});
+
+test.each([
+    ['too many attempts', { error: 429, message: 'Забагато спроб' }, 'Забагато спроб'],
+    ['a server error', { error: 500, message: 'Збій сервера' }, 'Збій сервера'],
+    ['a network failure', new TypeError('Failed to fetch'), 'common.serverError'],
+])('after %s the reason is shown and the button stays, so the player can try again', async (_, failure, shown) => {
+    confirmEmailFetch
+        .mockImplementationOnce(() => () => Promise.reject(failure))
+        .mockImplementationOnce(() => () => Promise.resolve({ user_login: 'newbie' }));
+    renderPage(`?token=${'a'.repeat(64)}`);
+
+    fireEvent.click(screen.getByRole('button', { name: 'auth.confirm.submit' }));
+
+    expect(await screen.findByText(shown)).toBeInTheDocument();
+    const retry = screen.getByRole('button', { name: 'auth.confirm.submit' });
+    await waitFor(() => expect(retry).not.toHaveClass('ant-btn-loading'));
+
+    fireEvent.click(retry);
+
+    await waitFor(() => expect(screen.getByText('home page')).toBeInTheDocument());
+    expect(confirmEmailFetch).toHaveBeenCalledTimes(2);
 });
 
 test('a link without a token says so', () => {

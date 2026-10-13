@@ -2,7 +2,7 @@ export const PASSWORD_MIN = 6;
 export const PASSWORD_MAX_BYTES = 72;
 export const LOGIN_PATTERN = /^[A-Za-z0-9_.-]{3,32}$/;
 export const EMAIL_MAX = 254;
-export const EMAIL_PATTERN = /^[\x21-\x3F\x41-\x7E]+@[\x21-\x3F\x41-\x7E]+\.[\x21-\x3F\x41-\x7E]+$/;
+export const EMAIL_PATTERN = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/;
 
 export const utf8Length = (value) => {
     try {

@@ -119,6 +119,12 @@ test.each([
     ['a b@e.ua'],
     ['a@e.ua\u202E'],
     [`${'x'.repeat(250)}@e.ua`],
+    ['\u00F6wner@e.ua'],
+    ['x<victim@y.z>'],
+    ['"quoted"@e.ua'],
+    ['a,b@e.ua'],
+    ['a@[127.0.0.1]'],
+    ['a@e..ua'],
 ])('the email %j is refused without registering', async (email) => {
     renderForm();
 
@@ -126,6 +132,19 @@ test.each([
 
     await waitFor(() => expect(screen.getByText('auth.register.emailInvalid')).toBeInTheDocument());
     expect(userPostRegisterFetch).not.toHaveBeenCalled();
+});
+
+test.each([
+    ['name.surname+tag@sub.example.co.uk'],
+    ['player@xn--80ak6aa92e.com'],
+    ["o'brien@e.ua"],
+])('the email %j registers', async (email) => {
+    renderForm();
+
+    fill({ email });
+
+    await waitFor(() => expect(screen.getByText('home page')).toBeInTheDocument());
+    expect(userPostRegisterFetch).toHaveBeenCalledWith(expect.objectContaining({ email }));
 });
 
 test('a registration that needs confirming shows where the link went and signs nobody in', async () => {

@@ -2,7 +2,7 @@ const PASSWORD_MIN = 6;
 const PASSWORD_MAX_BYTES = 72;
 const LOGIN_PATTERN = /^[A-Za-z0-9_.-]{3,32}$/;
 const EMAIL_MAX = 254;
-const EMAIL_PATTERN = /^[\x21-\x3F\x41-\x7E]+@[\x21-\x3F\x41-\x7E]+\.[\x21-\x3F\x41-\x7E]+$/;
+const EMAIL_PATTERN = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/;
 
 const isAcceptablePassword = (password) => typeof password === 'string'
     && password.length >= PASSWORD_MIN

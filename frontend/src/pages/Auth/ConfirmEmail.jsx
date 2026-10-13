@@ -12,7 +12,7 @@ const ConfirmEmail = () => {
     const dispatch = useDispatch();
     const token = new URLSearchParams(useLocation().search).get('token');
     const [loading, setLoading] = useState(false);
-    const [failure, setFailure] = useState('');
+    const [failure, setFailure] = useState(null);
 
     if (!token) {
         return (
@@ -31,7 +31,11 @@ const ConfirmEmail = () => {
             openNotification('success', t('auth.confirm.successTitle'));
             history.push('/');
         } catch (e) {
-            setFailure((e && e.message) || t('common.serverError'));
+            const answered = Boolean(e && e.error);
+            setFailure({
+                message: (answered && e.message) || t('common.serverError'),
+                refused: answered && e.error === 422,
+            });
             setLoading(false);
         }
     };
@@ -39,9 +43,9 @@ const ConfirmEmail = () => {
     return (
         <div className="loginpage">
             <h1 className="title">{t('auth.confirm.title')}</h1>
-            {failure ? (
+            {failure && failure.refused ? (
                 <>
-                    <p>{failure}</p>
+                    <p>{failure.message}</p>
                     <p>
                         <Link to="/registration">{t('auth.confirm.toRegister')}</Link>
                         {' · '}
@@ -51,6 +55,7 @@ const ConfirmEmail = () => {
             ) : (
                 <>
                     <p>{t('auth.confirm.intro')}</p>
+                    {failure && <p>{failure.message}</p>}
                     <Button type="primary" loading={loading} onClick={onConfirm}>{t('auth.confirm.submit')}</Button>
                 </>
             )}

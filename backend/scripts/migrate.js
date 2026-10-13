@@ -58,6 +58,8 @@ const DOWN_EFFECTS = {
         + "whole table again and a profile reset locks every player's items while it waits",
     '20260930000000-storage-status-updated-index.js':
         'drops the (status, updated_at) index, so the withdrawal sweep scans the whole storage table every 10 seconds',
+    '20261013000000-email-verifications.js':
+        'drops email_verifications, so every outstanding confirmation link stops working and those registrations are lost',
 };
 
 const EXPECTED_COLUMNS = [

@@ -115,7 +115,11 @@ test('a password reset-password would refuse is refused at registration too', as
 test('the email must be an address, and is stored trimmed as forgot-password looks it up', async () => {
     const sequelize = await setup();
 
-    for (const email of ['not-an-email', 'a@b', '@e.ua', 'a b@e.ua', 'a@e.ua\u202E', '   ', `${'x'.repeat(250)}@e.ua`]) {
+    for (const email of [
+        'not-an-email', 'a@b', '@e.ua', 'a b@e.ua', 'a@e.ua\u202E', '   ', `${'x'.repeat(250)}@e.ua`,
+        'x<victim@y.z>', '"quoted"@e.ua', 'a,b@e.ua', 'a;b@e.ua', 'a:b@e.ua', 'a(b)@e.ua', 'a\\b@e.ua',
+        'a@[127.0.0.1]', 'a@e_x.ua', 'a@e..ua', 'a@.e.ua', 'a@e.ua.', '\u00F6wner@e.ua', 'owner@\u00E9.ua', 'a@b@e.ua',
+    ]) {
         const result = await register({ email });
         assert.strictEqual(result.code, 422, JSON.stringify(email));
         assert.strictEqual(result.payload.message, MESSAGE.AUTH.EMAIL_INVALID, JSON.stringify(email));
@@ -133,6 +137,23 @@ test('the email must be an address, and is stored trimmed as forgot-password loo
     assert.strictEqual(duplicate.code, 401);
     assert.strictEqual(duplicate.payload.message, MESSAGE.AUTH.USER_IS_EXIST);
     assert.strictEqual(await userCount(sequelize), 2);
+});
+
+test('ordinary addresses, punycode domains and the symbols an address may hold before the @ register', async () => {
+    const sequelize = await setup();
+    const accepted = [
+        'name.surname+tag@sub.example.co.uk',
+        'player@xn--80ak6aa92e.com',
+        "o'brien@e.ua",
+        'a_b-c@e-x.ua',
+        'x!#$%&*/=?^`{|}~@e.ua',
+    ];
+
+    for (const [index, email] of accepted.entries()) {
+        const result = await register({ login: `player${index}`, email });
+        assert.strictEqual(result.code, 200, `${email}: ${JSON.stringify(result.payload)}`);
+    }
+    assert.strictEqual(await userCount(sequelize), 1 + accepted.length);
 });
 
 test('a login within the rule registers and signs in, and lookalike case variants still collide', async () => {

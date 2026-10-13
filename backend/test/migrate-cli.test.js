@@ -42,6 +42,12 @@ const adminConnection = (database) => mysql.createConnection({
     multipleStatements: false,
 });
 
+test('every migration names what reverting it costs', () => {
+    const cli = fs.readFileSync(path.join(BACKEND_ROOT, CLI), 'utf8');
+    const unnamed = knownMigrationNames().filter((name) => !cli.includes(`'${name}':`));
+    assert.deepStrictEqual(unnamed, [], 'each migration needs a DOWN_EFFECTS entry in scripts/migrate.js');
+});
+
 test('baseline-mark refuses when tables are missing, naming all of them', async () => {
     activeSequelize = await recreateTestDatabase();
 
