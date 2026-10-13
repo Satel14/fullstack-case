@@ -47,3 +47,4 @@ module.exports.userFromToken = async (token) => {
 };
 
 module.exports.withoutVersion = withoutVersion;
+module.exports.SESSION_FIELDS = SESSION_FIELDS;

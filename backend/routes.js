@@ -4,6 +4,7 @@ module.exports = (app) => {
     require("./src/auth/profile")(app);
     require("./src/auth/logout")(app);
     require("./src/auth/forgotPassword")(app);
+    require("./src/auth/confirmEmail")(app);
     require("./src/routes/article")(app);
     require("./src/routes/user")(app);
     require("./src/routes/promocode")(app);

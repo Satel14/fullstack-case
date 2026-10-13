@@ -152,15 +152,8 @@ const routeHandlers = () => {
     delete require.cache[require.resolve('../src/auth/register')];
     require('../src/auth/register')(app);
 
-    const confirmEmailPath = '../src/auth/confirmEmail';
-    try {
-        delete require.cache[require.resolve(confirmEmailPath)];
-        require(confirmEmailPath)(app);
-    } catch (e) {
-        if (e.code !== 'MODULE_NOT_FOUND') {
-            throw e;
-        }
-    }
+    delete require.cache[require.resolve('../src/auth/confirmEmail')];
+    require('../src/auth/confirmEmail')(app);
 
     return handlers;
 };
@@ -286,4 +279,65 @@ test('the confirmation and registration-attempt letters escape what the player t
     const attempt = registrationAttemptEmail({ login });
     assert.ok(!attempt.html.includes('<a href="https://evil.example">'));
     assert.ok(attempt.html.includes('&lt;a href=&quot;https://evil.example&quot;&gt;'));
+});
+
+const confirmToken = async () => {
+    mailLog.length = 0;
+    await register();
+    return /token=([0-9a-f]{64})/.exec(mailLog.find((m) => m.kind === 'confirm').link)[1];
+};
+
+test('confirming the emailed link creates the account, signs in and welcomes the player', async () => {
+    const sequelize = await fresh();
+    const token = await confirmToken();
+    const { sessionUser } = require('../src/auth/token');
+    const jwt = require('jsonwebtoken');
+
+    const result = await post('/api/profile/confirm-email', { token });
+
+    assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
+    assert.strictEqual(result.payload.user.user_login, 'newbie');
+    assert.strictEqual(result.payload.user.user_email, 'newbie@e.ua');
+    assert.ok(!('user_tokenVersion' in result.payload.user));
+    const payload = jwt.decode(result.payload.jwt);
+    assert.ok(await sessionUser(payload.id, payload.ver));
+    assert.deepStrictEqual((await users(sequelize)).map((u) => u.login), ['newbie']);
+    assert.deepStrictEqual(mailLog.filter((m) => m.kind === 'welcome').map((m) => m.mailTo), ['newbie@e.ua']);
+});
+
+test('a used, unknown or taken confirmation is refused with the reason', async () => {
+    const sequelize = await fresh();
+    const MESSAGE = require('../src/constant/responseMessages');
+    const token = await confirmToken();
+    await post('/api/profile/confirm-email', { token });
+
+    const again = await post('/api/profile/confirm-email', { token });
+    const unknown = await post('/api/profile/confirm-email', { token: 'f'.repeat(64) });
+    const missing = await post('/api/profile/confirm-email', {});
+
+    for (const refused of [again, unknown, missing]) {
+        assert.strictEqual(refused.code, 422);
+        assert.strictEqual(refused.payload.message, MESSAGE.AUTH.CONFIRM_LINK_INVALID);
+    }
+
+    mailLog.length = 0;
+    await register({ login: 'second', email: 'second@e.ua' });
+    const secondToken = /token=([0-9a-f]{64})/.exec(mailLog.find((m) => m.kind === 'confirm').link)[1];
+    await sequelize.query(
+        "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES ('Second', 'x', 'z@e.ua', 0, 0, 1)",
+    );
+    const loginTaken = await post('/api/profile/confirm-email', { token: secondToken });
+    assert.strictEqual(loginTaken.code, 422);
+    assert.strictEqual(loginTaken.payload.message, MESSAGE.AUTH.CONFIRM_LOGIN_TAKEN);
+});
+
+test('the confirm route is rate limited like the other sign-in routes', () => {
+    const express = require('express');
+    const limiters = require('../src/middleware/rateLimiters');
+    const app = express();
+    require('../routes')(app);
+    const layer = app._router.stack.find((l) => l.route && l.route.path === '/api/profile/confirm-email');
+    assert.ok(layer, 'POST /api/profile/confirm-email is mounted');
+    assert.ok(layer.route.methods.post);
+    assert.ok(layer.route.stack.some((s) => s.handle === limiters.authLimiter));
 });
