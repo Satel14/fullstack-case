@@ -286,6 +286,8 @@
         "time": "Time",
         "now": "Now",
         "loadMore": "Load more",
+        "historyLoadFailed": "Could not load the item history",
+        "retry": "Try again",
         "status": {
             "inventory": "In inventory",
             "received": "Item withdrawn",

@@ -20,6 +20,12 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 const loadItemsCount = 5;
+
+const fetchPage = async (id, offset) => {
+  const { data } = await getStorageLastItemsByUserId(id, loadItemsCount, offset);
+  return data || [];
+};
+
 class InventoryHistory extends React.Component {
   constructor(props) {
     super(props);
@@ -29,13 +35,21 @@ class InventoryHistory extends React.Component {
       fetching: false,
       offset: 0,
       loadMoreButton: true,
+      loadFailed: false,
+      loadingMore: false,
+      moreFailed: false,
     };
   }
 
   async componentDidMount() {
+    this.mounted = true;
     if (this.state.id) {
       await this.getData();
     }
+  }
+
+  componentWillUnmount() {
+    this.mounted = false;
   }
 
   getShortInfoItem(id, fieldName = null) {
@@ -52,22 +66,23 @@ class InventoryHistory extends React.Component {
   }
 
   async getData() {
-    this.setState({ fetching: true });
+    this.setState({ fetching: true, loadFailed: false });
     const { id, offset } = this.state;
 
-    const historyItems = await getStorageLastItemsByUserId(
-      id,
-      loadItemsCount,
-      offset,
-    ).then(({ data }) => data);
+    let historyItems;
+    try {
+      historyItems = await fetchPage(id, offset);
+    } catch (e) {
+      if (this.mounted) {
+        this.setState({ fetching: false, loadFailed: true });
+      }
+      return;
+    }
+    if (!this.mounted) {
+      return;
+    }
 
-    const massiveIds = [];
-
-    historyItems.forEach((element) => {
-      massiveIds.push(element.storage_itemId);
-    });
-
-    this.addItemsToCache(massiveIds);
+    this.addItemsToCache(historyItems.map((element) => element.storage_itemId));
 
     this.setState({
       openCaseHistory: historyItems,
@@ -87,31 +102,55 @@ class InventoryHistory extends React.Component {
   }
 
   async loadMore() {
-    const { offset, openCaseHistory, id } = this.state;
-    const historyItems = await getStorageLastItemsByUserId(
-      id,
-      loadItemsCount,
-      offset,
-    ).then(({ data }) => data);
+    const { offset, id, loadingMore } = this.state;
+    if (loadingMore) {
+      return;
+    }
+    this.setState({ loadingMore: true, moreFailed: false });
 
-    const massiveIds = [];
+    let historyItems;
+    try {
+      historyItems = await fetchPage(id, offset);
+    } catch (e) {
+      if (this.mounted) {
+        this.setState({ loadingMore: false, moreFailed: true });
+      }
+      return;
+    }
+    if (!this.mounted) {
+      return;
+    }
 
-    historyItems.forEach((element) => {
-      massiveIds.push(element.storage_itemId);
-    });
+    this.addItemsToCache(historyItems.map((element) => element.storage_itemId));
 
-    this.addItemsToCache(massiveIds);
-
-    this.setState({
-      openCaseHistory: [...openCaseHistory, ...historyItems],
+    this.setState((prev) => ({
+      openCaseHistory: [...prev.openCaseHistory, ...historyItems],
       offset: offset + loadItemsCount,
       loadMoreButton: !(historyItems.length < loadItemsCount),
-    });
+      loadingMore: false,
+    }));
+  }
+
+  renderLoadFailed() {
+    const { t } = this.props;
+    return (
+      <div className="flex-center-center" style={{ flexDirection: 'column', marginTop: '25px' }}>
+        <p>{t('inventory.historyLoadFailed')}</p>
+        <Button icon={<ReloadOutlined />} onClick={() => this.getData()}>
+          {t('inventory.retry')}
+        </Button>
+      </div>
+    );
   }
 
   render() {
-    const { fetching, openCaseHistory, loadMoreButton } = this.state;
+    const {
+      fetching, openCaseHistory, loadMoreButton, loadFailed, loadingMore, moreFailed,
+    } = this.state;
     const { t } = this.props;
+    if (loadFailed) {
+      return <div className="profilepage">{this.renderLoadFailed()}</div>;
+    }
     return (
       <div className="profilepage">
         {fetching ? (
@@ -191,12 +230,19 @@ class InventoryHistory extends React.Component {
               </table>
             </div>
 
+            {moreFailed && (
+              <p className="flex-center-center" style={{ marginTop: '25px' }}>
+                {t('inventory.historyLoadFailed')}
+              </p>
+            )}
+
             {loadMoreButton && (
               <div className="flex-center-center" style={{ marginTop: '25px' }}>
                 <Button
                   type="primary"
                   icon={<ReloadOutlined />}
                   className="color-green"
+                  loading={loadingMore}
                   onClick={() => this.loadMore()}
                 >
                   {t('inventory.loadMore')}

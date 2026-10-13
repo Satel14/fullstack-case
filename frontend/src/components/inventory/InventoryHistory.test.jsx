@@ -1,5 +1,7 @@
 import React from 'react';
-import { render, waitFor } from '@testing-library/react';
+import {
+    render, screen, fireEvent, waitFor,
+} from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
@@ -35,6 +37,55 @@ beforeEach(() => {
 });
 
 const imagePath = '/img/items/Rifles/AK-47/AK-47 Redline.png';
+
+const renderHistory = () => {
+    const store = createStore(combineReducers({ itemCache: itemCacheReducer }), applyMiddleware(thunk));
+    return render(
+        <Provider store={store}>
+            <InventoryHistory id={7} />
+        </Provider>,
+    );
+};
+
+const historyRow = (storageId) => ({
+    storage_id: storageId, storage_itemId: 5, storage_color: 'default', storage_status: 'inventory',
+});
+
+const rowCount = (container) => container.querySelectorAll('.casehistory-itemlist_item').length;
+
+test('a first load that fails stops the spinner, says so and can be retried', async () => {
+    getStorageLastItemsByUserId.mockRejectedValueOnce({ error: 500 });
+    const { container } = renderHistory();
+
+    expect(await screen.findByText('inventory.historyLoadFailed')).toBeInTheDocument();
+    expect(container.querySelector('.loader')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /inventory\.retry/ }));
+
+    await waitFor(() => expect(rowCount(container)).toBe(2));
+    expect(screen.queryByText('inventory.historyLoadFailed')).toBeNull();
+});
+
+test('a "load more" that fails keeps the rows, says so and can be pressed again', async () => {
+    getStorageLastItemsByUserId
+        .mockResolvedValueOnce({ data: [1, 2, 3, 4, 5].map(historyRow) })
+        .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+        .mockResolvedValueOnce({ data: [6, 7].map(historyRow) });
+    const { container } = renderHistory();
+    await waitFor(() => expect(rowCount(container)).toBe(5));
+
+    fireEvent.click(screen.getByRole('button', { name: /inventory\.loadMore/ }));
+
+    expect(await screen.findByText('inventory.historyLoadFailed')).toBeInTheDocument();
+    expect(rowCount(container)).toBe(5);
+
+    fireEvent.click(screen.getByRole('button', { name: /inventory\.loadMore/ }));
+
+    await waitFor(() => expect(rowCount(container)).toBe(7));
+    expect(screen.queryByText('inventory.historyLoadFailed')).toBeNull();
+    expect(getStorageLastItemsByUserId).toHaveBeenLastCalledWith(7, 5, 5);
+    expect(screen.queryByRole('button', { name: /inventory\.loadMore/ })).toBeNull();
+});
 
 test('an item whose earlier lookup failed is asked for again', async () => {
     getStorageLastItemsByUserId.mockResolvedValue({
