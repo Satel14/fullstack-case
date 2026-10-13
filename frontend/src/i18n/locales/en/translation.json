@@ -82,7 +82,14 @@
             "sentTitle": "Check your email",
             "sentText": "We sent a link to {{email}}. Open it to finish registering.",
             "sentHint": "The link is valid for 24 hours. If the letter is not there, check the spam folder or register again to get a new link.",
-            "toHome": "Home"
+            "toHome": "Home",
+            "title": "Confirm your email",
+            "intro": "Press the button to confirm your email and finish registering.",
+            "submit": "Confirm email",
+            "successTitle": "Email confirmed",
+            "missingToken": "The link is incomplete. Open it from the letter again or register again.",
+            "toRegister": "To registration",
+            "toLogin": "To sign in"
         },
         "forgot": {
             "trigger": "Forgot password",

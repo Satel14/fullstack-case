@@ -8,6 +8,7 @@ import ErrorPage from '../pages/ErrorPage';
 import Login from '../pages/Auth/Login.jsx';
 import Registration from '../pages/Auth/Registration.jsx';
 import ResetPassword from '../pages/Auth/ResetPassword';
+import ConfirmEmail from '../pages/Auth/ConfirmEmail';
 import Promocode from '../pages/Promocode';
 import Profile from '../pages/Profile';
 import Deposit from '../pages/Deposit';
@@ -90,6 +91,12 @@ export default {
             path: '/reset-password',
             layout: Layout,
             component: ResetPassword,
+            exact: true,
+        },
+        {
+            path: '/confirm-email',
+            layout: Layout,
+            component: ConfirmEmail,
             exact: true,
         },
         {

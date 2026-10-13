@@ -8,6 +8,7 @@ import { API_URL } from '../../api/config';
 import userFields from '../config/userFields';
 import { editProfile } from '../../api/all/profile';
 import { usePromocode } from '../../api/all/other';
+import { confirmEmail } from '../../api/all/user';
 import { reconnectSocket } from '../../api/all/ws';
 
 const loginUser = (user) => ({
@@ -98,6 +99,14 @@ export const userPostRegisterFetch = (body) => (dispatch) => fetch(`${API_URL}/p
 
         return false;
     });
+
+export const confirmEmailFetch = (token) => async (dispatch) => {
+    const data = await confirmEmail(token);
+    localStorage.setItem('token', data.jwt);
+    dispatch(loginUser(data.user));
+    reconnectSocket();
+    return data.user;
+};
 
 export const usePromocodeFetch = (code) => async (dispatch) => {
     const result = await usePromocode(code);
