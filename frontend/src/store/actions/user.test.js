@@ -220,6 +220,7 @@ describe('remember me', () => {
         expect(global.fetch.mock.calls[1][1].headers.Authorization).toBe('Bearer fresh-remembered');
         expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ payloadUser: { login: 'remembered-player' } }));
         expect(dispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'LOGOUT_USER' }));
+        expect(reconnectSocket).toHaveBeenCalledTimes(1);
     });
 
     test('a 401 that arrives after another tab signed in keeps the new sign-in', async () => {
@@ -238,6 +239,7 @@ describe('remember me', () => {
         expect(localStorage.getItem('token')).toBe('new-login-from-tab-b');
         expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ payloadUser: { login: 'player-b' } }));
         expect(dispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'LOGOUT_USER' }));
+        expect(reconnectSocket).toHaveBeenCalledTimes(1);
     });
 });
 

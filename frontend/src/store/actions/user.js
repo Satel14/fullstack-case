@@ -52,6 +52,7 @@ export const getProfileFetch = () => (dispatch) => {
                     removeToken(token);
                     const next = getToken();
                     if (next && next !== token) {
+                        reconnectSocket();
                         return dispatch(getProfileFetch());
                     }
                     dispatch(logoutUser());
