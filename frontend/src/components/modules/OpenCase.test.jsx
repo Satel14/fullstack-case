@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    render, screen, fireEvent, waitFor,
+    render, screen, fireEvent, waitFor, act,
 } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
@@ -282,4 +282,61 @@ test('case blocks are focusable buttons, and Space opens one without scrolling t
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Недостатньо грошей'));
     expect(openCaseById).toHaveBeenCalledTimes(1);
     openControlsAreBack();
+});
+
+const flushPromises = () => act(() => Array.from({ length: 50 })
+    .reduce((chain) => chain.then(() => undefined), Promise.resolve()));
+
+const expectOutOfTabOrder = (tile) => {
+    expect(tile).not.toHaveAttribute('tabindex');
+    expect(tile).not.toHaveAttribute('role');
+};
+
+test('revealed block tiles leave the tab order and ignore the keyboard, closed ones stay focusable', async () => {
+    jest.useFakeTimers();
+    try {
+        const item = wonItem(101, 'painted');
+        openCaseById.mockResolvedValue({
+            status: 200,
+            balance: 900,
+            data: [{ winner: { item, winIndex: 71, storageId: 5 }, resultWithItem: [item] }],
+        });
+        renderOpenCase(baseCase, {}, cachedGuns);
+        fireEvent.click(screen.getByRole('button', { name: /openCase\.openBlocks$/ }));
+
+        expect(blockTiles()).toHaveLength(22);
+        blockTiles().forEach((tile) => {
+            expect(tile).toHaveAttribute('tabindex', '0');
+            expect(tile).toHaveAttribute('role', 'button');
+        });
+
+        const chosen = blockTiles()[2];
+        fireEvent.keyDown(chosen, { key: 'Enter' });
+        await flushPromises();
+
+        expect(window.HeaderSecond.changeBalance).toHaveBeenCalledWith(900);
+        expect(blockTiles()[2]).toBe(chosen);
+        expect(blockTiles()[2].parentElement).toHaveClass('opened');
+        expect(blockTiles()[0].parentElement).not.toHaveClass('opened');
+        expectOutOfTabOrder(blockTiles()[2]);
+        expect(blockTiles()[0]).toHaveAttribute('tabindex', '0');
+        expect(blockTiles()[0]).toHaveAttribute('role', 'button');
+
+        act(() => { jest.advanceTimersByTime(1000); });
+
+        expect(blockTiles().every((tile) => tile.parentElement.classList.contains('opened'))).toBe(true);
+        blockTiles().forEach(expectOutOfTabOrder);
+        expect(screen.queryAllByRole('button', { name: /openCase\.openBlock / })).toHaveLength(0);
+
+        fireEvent.keyDown(blockTiles()[0], { key: 'Enter' });
+        expect(fireEvent.keyDown(blockTiles()[5], { key: ' ' })).toBe(true);
+        fireEvent.click(blockTiles()[7]);
+        expect(openCaseById).toHaveBeenCalledTimes(1);
+
+        act(() => { jest.advanceTimersByTime(2000); });
+
+        expect(document.querySelector('.opencase-result')).not.toBeNull();
+    } finally {
+        jest.useRealTimers();
+    }
 });

@@ -554,24 +554,25 @@ class OpenCase extends Component {
 
         for (let index = 0; index < max; index++) {
             const item = newMassive[index] || {};
+            const opened = index === this.state.loadIndex || this.state.loadAll;
 
             massive.push(
                 <div
                     key={`block-${index}`}
-                    className={
-                        index === this.state.loadIndex || this.state.loadAll
-                            ? 'loterylist opened'
-                            : 'loterylist'
-                    }
+                    className={opened ? 'loterylist opened' : 'loterylist'}
                 >
-                    <div
-                        className="front"
-                        role="button"
-                        tabIndex={0}
-                        aria-label={this.props.t('openCase.openBlock', { number: index + 1 })}
-                        onClick={() => this.openBlockMethod(index)}
-                        onKeyDown={(event) => this.onBlockKeyDown(event, index)}
-                    />
+                    {opened ? (
+                        <div className="front" />
+                    ) : (
+                        <div
+                            className="front"
+                            role="button"
+                            tabIndex={0}
+                            aria-label={this.props.t('openCase.openBlock', { number: index + 1 })}
+                            onClick={() => this.openBlockMethod(index)}
+                            onKeyDown={(event) => this.onBlockKeyDown(event, index)}
+                        />
+                    )}
                     <div className="back">
                         {newMassive.length && (
                             <div
