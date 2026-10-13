@@ -30,6 +30,7 @@ require('./src/models/provablyFairSeed');
 require('./src/models/caseOpenRecord');
 require('./src/models/adminAction');
 require('./src/models/passwordReset');
+require('./src/models/emailVerification');
 
 const sequelize = require('./src/config/db');
 const { assertMigrationsApplied } = require('./src/db/migrator');

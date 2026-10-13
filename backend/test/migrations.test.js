@@ -24,6 +24,7 @@ test('migrations create every expected table', async () => {
         'case_opens',
         'cases',
         'categories',
+        'email_verifications',
         'insider_prices',
         'items',
         'modules',
