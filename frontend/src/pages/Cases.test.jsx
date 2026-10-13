@@ -81,6 +81,23 @@ test('with categories, every category lists its own cases under its title', asyn
         .toEqual(['Elitecases', 'Dailypicks']);
 });
 
+test('Reset clears the search box along with the filters', async () => {
+    render(<Cases />);
+    await waitFor(() => expect(shownTitles()).toHaveLength(4));
+    const search = screen.getByPlaceholderText('cases.searchPlaceholder');
+
+    fireEvent.change(search, { target: { value: 'cheap' } });
+    fireEvent.click(screen.getByText('cases.onlyDiscount'));
+    fireEvent.click(screen.getByRole('button', { name: /cases\.reset/ }));
+
+    expect(search).toHaveValue('');
+    expect(shownTitles()).toEqual(['On sale', 'Cheap', 'Mid', 'Marked up']);
+    expect(screen.queryByRole('button', { name: /cases\.reset/ })).toBeNull();
+
+    fireEvent.click(screen.getByText('20-49₴'));
+    expect(shownTitles()).toEqual(['On sale', 'Cheap', 'Marked up']);
+});
+
 test('a text search is narrowed by the other filters, and a search with no match stays empty', async () => {
     render(<Cases />);
     await waitFor(() => expect(shownTitles()).toHaveLength(4));

@@ -243,6 +243,7 @@ class Cases extends Component {
                             <Input
                                 placeholder={t('cases.searchPlaceholder')}
                                 prefix={<SearchOutlined />}
+                                value={sortOptions.text}
                                 onChange={(e) => this.onChangeText(e)}
                             />
                             <Radio.Group
