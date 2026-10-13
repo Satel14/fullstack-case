@@ -7,6 +7,7 @@ const UserService = require('../services/user');
 const BalanceHistoryService = require('../services/balanceHistory');
 const MESSAGE = require('../constant/responseMessages');
 const sequelize = require('../config/db');
+const { answerFailure } = require('../helpers/failure');
 
 const refuse = (res, message) => res.status(422).json({ status: 422, message });
 
@@ -19,7 +20,7 @@ module.exports.getBonusListOfUser = async (req, res) => {
         const data = await BonusService.stateFor(req.user.profile.user_id);
         return res.status(200).json({ status: 200, data });
     } catch (e) {
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'bonus.list' });
     }
 };
 
@@ -66,7 +67,7 @@ module.exports.activateBonus = async (req, res) => {
         if (isDuplicateClaim(e)) {
             return refuse(res, MESSAGE.BONUS.ALREADY_USED);
         }
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'bonus.activate' });
     }
 };
 

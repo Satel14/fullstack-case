@@ -5,6 +5,7 @@ const BalanceHistoryService = require('../services/balanceHistory');
 const MESSAGE = require('../constant/responseMessages');
 const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
 const sequelize = require('../config/db');
+const { answerFailure } = require('../helpers/failure');
 
 module.exports.getUserById = async (req, res) => {
     try {
@@ -20,7 +21,7 @@ module.exports.getUserById = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: user, openCaseHistory });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'user.get' });
     }
 };
 
@@ -79,7 +80,7 @@ module.exports.sendMoneyForUserByUserId = async (req, res) => {
         if (e && e.code === 'MONEY_NOT_ENOUGH') {
             return res.status(200).json({ status: 200, sended: false, message: MESSAGE.USER.MONEY_NOT_ENOUGH });
         }
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'user.send-money' });
     }
 };
 
@@ -108,7 +109,7 @@ module.exports.depositBalance = async (req, res) => {
         const balance = await UserService.getBalanceByUserId(user_id);
         return res.status(200).json({ status: 200, balance });
     } catch (e) {
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'user.deposit' });
     }
 };
 
@@ -120,7 +121,7 @@ module.exports.getDepositHistory = async (req, res) => {
         );
         return res.status(200).json({ status: 200, data: history });
     } catch (e) {
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'user.deposit-history' });
     }
 };
 
@@ -132,7 +133,7 @@ module.exports.editUserRankForOnline = async (req, res) => {
         await UserService.incrementRank(fiveMinutesBonusRank, user_id);
         return res.status(200).json({ status: 200 });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'user.online' });
     }
 };
 
@@ -148,7 +149,7 @@ module.exports.editUser = async (req, res) => {
         await UserService.editUser(req.body, user_id);
         return res.status(200).json({ status: 200 });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'user.edit' });
     }
 };
 
@@ -171,7 +172,7 @@ module.exports.resetUser = async (req, res) => {
 
         return res.status(200).json({ status: 200 });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'user.reset' });
     }
 };
 

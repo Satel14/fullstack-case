@@ -1,4 +1,7 @@
 module.exports = {
+    SERVER: {
+        ERROR: 'Сталася помилка на сервері. Спробуйте ще раз пізніше'
+    },
     AUTH: {
         NOT_CORRECT: 'Дані не вірні',
         NOT_AUTHORIZED: 'Ви не авторизовані',

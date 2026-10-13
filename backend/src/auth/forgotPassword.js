@@ -6,6 +6,7 @@ const PasswordResetService = require('../services/passwordReset');
 const { authLimiter } = require('../middleware/rateLimiters');
 const { isAcceptablePassword } = require('./credentials');
 const clientOrigin = require('../config/clientOrigin');
+const { answerFailure } = require('../helpers/failure');
 
 const mailResetLink = async (email) => {
     const user = await Users.findOne({ where: { user_email: email } });
@@ -57,7 +58,7 @@ module.exports = (app) => {
 
             return res.status(200).json({ status: 200, message: message.AUTH.PASSWORD_CHANGED });
         } catch (e) {
-            return res.status(500).json({ message: e.message });
+            return answerFailure(res, e, { status: 500, where: 'reset-password' });
         }
     });
 };

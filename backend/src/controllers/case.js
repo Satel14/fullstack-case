@@ -12,6 +12,7 @@ const sequelize = require('../config/db');
 const PFService = require('../services/provablyFair');
 const { buildDrawTable, deriveFromTable } = require('../modules/provablyFair');
 const RedisManager = require('../redis/manager');
+const { answerFailure } = require('../helpers/failure');
 const ITEM_HASH = 'item_hash';
 
 const refusal = (code, message) => {
@@ -202,11 +203,9 @@ module.exports.openCaseById = async (req, res) => {
             })
         }
         if (e && (e.code === 'NOT_PUBLISHED' || e.code === 'LIMIT_EXCEEDED')) {
-            return res.status(422).json({ status: 422, message: e.message });
+            return answerFailure(res, e, { status: 422, where: 'case.open' });
         }
-        return res.status(400).json({
-            status: 400, message: e.message
-        })
+        return answerFailure(res, e, { status: 400, where: 'case.open' });
     }
 }
 
@@ -242,7 +241,7 @@ module.exports.getAllCase = async (req, res) => {
             .status(200)
             .json({ status: 200, data: cases, categories: filtredCategories });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'case.list' });
     }
 };
 
@@ -266,7 +265,7 @@ module.exports.getCaseById = async (req, res) => {
         });
 
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message })
+        return answerFailure(res, e, { status: 400, where: 'case.get' });
     }
 }
 

@@ -5,6 +5,7 @@ const PromocodeService = require('../services/promocode');
 const MESSAGE = require('../constant/responseMessages');
 const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
 const sequelize = require('../config/db');
+const { answerFailure } = require('../helpers/failure');
 
 module.exports.usePromocode = async (req, res) => {
     try {
@@ -37,7 +38,7 @@ module.exports.usePromocode = async (req, res) => {
         const actualBalance = await UserService.getBalanceByUserId(user_id);
         return res.status(200).json({ status: 200, balance: actualBalance, message: `${MESSAGE.PROMOCODE.ADDED} ${bonus} ₴. Опис бонусу: ${description}` });
     } catch (e) {
-        return res.status(200).json({ status: 200, message: e.message });
+        return answerFailure(res, e, { status: 200, where: 'promocode' });
     }
 };
 

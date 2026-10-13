@@ -5,6 +5,7 @@ const CaseOpenRecord = require('../models/caseOpenRecord');
 const RedisManager = require('../redis/manager');
 const allCases = require('../constant/cases/_all');
 const MESSAGE = require('../constant/responseMessages');
+const { answerFailure } = require('../helpers/failure');
 
 const ITEM_HASH = 'item_hash';
 
@@ -14,7 +15,7 @@ module.exports.getState = async (req, res) => {
         const state = await PFService.getState(user_id);
         return res.status(200).json({ status: 200, data: state });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'provably-fair.state' });
     }
 };
 
@@ -29,7 +30,7 @@ module.exports.setClientSeed = async (req, res) => {
         const data = await PFService.setClientSeed(user_id, clientSeed);
         return res.status(200).json({ status: 200, message: MESSAGE.PROVABLY_FAIR.SEED_UPDATED, data });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'provably-fair.client-seed' });
     }
 };
 
@@ -39,7 +40,7 @@ module.exports.rotate = async (req, res) => {
         const data = await PFService.rotateSeed(user_id);
         return res.status(200).json({ status: 200, message: MESSAGE.PROVABLY_FAIR.ROTATED, data });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'provably-fair.rotate' });
     }
 };
 
@@ -51,7 +52,7 @@ module.exports.getHistory = async (req, res) => {
         const data = await PFService.getHistory(user_id, limit, offset, itemHash);
         return res.status(200).json({ status: 200, data });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'provably-fair.history' });
     }
 };
 

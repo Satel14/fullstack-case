@@ -146,7 +146,9 @@ test('a reset that fails part-way leaves the profile exactly as it was', async (
     const { cleanStorageUser } = StorageService;
     StorageService.cleanStorageUser = async () => { throw new Error('storage unavailable'); };
     try {
-        assert.strictEqual((await reset(1)).code, 400);
+        const failed = await reset(1);
+        assert.strictEqual(failed.code, 500);
+        assert.strictEqual(failed.payload.message, MESSAGE.SERVER.ERROR);
     } finally {
         StorageService.cleanStorageUser = cleanStorageUser;
     }

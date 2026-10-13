@@ -10,6 +10,7 @@ const {
 } = require('./credentials');
 const EmailVerificationService = require('../services/emailVerification');
 const clientOrigin = require('../config/clientOrigin');
+const { answerFailure } = require('../helpers/failure');
 
 const AVATAR_IDS = [1, 2, 3, 4, 5, 6];
 
@@ -106,7 +107,7 @@ module.exports = (app) => {
                 if (e && e.name === 'SequelizeUniqueConstraintError') {
                     return res.status(401).json({ message: message.AUTH.USER_IS_EXIST });
                 }
-                return res.status(500).json({ message: e.message });
+                return answerFailure(res, e, { status: 500, where: 'register' });
             }
 
             mailSender.userRegistered(email, { login });
@@ -122,7 +123,7 @@ module.exports = (app) => {
                 user: withoutVersion(profile.dataValues),
             });
         } catch (e) {
-            return res.status(500).json({ message: e.message });
+            return answerFailure(res, e, { status: 500, where: 'register' });
         }
     })
 }

@@ -12,6 +12,7 @@ const BalanceHistoryService = require('../services/balanceHistory');
 const WithdrawalService = require('../services/withdrawal');
 const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
 const { salePayout } = require('../helpers/salePayout');
+const { answerFailure } = require('../helpers/failure');
 
 const MESSAGE = require('../constant/responseMessages');
 const sequelize = require('../config/db');
@@ -40,7 +41,7 @@ module.exports.getProfileStorage = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: items, serverNow: new Date().toISOString() });
     } catch (e) {
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'storage.profile' });
     }
 };
 
@@ -92,7 +93,7 @@ module.exports.receiveItemByStorageId = async (req, res) => {
         if (e && e.code === 'NO_RECEIVE_INFO') {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.RECEIVE_INFO_REQUIRED });
         }
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'storage.withdraw' });
     }
 };
 
@@ -128,7 +129,7 @@ module.exports.cancelWithdrawalByStorageId = async (req, res) => {
         if (e && e.code === 'NOT_PENDING') {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.WITHDRAW_NOT_PENDING });
         }
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'storage.withdraw-cancel' });
     }
 };
 
@@ -237,7 +238,7 @@ module.exports.sellItemByStorageId = async (req, res) => {
         if (e && e.code === 'NOT_SELLABLE') {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
         }
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'storage.sell' });
     }
 };
 
@@ -255,7 +256,7 @@ module.exports.getStorageItemsCountByUserId = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: result });
     } catch (e) {
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'storage.count' });
     }
 };
 
@@ -267,7 +268,7 @@ module.exports.getStorageLastItems = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: items });
     } catch (e) {
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'storage.list' });
     }
 };
 
@@ -292,7 +293,7 @@ module.exports.getStorageLastItemsWithUserInfo = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: items, userList, caseList, itemList });
     } catch (e) {
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'storage.list-userinfo' });
     }
 };
 
@@ -310,7 +311,7 @@ module.exports.getStorageLastItemsByUserId = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: items });
     } catch (e) {
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'storage.user-history' });
     }
 };
 
@@ -343,7 +344,7 @@ module.exports.getStorageTop = async (req, res) => {
 
         return res.status(200).json({ status: 200, data });
     } catch (e) {
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'storage.top' });
     }
 };
 
@@ -388,7 +389,7 @@ module.exports.getFavoriteCaseByUserId = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: caseInfo });
     } catch (e) {
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'storage.favorite' });
     }
 };
 

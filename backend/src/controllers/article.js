@@ -1,6 +1,7 @@
 const { check, validationResult } = require('express-validator');
 const ArticleService = require('../services/article');
 const MESSAGE = require('../constant/responseMessages');
+const { answerFailure } = require('../helpers/failure');
 
 module.exports.getArticleById = async (req, res) => {
     try {
@@ -14,7 +15,7 @@ module.exports.getArticleById = async (req, res) => {
         const article = await ArticleService.getArticleById(id);
         return res.status(200).json({ status: 200, data: article });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'article' });
     }
 };
 

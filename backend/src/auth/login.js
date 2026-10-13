@@ -3,6 +3,7 @@ const message = require('./../constant/responseMessages');
 const { signToken, withoutVersion } = require('./token');
 const Encrypt = require('../modules/Encrypt')
 const { authLimiter } = require('../middleware/rateLimiters');
+const { answerFailure } = require('../helpers/failure');
 
 module.exports = (app) => {
     app.post('/api/profile/login', authLimiter, async (req, res) => {
@@ -45,7 +46,7 @@ module.exports = (app) => {
                 user: withoutVersion(safeUser),
             });
         } catch (e) {
-            return res.status(500).json({ message: e.message });
+            return answerFailure(res, e, { status: 500, where: 'login' });
         }
     })
 }

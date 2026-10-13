@@ -1,4 +1,5 @@
 const ModuleService = require('../services/module');
+const { answerFailure } = require('../helpers/failure');
 
 module.exports.getAllModules = async (req, res) => {
     try {
@@ -6,6 +7,6 @@ module.exports.getAllModules = async (req, res) => {
 
         return res.status(200).json({status: 200, data: modules});
     } catch (e) {
-        return res.status(200).json({status: 200, message: e.message})
+        return answerFailure(res, e, { status: 200, where: 'module.list' });
     }
 }

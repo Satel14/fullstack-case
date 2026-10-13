@@ -1,6 +1,7 @@
 const UserService = require('../services/user');
 const StorageService = require('../services/storage');
 const { onlinePresence } = require('../socket/chat');
+const { answerFailure } = require('../helpers/failure');
 
 module.exports.getSiteStats = async (req, res) => {
     try {
@@ -17,6 +18,6 @@ module.exports.getSiteStats = async (req, res) => {
             },
         });
     } catch (e) {
-        return res.status(500).json({ status: 500, message: e.message});
+        return answerFailure(res, e, { status: 500, where: 'stats' });
     }
 }

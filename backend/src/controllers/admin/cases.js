@@ -74,7 +74,7 @@ module.exports.update = async (req, res) => {
         return res.status(200).json({ status: 200, data: updated });
     } catch (e) {
         if (e && e.code === 'DISCOUNT_INVALID') {
-            return res.status(422).json({ status: 422, message: e.message });
+            return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.DISCOUNT_INVALID });
         }
         console.error('[admin] cases.update failed:', e);
         return res.status(400).json({ status: 400, message: MESSAGE.ADMIN.ERROR });

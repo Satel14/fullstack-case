@@ -3,6 +3,7 @@ const MESSAGE = require('../constant/responseMessages');
 const ItemService = require('../services/item');
 const InsiderService = require('../services/insiderPrices');
 const RedisManager = require('../redis/manager');
+const { answerFailure } = require('../helpers/failure');
 
 const ITEM_HASH = "item_hash";
 const ITEMS_PER_REQUEST = 200;
@@ -33,7 +34,7 @@ module.exports.getItemById = async (req, res) => {
 
         return res.status(200).json({ status: 200, data });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'item.get' });
     }
 };
 
@@ -52,7 +53,7 @@ module.exports.getItemsByIds = async (req, res) => {
 
         return res.status(200).json({ status: 200, data });
     } catch (e) {
-        return res.status(500).json({ status: 500, message: e.message });
+        return answerFailure(res, e, { status: 500, where: 'item.batch' });
     }
 };
 
@@ -82,7 +83,7 @@ module.exports.getItemPriceById = async (req, res) => {
             prices,
         });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'item.price' });
     }
 };
 
@@ -107,7 +108,7 @@ module.exports.getItemList = async (req, res) => {
             data: newItemList,
         });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: e.message });
+        return answerFailure(res, e, { status: 400, where: 'item.list' });
     }
 };
 
