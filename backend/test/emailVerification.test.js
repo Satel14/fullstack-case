@@ -132,3 +132,19 @@ test('registering again clears expired and used pending rows', async () => {
 
     assert.deepStrictEqual((await pendingRows(sequelize)).map((row) => row.login), ['later']);
 });
+
+test('the confirmation and registration-attempt letters escape what the player typed', () => {
+    const { emailConfirmationEmail, registrationAttemptEmail } = require('../src/modules/mailSender');
+    const login = '<a href="https://evil.example">x</a>';
+
+    const confirmation = emailConfirmationEmail({ login, link: 'http://host/confirm-email?token=abc&x="><script>', hours: 24 });
+    assert.ok(!confirmation.html.includes('<a href="https://evil.example">'));
+    assert.ok(confirmation.html.includes('&lt;a href=&quot;https://evil.example&quot;&gt;'));
+    assert.ok(!confirmation.html.includes('"><script>'));
+    assert.ok(confirmation.html.includes('token=abc&amp;x='));
+    assert.ok(confirmation.html.includes('24'));
+
+    const attempt = registrationAttemptEmail({ login });
+    assert.ok(!attempt.html.includes('<a href="https://evil.example">'));
+    assert.ok(attempt.html.includes('&lt;a href=&quot;https://evil.example&quot;&gt;'));
+});

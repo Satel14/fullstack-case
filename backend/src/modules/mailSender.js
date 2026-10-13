@@ -39,6 +39,26 @@ const passwordResetEmail = (data) => {
     };
 };
 
+const emailConfirmationEmail = (data) => {
+    const link = escapeHtml(data.link);
+    return {
+        subject: 'Підтвердження пошти',
+        html: `<h1>Підтвердіть пошту</h1>
+               <p><strong>Ваш логін:</strong> ${escapeHtml(data.login)}</p>
+               <p>Щоб завершити реєстрацію, перейдіть за посиланням (діє ${escapeHtml(data.hours)} год):</p>
+               <p><a href="${link}">${link}</a></p>
+               <p>Якщо ви не реєструвалися на caseUA, просто проігноруйте цей лист — акаунт не буде створено.</p>`,
+    };
+};
+
+const registrationAttemptEmail = (data) => ({
+    subject: 'Спроба реєстрації з вашою поштою',
+    html: `<h1>Хтось намагався зареєструватися з вашою поштою</h1>
+           <p>На цю адресу вже зареєстровано акаунт <strong>${escapeHtml(data.login)}</strong>.</p>
+           <p>Якщо це були ви — просто увійдіть або відновіть пароль на сторінці входу.</p>
+           <p>Якщо ні — нічого робити не треба, ваш акаунт не змінився.</p>`,
+});
+
 const send = (mailTo, message, sentLog, failedLog) => {
     if (!isEnabled()) {
         console.warn(`[mail] "${message.subject}" not sent: RESEND_API_KEY is not set`);
@@ -50,17 +70,25 @@ const send = (mailTo, message, sentLog, failedLog) => {
 };
 
 if (!isEnabled()) {
-    console.warn('[mail] RESEND_API_KEY is not set: emails are disabled and password recovery is unavailable');
+    console.warn('[mail] RESEND_API_KEY is not set: emails are disabled, password recovery is unavailable and registration signs in without confirming the email');
 }
 
 module.exports = {
     isEnabled,
     welcomeEmail,
     passwordResetEmail,
+    emailConfirmationEmail,
+    registrationAttemptEmail,
     userRegistered(mailTo, data) {
         send(mailTo, welcomeEmail(data), 'Welcome email sent via Resend:', 'Failed to send Resend welcome email:');
     },
     passwordResetLink(mailTo, data) {
         send(mailTo, passwordResetEmail(data), 'Recovery email sent via Resend:', 'Error sending recovery email:');
+    },
+    emailConfirmationLink(mailTo, data) {
+        send(mailTo, emailConfirmationEmail(data), 'Confirmation email sent via Resend:', 'Error sending confirmation email:');
+    },
+    registrationAttemptNotice(mailTo, data) {
+        send(mailTo, registrationAttemptEmail(data), 'Registration attempt notice sent via Resend:', 'Error sending registration attempt notice:');
     },
 };
