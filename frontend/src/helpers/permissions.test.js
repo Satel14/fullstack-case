@@ -7,9 +7,9 @@ test('isAdmin is true only for the administrator role', () => {
 });
 
 test('isAdmin is false for every other role, including famous', () => {
-    for (const role of [roles.NORMAL, roles.FAMOUS, roles.YOUTUBER, roles.STREAMER, roles.BANNED, roles.BANNED_CHAT]) {
+    [roles.NORMAL, roles.FAMOUS, roles.YOUTUBER, roles.STREAMER, roles.BANNED, roles.BANNED_CHAT].forEach((role) => {
         expect(isAdmin({ role })).toBe(false);
-    }
+    });
 });
 
 test('isAdmin is false for absent or malformed input', () => {

@@ -45,9 +45,13 @@ const catalogue = (overrides = {}) => [
 ].map((bonus) => ({ ...bonus, ...(overrides[bonus.id] || {}) }));
 
 const deferred = () => {
-    let resolve;
-    const promise = new Promise((done) => { resolve = done; });
-    return { promise, resolve };
+    let settle;
+    let fail;
+    const promise = new Promise((resolve, reject) => {
+        settle = resolve;
+        fail = reject;
+    });
+    return { promise, resolve: settle, reject: fail };
 };
 
 beforeEach(() => {
@@ -214,12 +218,12 @@ test('a refresh that fails after a newer one succeeded keeps the list', async ()
     renderBonus();
     await card('welcome');
     const slowFailure = deferred();
-    getBonusList.mockImplementationOnce(() => slowFailure.promise.then(() => Promise.reject({ error: 500 })));
+    getBonusList.mockImplementationOnce(() => slowFailure.promise);
 
     act(() => { window.dispatchEvent(new Event('focus')); });
     act(() => { window.dispatchEvent(new Event('focus')); });
     await waitFor(() => expect(getBonusList).toHaveBeenCalledTimes(3));
-    await act(async () => { slowFailure.resolve(); });
+    await act(async () => { slowFailure.reject({ error: 500 }); });
 
     expect(screen.getByTestId('bonus-welcome')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /bonus\.retry$/ })).not.toBeInTheDocument();

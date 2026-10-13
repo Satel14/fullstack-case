@@ -212,9 +212,9 @@ test('polling stops when the page is left while a request is still pending', asy
 });
 
 const deferred = () => {
-    let resolve;
-    const promise = new Promise((done) => { resolve = done; });
-    return { promise, resolve };
+    let settle;
+    const promise = new Promise((resolve) => { settle = resolve; });
+    return { promise, resolve: settle };
 };
 
 test('a poll that answers after a cancel does not bring the cancelled item back to the pending list', async () => {

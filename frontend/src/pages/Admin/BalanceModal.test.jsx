@@ -85,16 +85,16 @@ test('an amount with a thousands separator or in a non-decimal notation is refus
     const review = screen.getByRole('button', { name: 'admin.balance.review' });
     const delta = screen.getByLabelText('admin.balance.delta');
 
-    for (const value of ['1,000', '1.000', '-2,500', '1,000.50', '1 000', '1e3', '0x10', '.5', '5.', '--5']) {
+    ['1,000', '1.000', '-2,500', '1,000.50', '1 000', '1e3', '0x10', '.5', '5.', '--5'].forEach((value) => {
         fireEvent.change(delta, { target: { value } });
         expect(review).toBeDisabled();
         expect(screen.getByText('admin.balance.deltaInvalid')).toBeInTheDocument();
-    }
+    });
 
-    for (const value of ['1000', '+10', '-3,25', ' 12.5 ', '0,01']) {
+    ['1000', '+10', '-3,25', ' 12.5 ', '0,01'].forEach((value) => {
         fireEvent.change(delta, { target: { value } });
         expect(review).not.toBeDisabled();
-    }
+    });
 });
 
 test('an unusable amount is explained instead of only greying the button', () => {

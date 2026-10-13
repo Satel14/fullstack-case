@@ -5,8 +5,8 @@ import {
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
-import itemCacheReducer from '../../store/reducers/itemCache';
 import { MemoryRouter } from 'react-router-dom';
+import itemCacheReducer from '../../store/reducers/itemCache';
 import OpenCase from './OpenCase';
 
 jest.mock('react-i18next', () => {
