@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     Table, Tag, Alert, Space,
 } from 'antd';
@@ -24,7 +24,7 @@ const JournalTab = ({ active = true }) => {
     const [loading, setLoading] = useState(false);
     const [failed, setFailed] = useState(false);
 
-    const load = async (nextPage = page) => {
+    const load = useCallback(async (nextPage) => {
         setLoading(true);
         setFailed(false);
         try {
@@ -36,7 +36,7 @@ const JournalTab = ({ active = true }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         if (!active) {
@@ -44,7 +44,7 @@ const JournalTab = ({ active = true }) => {
         }
         setPage(1);
         load(1);
-    }, [active]);
+    }, [active, load]);
 
     const total = (page - 1) * PAGE_SIZE + rows.length + (rows.length === PAGE_SIZE ? 1 : 0);
 

@@ -45,3 +45,27 @@ test('a refused role change shows the reason the server gave and reloads the lis
     expect(setUserRole).toHaveBeenCalledWith(7, -1);
     await waitFor(() => expect(getAdminUsers).toHaveBeenCalledTimes(2));
 });
+
+test('the list is fetched once on mount, and a search carries over to the next page', async () => {
+    getAdminUsers.mockResolvedValue({ data: [player], count: 45 });
+    const store = createStore(() => ({ user: { id: 1 } }));
+
+    render(
+        <Provider store={store}>
+            <UsersTab />
+        </Provider>,
+    );
+
+    await screen.findByText('peer');
+    fireEvent.change(screen.getByPlaceholderText('admin.users.searchPlaceholder'), { target: { value: 'pe' } });
+    expect(getAdminUsers).toHaveBeenCalledTimes(1);
+    expect(getAdminUsers).toHaveBeenCalledWith({ search: '', limit: 20, offset: 0 });
+
+    fireEvent.click(document.querySelector('.ant-input-search-button'));
+    await waitFor(() => expect(getAdminUsers).toHaveBeenCalledTimes(2));
+    expect(getAdminUsers).toHaveBeenLastCalledWith({ search: 'pe', limit: 20, offset: 0 });
+
+    fireEvent.click(await screen.findByTitle('2'));
+    await waitFor(() => expect(getAdminUsers).toHaveBeenCalledTimes(3));
+    expect(getAdminUsers).toHaveBeenLastCalledWith({ search: 'pe', limit: 20, offset: 20 });
+});

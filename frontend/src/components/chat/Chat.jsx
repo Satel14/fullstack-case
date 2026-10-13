@@ -117,6 +117,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             socket.off('chat messages', onChatMessages);
             socket.off('user-on', onUsersOn);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [enabled]);
 
     useEffect(() => {

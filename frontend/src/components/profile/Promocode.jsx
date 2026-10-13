@@ -4,18 +4,18 @@ import {
 } from 'antd';
 import { connect } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { usePromocodeFetch } from '../../store/actions/user';
+import { redeemPromocodeFetch } from '../../store/actions/user';
 import openNotification from '../mini/openNotification';
 
 const mapDispatchToProps = (dispatch) => ({
-  usePromocodeFetch: (body) => dispatch(usePromocodeFetch(body)),
+  redeemPromocodeFetch: (body) => dispatch(redeemPromocodeFetch(body)),
 });
 
 const Promocode = (props) => {
   const { t } = useTranslation();
   const onFinish = (values) => {
     props
-      .usePromocodeFetch({
+      .redeemPromocodeFetch({
         promocode: values.promocode,
       })
       .then((data) => {

@@ -14,14 +14,14 @@ jest.mock('react-i18next', () => ({
 }));
 
 jest.mock('../../api/all/other', () => ({
-    usePromocode: jest.fn(),
+    redeemPromocode: jest.fn(),
 }));
 
-const { usePromocode } = require('../../api/all/other');
+const { redeemPromocode } = require('../../api/all/other');
 
 afterEach(() => {
     notification.destroy();
-    usePromocode.mockReset();
+    redeemPromocode.mockReset();
 });
 
 const submit = (code) => {
@@ -36,17 +36,17 @@ const submit = (code) => {
 };
 
 test('a rejected request tells the player the promocode was not activated', async () => {
-    usePromocode.mockRejectedValue({ error: 429, message: 'too many' });
+    redeemPromocode.mockRejectedValue({ error: 429, message: 'too many' });
 
     submit('BONUS');
 
-    await waitFor(() => expect(usePromocode).toHaveBeenCalledWith({ promocode: 'BONUS' }));
+    await waitFor(() => expect(redeemPromocode).toHaveBeenCalledWith({ promocode: 'BONUS' }));
     expect(await screen.findByText('promocode.failed')).toBeInTheDocument();
     expect(screen.getByText('promocode.errorTitle')).toBeInTheDocument();
 });
 
 test('an answer without a balance shows the server message as an error', async () => {
-    usePromocode.mockResolvedValue({ status: 200, message: 'Такого промокоду не існує' });
+    redeemPromocode.mockResolvedValue({ status: 200, message: 'Такого промокоду не існує' });
 
     submit('NOPE');
 

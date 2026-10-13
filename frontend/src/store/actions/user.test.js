@@ -2,7 +2,7 @@ import { userPostFetch, userPostRegisterFetch } from './user';
 
 jest.mock('../../api/all/ws', () => ({ __esModule: true, default: {}, reconnectSocket: jest.fn() }));
 jest.mock('../../api/all/profile', () => ({ editProfile: jest.fn() }));
-jest.mock('../../api/all/other', () => ({ usePromocode: jest.fn() }));
+jest.mock('../../api/all/other', () => ({ redeemPromocode: jest.fn() }));
 
 const { reconnectSocket } = require('../../api/all/ws');
 

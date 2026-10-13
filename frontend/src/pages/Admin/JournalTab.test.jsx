@@ -1,5 +1,7 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import {
+    render, screen, waitFor, fireEvent,
+} from '@testing-library/react';
 import JournalTab from './JournalTab';
 
 jest.mock('react-i18next', () => ({
@@ -46,4 +48,23 @@ test('becoming the active tab refetches the log', async () => {
     rerender(<JournalTab active={false} />);
     rerender(<JournalTab active />);
     await waitFor(() => expect(getAdminActions).toHaveBeenCalledTimes(2));
+});
+
+test('re-rendering does not refetch, and turning a page fetches only that page', async () => {
+    const fullPage = Array.from({ length: 20 }, (_, i) => ({
+        id: i + 1, created_at: '', adminId: 1, action: 'balance', targetType: 'user', targetId: i, reason: '', payload: null,
+    }));
+    getAdminActions.mockResolvedValue({ data: fullPage });
+
+    const { rerender } = render(<JournalTab active />);
+    const secondPage = await screen.findByTitle('2');
+    rerender(<JournalTab active />);
+    expect(getAdminActions).toHaveBeenCalledTimes(1);
+    expect(getAdminActions).toHaveBeenCalledWith({ limit: 20, offset: 0 });
+
+    fireEvent.click(secondPage);
+    await screen.findByTitle('3');
+
+    expect(getAdminActions).toHaveBeenCalledTimes(2);
+    expect(getAdminActions).toHaveBeenLastCalledWith({ limit: 20, offset: 20 });
 });

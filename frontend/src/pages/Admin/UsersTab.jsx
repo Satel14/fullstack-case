@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
  Table, Input, Select, Button, Space, Alert,
 } from 'antd';
@@ -34,7 +34,7 @@ const UsersTab = ({ user }) => {
     const [failed, setFailed] = useState(false);
     const [balanceTarget, setBalanceTarget] = useState(null);
 
-    const load = async (nextPage = page, nextSearch = search) => {
+    const fetchUsers = useCallback(async (nextPage, nextSearch) => {
         setLoading(true);
         setFailed(false);
         try {
@@ -52,9 +52,11 @@ const UsersTab = ({ user }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    useEffect(() => { load(1, ''); }, []);
+    const load = (nextPage = page, nextSearch = search) => fetchUsers(nextPage, nextSearch);
+
+    useEffect(() => { fetchUsers(1, ''); }, [fetchUsers]);
 
     const onSearch = (value) => {
         setSearch(value);

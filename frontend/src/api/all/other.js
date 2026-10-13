@@ -2,11 +2,11 @@ import { put, get } from '../fetch';
 
 const getSiteStats = () => get('/stats');
 
-const usePromocode = (fields) => put('/promocode/use', {
+const redeemPromocode = (fields) => put('/promocode/use', {
     ...fields,
 });
 
 export {
-    usePromocode,
+    redeemPromocode,
     getSiteStats,
 };
