@@ -1,26 +1,24 @@
 const sequelize = require('../src/config/db');
 const { createMigrator } = require('../src/db/migrator');
+const baselineMigration = require('../migrations/20260922000000-baseline.js');
 
 const BASELINE = '20260922000000-baseline.js';
 
-const EXPECTED_TABLES = [
-    'articles',
-    'balance_history',
-    'bonus_history',
-    'case_opens',
-    'cases',
-    'categories',
-    'insider_prices',
-    'items',
-    'modules',
-    'promocodes',
-    'provably_fair_seeds',
-    'storage',
-    'users',
-];
+const deriveBaselineSchema = async () => {
+    const schema = [];
+    await baselineMigration.up({
+        context: {
+            createTable: async (name, columns) => {
+                schema.push({ table: name, columns: Object.keys(columns) });
+            },
+            addIndex: async () => {},
+        },
+    });
+    return schema;
+};
 
 const DOWN_EFFECTS = {
-    '20260922000000-baseline.js': `drops all ${EXPECTED_TABLES.length} tables and every row in them`,
+    '20260922000000-baseline.js': 'drops every table in the schema and all rows in them',
     '20260922000100-money-precision.js':
         'narrows users.balance back to DECIMAL(10,0), users.rank back to DECIMAL(10,0) and '
         + 'balance_history.balanceChange back to INTEGER — MySQL rounds every stored amount to a whole '
@@ -62,14 +60,6 @@ const DOWN_EFFECTS = {
         'drops email_verifications, so every outstanding confirmation link stops working and those registrations are lost',
 };
 
-const EXPECTED_COLUMNS = [
-    { table: 'users', column: 'balance' },
-    { table: 'users', column: 'rank' },
-    { table: 'users', column: 'email' },
-    { table: 'users', column: 'login' },
-    { table: 'balance_history', column: 'balanceChange' },
-];
-
 const status = async (migrator) => {
     const executed = await migrator.executed();
     const pending = await migrator.pending();
@@ -80,20 +70,19 @@ const status = async (migrator) => {
     return pending.length;
 };
 
-const findMissingTablesAndColumns = async (names) => {
-    const missingTables = EXPECTED_TABLES.filter((t) => !names.includes(t));
+const findMissingTablesAndColumns = async (names, schema) => {
+    const missingTables = schema.map((t) => t.table).filter((t) => !names.includes(t));
 
     const missingColumns = [];
-    for (const { table, column } of EXPECTED_COLUMNS) {
+    for (const { table, columns } of schema) {
         if (missingTables.includes(table)) {
             continue;
         }
         // eslint-disable-next-line no-await-in-loop
         const [cols] = await sequelize.query(`SHOW COLUMNS FROM \`${table}\``);
         const colNames = cols.map((c) => c.Field);
-        if (!colNames.includes(column)) {
-            missingColumns.push(`${table}.${column}`);
-        }
+        columns.filter((column) => !colNames.includes(column))
+            .forEach((column) => missingColumns.push(`${table}.${column}`));
     }
 
     return { missingTables, missingColumns };
@@ -106,9 +95,10 @@ const baselineMark = async (migrator) => {
         return;
     }
 
+    const schema = await deriveBaselineSchema();
     const [tables] = await sequelize.query('SHOW TABLES');
     const names = tables.map((r) => Object.values(r)[0]);
-    const { missingTables, missingColumns } = await findMissingTablesAndColumns(names);
+    const { missingTables, missingColumns } = await findMissingTablesAndColumns(names, schema);
 
     if (missingTables.length > 0 || missingColumns.length > 0) {
         const problems = [];
@@ -144,8 +134,8 @@ const down = async (migrator, { forceDropAll, confirmed }) => {
     if (target.name === BASELINE) {
         if (!forceDropAll) {
             throw new Error(
-                `Refusing to revert ${BASELINE}: this drops all ${EXPECTED_TABLES.length} tables and every row `
-                + 'in them. Run "npm run migrate:undo -- --force-drop-all" to confirm you intend to destroy the '
+                `Refusing to revert ${BASELINE}: this drops every table in the schema and every row in them. `
+                + 'Run "npm run migrate:undo -- --force-drop-all" to confirm you intend to destroy the '
                 + 'entire schema and its data. The "--" is required; without it npm swallows the flag.',
             );
         }

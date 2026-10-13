@@ -73,6 +73,19 @@ test('baseline-mark refuses when a column is missing, naming it', async () => {
     assert.match(output, /missing columns: users\.rank/);
 });
 
+test('baseline-mark refuses when a column outside the old five-column check is missing, naming it', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await sequelize.query('DELETE FROM SequelizeMeta');
+    await sequelize.query('ALTER TABLE storage DROP COLUMN `color`');
+
+    const { code, output } = runCli(['baseline-mark']);
+
+    assert.strictEqual(code, 1);
+    assert.match(output, /Refusing to mark the baseline/);
+    assert.match(output, /missing columns: storage\.color/);
+});
+
 test('baseline-mark records the baseline without running it', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
