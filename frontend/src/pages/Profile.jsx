@@ -13,7 +13,7 @@ import {
     getStorageItemsCountByUserId,
     getStorageLastItemsByUserId,
 } from '../api/all/storage';
-import { getItemInfoById } from '../api/all/item';
+import { itemInfoFetch } from '../store/actions/itemCache';
 import { computeItemPriceUAH } from '../helpers/price';
 import roles from '../enum/role';
 
@@ -21,6 +21,10 @@ const STORAGE_LOAD_LIMIT = 200;
 
 const mapStateToProps = (state) => ({
     user: state.user,
+});
+
+const mapDispatchToProps = (dispatch) => ({
+    itemInfoFetch: (id) => dispatch(itemInfoFetch(id)),
 });
 
 const ROLE_KEYS = {
@@ -34,17 +38,6 @@ const ROLE_KEYS = {
 };
 
 const roleKey = (role) => ROLE_KEYS[Number(role)] || 'user';
-
-const buildItemInfoMap = (itemIds, responses) => {
-    const result = {};
-    itemIds.forEach((id, index) => {
-        const payload = responses[index];
-        if (payload && payload.data) {
-            result[id] = payload.data;
-        }
-    });
-    return result;
-};
 
 const parsePrices = (prices) => {
     if (typeof prices !== 'string') {
@@ -177,10 +170,8 @@ class Profile extends Component {
         const uniqueCases = new Set(storageItems.map((item) => item.storage_caseId)).size;
 
         const uniqueItemIds = [...new Set(storageItems.map((item) => item.storage_itemId).filter(Boolean))];
-        const itemInfoResponses = await Promise.all(
-            uniqueItemIds.map((itemId) => getItemInfoById(itemId).catch(() => null)),
-        );
-        const itemInfoById = buildItemInfoMap(uniqueItemIds, itemInfoResponses);
+        const items = await Promise.all(uniqueItemIds.map((itemId) => this.props.itemInfoFetch(itemId)));
+        const itemInfoById = Object.fromEntries(uniqueItemIds.map((itemId, index) => [itemId, items[index]]));
 
         const bestDrop = pickBestDrop(storageItems, itemInfoById);
         const historyItems = buildHistoryItems(storageItems, itemInfoById);
@@ -332,4 +323,4 @@ class Profile extends Component {
     }
 }
 
-export default connect(mapStateToProps, null)(withTranslation()(Profile));
+export default connect(mapStateToProps, mapDispatchToProps)(withTranslation()(Profile));

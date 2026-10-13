@@ -2,8 +2,10 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
-import { createStore, combineReducers } from 'redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import thunk from 'redux-thunk';
 import usersReducer from '../store/reducers/user';
+import itemCacheReducer from '../store/reducers/itemCache';
 import { LOGIN_USER } from '../store/types';
 import roles from '../enum/role';
 import Profile from './Profile';
@@ -24,10 +26,10 @@ jest.mock('../api/all/storage', () => ({
     getStorageLastItemsByUserId: jest.fn(),
 }));
 
-jest.mock('../api/all/item', () => ({ getItemInfoById: jest.fn() }));
+jest.mock('../api/all/item', () => ({ getItemsInfo: jest.fn() }));
 
 const { getUserById } = require('../api/all/user');
-const { getItemInfoById } = require('../api/all/item');
+const { getItemsInfo } = require('../api/all/item');
 const {
     getFavoriteCaseByUserId, getStorageItemsCountByUserId, getStorageLastItemsByUserId,
 } = require('../api/all/storage');
@@ -37,7 +39,7 @@ const viewer = {
 };
 
 const renderProfile = (id) => {
-    const store = createStore(combineReducers({ user: usersReducer }));
+    const store = createStore(combineReducers({ user: usersReducer, itemCache: itemCacheReducer }), applyMiddleware(thunk));
     store.dispatch({ type: LOGIN_USER, payloadUser: viewer });
     return render(
         <Provider store={store}>
@@ -119,11 +121,34 @@ test('the best drop is the most valuable item, not the one with the rarest wear 
         361: { item_name: 'Shadow Daggers | Safari Mesh', item_rare: 'Field Tested', pricesInCredits: { default: 1939, painted: 2715 } },
         88: { item_name: 'AWP | Worm God', item_rare: 'Battle Scarred', pricesInCredits: JSON.stringify({ default: 300, painted: 2000 }) },
     };
-    getItemInfoById.mockImplementation((id) => Promise.resolve({ data: items[id] }));
+    getItemsInfo.mockImplementation((ids) => Promise.resolve({ data: Object.fromEntries(ids.map((id) => [id, items[id]])) }));
 
     const { container } = renderProfile('5');
 
     await screen.findByText('testopen');
     const bestDrop = container.querySelector('.profilepage-firstblock__bestdrop span');
     expect(bestDrop.textContent).toBe('AWP | Worm God');
+});
+
+test('every item of the history is loaded with one request', async () => {
+    getUserById.mockResolvedValue({
+        data: {
+            user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
+        },
+    });
+    getStorageLastItemsByUserId.mockResolvedValue({
+        data: Array.from({ length: 30 }, (_, i) => ({
+            storage_id: i + 1, storage_itemId: 100 + (i % 12), storage_color: 'default', storage_caseId: 1,
+        })),
+    });
+    getItemsInfo.mockImplementation((ids) => Promise.resolve({
+        data: Object.fromEntries(ids.map((id) => [id, { item_name: `Gun ${id}`, pricesInCredits: { default: Number(id) } }])),
+    }));
+
+    const { container } = renderProfile('5');
+
+    await screen.findByText('testopen');
+    expect(getItemsInfo).toHaveBeenCalledTimes(1);
+    expect(getItemsInfo.mock.calls[0][0]).toHaveLength(12);
+    expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('Gun 111');
 });
