@@ -29,7 +29,7 @@ function TextFilter(raw) {
     if (value.length > 2) {
         value = value.replace(
             /(https?:\/\/.*\.(?:png|jpg|jpeg|gif))/gm,
-            '<img src="$1" className="foto-chat"/>',
+            '<img src="$1" class="foto-chat"/>',
         );
 
         value = value.replace(
@@ -43,7 +43,7 @@ function TextFilter(raw) {
                 value = value.replace(
                     new RegExp(smile.name, 'g'),
 
-                    `<img className="smile-img" src="${smile.url}"/>`,
+                    `<img class="smile-img" src="${smile.url}"/>`,
                 );
             }
         });

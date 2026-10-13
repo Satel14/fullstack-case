@@ -183,6 +183,19 @@ test('smileys and image links still render after escaping', () => {
     expect(document.querySelectorAll('.chat-messages img').length).toBe(2);
 });
 
+test('images and smileys in a chat message carry their styling class', () => {
+    serverReplies({ ok: true });
+
+    send('hi EZ https://example.com/cat.png');
+
+    const photo = document.querySelector('.chat-messages img[src="https://example.com/cat.png"]');
+    expect(photo).toHaveClass('foto-chat');
+    expect(photo.hasAttribute('classname')).toBe(false);
+    const smile = document.querySelector('.chat-messages img.smile-img');
+    expect(smile).not.toBeNull();
+    expect(smile.hasAttribute('classname')).toBe(false);
+});
+
 test('sending while the socket is down reports it instead of queueing the message', () => {
     socket.connected = false;
     socket.emit.mockReset();
