@@ -75,30 +75,46 @@ const renderAllJs = () => {
     return `module.exports = {\n${lines}\n};\n`;
 };
 
-const main = () => {
-    if (!fs.existsSync(PRICE_MAP_FILE)) {
-        console.error(`❌ ${PRICE_MAP_FILE} missing. Run buildPriceMap.js first.`);
-        process.exit(1);
-    }
-    const priceMap = JSON.parse(fs.readFileSync(PRICE_MAP_FILE, 'utf8'));
+const buildCases = (priceMap) => {
     const pool = Object.entries(priceMap).map(([itemId, p]) => ({
         itemId: Number(itemId),
         isKnife: p.type === 'knife',
         evValue: 0.9 * p.default + 0.1 * p.painted,
     }));
 
+    const files = {};
     const casePrices = {};
+    const summary = [];
     for (const id of CASE_IDS) {
         const result = generateCase({ archetype: archetypeFor(id), pool, rng: makeRng(id) });
-        fs.writeFileSync(path.join(CASES_DIR, `${fileFor(id)}.js`), renderCaseFile(result));
+        files[`${fileFor(id)}.js`] = renderCaseFile(result);
         casePrices[id] = result.price;
-        console.log(`  ✓ ${id} [${archetypeFor(id)}] price=${result.price} ev=${result.ev.toFixed(0)} ratio=${(result.ev / result.price).toFixed(3)}`);
+        summary.push(`  ✓ ${id} [${archetypeFor(id)}] price=${result.price} ev=${result.ev.toFixed(0)} ratio=${(result.ev / result.price).toFixed(3)}`);
     }
+    files['_all.js'] = renderAllJs();
 
-    fs.writeFileSync(path.join(CASES_DIR, '_all.js'), renderAllJs());
+    return { files, casePrices, summary };
+};
+
+const main = () => {
+    if (!fs.existsSync(PRICE_MAP_FILE)) {
+        console.error(`❌ ${PRICE_MAP_FILE} missing. Run buildPriceMap.js first.`);
+        process.exit(1);
+    }
+    const priceMap = JSON.parse(fs.readFileSync(PRICE_MAP_FILE, 'utf8'));
+    const { files, casePrices, summary } = buildCases(priceMap);
+
+    for (const [name, content] of Object.entries(files)) {
+        fs.writeFileSync(path.join(CASES_DIR, name), content);
+    }
+    summary.forEach((line) => console.log(line));
     fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(CASE_PRICES_FILE, JSON.stringify(casePrices, null, 2));
     console.log(`✅ Generated ${CASE_IDS.length} cases + _all.js + casePrices.json`);
 };
 
-main();
+if (require.main === module) {
+    main();
+}
+
+module.exports = { buildCases };
