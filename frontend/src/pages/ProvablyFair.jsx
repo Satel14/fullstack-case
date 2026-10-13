@@ -15,13 +15,23 @@ import {
     verifyOpen,
 } from '../api/all/provablyFair';
 
+const HISTORY_PAGE = 50;
+
+const appendOpens = (loaded, page) => {
+    const known = new Set(loaded.map((open) => open.id));
+    return [...loaded, ...page.filter((open) => !known.has(open.id))];
+};
+
 const ProvablyFair = () => {
     const { t } = useTranslation();
     const [state, setState] = useState(null);
     const [loadFailed, setLoadFailed] = useState(false);
     const [clientSeedInput, setClientSeedInput] = useState('');
     const [history, setHistory] = useState([]);
+    const [historyLoaded, setHistoryLoaded] = useState(false);
     const [historyFailed, setHistoryFailed] = useState(false);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [hasMoreHistory, setHasMoreHistory] = useState(false);
     const [calc, setCalc] = useState({
         serverSeed: '', clientSeed: '', nonce: '', caseId: '', openId: null,
     });
@@ -29,17 +39,27 @@ const ProvablyFair = () => {
     const [calcError, setCalcError] = useState(null);
     const generation = useRef(0);
 
-    const loadHistory = useCallback(async (mine) => {
+    const loadHistory = useCallback(async (mine, loaded = []) => {
+        setHistoryLoading(true);
         try {
-            const h = await getOpenHistory();
+            const h = await getOpenHistory(HISTORY_PAGE, loaded.length);
             if (mine === generation.current) {
-                setHistory(h.data);
+                const page = h.data || [];
+                setHistory(appendOpens(loaded, page));
+                setHasMoreHistory(page.length === HISTORY_PAGE);
+                setHistoryLoaded(true);
                 setHistoryFailed(false);
             }
         } catch (e) {
             if (mine === generation.current) {
                 setHistoryFailed(true);
+                if (!loaded.length) {
+                    setHistoryLoaded(false);
+                }
             }
+        }
+        if (mine === generation.current) {
+            setHistoryLoading(false);
         }
     }, []);
 
@@ -64,6 +84,8 @@ const ProvablyFair = () => {
     }, [loadHistory]);
 
     const reloadHistory = () => loadHistory(generation.current);
+
+    const loadMoreHistory = () => loadHistory(generation.current, history);
 
     useEffect(() => {
         load();
@@ -204,13 +226,13 @@ const ProvablyFair = () => {
             )}
 
             <h3>{t('provablyFair.history')}</h3>
-            {historyFailed ? (
-                <div>
-                    <p className="provablyfair-error">{t('provablyFair.historyFailed')}</p>
-                    <Button icon={<ReloadOutlined />} onClick={reloadHistory}>{t('provablyFair.retry')}</Button>
-                </div>
-            ) : (
-                <Table rowKey="id" dataSource={history} columns={columns} pagination={false} />
+            {historyLoaded && <Table rowKey="id" dataSource={history} columns={columns} pagination={false} />}
+            {historyFailed && <p className="provablyfair-error">{t('provablyFair.historyFailed')}</p>}
+            {historyFailed && !historyLoaded && (
+                <Button icon={<ReloadOutlined />} loading={historyLoading} onClick={reloadHistory}>{t('provablyFair.retry')}</Button>
+            )}
+            {historyLoaded && hasMoreHistory && (
+                <Button icon={<ReloadOutlined />} loading={historyLoading} onClick={loadMoreHistory}>{t('provablyFair.loadMore')}</Button>
             )}
 
             <h3>{t('provablyFair.calculator')}</h3>

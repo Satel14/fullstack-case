@@ -90,6 +90,63 @@ test('a history that cannot be loaded is shown as an error, not as an empty tabl
     expect(screen.queryByText('provablyFair.historyFailed')).toBeNull();
 });
 
+const opensFrom = (firstId, count) => Array.from({ length: count }, (_, i) => ({
+    ...ROWS[0], id: firstId - i, nonce: firstId - i, caseId: `case-${firstId - i}`,
+}));
+
+test('older opens beyond the first page are reached with "load more"', async () => {
+    api.getOpenHistory
+        .mockResolvedValueOnce({ data: opensFrom(60, 50) })
+        .mockResolvedValueOnce({ data: opensFrom(10, 10) });
+    render(<ProvablyFair />);
+
+    expect(await screen.findByText('case-60')).toBeInTheDocument();
+    expect(screen.queryByText('case-10')).toBeNull();
+    expect(api.getOpenHistory).toHaveBeenCalledWith(50, 0);
+
+    fireEvent.click(screen.getByRole('button', { name: /provablyFair\.loadMore/ }));
+
+    expect(await screen.findByText('case-1')).toBeInTheDocument();
+    expect(api.getOpenHistory).toHaveBeenLastCalledWith(50, 50);
+    expect(screen.getByText('case-60')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'provablyFair.verify' })).toHaveLength(60);
+    expect(screen.queryByRole('button', { name: /provablyFair\.loadMore/ })).toBeNull();
+});
+
+test('an open that shifted onto the next page while loading is listed once', async () => {
+    api.getOpenHistory
+        .mockResolvedValueOnce({ data: opensFrom(60, 50) })
+        .mockResolvedValueOnce({ data: opensFrom(11, 11) });
+    render(<ProvablyFair />);
+    await screen.findByText('case-60');
+
+    fireEvent.click(screen.getByRole('button', { name: /provablyFair\.loadMore/ }));
+
+    expect(await screen.findByText('case-1')).toBeInTheDocument();
+    expect(screen.getAllByText('case-11')).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'provablyFair.verify' })).toHaveLength(60);
+});
+
+test('a "load more" that fails keeps the loaded opens and can be pressed again', async () => {
+    api.getOpenHistory
+        .mockResolvedValueOnce({ data: opensFrom(60, 50) })
+        .mockRejectedValueOnce({ error: 503 })
+        .mockResolvedValueOnce({ data: opensFrom(10, 10) });
+    render(<ProvablyFair />);
+    await screen.findByText('case-60');
+
+    fireEvent.click(screen.getByRole('button', { name: /provablyFair\.loadMore/ }));
+
+    expect(await screen.findByText('provablyFair.historyFailed')).toBeInTheDocument();
+    expect(screen.getByText('case-60')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /provablyFair\.loadMore/ }));
+
+    expect(await screen.findByText('case-1')).toBeInTheDocument();
+    expect(screen.queryByText('provablyFair.historyFailed')).toBeNull();
+    expect(api.getOpenHistory).toHaveBeenLastCalledWith(50, 50);
+});
+
 const rowOf = async (nonce) => {
     await screen.findAllByText(/dust2|train/);
     return screen.getAllByRole('row').find((r) => within(r).queryByText(String(nonce), { exact: true }));

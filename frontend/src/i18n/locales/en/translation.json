@@ -417,7 +417,8 @@
         "verifyFailed": "Verification failed. Fill all fields correctly and make sure the case ID exists.",
         "loadFailed": "Could not load your seeds",
         "historyFailed": "Could not load the open history",
-        "retry": "Try again"
+        "retry": "Try again",
+        "loadMore": "Load more"
     },
     "admin": {
         "title": "Admin panel",
