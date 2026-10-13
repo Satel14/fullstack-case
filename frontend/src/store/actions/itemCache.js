@@ -17,6 +17,8 @@ const placeholderItem = (id, failed) => ({
 
 const isSettled = (itemInfo) => Boolean(itemInfo) && itemInfo.placeholder !== 'failed';
 
+const replaces = (answer, current) => !current || !answer.placeholder || (isSettled(answer) && !isSettled(current));
+
 const fetchKnownItems = async (ids) => {
     if (!ids.length) {
         return {};
@@ -36,7 +38,7 @@ const requestBatch = async (entries) => {
     const results = entries.map(({ id, dispatch, getState }) => {
         const answer = (found && found[id]) || placeholderItem(id, !found);
         const current = getState().itemCache[id];
-        if (!isSettled(answer) && current) {
+        if (!replaces(answer, current)) {
             return current;
         }
         if (!updates.has(dispatch)) {

@@ -151,6 +151,34 @@ test('a failed request does not replace an item the drop feed delivered meanwhil
     expect(state.itemCache[707]).toEqual({ item_itemId: 707, item_name: 'AK', pricesInCredits: { default: 5 } });
 });
 
+test('an answer without the item does not replace an item the drop feed delivered meanwhile', async () => {
+    let answer;
+    getItemsInfo.mockReturnValueOnce(new Promise((resolve) => { answer = resolve; }));
+    const { state, dispatch } = makeStore();
+
+    const lookup = dispatch(itemInfoFetch(707));
+    await Promise.resolve();
+    dispatch(addItemsToCache({ 707: { item_itemId: 707, item_name: 'AK' } }));
+    answer({ status: 200, data: {} });
+
+    expect((await lookup).item_name).toBe('AK');
+    expect(state.itemCache[707]).toEqual({ item_itemId: 707, item_name: 'AK' });
+});
+
+test('an answer without the item turns an earlier failed placeholder into a settled one', async () => {
+    getItemsInfo.mockRejectedValueOnce({ error: 500 });
+    getItemsInfo.mockImplementation(answerWith({}));
+    const { state, dispatch } = makeStore();
+
+    await dispatch(itemInfoFetch(999));
+    expect(state.itemCache[999].placeholder).toBe('failed');
+    await dispatch(itemInfoFetch(999));
+    await dispatch(itemInfoFetch(999));
+
+    expect(state.itemCache[999].placeholder).toBe('unknown');
+    expect(getItemsInfo).toHaveBeenCalledTimes(2);
+});
+
 test('the same id as a number and as a string is looked up once', async () => {
     const { dispatch } = makeStore();
     const ids = Array.from({ length: 199 }, (_, i) => i + 1);
