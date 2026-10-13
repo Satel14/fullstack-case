@@ -1,5 +1,5 @@
 import { itemInfoFetch, addItemsToCache } from './itemCache';
-import { ADD_ITEMS_CACHE } from '../types';
+import { ADD_ITEM_LIST_CACHE } from '../types';
 
 jest.mock('../../api/all/item', () => ({
     getItemsInfo: jest.fn(),
@@ -13,8 +13,8 @@ const makeStore = () => {
         if (typeof action === 'function') {
             return action(dispatch, () => state);
         }
-        if (action.type === ADD_ITEMS_CACHE) {
-            state.itemCache = { ...state.itemCache, [action.payloadKey]: action.payloadData };
+        if (action.type === ADD_ITEM_LIST_CACHE) {
+            state.itemCache = { ...state.itemCache, ...action.payloadItems };
         }
         return action;
     });
@@ -29,6 +29,8 @@ const answerWith = (catalogue) => (ids) => Promise.resolve({
 const named = (ids) => Object.fromEntries(ids.map((id) => [id, { item_itemId: Number(id), item_name: `name ${id}` }]));
 
 const requestedIds = () => getItemsInfo.mock.calls.map(([ids]) => ids);
+
+const storeUpdates = (dispatch) => dispatch.mock.calls.filter(([action]) => typeof action !== 'function').length;
 
 beforeEach(() => {
     getItemsInfo.mockImplementation(answerWith(named(Array.from({ length: 500 }, (_, i) => String(i + 1)))));
@@ -156,6 +158,25 @@ test('the same id as a number and as a string is looked up once', async () => {
     await Promise.all([...ids, 300, '300'].map((id) => dispatch(itemInfoFetch(id))));
 
     expect(requestedIds().map((batch) => batch.length)).toEqual([200]);
+});
+
+test('a whole batch reaches the cache with one store update', async () => {
+    const { state, dispatch } = makeStore();
+    const ids = Array.from({ length: 150 }, (_, i) => i + 1);
+
+    await Promise.all(ids.map((id) => dispatch(itemInfoFetch(id))));
+
+    expect(storeUpdates(dispatch)).toBe(1);
+    expect(Object.keys(state.itemCache)).toHaveLength(150);
+});
+
+test('the drop feed fills the cache with one store update', () => {
+    const { state, dispatch } = makeStore();
+
+    dispatch(addItemsToCache(named(['1', '2', '3'])));
+
+    expect(storeUpdates(dispatch)).toBe(1);
+    expect(state.itemCache[3].item_name).toBe('name 3');
 });
 
 test('items delivered with the drop feed fill the cache without any request', async () => {

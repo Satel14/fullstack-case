@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import itemCacheReducer from '../../store/reducers/itemCache';
-import { ADD_ITEMS_CACHE } from '../../store/types';
+import { ADD_ITEM_LIST_CACHE } from '../../store/types';
 import InventoryHistory from './InventoryHistory';
 
 jest.mock('react-i18next', () => ({
@@ -45,9 +45,8 @@ test('an item whose earlier lookup failed is asked for again', async () => {
     getItemsInfo.mockResolvedValue({ data: { 31: { item_name: 'M4A1-S | Hot Rod', item_imagePath: imagePath } } });
     const store = createStore(combineReducers({ itemCache: itemCacheReducer }), applyMiddleware(thunk));
     store.dispatch({
-        type: ADD_ITEMS_CACHE,
-        payloadKey: 31,
-        payloadData: { item_itemId: 31, item_name: 'Item 31', placeholder: 'failed' },
+        type: ADD_ITEM_LIST_CACHE,
+        payloadItems: { 31: { item_itemId: 31, item_name: 'Item 31', placeholder: 'failed' } },
     });
 
     render(
@@ -63,10 +62,11 @@ test('an item whose earlier lookup failed is asked for again', async () => {
 test('each history row shows the item picture from the item cache', async () => {
     const store = createStore(combineReducers({ itemCache: itemCacheReducer }), applyMiddleware(thunk));
     store.dispatch({
-        type: ADD_ITEMS_CACHE,
-        payloadKey: 5,
-        payloadData: {
-            item_name: 'AK-47 | Redline', item_rare: 'Field Tested', item_type: 'Rifle', item_imagePath: imagePath,
+        type: ADD_ITEM_LIST_CACHE,
+        payloadItems: {
+            5: {
+                item_name: 'AK-47 | Redline', item_rare: 'Field Tested', item_type: 'Rifle', item_imagePath: imagePath,
+            },
         },
     });
 

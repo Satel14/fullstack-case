@@ -1,4 +1,4 @@
-import { ADD_ITEMS_CACHE } from '../types';
+import { ADD_ITEM_LIST_CACHE } from '../types';
 import { getItemsInfo } from '../../api/all/item';
 
 const ITEMS_PER_REQUEST = 200;
@@ -32,7 +32,24 @@ const fetchKnownItems = async (ids) => {
 const requestBatch = async (entries) => {
     const ids = [...new Set(entries.map((entry) => String(entry.id)))].filter((id) => ITEM_ID.test(id));
     const found = await fetchKnownItems(ids);
-    entries.forEach(({ id, resolve }) => resolve((found && found[id]) || placeholderItem(id, !found)));
+    const updates = new Map();
+    const results = entries.map(({ id, dispatch, getState }) => {
+        const answer = (found && found[id]) || placeholderItem(id, !found);
+        const current = getState().itemCache[id];
+        if (!isSettled(answer) && current) {
+            return current;
+        }
+        if (!updates.has(dispatch)) {
+            updates.set(dispatch, {});
+        }
+        updates.get(dispatch)[id] = answer;
+        return answer;
+    });
+    try {
+        updates.forEach((items, dispatch) => dispatch({ type: ADD_ITEM_LIST_CACHE, payloadItems: items }));
+    } finally {
+        entries.forEach(({ resolve }, index) => resolve(results[index]));
+    }
 };
 
 const flush = () => {
@@ -43,19 +60,18 @@ const flush = () => {
     }
 };
 
-const enqueue = (id) => new Promise((resolve) => {
+const enqueue = (entry) => new Promise((resolve) => {
     if (!queue.length) {
         Promise.resolve().then(flush);
     }
-    queue.push({ id, resolve });
+    queue.push({ ...entry, resolve });
 });
 
 export const addItemsToCache = (itemList) => (dispatch) => {
-    Object.entries(itemList || {}).forEach(([id, itemInfo]) => {
-        if (itemInfo) {
-            dispatch({ type: ADD_ITEMS_CACHE, payloadKey: id, payloadData: itemInfo });
-        }
-    });
+    const items = Object.fromEntries(Object.entries(itemList || {}).filter(([, itemInfo]) => itemInfo));
+    if (Object.keys(items).length) {
+        dispatch({ type: ADD_ITEM_LIST_CACHE, payloadItems: items });
+    }
 };
 
 export const itemInfoFetch = (id) => (dispatch, getState) => {
@@ -69,15 +85,7 @@ export const itemInfoFetch = (id) => (dispatch, getState) => {
         return pending.get(key);
     }
 
-    const request = enqueue(id)
-        .then((itemInfo) => {
-            const current = getState().itemCache[id];
-            if (!isSettled(itemInfo) && current) {
-                return current;
-            }
-            dispatch({ type: ADD_ITEMS_CACHE, payloadKey: id, payloadData: itemInfo });
-            return itemInfo;
-        })
+    const request = enqueue({ id, dispatch, getState })
         .finally(() => {
             pending.delete(key);
         });
