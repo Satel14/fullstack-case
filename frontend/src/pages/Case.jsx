@@ -33,9 +33,12 @@ class Case extends Component {
             fetching: false,
             serverSeedHash: null,
         };
+        this.mounted = false;
+        this.loadGeneration = 0;
     }
 
     async componentDidMount() {
+        this.mounted = true;
         await this.getData();
         await this.getProvablyFairInfo();
     }
@@ -46,6 +49,10 @@ class Case extends Component {
                     id: this.props.match.params.id,
                 }, () => this.getData());
         }
+    }
+
+    componentWillUnmount() {
+        this.mounted = false;
     }
 
     getShortInfoItem(item, fieldName = null) {
@@ -93,15 +100,15 @@ class Case extends Component {
     }
 
     async getData() {
+        this.loadGeneration += 1;
+        const generation = this.loadGeneration;
         this.setState({ fetching: true });
         const { id } = this.state;
         const { history } = this.props;
 
-        let caseData;
-        try {
-            caseData = await getCaseById(id);
-        } catch (e) {
-            history.push('/404');
+        const caseData = await getCaseById(id).catch(() => null);
+
+        if (!this.mounted || generation !== this.loadGeneration) {
             return;
         }
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    render, screen, fireEvent, waitFor,
+    act, render, screen, fireEvent, waitFor,
 } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
@@ -58,6 +58,89 @@ test('the opened count is refreshed after an open', async () => {
 
     await waitFor(() => expect(openedCount()).toBe('case.openedCount 8'));
     expect(getCaseById).toHaveBeenLastCalledWith('havoc');
+});
+
+const deferred = () => {
+    const handle = {};
+    handle.promise = new Promise((resolve, reject) => {
+        handle.resolve = resolve;
+        handle.reject = reject;
+    });
+    return handle;
+};
+
+const settle = () => act(async () => {
+    await new Promise((resolve) => { setTimeout(resolve, 50); });
+});
+
+const casePage = (store, id, history) => (
+    <Provider store={store}>
+        <MemoryRouter>
+            <Case match={{ params: { id } }} history={history} />
+        </MemoryRouter>
+    </Provider>
+);
+
+test('a late answer for the previous case does not replace the case now shown', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    const havoc = deferred();
+    getCaseById.mockImplementation((id) => (id === 'havoc' ? havoc.promise : Promise.resolve({
+        data: { case_id: 'phoenix', case_title: 'Phoenix', case_openedCount: 3 },
+        caseCollection: { ITEMS: [] },
+    })));
+    const store = createStore(() => ({ itemCache: {} }));
+    const history = { push: jest.fn() };
+
+    const { container, rerender } = render(casePage(store, 'havoc', history));
+    rerender(casePage(store, 'phoenix', history));
+
+    const openedCount = () => container.querySelector('.casepage-title-second i')?.textContent;
+    await waitFor(() => expect(openedCount()).toBe('case.openedCount 3'));
+
+    havoc.resolve(caseResponse(7));
+    await settle();
+
+    expect(openedCount()).toBe('case.openedCount 3');
+    expect(history.push).not.toHaveBeenCalled();
+});
+
+test('a late failure for the previous case does not send the player to not-found', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    const havoc = deferred();
+    getCaseById.mockImplementation((id) => (id === 'havoc' ? havoc.promise : Promise.resolve({
+        data: { case_id: 'phoenix', case_title: 'Phoenix', case_openedCount: 3 },
+        caseCollection: { ITEMS: [] },
+    })));
+    const store = createStore(() => ({ itemCache: {} }));
+    const history = { push: jest.fn() };
+
+    const { container, rerender } = render(casePage(store, 'havoc', history));
+    rerender(casePage(store, 'phoenix', history));
+
+    const openedCount = () => container.querySelector('.casepage-title-second i')?.textContent;
+    await waitFor(() => expect(openedCount()).toBe('case.openedCount 3'));
+
+    havoc.reject({ error: 404 });
+    await settle();
+
+    expect(history.push).not.toHaveBeenCalled();
+    expect(openedCount()).toBe('case.openedCount 3');
+});
+
+test('a failure that arrives after the player left the case page does not navigate', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    const havoc = deferred();
+    getCaseById.mockReturnValue(havoc.promise);
+    const store = createStore(() => ({ itemCache: {} }));
+    const history = { push: jest.fn() };
+
+    const { unmount } = render(casePage(store, 'havoc', history));
+    unmount();
+
+    havoc.reject({ error: 500 });
+    await settle();
+
+    expect(history.push).not.toHaveBeenCalled();
 });
 
 test('every item of the case is looked up, cached or not, so a failed lookup is asked for again', async () => {
