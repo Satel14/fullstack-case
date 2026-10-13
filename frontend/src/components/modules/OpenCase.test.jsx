@@ -237,3 +237,49 @@ test('a won item without a price offers no sell button for it', async () => {
     expect(screen.getAllByText(/openCase\.sellFor/)).toHaveLength(1);
     expect(screen.getByText('openCase.sellAllFor {"sum":"25.00"}')).toBeInTheDocument();
 });
+
+const blockTiles = () => Array.from(document.querySelectorAll('.opencase-blocklist .front'));
+
+test.each([
+    ['a click', (tile) => fireEvent.click(tile)],
+    ['Enter', (tile) => fireEvent.keyDown(tile, { key: 'Enter' })],
+    ['Space', (tile) => fireEvent.keyDown(tile, { key: ' ' })],
+])('a case block opened with %s opens that block and charges the balance', async (name, activate) => {
+    const item = wonItem(101, 'painted');
+    openCaseById.mockResolvedValue({
+        status: 200,
+        balance: 900,
+        data: [{ winner: { item, winIndex: 71, storageId: 5 }, resultWithItem: [item] }],
+    });
+    renderOpenCase(baseCase, {}, cachedGuns);
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.openBlocks$/ }));
+
+    activate(screen.getByRole('button', { name: 'openCase.openBlock {"number":3}' }));
+
+    await waitFor(() => expect(blockTiles()[2].parentElement).toHaveClass('opened'));
+    expect(openCaseById).toHaveBeenCalledTimes(1);
+    expect(window.HeaderSecond.changeBalance).toHaveBeenCalledWith(900);
+    expect(blockTiles()[0].parentElement).not.toHaveClass('opened');
+});
+
+test('case blocks are focusable buttons, and Space opens one without scrolling the page', async () => {
+    openCaseById.mockResolvedValue({ status: 200, message: 'Недостатньо грошей' });
+    renderOpenCase();
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.openBlocks$/ }));
+    const [tile] = blockTiles();
+
+    expect(tile).toHaveAttribute('role', 'button');
+    expect(tile).toHaveAttribute('tabindex', '0');
+    expect(tile).toHaveAttribute('aria-label', 'openCase.openBlock {"number":1}');
+    tile.focus();
+    expect(tile).toHaveFocus();
+
+    fireEvent.keyDown(tile, { key: 'Tab' });
+    fireEvent.keyDown(tile, { key: 'a' });
+    expect(openCaseById).not.toHaveBeenCalled();
+
+    expect(fireEvent.keyDown(tile, { key: ' ' })).toBe(false);
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Недостатньо грошей'));
+    expect(openCaseById).toHaveBeenCalledTimes(1);
+    openControlsAreBack();
+});

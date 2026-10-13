@@ -1,6 +1,3 @@
-/* eslint-disable jsx-a11y/click-events-have-key-events */
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-
 import React, { Component } from 'react';
 import Fade from 'react-reveal/Fade';
 import Zoom from 'react-reveal/Zoom';
@@ -144,6 +141,16 @@ class OpenCase extends Component {
     onChangeRadio(e) {
         const { value } = e.target;
         this.setState({ openCount: value });
+    }
+
+    onBlockKeyDown(event, index) {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+        if (event.key === ' ') {
+            event.preventDefault();
+        }
+        this.openBlockMethod(index);
     }
 
     getShortInfoItem(id, fieldName) {
@@ -557,7 +564,14 @@ class OpenCase extends Component {
                             : 'loterylist'
                     }
                 >
-                    <div className="front" onClick={() => this.openBlockMethod(index)} />
+                    <div
+                        className="front"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={this.props.t('openCase.openBlock', { number: index + 1 })}
+                        onClick={() => this.openBlockMethod(index)}
+                        onKeyDown={(event) => this.onBlockKeyDown(event, index)}
+                    />
                     <div className="back">
                         {newMassive.length && (
                             <div

@@ -331,6 +331,7 @@
     "openCase": {
         "open": "Відкрити",
         "openBlocks": "Відкрити блоками",
+        "openBlock": "Відкрити блок {{number}}",
         "fast": "Швидко",
         "opening": "Відкриття",
         "caseFallback": "Кейс",

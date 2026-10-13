@@ -331,6 +331,7 @@
     "openCase": {
         "open": "Open",
         "openBlocks": "Open by blocks",
+        "openBlock": "Open block {{number}}",
         "fast": "Fast",
         "opening": "Opening",
         "caseFallback": "Case",
