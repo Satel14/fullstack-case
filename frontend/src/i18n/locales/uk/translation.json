@@ -42,7 +42,6 @@
             "title": "Авторизація",
             "loginLabel": "Логін",
             "loginRequired": "Введіть ваш логін!",
-            "minChars": "Мінімум 6 символів",
             "passwordLabel": "Пароль",
             "passwordRequired": "Введіть ваш пароль!",
             "usernamePlaceholder": "Username",

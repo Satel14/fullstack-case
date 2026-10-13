@@ -67,7 +67,6 @@ const Login = (props) => {
                     label={t('auth.login.loginLabel')}
                     rules={[
                         { required: true, message: t('auth.login.loginRequired') },
-                        { min: 6, message: t('auth.login.minChars') },
                     ]}
                 >
                     <Input
@@ -80,7 +79,6 @@ const Login = (props) => {
                     label={t('auth.login.passwordLabel')}
                     rules={[
                         { required: true, message: t('auth.login.passwordRequired') },
-                        { min: 6, message: t('auth.login.minChars') },
                     ]}
                 >
                     <Input

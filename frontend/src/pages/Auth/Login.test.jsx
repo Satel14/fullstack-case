@@ -59,6 +59,16 @@ test('empty fields are refused without logging in', async () => {
     expect(userPostFetch).not.toHaveBeenCalled();
 });
 
+test('a short login and an old short password are left for the server to judge', async () => {
+    renderForm();
+
+    fill({ login: 'abc', password: '1234' });
+
+    await waitFor(() => expect(screen.getByText('home page')).toBeInTheDocument());
+    expect(userPostFetch).toHaveBeenCalledWith({ login: 'abc', password: '1234' });
+    expect(screen.queryByText('auth.login.minChars')).toBeNull();
+});
+
 test('a correct login and password logs in with the typed values and goes home', async () => {
     renderForm();
 

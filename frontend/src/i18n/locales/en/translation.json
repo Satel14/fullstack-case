@@ -42,7 +42,6 @@
             "title": "Authorization",
             "loginLabel": "Login",
             "loginRequired": "Enter your login!",
-            "minChars": "Minimum 6 characters",
             "passwordLabel": "Password",
             "passwordRequired": "Enter your password!",
             "usernamePlaceholder": "Username",
