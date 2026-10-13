@@ -414,7 +414,10 @@
         "matchesRecord": "The result matches the item that dropped",
         "mismatchRecord": "The result does NOT match the item that dropped",
         "revealedServerSeedNote": "Previous seed — for verifying past opens (not the active one).",
-        "verifyFailed": "Verification failed. Fill all fields correctly and make sure the case ID exists."
+        "verifyFailed": "Verification failed. Fill all fields correctly and make sure the case ID exists.",
+        "loadFailed": "Could not load your seeds",
+        "historyFailed": "Could not load the open history",
+        "retry": "Try again"
     },
     "admin": {
         "title": "Admin panel",

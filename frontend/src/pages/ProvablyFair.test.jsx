@@ -62,6 +62,34 @@ beforeEach(() => {
     api.verifyOpen.mockReset();
 });
 
+test('seeds that cannot be loaded leave an error with a retry instead of a blank page', async () => {
+    api.getProvablyFairState.mockRejectedValueOnce({ error: 500 });
+    render(<ProvablyFair />);
+
+    expect(await screen.findByText('provablyFair.loadFailed')).toBeInTheDocument();
+    expect(api.getOpenHistory).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /provablyFair\.retry/ }));
+
+    expect(await screen.findByText('hash')).toBeInTheDocument();
+    expect(await screen.findAllByText('dust2')).toHaveLength(2);
+    expect(screen.queryByText('provablyFair.loadFailed')).toBeNull();
+});
+
+test('a history that cannot be loaded is shown as an error, not as an empty table, and can be retried', async () => {
+    api.getOpenHistory.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const { container } = render(<ProvablyFair />);
+
+    expect(await screen.findByText('provablyFair.historyFailed')).toBeInTheDocument();
+    expect(screen.getByText('hash')).toBeInTheDocument();
+    expect(container.querySelector('.ant-table')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /provablyFair\.retry/ }));
+
+    expect(await screen.findAllByText('dust2')).toHaveLength(2);
+    expect(screen.queryByText('provablyFair.historyFailed')).toBeNull();
+});
+
 const rowOf = async (nonce) => {
     await screen.findAllByText(/dust2|train/);
     return screen.getAllByRole('row').find((r) => within(r).queryByText(String(nonce), { exact: true }));

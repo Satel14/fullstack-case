@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, {
+    useCallback, useEffect, useRef, useState,
+} from 'react';
 import {
  Modal, Table, Input, Button, Tag,
 } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import Loader from '../components/mini/Loader';
 import {
     getProvablyFairState,
     setClientSeed as apiSetClientSeed,
@@ -14,23 +18,57 @@ import {
 const ProvablyFair = () => {
     const { t } = useTranslation();
     const [state, setState] = useState(null);
+    const [loadFailed, setLoadFailed] = useState(false);
     const [clientSeedInput, setClientSeedInput] = useState('');
     const [history, setHistory] = useState([]);
+    const [historyFailed, setHistoryFailed] = useState(false);
     const [calc, setCalc] = useState({
         serverSeed: '', clientSeed: '', nonce: '', caseId: '', openId: null,
     });
     const [calcResult, setCalcResult] = useState(null);
     const [calcError, setCalcError] = useState(null);
+    const generation = useRef(0);
 
-    const load = async () => {
-        const res = await getProvablyFairState();
-        setState(res.data);
-        setClientSeedInput(res.data.active.clientSeed);
-        const h = await getOpenHistory();
-        setHistory(h.data);
-    };
+    const loadHistory = useCallback(async (mine) => {
+        try {
+            const h = await getOpenHistory();
+            if (mine === generation.current) {
+                setHistory(h.data);
+                setHistoryFailed(false);
+            }
+        } catch (e) {
+            if (mine === generation.current) {
+                setHistoryFailed(true);
+            }
+        }
+    }, []);
 
-    useEffect(() => { load(); }, []);
+    const load = useCallback(async () => {
+        generation.current += 1;
+        const mine = generation.current;
+        setLoadFailed(false);
+        try {
+            const res = await getProvablyFairState();
+            if (mine !== generation.current) {
+                return;
+            }
+            setState(res.data);
+            setClientSeedInput(res.data.active.clientSeed);
+        } catch (e) {
+            if (mine === generation.current) {
+                setLoadFailed(true);
+            }
+            return;
+        }
+        await loadHistory(mine);
+    }, [loadHistory]);
+
+    const reloadHistory = () => loadHistory(generation.current);
+
+    useEffect(() => {
+        load();
+        return () => { generation.current += 1; };
+    }, [load]);
 
     const onSaveClientSeed = async () => {
         try {
@@ -99,7 +137,19 @@ const ProvablyFair = () => {
         setCalcResult(null);
     };
 
-    if (!state) return null;
+    if (loadFailed) {
+        return (
+            <div className="provablyfairpage">
+                <h2>{t('provablyFair.title')}</h2>
+                <p className="provablyfair-error">{t('provablyFair.loadFailed')}</p>
+                <Button icon={<ReloadOutlined />} onClick={load}>{t('provablyFair.retry')}</Button>
+            </div>
+        );
+    }
+
+    if (!state) {
+        return <Loader />;
+    }
 
     const columns = [
         { title: t('provablyFair.case'), dataIndex: 'caseId' },
@@ -154,7 +204,14 @@ const ProvablyFair = () => {
             )}
 
             <h3>{t('provablyFair.history')}</h3>
-            <Table rowKey="id" dataSource={history} columns={columns} pagination={false} />
+            {historyFailed ? (
+                <div>
+                    <p className="provablyfair-error">{t('provablyFair.historyFailed')}</p>
+                    <Button icon={<ReloadOutlined />} onClick={reloadHistory}>{t('provablyFair.retry')}</Button>
+                </div>
+            ) : (
+                <Table rowKey="id" dataSource={history} columns={columns} pagination={false} />
+            )}
 
             <h3>{t('provablyFair.calculator')}</h3>
             <Input placeholder={t('provablyFair.serverSeedPlaceholder')} value={calc.serverSeed} onChange={(e) => setCalc({ ...calc, serverSeed: e.target.value, openId: null })} />
