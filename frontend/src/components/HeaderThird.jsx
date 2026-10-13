@@ -12,6 +12,13 @@ import socket from '../api/all/ws';
 
 const { Header } = Layout;
 
+const FEED_LENGTH = 40;
+
+const mergeDrops = (newer, older) => {
+    const newerIds = new Set(newer.map((item) => item.storage_id));
+    return [...newer, ...older.filter((item) => !newerIds.has(item.storage_id))].slice(0, FEED_LENGTH);
+};
+
 const mapStateToProps = (state) => ({
     itemCache: state.itemCache,
 });
@@ -27,38 +34,34 @@ class HeaderThird extends React.Component {
         this.state = {
             storageLast: [],
         };
+        this.handleNewDrop = this.handleNewDrop.bind(this);
     }
 
     async componentDidMount() {
+        this.mounted = true;
+        socket.on('new-drop', this.handleNewDrop);
         try {
-            const result = await getStorageLastItemsWithUserInfo(40);
-            if (result && result.status === 200) {
-                this.setState({
-                    storageLast: result.data || [],
-                });
+            const result = await getStorageLastItemsWithUserInfo(FEED_LENGTH);
+            if (this.mounted && result && result.status === 200) {
+                const loaded = result.data || [];
+                this.setState((prevState) => ({ storageLast: mergeDrops(prevState.storageLast, loaded) }));
 
                 this.props.cacheItems(result.itemList);
-                if (result.data) {
-                    result.data.forEach((item) => this.props.fetchItemInfo(item.storage_itemId));
-                }
+                loaded.forEach((item) => this.props.fetchItemInfo(item.storage_itemId));
             }
         } catch (e) {
             console.error('HeaderThird: Failed to fetch recent wins:', e);
         }
-
-        this.handleNewDrop = (item) => {
-            this.setState((prevState) => {
-                const newStorageLast = [item, ...prevState.storageLast].slice(0, 40);
-                return { storageLast: newStorageLast };
-            });
-            this.props.fetchItemInfo(item.storage_itemId);
-        };
-
-        socket.on('new-drop', this.handleNewDrop);
     }
 
     componentWillUnmount() {
+        this.mounted = false;
         socket.off('new-drop', this.handleNewDrop);
+    }
+
+    handleNewDrop(item) {
+        this.setState((prevState) => ({ storageLast: mergeDrops([item], prevState.storageLast) }));
+        this.props.fetchItemInfo(item.storage_itemId);
     }
 
     getShortInfoItem(id, fieldName = null) {
@@ -94,7 +97,7 @@ class HeaderThird extends React.Component {
             <Header className="headersecond third">
                 {map(storageLast, (item, i) => (
                     <div key={`header-${item.storage_id}`}>
-                        {i < 40 && (
+                        {i < FEED_LENGTH && (
                             <Tooltip
                                 placement="bottom"
                                 title={renderItemProp(
