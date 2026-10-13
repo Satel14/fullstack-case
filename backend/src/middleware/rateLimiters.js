@@ -21,7 +21,7 @@ const onlineLimiter = rateLimit({
     max: 5,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Too many requests.' },
+    message: { status: 429, message: 'Забагато запитів. Зачекайте трохи.' },
 });
 
 const depositLimiter = rateLimit({

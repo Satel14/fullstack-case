@@ -233,6 +233,30 @@ test('the real promocode route limits a logged-in player by account and keeps se
     }
 });
 
+test('every limiter tells the player in Ukrainian that they are going too fast', async () => {
+    const names = Object.keys(limiters).filter((name) => typeof limiters[name] === 'function');
+    assert.ok(names.length > 5, 'the limiters are exported');
+    for (const [index, name] of names.entries()) {
+        const { send, close } = await serve(limiters[name]);
+        try {
+            const player = freshUser();
+            const address = `192.0.2.${index + 1}`;
+            let limited = null;
+            for (let attempt = 0; attempt < 1000 && !limited; attempt += 1) {
+                const result = await send(player, address);
+                if (result.code === 429) {
+                    limited = result;
+                }
+            }
+            assert.ok(limited, `${name} never answered 429`);
+            assert.match(limited.body.message, /[а-яіїєґ]/i, `${name} answers "${limited.body.message}"`);
+            assert.doesNotMatch(limited.body.message, /[A-Za-z]/, `${name} answers "${limited.body.message}"`);
+        } finally {
+            await close();
+        }
+    }
+});
+
 test('withdrawing does not use up the budget for cancelling a withdrawal', async () => {
     assert.notStrictEqual(limiters.withdrawCancelLimiter, limiters.receiveLimiter);
     const withdraw = await serve(limiters.receiveLimiter);
