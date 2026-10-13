@@ -189,7 +189,9 @@ const Inventory = ({
                 offset = 0;
                 left = new Map();
             } else {
-                rows.forEach((r) => left.set(r.storage_id, r));
+                for (let i = 0; i < rows.length; i++) {
+                    left.set(rows[i].storage_id, rows[i]);
+                }
                 if (rows.length === PAGE_LIMIT) {
                     offset += PAGE_LIMIT;
                 } else {

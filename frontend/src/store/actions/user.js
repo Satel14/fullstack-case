@@ -20,6 +20,8 @@ export const logoutUser = () => ({
     type: LOGOUT_USER,
 });
 
+const readJsonOrNull = (resp) => resp.json().catch(() => null);
+
 export const getProfileFetch = () => (dispatch) => {
     const { token } = localStorage;
     if (token) {
@@ -35,12 +37,13 @@ export const getProfileFetch = () => (dispatch) => {
                 if (resp.status === 401) {
                     localStorage.removeItem('token');
                     dispatch(logoutUser());
-                    return;
+                    return undefined;
                 }
-                const data = await resp.json().catch(() => null);
+                const data = await readJsonOrNull(resp);
                 if (data && data.user) {
                     dispatch(loginUser(data.user));
                 }
+                return undefined;
             })
             .catch(() => {});
     }

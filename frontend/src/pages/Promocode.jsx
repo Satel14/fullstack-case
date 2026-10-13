@@ -25,9 +25,10 @@ const Promocode = (props) => {
             .then((data) => {
                 if (!data.balance) {
                     openNotification('error', t('promocode.errorTitle'), data.message);
-                    return;
+                } else {
+                    openNotification('success', t('promocode.successTitle'), data.message);
                 }
-                openNotification('success', t('promocode.successTitle'), data.message);
+                return undefined;
             })
             .catch(() => {
                 openNotification('error', t('promocode.errorTitle'), t('promocode.failed'));

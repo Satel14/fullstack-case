@@ -62,8 +62,10 @@ const flush = () => {
     }
 };
 
+// eslint-disable-next-line promise/avoid-new
 const enqueue = (entry) => new Promise((resolve) => {
     if (!queue.length) {
+        // eslint-disable-next-line promise/catch-or-return
         Promise.resolve().then(flush);
     }
     queue.push({ ...entry, resolve });

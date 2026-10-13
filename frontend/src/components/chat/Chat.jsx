@@ -121,7 +121,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
     }, [enabled]);
 
     useEffect(() => {
-        if (!enabled || !login) return;
+        if (!enabled || !login) return undefined;
 
         const registerUser = () => {
             socket.emit('new-user', login);

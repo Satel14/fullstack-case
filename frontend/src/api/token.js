@@ -16,6 +16,7 @@ export const setToken = async (token) => {
     } catch (e) {
         return null;
     }
+    return undefined;
 };
 
 export const removeItem = () => {
@@ -24,4 +25,5 @@ export const removeItem = () => {
     } catch (e) {
         return null;
     }
+    return undefined;
 };

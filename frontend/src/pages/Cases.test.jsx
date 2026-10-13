@@ -61,3 +61,40 @@ test('only cases sold below their price count as discounted', async () => {
 
     expect(shownTitles()).toEqual(['On sale']);
 });
+
+test('with categories, every category lists its own cases under its title', async () => {
+    getAllCases.mockResolvedValue({
+        data: [...CASES, {
+            case_id: 'elite', case_title: 'Elite', case_price: 500, case_discount: 0, case_categoryId: 2,
+        }],
+        categories: [
+            { category_id: 2, category_title: 'Elite cases', category_titleHelp: '' },
+            { category_id: 1, category_title: 'Daily picks', category_titleHelp: '' },
+        ],
+    });
+
+    render(<Cases />);
+    await waitFor(() => expect(shownTitles()).toHaveLength(5));
+
+    expect(shownTitles()).toEqual(['Elite', 'On sale', 'Cheap', 'Mid', 'Marked up']);
+    expect(Array.from(document.querySelectorAll('.title-a__heading')).map((node) => node.textContent))
+        .toEqual(['Elitecases', 'Dailypicks']);
+});
+
+test('a text search is narrowed by the other filters, and a search with no match stays empty', async () => {
+    render(<Cases />);
+    await waitFor(() => expect(shownTitles()).toHaveLength(4));
+    const search = screen.getByPlaceholderText('cases.searchPlaceholder');
+
+    fireEvent.change(search, { target: { value: 'A' } });
+    expect(shownTitles()).toEqual(['On sale', 'Cheap', 'Marked up']);
+
+    fireEvent.click(screen.getByText('cases.onlyDiscount'));
+    expect(shownTitles()).toEqual(['On sale']);
+
+    fireEvent.change(search, { target: { value: 'zzz' } });
+    expect(shownTitles()).toEqual([]);
+
+    fireEvent.click(screen.getByText('20-49₴'));
+    expect(shownTitles()).toEqual([]);
+});

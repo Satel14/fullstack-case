@@ -28,11 +28,11 @@ const Article = ({ match }) => {
 
         getArticleById(articleId)
             .then((resp) => {
-                if (!active) {
-                    return;
+                if (active) {
+                    setArticle(resp && resp.data ? resp.data : null);
+                    setLoading(false);
                 }
-                setArticle(resp && resp.data ? resp.data : null);
-                setLoading(false);
+                return undefined;
             })
             .catch(() => {
                 if (!active) {

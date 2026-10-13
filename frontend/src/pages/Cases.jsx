@@ -87,25 +87,18 @@ class Cases extends Component {
         if (sortOptions.text !== '') {
             optionCounter += 1;
 
-            const newSortedList = [];
             const textOption = sortOptions.text;
 
             const sortCaseList = allCases;
 
-            for (const key in sortCaseList) {
-                const element = sortCaseList[key];
+            newBobi = sortCaseList.filter((element) => {
                 const title = element.case_title.toLowerCase();
                 const stringFind = textOption.toLowerCase();
-                if (title.includes(stringFind)) {
-                    newSortedList.push(element);
-                }
-            }
-
-            newBobi = newSortedList;
+                return title.includes(stringFind);
+            });
         }
 
         if (sortOptions.price) {
-            const newSortedList = [];
             optionCounter += 1;
 
             let min;
@@ -127,29 +120,17 @@ class Cases extends Component {
             }
 
             const sortCaseList = newBobi.length === 0 && optionCounter === 1 ? allCases : newBobi;
-            for (const key in sortCaseList) {
-                const element = sortCaseList[key];
+            newBobi = sortCaseList.filter((element) => {
                 const price = effectivePrice(element);
-
-                if (price >= min && price <= max) {
-                    newSortedList.push(element);
-                }
-            }
-            newBobi = newSortedList;
+                return price >= min && price <= max;
+            });
         }
 
         if (sortOptions.discount) {
             optionCounter += 1;
-            const newSortedList = [];
             const sortCaseList = newBobi.length === 0 && optionCounter === 1 ? allCases : newBobi;
 
-            for (const key in sortCaseList) {
-                const element = sortCaseList[key];
-                if (hasDiscount(element)) {
-                    newSortedList.push(element);
-                }
-            }
-            newBobi = newSortedList;
+            newBobi = sortCaseList.filter((element) => hasDiscount(element));
         }
 
         if (optionCounter === 0) {
@@ -202,9 +183,55 @@ class Cases extends Component {
         }
     }
 
+    renderCatalogue() {
+        const { categories, allCases } = this.state;
+        const { t } = this.props;
+
+        if (categories.length > 0) {
+            return (
+                <>
+                    {map(categories, (category) => (
+                        <div key={`categories${category.category_title}`}>
+                            <H2A
+                                title={splitTitle(category.category_title, 0)}
+                                subTitle={splitTitle(category.category_title, 1)}
+                                help={category.category_titleHelp}
+                            />
+                            <div className="caselist">
+                                {map(filteredCases(category.category_id, allCases),
+                                    (item, i) => (
+                                        <Flip bottom delay={i * 30} key={`caselistfiltered-${category.category_id}-${item.case_id}`}>
+                                            <CaseMini data={item} />
+                                        </Flip>
+                                    ))}
+                            </div>
+                        </div>
+                    ))}
+                </>
+            );
+        }
+
+        if (allCases.length > 0) {
+            return (
+                <>
+                    <H2A title={t('cases.allTitle')} subTitle={t('cases.casesWord')} />
+                    <div className="caselist">
+                        {map(allCases, (item, i) => (
+                            <Flip bottom delay={i * 30} key={`caselist-all-${item.case_id}`}>
+                                <CaseMini data={item} />
+                            </Flip>
+                        ))}
+                    </div>
+                </>
+            );
+        }
+
+        return null;
+    }
+
     render() {
         const {
- fetching, categories, sortedCases, allCases, sortOptions,
+ fetching, sortedCases, sortOptions,
 } = this.state;
         const { t } = this.props;
         return (
@@ -285,38 +312,7 @@ class Cases extends Component {
                             </>
                         ) : (
                             <>
-                                {categories.length > 0 ? (
-                                    <>
-                                        {map(categories, (category) => (
-                                            <div key={`categories${category.category_title}`}>
-                                                <H2A
-                                                    title={splitTitle(category.category_title, 0)}
-                                                    subTitle={splitTitle(category.category_title, 1)}
-                                                    help={category.category_titleHelp}
-                                                />
-                                                <div className="caselist">
-                                                    {map(filteredCases(category.category_id, allCases),
-                                                        (item, i) => (
-                                                            <Flip bottom delay={i * 30} key={`caselistfiltered-${category.category_id}-${item.case_id}`}>
-                                                                <CaseMini data={item} />
-                                                            </Flip>
-                                                        ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </>
-                                ) : allCases.length > 0 ? (
-                                    <>
-                                        <H2A title={t('cases.allTitle')} subTitle={t('cases.casesWord')} />
-                                        <div className="caselist">
-                                            {map(allCases, (item, i) => (
-                                                <Flip bottom delay={i * 30} key={`caselist-all-${item.case_id}`}>
-                                                    <CaseMini data={item} />
-                                                </Flip>
-                                            ))}
-                                        </div>
-                                    </>
-                                ) : null}
+                                {this.renderCatalogue()}
                             </>
                         )}
                     </>

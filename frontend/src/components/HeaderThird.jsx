@@ -39,9 +39,7 @@ class HeaderThird extends React.Component {
 
                 this.props.cacheItems(result.itemList);
                 if (result.data) {
-                    for (const item of result.data) {
-                        this.props.fetchItemInfo(item.storage_itemId);
-                    }
+                    result.data.forEach((item) => this.props.fetchItemInfo(item.storage_itemId));
                 }
             }
         } catch (e) {
