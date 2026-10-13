@@ -88,14 +88,15 @@ export const userPostRegisterFetch = (body) => (dispatch) => fetch(`${API_URL}/p
     },
     body: JSON.stringify(body),
 })
-    .then((resp) => resp.json())
-    // eslint-disable-next-line promise/always-return
-    .then((data) => {
+    .then(async (resp) => ({ status: resp.status, data: await readJsonOrNull(resp) }))
+    .then(({ status, data }) => {
         if (data && data.status === 'confirm-email') {
             return { status: 'confirm-email' };
         }
-        if (Object.prototype.hasOwnProperty.call(data, 'message')) {
-            return data.message;
+        if (!data || !data.jwt) {
+            return data && typeof data.message === 'string'
+                ? { error: status, message: data.message }
+                : { error: status };
         }
 
         localStorage.setItem('token', data.jwt);

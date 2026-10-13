@@ -70,12 +70,15 @@ const Registration = (props) => {
                 return undefined;
             }
             if (result) {
-                openNotification('error', t('auth.register.errorTitle'), result);
+                openNotification('error', t('auth.register.errorTitle'), result.message || t('common.serverError'));
                 return undefined;
             }
             props.history.push('/');
             openNotification('success', t('auth.register.successTitle'), t('auth.register.welcome', { name: capitalize(values.username) }));
             return undefined;
+        }).catch(() => {
+            setLoading(false);
+            openNotification('error', t('auth.register.errorTitle'), t('common.serverError'));
         });
     };
 

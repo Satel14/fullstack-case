@@ -50,17 +50,33 @@ describe('userPostRegisterFetch', () => {
         expect(reconnectSocket).not.toHaveBeenCalled();
     });
 
-    test('a taken-login answer resolves to the message and signs nobody in', async () => {
+    test('a taken-login answer resolves to the status and the message and signs nobody in', async () => {
         global.fetch = jest.fn(() => Promise.resolve({
+            status: 422,
             json: () => Promise.resolve({ message: 'Такий логін уже зайнятий' }),
         }));
         const dispatch = jest.fn();
 
         const result = await userPostRegisterFetch({ login: 'player', password: 'secret123', email: 'player@e.ua' })(dispatch);
 
-        expect(result).toBe('Такий логін уже зайнятий');
+        expect(result).toEqual({ error: 422, message: 'Такий логін уже зайнятий' });
         expect(localStorage.getItem('token')).toBeNull();
         expect(dispatch).not.toHaveBeenCalled();
+    });
+
+    test('an answer that is not JSON resolves to its status and signs nobody in', async () => {
+        global.fetch = jest.fn(() => Promise.resolve({
+            status: 502,
+            json: () => Promise.reject(new SyntaxError('Unexpected token < in JSON at position 0')),
+        }));
+        const dispatch = jest.fn();
+
+        const result = await userPostRegisterFetch({ login: 'player', password: 'secret123', email: 'player@e.ua' })(dispatch);
+
+        expect(result).toEqual({ error: 502 });
+        expect(localStorage.getItem('token')).toBeNull();
+        expect(dispatch).not.toHaveBeenCalled();
+        expect(reconnectSocket).not.toHaveBeenCalled();
     });
 
     test('a jwt answer stores the token, logs the user in and reconnects the socket', async () => {

@@ -22,6 +22,7 @@ jest.mock('../../components/mini/openNotification', () => ({
 }));
 
 const { userPostRegisterFetch } = require('../../store/actions/user');
+const openNotification = require('../../components/mini/openNotification').default;
 
 const renderForm = () => render(
     <Provider store={createStore(() => ({}), applyMiddleware(thunk))}>
@@ -47,7 +48,43 @@ const fill = ({
 
 beforeEach(() => {
     userPostRegisterFetch.mockReset();
+    openNotification.mockReset();
     userPostRegisterFetch.mockImplementation(() => () => Promise.resolve(false));
+});
+
+const submitButton = () => screen.getByRole('button', { name: /auth\.register\.submit/ });
+
+test('a network failure stops the spinner, says the server failed, and the form can be sent again', async () => {
+    userPostRegisterFetch.mockImplementationOnce(() => () => Promise.reject(new TypeError('Failed to fetch')));
+    renderForm();
+
+    fill();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.register.errorTitle', 'common.serverError'));
+    expect(submitButton()).not.toHaveClass('ant-btn-loading');
+    fireEvent.click(submitButton());
+    await waitFor(() => expect(screen.getByText('home page')).toBeInTheDocument());
+});
+
+test('an answer without a readable body stops the spinner and says the server failed', async () => {
+    userPostRegisterFetch.mockImplementation(() => () => Promise.resolve({ error: 502 }));
+    renderForm();
+
+    fill();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.register.errorTitle', 'common.serverError'));
+    expect(submitButton()).not.toHaveClass('ant-btn-loading');
+    expect(screen.queryByText('home page')).toBeNull();
+});
+
+test('a refused registration shows the reason the server gave', async () => {
+    userPostRegisterFetch.mockImplementation(() => () => Promise.resolve({ error: 422, message: 'Такий логін уже зайнятий' }));
+    renderForm();
+
+    fill();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.register.errorTitle', 'Такий логін уже зайнятий'));
+    expect(screen.queryByText('home page')).toBeNull();
 });
 
 test('a too short password is refused without registering', async () => {
