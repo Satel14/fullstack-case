@@ -8,6 +8,8 @@ RUN npm ci --legacy-peer-deps
 # RUN npm install node-sass --force
 
 COPY . .
+ARG REACT_APP_API_URL=/api
+ARG REACT_APP_WS_URL=/
 RUN npm run build
 
 FROM nginx

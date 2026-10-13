@@ -88,8 +88,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - "3033:3033"
     networks:
       - public
     depends_on:
