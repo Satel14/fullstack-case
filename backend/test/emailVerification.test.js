@@ -575,6 +575,30 @@ test('a used, unknown or taken confirmation is refused with the reason', async (
     assert.strictEqual(loginTaken.payload.message, MESSAGE.AUTH.CONFIRM_LOGIN_TAKEN);
 });
 
+test('a confirmation that throws is answered with a fixed message, not the raw error', async () => {
+    await fresh();
+    const MESSAGE = require('../src/constant/responseMessages');
+    const Service = require('../src/services/emailVerification');
+    const real = Service.confirm;
+    const errors = [];
+    const originalError = console.error;
+    console.error = (...args) => { errors.push(args.join(' ')); };
+    Service.confirm = async () => { throw new Error('ER_LOCK_DEADLOCK: raw mysql text that must not reach the player'); };
+
+    let result;
+    try {
+        result = await post('/api/profile/confirm-email', { token: 'f'.repeat(64) });
+    } finally {
+        Service.confirm = real;
+        console.error = originalError;
+    }
+
+    assert.strictEqual(result.code, 500);
+    assert.strictEqual(result.payload.message, MESSAGE.AUTH.CONFIRM_FAILED);
+    assert.ok(!JSON.stringify(result.payload).includes('ER_LOCK_DEADLOCK'));
+    assert.ok(errors.some((line) => line.includes('ER_LOCK_DEADLOCK')), JSON.stringify(errors));
+});
+
 test('the confirm route is rate limited like the other sign-in routes', () => {
     const express = require('express');
     const limiters = require('../src/middleware/rateLimiters');

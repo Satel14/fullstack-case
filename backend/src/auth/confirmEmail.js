@@ -27,7 +27,8 @@ module.exports = (app) => {
                 user: withoutVersion(profile.dataValues),
             });
         } catch (e) {
-            return res.status(500).json({ message: e.message });
+            console.error('[EmailVerification] confirm failed:', e);
+            return res.status(500).json({ message: message.AUTH.CONFIRM_FAILED });
         }
     });
 };
