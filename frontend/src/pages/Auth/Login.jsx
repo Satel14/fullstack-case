@@ -18,16 +18,25 @@ const Login = (props) => {
     const { t } = useTranslation();
 
     const [loading, setLoading] = useState(false);
+    const failureText = (failure) => {
+        if (failure.error === 401) {
+            return t('auth.login.errorWrong');
+        }
+        if (failure.error === 429 && failure.message) {
+            return failure.message;
+        }
+        return t('common.serverError');
+    };
     const onFinish = (values) => {
         setLoading(true);
         return props.userPostFetch({
             login: values.username,
             password: values.password,
         })
-            .then((errMessage) => {
+            .then((failure) => {
                 setLoading(false);
-                if (errMessage) {
-                    openNotification('error', t('auth.login.errorTitle'), t('auth.login.errorWrong'));
+                if (failure) {
+                    openNotification('error', t('auth.login.errorTitle'), failureText(failure));
                     return undefined;
                 }
                 props.history.push('/');
@@ -37,6 +46,10 @@ const Login = (props) => {
                     t('auth.login.welcome', { name: capitalize(values.username) }),
                 );
                 return undefined;
+            })
+            .catch(() => {
+                setLoading(false);
+                openNotification('error', t('auth.login.errorTitle'), t('common.serverError'));
             });
     };
     return (

@@ -27,11 +27,11 @@ test.each([
 });
 
 test('a failed login does not reconnect the socket', async () => {
-    global.fetch = jest.fn(() => Promise.resolve({ json: () => Promise.resolve({ message: 'wrong' }) }));
+    global.fetch = jest.fn(() => Promise.resolve({ status: 401, json: () => Promise.resolve({ message: 'wrong' }) }));
 
     const result = await userPostFetch({ login: 'player', password: 'bad' })(jest.fn());
 
-    expect(result).toBe('wrong');
+    expect(result).toEqual({ error: 401, message: 'wrong' });
     expect(reconnectSocket).not.toHaveBeenCalled();
 });
 

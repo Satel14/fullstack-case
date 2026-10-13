@@ -22,6 +22,8 @@ export const logoutUser = () => ({
 
 const readJsonOrNull = (resp) => resp.json().catch(() => null);
 
+const readWithStatus = async (resp) => ({ status: resp.status, data: await resp.json() });
+
 export const getProfileFetch = () => (dispatch) => {
     const { token } = localStorage;
     if (token) {
@@ -59,10 +61,10 @@ export const userPostFetch = (body) => (dispatch) => fetch(`${API_URL}/profile/l
     },
     body: JSON.stringify(body),
 })
-    .then((resp) => resp.json())
-    .then((data) => {
+    .then(readWithStatus)
+    .then(({ status, data }) => {
         if (Object.prototype.hasOwnProperty.call(data, 'message')) {
-            return data.message;
+            return { error: status, message: data.message };
         }
         localStorage.setItem('token', data.jwt);
         dispatch(loginUser(data.user));

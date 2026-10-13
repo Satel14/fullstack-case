@@ -70,11 +70,43 @@ test('a correct login and password logs in with the typed values and goes home',
 });
 
 test('a failed login shows the wrong-credentials message and stays on the page', async () => {
-    userPostFetch.mockImplementation(() => () => Promise.resolve('Невірний логін або пароль'));
+    userPostFetch.mockImplementation(() => () => Promise.resolve({ error: 401, message: 'Дані не вірні' }));
     renderForm();
 
     fill({ login: 'satel7', password: 'wrongpass' });
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.login.errorTitle', 'auth.login.errorWrong'));
     expect(screen.queryByText('home page')).toBeNull();
+});
+
+test('a player stopped by the login limiter is told so, not that the password is wrong', async () => {
+    userPostFetch.mockImplementation(() => () => Promise.resolve({ error: 429, message: 'Забагато спроб входу. Зачекайте трохи.' }));
+    renderForm();
+
+    fill();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
+        'error', 'auth.login.errorTitle', 'Забагато спроб входу. Зачекайте трохи.',
+    ));
+    expect(openNotification).not.toHaveBeenCalledWith('error', 'auth.login.errorTitle', 'auth.login.errorWrong');
+});
+
+test('a server failure is reported as a server error, never with its raw text', async () => {
+    userPostFetch.mockImplementation(() => () => Promise.resolve({ error: 500, message: 'ER_CON_COUNT_ERROR raw database text' }));
+    renderForm();
+
+    fill();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.login.errorTitle', 'common.serverError'));
+});
+
+test('a network failure is reported and the form can be sent again', async () => {
+    userPostFetch.mockImplementationOnce(() => () => Promise.reject(new TypeError('Failed to fetch')));
+    renderForm();
+
+    fill();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.login.errorTitle', 'common.serverError'));
+    fireEvent.click(screen.getByRole('button', { name: 'auth.login.submit' }));
+    await waitFor(() => expect(screen.getByText('home page')).toBeInTheDocument());
 });
