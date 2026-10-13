@@ -1,6 +1,6 @@
 /* eslint-disable-next-line react/no-children-prop */
 import React from 'react';
-import { Layout, Button } from 'antd';
+import { Layout } from 'antd';
 import ContentLayout from './components/ContentLayout';
 import MenuLayoutSlider from './components/MenuLayoutSlider';
 import HeaderSecond from './components/HeaderSecond';

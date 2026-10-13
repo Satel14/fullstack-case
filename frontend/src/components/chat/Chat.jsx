@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useHistory, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { message, Button, Popover } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -51,14 +51,6 @@ function TextFilter(raw) {
 
     return value;
 }
-function timeConverterHoursMin(unix) {
-    const a = new Date(unix * 1000);
-
-    const hour = a.getHours() < 10 ? `${a.getHours()}0` : a.getHours();
-    const min = a.getMinutes() < 10 ? `${a.getMinutes()}0` : a.getMinutes();
-    const time = `${hour}:${min}`;
-    return time;
-}
 
 const MessageBlock = ({ message, id, nickname }) => (
     <div className="chat-messages-list_item__msg">
@@ -91,7 +83,6 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
     const pendingAck = useRef(null);
 
     useEffect(() => () => clearTimeout(pendingAck.current), []);
-    const history = useHistory();
 
     useEffect(() => {
         if (!enabled) {
@@ -326,8 +317,9 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                                                     style={{
                                                         backgroundImage: `url(${smile.url})`,
                                                     }}
-                                                    onClick={(e) => {
-                                                        setMsg(`${msg} ${smile.name}`), setVisible(false);
+                                                    onClick={() => {
+                                                        setMsg(`${msg} ${smile.name}`);
+                                                        setVisible(false);
                                                     }}
                                                 />
                                             ))}

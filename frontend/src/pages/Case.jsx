@@ -133,8 +133,11 @@ class Case extends Component {
             const caseData = await getCaseById(id);
             if (caseData && caseData.data && caseData.data.case_id === id) {
                 this.setState({ caseData: caseData.data });
+                return true;
             }
+            return false;
         } catch (e) {
+            return false;
         }
     }
 

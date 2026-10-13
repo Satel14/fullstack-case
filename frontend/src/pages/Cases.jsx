@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
- Input, Tooltip, Radio, Checkbox, Button,
+ Input, Radio, Checkbox, Button,
 } from 'antd';
 import map from 'lodash/map';
 import { getAllCases } from '../api/all/cases';

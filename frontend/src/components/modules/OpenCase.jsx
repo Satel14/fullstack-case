@@ -13,7 +13,6 @@ import {
     DollarOutlined,
     RollbackOutlined, UnlockOutlined, BlockOutlined, ThunderboltOutlined,
 } from '@ant-design/icons';
-import map from 'lodash/map';
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';

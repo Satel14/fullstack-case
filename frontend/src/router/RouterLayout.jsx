@@ -22,13 +22,6 @@ const mapStateToProps = (state) => ({
 });
 
 class RouterLayout extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            intervalId: null,
-        };
-    }
-
     async componentDidMount() {
         try {
             await this.props.getAllModules();

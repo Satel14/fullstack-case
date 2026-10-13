@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Popover, Tooltip } from 'antd';
+import { Layout, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
 import map from 'lodash/map';
 import { connect } from 'react-redux';
@@ -11,32 +11,6 @@ import { itemInfoFetch, addItemsToCache } from '../store/actions/itemCache';
 import { default as socket } from '../api/all/ws';
 
 const { Header } = Layout;
-
-const ProfileInline = ({ data }) => {
-    if (!data) return null;
-    return (
-        <Link to={`/profile/${data.user_id}`} className="popover-history-user">
-            <div
-                className="popover-history-user__avatar"
-                style={{
-                    backgroundImage: `url(/img/avatars/${data.user_avatar}.webp)`,
-                }}
-            >
-                <span>{data.user_login}</span>
-            </div>
-        </Link>
-    );
-};
-
-const CaseInfo = ({ data }) => {
-    if (!data) return null;
-    return (
-        <Link to={`/case/${data.case_id}`} className="popover-history-case">
-            <img className="case-img" src={data.case_img} alt={data.case_title} />
-            <div className="case-name">{data.case_title}</div>
-        </Link>
-    );
-};
 
 const mapStateToProps = (state) => ({
     itemCache: state.itemCache,
@@ -52,8 +26,6 @@ class HeaderThird extends React.Component {
         super(props);
         this.state = {
             storageLast: [],
-            userList: {},
-            caseList: {},
         };
     }
 
@@ -63,8 +35,6 @@ class HeaderThird extends React.Component {
             if (result && result.status === 200) {
                 this.setState({
                     storageLast: result.data || [],
-                    userList: result.userList || {},
-                    caseList: result.caseList || {},
                 });
 
                 this.props.cacheItems(result.itemList);
@@ -116,7 +86,7 @@ class HeaderThird extends React.Component {
     }
 
     render() {
-        const { storageLast, userList, caseList } = this.state;
+        const { storageLast } = this.state;
 
         if (!storageLast || storageLast.length === 0) {
             return null;
