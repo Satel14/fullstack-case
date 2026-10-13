@@ -35,6 +35,49 @@ test('a failed login does not reconnect the socket', async () => {
     expect(reconnectSocket).not.toHaveBeenCalled();
 });
 
+describe('userPostRegisterFetch', () => {
+    test('a confirm-email answer resolves to the status and signs nobody in', async () => {
+        global.fetch = jest.fn(() => Promise.resolve({
+            json: () => Promise.resolve({ status: 'confirm-email', message: 'Перевірте пошту, щоб завершити реєстрацію' }),
+        }));
+        const dispatch = jest.fn();
+
+        const result = await userPostRegisterFetch({ login: 'player', password: 'secret123', email: 'player@e.ua' })(dispatch);
+
+        expect(result).toEqual({ status: 'confirm-email' });
+        expect(localStorage.getItem('token')).toBeNull();
+        expect(dispatch).not.toHaveBeenCalled();
+        expect(reconnectSocket).not.toHaveBeenCalled();
+    });
+
+    test('a taken-login answer resolves to the message and signs nobody in', async () => {
+        global.fetch = jest.fn(() => Promise.resolve({
+            json: () => Promise.resolve({ message: 'Такий логін уже зайнятий' }),
+        }));
+        const dispatch = jest.fn();
+
+        const result = await userPostRegisterFetch({ login: 'player', password: 'secret123', email: 'player@e.ua' })(dispatch);
+
+        expect(result).toBe('Такий логін уже зайнятий');
+        expect(localStorage.getItem('token')).toBeNull();
+        expect(dispatch).not.toHaveBeenCalled();
+    });
+
+    test('a jwt answer stores the token, logs the user in and reconnects the socket', async () => {
+        global.fetch = jest.fn(() => Promise.resolve({
+            json: () => Promise.resolve({ jwt: 'signed.jwt', user: { login: 'player' } }),
+        }));
+        const dispatch = jest.fn();
+
+        const result = await userPostRegisterFetch({ login: 'player', password: 'secret123', email: 'player@e.ua' })(dispatch);
+
+        expect(localStorage.getItem('token')).toBe('signed.jwt');
+        expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'LOGIN_USER', payloadUser: { login: 'player' } }));
+        expect(reconnectSocket).toHaveBeenCalledTimes(1);
+        expect(result).toBe(false);
+    });
+});
+
 describe('the profile check on page load', () => {
     const { getProfileFetch } = require('./user');
     const run = async (response) => {
