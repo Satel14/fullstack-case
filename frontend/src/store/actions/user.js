@@ -5,7 +5,9 @@ import {
 } from '../types';
 
 import { API_URL } from '../../api/config';
-import { getToken, setToken, removeToken } from '../../api/token';
+import {
+    getToken, setToken, removeToken, TOKEN_NOT_SAVED,
+} from '../../api/token';
 import userFields from '../config/userFields';
 import { editProfile } from '../../api/all/profile';
 import { redeemPromocode } from '../../api/all/other';
@@ -20,6 +22,15 @@ const loginUser = (user) => ({
 export const logoutUser = () => ({
     type: LOGOUT_USER,
 });
+
+const signIn = (dispatch, { jwt, user }, remember) => {
+    if (!setToken(jwt, remember)) {
+        return { error: TOKEN_NOT_SAVED };
+    }
+    dispatch(loginUser(user));
+    reconnectSocket();
+    return false;
+};
 
 const readJsonOrNull = (resp) => resp.json().catch(() => null);
 
@@ -71,10 +82,7 @@ export const userPostFetch = (body, remember = true) => (dispatch) => fetch(`${A
         if (Object.prototype.hasOwnProperty.call(data, 'message')) {
             return { error: status, message: data.message };
         }
-        setToken(data.jwt, remember);
-        dispatch(loginUser(data.user));
-        reconnectSocket();
-        return false;
+        return signIn(dispatch, data, remember);
     });
 
 export const logoutProfile = () => (dispatch) => {
@@ -104,18 +112,15 @@ export const userPostRegisterFetch = (body) => (dispatch) => fetch(`${API_URL}/p
                 : { error: status };
         }
 
-        setToken(data.jwt);
-        dispatch(loginUser(data.user));
-        reconnectSocket();
-
-        return false;
+        return signIn(dispatch, data, true);
     });
 
 export const confirmEmailFetch = (token) => async (dispatch) => {
     const data = await confirmEmail(token);
-    setToken(data.jwt);
-    dispatch(loginUser(data.user));
-    reconnectSocket();
+    const failure = signIn(dispatch, data, true);
+    if (failure) {
+        throw failure;
+    }
     return data.user;
 };
 

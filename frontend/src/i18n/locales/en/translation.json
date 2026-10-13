@@ -38,6 +38,7 @@
         }
     },
     "auth": {
+        "tokenNotSaved": "Your browser does not let this site save the sign-in. Allow this site to store data (cookies and site storage) and sign in again.",
         "login": {
             "title": "Authorization",
             "loginLabel": "Login",

@@ -9,6 +9,7 @@ import capitalize from 'lodash/capitalize';
 import { useTranslation } from 'react-i18next';
 import ForgotPassword from './ForgotPassword';
 import { userPostFetch } from '../../store/actions/user';
+import { TOKEN_NOT_SAVED } from '../../api/token';
 import openNotification from '../../components/mini/openNotification';
 
 const mapDispatchToProps = (dispatch) => ({
@@ -19,6 +20,9 @@ const Login = (props) => {
 
     const [loading, setLoading] = useState(false);
     const failureText = (failure) => {
+        if (failure.error === TOKEN_NOT_SAVED) {
+            return t('auth.tokenNotSaved');
+        }
         if (failure.error === 401) {
             return t('auth.login.errorWrong');
         }

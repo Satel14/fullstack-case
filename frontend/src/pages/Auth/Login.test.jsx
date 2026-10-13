@@ -7,6 +7,7 @@ import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import Login from './Login';
+import { TOKEN_NOT_SAVED } from '../../api/token';
 
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key) => key }),
@@ -111,6 +112,17 @@ test('a player stopped by the login limiter is told so, not that the password is
         'error', 'auth.login.errorTitle', 'Забагато спроб входу. Зачекайте трохи.',
     ));
     expect(openNotification).not.toHaveBeenCalledWith('error', 'auth.login.errorTitle', 'auth.login.errorWrong');
+});
+
+test('a sign-in the browser does not let the site save says so, without the welcome and without leaving the page', async () => {
+    userPostFetch.mockImplementation(() => () => Promise.resolve({ error: TOKEN_NOT_SAVED }));
+    renderForm();
+
+    fill();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.login.errorTitle', 'auth.tokenNotSaved'));
+    expect(openNotification).not.toHaveBeenCalledWith('success', 'auth.login.successTitle', 'auth.login.welcome');
+    expect(screen.queryByText('home page')).toBeNull();
 });
 
 test('a server failure is reported as a server error, never with its raw text', async () => {

@@ -1,4 +1,5 @@
 import { userPostFetch, userPostRegisterFetch } from './user';
+import { TOKEN_NOT_SAVED } from '../../api/token';
 
 jest.mock('../../api/all/ws', () => ({ __esModule: true, default: {}, reconnectSocket: jest.fn() }));
 jest.mock('../../api/all/profile', () => ({ editProfile: jest.fn() }));
@@ -24,6 +25,31 @@ test.each([
 
     expect(localStorage.getItem('token')).toBe('fresh');
     expect(reconnectSocket).toHaveBeenCalledTimes(1);
+});
+
+const withStorageRefused = async (run) => {
+    const spy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('The operation is insecure.', 'SecurityError');
+    });
+    try {
+        return await run();
+    } finally {
+        spy.mockRestore();
+    }
+};
+
+test.each([
+    ['a remembered login', (dispatch) => userPostFetch({ login: 'player', password: 'secret123' }, true)(dispatch)],
+    ['a session-only login', (dispatch) => userPostFetch({ login: 'player', password: 'secret123' }, false)(dispatch)],
+    ['a registration', (dispatch) => userPostRegisterFetch({ login: 'player', password: 'secret123', email: 'player@e.ua' })(dispatch)],
+])('%s whose token the browser refuses to store fails and signs nobody in', async (_, signIn) => {
+    const dispatch = jest.fn();
+
+    const result = await withStorageRefused(() => signIn(dispatch));
+
+    expect(result).toEqual({ error: TOKEN_NOT_SAVED });
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(reconnectSocket).not.toHaveBeenCalled();
 });
 
 test('a failed login does not reconnect the socket', async () => {

@@ -14,6 +14,7 @@ import { userPostRegisterFetch } from '../../store/actions/user';
 import openNotification from '../../components/mini/openNotification';
 import { LOGIN_PATTERN, acceptablePassword, acceptableEmail } from '../../helpers/credentials';
 import { clientErrorMessage } from '../../helpers/serverMessage';
+import { TOKEN_NOT_SAVED } from '../../api/token';
 
 const formItemLayout = {
     labelCol: {
@@ -68,6 +69,10 @@ const Registration = (props) => {
             setLoading(false);
             if (result && result.status === 'confirm-email') {
                 setSentTo(values.email.trim());
+                return undefined;
+            }
+            if (result && result.error === TOKEN_NOT_SAVED) {
+                openNotification('error', t('auth.register.errorTitle'), t('auth.tokenNotSaved'));
                 return undefined;
             }
             if (result) {

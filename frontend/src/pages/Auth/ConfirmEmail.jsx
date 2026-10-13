@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { confirmEmailFetch } from '../../store/actions/user';
+import { TOKEN_NOT_SAVED } from '../../api/token';
 import openNotification from '../../components/mini/openNotification';
 
 const ConfirmEmail = () => {
@@ -31,6 +32,11 @@ const ConfirmEmail = () => {
             openNotification('success', t('auth.confirm.successTitle'));
             history.push('/');
         } catch (e) {
+            if (e && e.error === TOKEN_NOT_SAVED) {
+                setFailure({ message: t('auth.tokenNotSaved'), refused: true });
+                setLoading(false);
+                return;
+            }
             const answered = Boolean(e && e.error);
             setFailure({
                 message: (answered && e.message) || t('common.serverError'),

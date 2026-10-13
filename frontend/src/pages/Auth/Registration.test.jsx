@@ -7,6 +7,7 @@ import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import Registration from './Registration';
+import { TOKEN_NOT_SAVED } from '../../api/token';
 
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key) => key }),
@@ -85,6 +86,17 @@ test('a server failure is reported as a server error, never with its raw text', 
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.register.errorTitle', 'common.serverError'));
     expect(openNotification).not.toHaveBeenCalledWith('error', 'auth.register.errorTitle', 'ER_DUP_ENTRY raw database text');
+});
+
+test('a registration whose sign-in the browser does not let the site save says so, without the welcome and without leaving the page', async () => {
+    userPostRegisterFetch.mockImplementation(() => () => Promise.resolve({ error: TOKEN_NOT_SAVED }));
+    renderForm();
+
+    fill();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.register.errorTitle', 'auth.tokenNotSaved'));
+    expect(openNotification).not.toHaveBeenCalledWith('success', 'auth.register.successTitle', 'auth.register.welcome');
+    expect(screen.queryByText('home page')).toBeNull();
 });
 
 test('a refused registration shows the reason the server gave', async () => {

@@ -1,5 +1,7 @@
 const TOKEN_KEY = 'token';
 
+export const TOKEN_NOT_SAVED = 'token-not-saved';
+
 const persistent = () => window.localStorage;
 const perSession = () => window.sessionStorage;
 

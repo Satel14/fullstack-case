@@ -7,6 +7,7 @@ import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import ConfirmEmail from './ConfirmEmail';
+import { TOKEN_NOT_SAVED } from '../../api/token';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
 jest.mock('../../store/actions/user', () => ({ confirmEmailFetch: jest.fn() }));
@@ -73,6 +74,19 @@ test.each([
 
     await waitFor(() => expect(screen.getByText('home page')).toBeInTheDocument());
     expect(confirmEmailFetch).toHaveBeenCalledTimes(2);
+});
+
+test('a confirmation whose sign-in the browser does not let the site save says so and points to signing in', async () => {
+    confirmEmailFetch.mockImplementation(() => () => Promise.reject({ error: TOKEN_NOT_SAVED }));
+    renderPage(`?token=${'a'.repeat(64)}`);
+
+    fireEvent.click(screen.getByRole('button', { name: 'auth.confirm.submit' }));
+
+    expect(await screen.findByText('auth.tokenNotSaved')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'auth.confirm.toLogin' })).toHaveAttribute('href', '/login');
+    expect(screen.queryByRole('button', { name: 'auth.confirm.submit' })).toBeNull();
+    expect(openNotification).not.toHaveBeenCalled();
+    expect(screen.queryByText('home page')).toBeNull();
 });
 
 test('a link without a token says so', () => {

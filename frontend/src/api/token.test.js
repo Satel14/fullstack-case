@@ -66,6 +66,26 @@ test('removing a token that no storage holds any more leaves the stored ones alo
     expect(sessionStorage.getItem('token')).toBe('this-tab');
 });
 
+test.each([
+    ['remembered', true],
+    ['session-only', false],
+])('a %s sign-in the browser refuses to store is reported as not saved', (_, remember) => {
+    const spy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('The operation is insecure.', 'SecurityError');
+    });
+    try {
+        expect(setToken('fresh', remember)).toBe(false);
+        expect(getToken()).toBeNull();
+    } finally {
+        spy.mockRestore();
+    }
+});
+
+test('a stored sign-in is reported as saved', () => {
+    expect(setToken('fresh', true)).toBe(true);
+    expect(setToken('this-tab', false)).toBe(true);
+});
+
 test('no token reads as null', () => {
     expect(getToken()).toBeNull();
 });
