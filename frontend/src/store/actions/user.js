@@ -85,6 +85,9 @@ export const userPostRegisterFetch = (body) => (dispatch) => fetch(`${API_URL}/p
     .then((resp) => resp.json())
     // eslint-disable-next-line promise/always-return
     .then((data) => {
+        if (data && data.status === 'confirm-email') {
+            return { status: 'confirm-email' };
+        }
         if (Object.prototype.hasOwnProperty.call(data, 'message')) {
             return data.message;
         }

@@ -127,3 +127,15 @@ test.each([
     await waitFor(() => expect(screen.getByText('auth.register.emailInvalid')).toBeInTheDocument());
     expect(userPostRegisterFetch).not.toHaveBeenCalled();
 });
+
+test('a registration that needs confirming shows where the link went and signs nobody in', async () => {
+    userPostRegisterFetch.mockImplementation(() => () => Promise.resolve({ status: 'confirm-email' }));
+    renderForm();
+
+    fill();
+
+    expect(await screen.findByText('auth.confirm.sentTitle')).toBeInTheDocument();
+    expect(screen.getByText('auth.confirm.sentText')).toBeInTheDocument();
+    expect(screen.queryByText('home page')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'auth.register.submit' })).toBeNull();
+});

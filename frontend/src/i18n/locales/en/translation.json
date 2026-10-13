@@ -78,6 +78,12 @@
             "successTitle": "Signed in",
             "welcome": "Welcome to the site, {{name}}!"
         },
+        "confirm": {
+            "sentTitle": "Check your email",
+            "sentText": "We sent a link to {{email}}. Open it to finish registering.",
+            "sentHint": "The link is valid for 24 hours. If the letter is not there, check the spam folder or register again to get a new link.",
+            "toHome": "Home"
+        },
         "forgot": {
             "trigger": "Forgot password",
             "modalTitle": "Recover password",

@@ -12,6 +12,7 @@ import {connect} from "react-redux";
 import capitalize from "lodash/capitalize";
 import openNotification from '../../components/mini/openNotification';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { LOGIN_PATTERN, acceptablePassword, acceptableEmail } from '../../helpers/credentials';
 
 
@@ -55,6 +56,7 @@ const Registration = (props) => {
     const [form] = Form.useForm()
     const [avatar, setAvatar] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [sentTo, setSentTo] = useState('');
 
     const onFinish = (values) => {
         setLoading(true);
@@ -64,15 +66,30 @@ const Registration = (props) => {
             password: values.password,
             email: values.email,
             avatar: values.avatar,
-        }).then((errMessage) => {
+        }).then((result) => {
             setLoading(false)
-            if(errMessage) {
-                openNotification('error', t('auth.register.errorTitle'), errMessage)
+            if (result && result.status === 'confirm-email') {
+                setSentTo(values.email.trim())
+                return
+            }
+            if(result) {
+                openNotification('error', t('auth.register.errorTitle'), result)
                 return
             }
             props.history.push('/')
             openNotification('success', t('auth.register.successTitle'), t('auth.register.welcome', { name: capitalize(values.username) }))
         })
+    }
+
+    if (sentTo) {
+        return (
+            <div className="registrationpage">
+                <h1 className="title">{t('auth.confirm.sentTitle')}</h1>
+                <p>{t('auth.confirm.sentText', { email: sentTo })}</p>
+                <p>{t('auth.confirm.sentHint')}</p>
+                <Link to="/">{t('auth.confirm.toHome')}</Link>
+            </div>
+        )
     }
 
     return (
