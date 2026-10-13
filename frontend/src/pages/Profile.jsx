@@ -114,6 +114,7 @@ class Profile extends Component {
             historyItems: [],
         };
         this.mounted = false;
+        this.loadGeneration = 0;
     }
 
     componentDidMount() {
@@ -144,6 +145,9 @@ class Profile extends Component {
     }
 
     async loadProfileData() {
+        this.loadGeneration += 1;
+        const generation = this.loadGeneration;
+        const isCurrent = () => this.mounted && generation === this.loadGeneration;
         const profileId = this.getProfileId();
 
         if (!profileId) {
@@ -162,6 +166,10 @@ class Profile extends Component {
             getStorageLastItemsByUserId(profileId, STORAGE_LOAD_LIMIT, 0).catch(() => null),
         ]);
 
+        if (!isCurrent()) {
+            return;
+        }
+
         const profileUser = userResp?.data || null;
         const favoriteCase = favoriteResp?.data || null;
         const openedCases = Number(countResp?.data || 0);
@@ -178,7 +186,7 @@ class Profile extends Component {
         const bestDrop = pickBestDrop(storageItems, itemInfoById);
         const historyItems = buildHistoryItems(storageItems, itemInfoById);
 
-        if (!this.mounted) {
+        if (!isCurrent()) {
             return;
         }
 

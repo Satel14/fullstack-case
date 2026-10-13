@@ -1,5 +1,7 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import {
+    act, render, screen, waitFor,
+} from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
@@ -149,6 +151,46 @@ test('items that could not be loaded are left out of the history and the best dr
     expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('profile.noDrop');
     expect(container.querySelectorAll('.casehistory-itemlist_item')).toHaveLength(0);
     expect(screen.queryByText('Item 4242')).toBeNull();
+});
+
+test('an answer for a player the page has already left does not replace the player now shown', async () => {
+    let answerFirst;
+    getUserById.mockImplementation((id) => {
+        if (id === 5) {
+            return new Promise((resolve) => { answerFirst = resolve; });
+        }
+        return Promise.resolve({
+            data: {
+                user_id: 9, user_login: 'second', user_avatar: 4, user_role: roles.NORMAL,
+            },
+        });
+    });
+    const store = createStore(combineReducers({ user: usersReducer, itemCache: itemCacheReducer }), applyMiddleware(thunk));
+    store.dispatch({ type: LOGIN_USER, payloadUser: viewer });
+    const page = (id) => (
+        <Provider store={store}>
+            <MemoryRouter>
+                <Profile match={{ params: { id } }} />
+            </MemoryRouter>
+        </Provider>
+    );
+
+    const { container, rerender } = render(page('5'));
+    rerender(page('9'));
+    expect(await screen.findByText('second')).toBeInTheDocument();
+
+    await act(async () => {
+        answerFirst({
+            data: {
+                user_id: 5, user_login: 'first', user_avatar: 2, user_role: roles.NORMAL,
+            },
+        });
+        await new Promise((resolve) => { setTimeout(resolve, 50); });
+    });
+
+    expect(screen.queryByText('first')).toBeNull();
+    expect(screen.getByText('second')).toBeInTheDocument();
+    expect(avatarUrls(container)).toEqual(['url(/img/avatars/4.png)']);
 });
 
 test('every item of the history is loaded with one request', async () => {
