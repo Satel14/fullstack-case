@@ -110,6 +110,16 @@ test('sell prices come with the item info, without a price request per row', asy
     expect(getItemPriceById).not.toHaveBeenCalled();
 });
 
+test('the inventory still opens when the item lookup fails, with plain sell buttons', async () => {
+    server.inventory = inventoryRows(2);
+    getItemsInfo.mockRejectedValue({ error: 500 });
+    renderInventory();
+
+    expect(await screen.findAllByText('inventory.sell')).toHaveLength(2);
+    expect(screen.getAllByText('Item 1')).toHaveLength(2);
+    expect(screen.queryByText(/openCase.sellFor/)).toBeNull();
+});
+
 const clickSellAll = async () => {
     fireEvent.click(await screen.findByRole('button', { name: /inventory.sellAll/ }));
 };

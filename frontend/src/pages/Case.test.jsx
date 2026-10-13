@@ -20,13 +20,18 @@ jest.mock('react-reveal/Fade', () => ({ __esModule: true, default: ({ children }
 
 jest.mock('../api/all/cases', () => ({ getCaseById: jest.fn() }));
 jest.mock('../api/all/provablyFair', () => ({ getProvablyFairState: jest.fn() }));
-jest.mock('../store/actions/itemCache', () => ({ itemInfoFetch: () => ({ type: 'noop' }) }));
+jest.mock('../store/actions/itemCache', () => ({ itemInfoFetch: jest.fn() }));
 jest.mock('../components/modules/OpenCase', () => ({ onCaseChanged }) => (
     <button type="button" onClick={onCaseChanged}>opened</button>
 ));
 
 const { getCaseById } = require('../api/all/cases');
 const { getProvablyFairState } = require('../api/all/provablyFair');
+const { itemInfoFetch } = require('../store/actions/itemCache');
+
+beforeEach(() => {
+    itemInfoFetch.mockImplementation(() => ({ type: 'noop' }));
+});
 
 const caseResponse = (openedCount) => ({
     data: { case_id: 'havoc', case_title: 'Havoc', case_openedCount: openedCount },
@@ -53,4 +58,21 @@ test('the opened count is refreshed after an open', async () => {
 
     await waitFor(() => expect(openedCount()).toBe('case.openedCount 8'));
     expect(getCaseById).toHaveBeenLastCalledWith('havoc');
+});
+
+test('every item of the case is looked up, cached or not, so a failed lookup is asked for again', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    getCaseById.mockResolvedValue({ ...caseResponse(7), caseCollection: { ITEMS: [{ id: 1 }, { id: 2 }] } });
+    const store = createStore(() => ({ itemCache: { 1: { item_itemId: 1, item_name: 'Item 1', placeholder: 'failed' } } }));
+
+    render(
+        <Provider store={store}>
+            <MemoryRouter>
+                <Case match={{ params: { id: 'havoc' } }} history={{ push: jest.fn() }} />
+            </MemoryRouter>
+        </Provider>,
+    );
+
+    await waitFor(() => expect(itemInfoFetch).toHaveBeenCalledTimes(2));
+    expect(itemInfoFetch.mock.calls.map(([id]) => id)).toEqual([1, 2]);
 });
