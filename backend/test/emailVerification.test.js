@@ -74,8 +74,9 @@ test('confirming creates the account once and uses up every pending registration
         { login: 'newbie', email: 'newbie@e.ua', password: pending().passwordHash, avatar: 2 },
     );
     assert.ok((await pendingRows(sequelize)).every((row) => row.usedAt !== null));
-    assert.deepStrictEqual(await Service.confirm(token), { outcome: 'invalid' });
-    assert.deepStrictEqual(await Service.confirm(older), { outcome: 'invalid' });
+    assert.deepStrictEqual(await Service.confirm(token), { outcome: 'email-taken' });
+    assert.deepStrictEqual(await Service.confirm(older), { outcome: 'email-taken' });
+    assert.strictEqual((await users(sequelize)).length, 1);
 });
 
 test('a malformed, unknown or expired token is invalid', async () => {
@@ -118,6 +119,52 @@ test('two confirmations at once create exactly one account', async () => {
 
     assert.strictEqual(outcomes.filter((r) => r.outcome === 'created').length, 1, JSON.stringify(outcomes));
     assert.strictEqual((await users(sequelize)).length, 1);
+});
+
+const deadlockCount = async (sequelize) => {
+    const [[row]] = await sequelize.query(
+        "SELECT `COUNT` AS n FROM information_schema.INNODB_METRICS WHERE NAME = 'lock_deadlocks'",
+    );
+    return Number(row.n);
+};
+
+test('two links of one address confirmed at once create one account and send the other to sign in', async () => {
+    const sequelize = await fresh();
+    const Service = require('../src/services/emailVerification');
+    const deadlocksBefore = await deadlockCount(sequelize);
+
+    for (let round = 0; round < 10; round += 1) {
+        const email = `round${round}@e.ua`;
+        const login = (n) => (round % 2 ? `r${round}` : `r${round}x${n}`);
+        const first = await Service.createPending(pending({ login: login(1), email }));
+        const second = await Service.createPending(pending({ login: login(2), email }));
+
+        const settled = await Promise.allSettled([Service.confirm(first), Service.confirm(second)]);
+
+        const failures = settled.filter((s) => s.status === 'rejected').map((s) => s.reason && s.reason.message);
+        assert.deepStrictEqual(failures, [], `round ${round}`);
+        const outcomes = settled.map((s) => s.value.outcome).sort();
+        assert.deepStrictEqual(outcomes, ['created', 'email-taken'], `round ${round}`);
+    }
+
+    const created = await users(sequelize);
+    assert.strictEqual(created.length, 10);
+    assert.strictEqual(new Set(created.map((u) => u.email)).size, 10);
+    assert.ok((await pendingRows(sequelize)).every((row) => row.usedAt !== null));
+    assert.strictEqual(await deadlockCount(sequelize), deadlocksBefore, 'the confirmations must not deadlock at all');
+});
+
+test('a used link of an address that has an account sends the player to sign in, otherwise it is invalid', async () => {
+    const sequelize = await fresh();
+    const Service = require('../src/services/emailVerification');
+    const token = await Service.createPending(pending());
+    const orphan = await Service.createPending(pending({ login: 'gone', email: 'gone@e.ua' }));
+    await Service.confirm(token);
+    await Service.confirm(orphan);
+    await sequelize.query("DELETE FROM users WHERE login = 'gone'");
+
+    assert.deepStrictEqual(await Service.confirm(token), { outcome: 'email-taken' });
+    assert.deepStrictEqual(await Service.confirm(orphan), { outcome: 'invalid' });
 });
 
 test('registering leaves stale pending rows alone and the sweep deletes the expired and used ones', async () => {
@@ -442,7 +489,9 @@ test('a used, unknown or taken confirmation is refused with the reason', async (
     const unknown = await post('/api/profile/confirm-email', { token: 'f'.repeat(64) });
     const missing = await post('/api/profile/confirm-email', {});
 
-    for (const refused of [again, unknown, missing]) {
+    assert.strictEqual(again.code, 422);
+    assert.strictEqual(again.payload.message, MESSAGE.AUTH.CONFIRM_EMAIL_TAKEN);
+    for (const refused of [unknown, missing]) {
         assert.strictEqual(refused.code, 422);
         assert.strictEqual(refused.payload.message, MESSAGE.AUTH.CONFIRM_LINK_INVALID);
     }

@@ -14,6 +14,12 @@ const isUniqueViolation = (e) => Boolean(e && (
     e.name === 'SequelizeUniqueConstraintError' || (e.original && e.original.code === 'ER_DUP_ENTRY')
 ));
 
+const isDeadlock = (e) => Boolean(e && e.original && e.original.code === 'ER_LOCK_DEADLOCK');
+
+const hasAccount = async (email, t) => Boolean(await User.findOne({
+    where: { user_email: email }, attributes: ['user_id'], transaction: t, lock: t.LOCK.SHARE,
+}));
+
 const takenBy = async (pending, options = {}) => {
     if (await User.count({ where: { user_login: pending.ev_login }, ...options })) {
         return 'login-taken';
@@ -75,15 +81,28 @@ module.exports.confirm = async (token, now = new Date()) => {
     if (typeof token !== 'string' || !TOKEN_FORMAT.test(token)) {
         return { outcome: 'invalid' };
     }
+    const tokenHash = hashToken(token);
     let claimed = null;
     try {
         return await sequelize.transaction(async (t) => {
-            const pending = await EmailVerification.findOne({
-                where: { ev_tokenHash: hashToken(token) },
-                transaction: t,
+            const found = await EmailVerification.findOne({ where: { ev_tokenHash: tokenHash }, transaction: t });
+            if (!found) {
+                return { outcome: 'invalid' };
+            }
+            const addressRows = await EmailVerification.findAll({
+                where: { ev_email: found.ev_email },
+                order: [['ev_id', 'ASC']],
                 lock: t.LOCK.UPDATE,
+                transaction: t,
             });
-            if (!pending || pending.ev_usedAt !== null || pending.ev_expiresAt <= now) {
+            const pending = addressRows.find((row) => row.ev_tokenHash === tokenHash);
+            if (!pending) {
+                return { outcome: 'invalid' };
+            }
+            if (pending.ev_usedAt !== null) {
+                return { outcome: (await hasAccount(pending.ev_email, t)) ? 'email-taken' : 'invalid' };
+            }
+            if (pending.ev_expiresAt <= now) {
                 return { outcome: 'invalid' };
             }
             claimed = pending;
@@ -108,7 +127,7 @@ module.exports.confirm = async (token, now = new Date()) => {
             return { outcome: 'created', userId: user.user_id };
         });
     } catch (e) {
-        if (isUniqueViolation(e) && claimed) {
+        if ((isUniqueViolation(e) || isDeadlock(e)) && claimed) {
             return { outcome: (await takenBy(claimed)) || 'email-taken' };
         }
         throw e;
