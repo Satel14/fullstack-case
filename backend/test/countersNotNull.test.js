@@ -89,6 +89,44 @@ test('a case whose opened count was NULL counts its opens and closes at its limi
     assert.strictEqual(Number(user.balance), 9800);
 });
 
+test('a NULL opened count resumes at the opens already made, and a case they took to its limit closes', async () => {
+    const sequelize = await databaseBeforeTheMigration();
+    await sequelize.query(
+        "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES ('player', 'x', 'p@e.ua', 10000, 0, 1)",
+    );
+    await sequelize.query(
+        "INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) VALUES "
+        + "('dust2', 'DUST2', 100, 0, 1, 1, NULL, 'weapon', 5), "
+        + "('mirage', 'MIRAGE', 100, 0, 1, 1, NULL, 'weapon', 4), "
+        + "('nuke', 'NUKE', 100, 0, 1, 1, NULL, 'weapon', -1), "
+        + "('kept', 'KEPT', 100, 0, 1, 1, 7, 'weapon', 1000)",
+    );
+    const opensRecorded = ['dust2', 'dust2', 'dust2', 'nuke', 'nuke', 'kept'];
+    await sequelize.query(
+        `INSERT INTO case_opens (userId, caseId) VALUES ${opensRecorded.map(() => '(1, ?)').join(', ')}`,
+        { replacements: opensRecorded },
+    );
+    const dropsKept = ['dust2', 'mirage', 'mirage', 'mirage', 'mirage', 'nuke', 'kept'];
+    await sequelize.query(
+        `INSERT INTO storage (userId, itemId, color, caseId, status) VALUES ${dropsKept.map(() => "(1, 1, 'default', ?, 'received')").join(', ')}`,
+        { replacements: dropsKept },
+    );
+
+    await migrateRest(sequelize);
+
+    const [migrated] = await sequelize.query('SELECT id, openedCount, published FROM cases ORDER BY id');
+    assert.deepStrictEqual(migrated.map((c) => [c.id, c.openedCount, c.published]), [
+        ['dust2', 3, 1], ['kept', 7, 1], ['mirage', 4, 0], ['nuke', 2, 1],
+    ]);
+
+    stubItemCache(require('../src/constant/cases/_all').dust2);
+    const results = [await open(1), await open(1), await open(1)];
+
+    assert.deepStrictEqual(results.map((r) => r.code), [200, 200, 422], JSON.stringify(results.map((r) => r.payload.message)));
+    const [[dust2]] = await sequelize.query("SELECT openedCount, published FROM cases WHERE id = 'dust2'");
+    assert.deepStrictEqual({ openedCount: dust2.openedCount, published: dust2.published }, { openedCount: 5, published: 0 });
+});
+
 test('NULL counters on cases and players become 0 and the columns refuse NULL from then on', async () => {
     const sequelize = await databaseBeforeTheMigration();
     await sequelize.query(
