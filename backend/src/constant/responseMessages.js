@@ -54,7 +54,8 @@ module.exports = {
     USER: {
         NOT_EXIST: 'Такого користувача не існує',
         MONEY_NOT_ENOUGH: 'Недостатньо грошей',
-        CANT_UPDATE_FIELD: 'Це поле не можна змінювати'
+        CANT_UPDATE_FIELD: 'Це поле не можна змінювати',
+        AVATAR_INVALID: 'Оберіть аватар зі списку'
     },
     BONUS: {
         NOT_EXIST: 'Такого бонуса не існує',

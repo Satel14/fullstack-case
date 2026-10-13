@@ -6,6 +6,7 @@ const MESSAGE = require('../constant/responseMessages');
 const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
 const sequelize = require('../config/db');
 const { answerFailure } = require('../helpers/failure');
+const { isAcceptableAvatar } = require('../helpers/avatar');
 
 module.exports.getUserById = async (req, res) => {
     try {
@@ -145,6 +146,10 @@ module.exports.editUser = async (req, res) => {
             return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
         }
 
+        if ('user_avatar' in req.body && !isAcceptableAvatar(req.body.user_avatar)) {
+            return res.status(422).json({ status: 422, message: MESSAGE.USER.AVATAR_INVALID });
+        }
+
         const { user_id } = req.user.profile;
         await UserService.editUser(req.body, user_id);
         return res.status(200).json({ status: 200 });
@@ -184,9 +189,7 @@ module.exports.validate = (method) => {
             ];
         }
         case 'editUser': {
-            return [
-                body('user_avatar').isNumeric().optional({ nullable: true }),
-            ];
+            return [];
         }
         case 'sendMoneyForUser': {
             return [

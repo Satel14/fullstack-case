@@ -11,8 +11,7 @@ const {
 const EmailVerificationService = require('../services/emailVerification');
 const clientOrigin = require('../config/clientOrigin');
 const { answerFailure } = require('../helpers/failure');
-
-const AVATAR_IDS = [1, 2, 3, 4, 5, 6];
+const { DEFAULT_AVATAR, isAcceptableAvatar } = require('../helpers/avatar');
 
 const mailConfirmationOrNotice = async ({
     login, password, email, avatar,
@@ -26,7 +25,7 @@ const mailConfirmationOrNotice = async ({
     }
 
     const token = await EmailVerificationService.createPending({
-        login, email, passwordHash, avatar: AVATAR_IDS.includes(avatar) ? avatar : 1,
+        login, email, passwordHash, avatar,
     });
     mailSender.emailConfirmationLink(email, {
         login,
@@ -54,7 +53,7 @@ module.exports = (app) => {
     app.post('/api/profile/register', authLimiter, async (req, res) => {
         try {
             const {
-                login, password, email: rawEmail, avatar,
+                login, password, email: rawEmail, avatar: rawAvatar,
             } = req.body;
 
             if ([login, password, rawEmail].some((value) => typeof value !== 'string' || !value)) {
@@ -72,6 +71,11 @@ module.exports = (app) => {
             const email = normalizeEmail(rawEmail);
             if (!isAcceptableEmail(email)) {
                 return res.status(422).json({ message: message.AUTH.EMAIL_INVALID });
+            }
+
+            const avatar = rawAvatar === undefined ? DEFAULT_AVATAR : rawAvatar;
+            if (!isAcceptableAvatar(avatar)) {
+                return res.status(422).json({ message: message.USER.AVATAR_INVALID });
             }
 
             if (mailSender.isEnabled()) {
