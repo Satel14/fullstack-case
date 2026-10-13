@@ -18,7 +18,9 @@ const location = (prefix) => {
 
 const composeService = (name) => {
     const lines = compose.split('\n');
-    const start = lines.indexOf(`  ${name}:`);
+    const services = lines.indexOf('services:');
+    assert.ok(services !== -1, 'docker-compose has a services section');
+    const start = lines.indexOf(`  ${name}:`, services);
     assert.ok(start !== -1, `docker-compose has no service ${name}`);
     const rest = lines.slice(start + 1);
     const end = rest.findIndex((line) => /^(\S|  [\w.-]+:)/.test(line) && !/^\s*#/.test(line));
@@ -30,9 +32,15 @@ test('the frontend image is built to call the API and Socket.IO on the host it i
     const build = frontendDockerfile.indexOf('RUN npm run build');
     assert.ok(stage !== -1 && build > stage, 'the build stage builds the bundle');
     const buildStage = frontendDockerfile.slice(stage, build);
+    assert.doesNotMatch(buildStage.slice(1), /^FROM /im, 'the bundle is built in the stage that declares the URLs');
     assert.match(buildStage, /^ARG REACT_APP_API_URL=\/api$/m);
     assert.match(buildStage, /^ARG REACT_APP_WS_URL=\/$/m);
-    assert.doesNotMatch(frontendDockerfile, /^ENV\s+REACT_APP_/m);
+    assert.deepStrictEqual(
+        frontendDockerfile.split('\n').filter((line) => line.includes('REACT_APP_')),
+        ['ARG REACT_APP_API_URL=/api', 'ARG REACT_APP_WS_URL=/'],
+        'nothing else in the Dockerfile sets the URLs',
+    );
+    assert.doesNotMatch(composeService('frontend'), /REACT_APP_/, 'docker-compose does not override the URLs');
 });
 
 test('nginx sends the API to the backend and everything else to the frontend', () => {
