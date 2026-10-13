@@ -188,6 +188,17 @@ test('the same id as a number and as a string is looked up once', async () => {
     expect(requestedIds().map((batch) => batch.length)).toEqual([200]);
 });
 
+test('two stores asking for the same item at once both get it into their cache', async () => {
+    const first = makeStore();
+    const second = makeStore();
+
+    await Promise.all([first.dispatch(itemInfoFetch(5)), second.dispatch(itemInfoFetch(5))]);
+
+    expect(first.state.itemCache[5].item_name).toBe('name 5');
+    expect(second.state.itemCache[5].item_name).toBe('name 5');
+    expect(requestedIds()).toEqual([['5']]);
+});
+
 test('a whole batch reaches the cache with one store update', async () => {
     const { state, dispatch } = makeStore();
     const ids = Array.from({ length: 150 }, (_, i) => i + 1);

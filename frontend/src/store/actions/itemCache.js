@@ -4,7 +4,7 @@ import { getItemsInfo } from '../../api/all/item';
 const ITEMS_PER_REQUEST = 200;
 const ITEM_ID = /^[1-9]\d{0,9}$/;
 
-const pending = new Map();
+const pendingByStore = new WeakMap();
 let queue = [];
 
 const placeholderItem = (id, failed) => ({
@@ -76,8 +76,16 @@ export const addItemsToCache = (itemList) => (dispatch) => {
     }
 };
 
+const pendingOf = (dispatch) => {
+    if (!pendingByStore.has(dispatch)) {
+        pendingByStore.set(dispatch, new Map());
+    }
+    return pendingByStore.get(dispatch);
+};
+
 export const itemInfoFetch = (id) => (dispatch, getState) => {
     const cached = getState().itemCache[id];
+    const pending = pendingOf(dispatch);
     const key = String(id);
 
     if (isSettled(cached)) {
