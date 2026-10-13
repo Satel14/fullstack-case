@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { enumerateItems } = require('./lib/enumerateItems');
-const { buildPriceEntry } = require('./lib/priceEntry');
+const { buildPriceEntry, serializePriceMap } = require('./lib/priceEntry');
 const { assertMigrationsApplied } = require('../src/db/migrator');
 
 const DATA_DIR = path.join(__dirname, 'data');
@@ -68,7 +68,7 @@ const main = async () => {
     }
 
     fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(OUT_FILE, JSON.stringify(priceMap, null, 0));
+    fs.writeFileSync(OUT_FILE, serializePriceMap(priceMap));
     const pct = ((matched / items.length) * 100).toFixed(1);
     console.log(`✅ priceMap.json: ${items.length} items, ${matched} matched to market (${pct}%), ${items.length - matched} fallback`);
 

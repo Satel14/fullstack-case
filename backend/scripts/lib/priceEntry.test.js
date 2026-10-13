@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { buildPriceEntry, STATTRAK_MULT } = require('./priceEntry');
+const { buildPriceEntry, serializePriceMap, STATTRAK_MULT } = require('./priceEntry');
 const ITEMS = require('../../src/constant/itemConfigs');
 
 const rate = 40;
@@ -46,4 +46,20 @@ test('painted is clamped to at least the default price', () => {
   const e = buildPriceEntry(redline, idx, rate);
   assert.equal(e.default, 400);
   assert.equal(e.painted, 400);
+});
+
+test('serializePriceMap writes one item per line and parses back unchanged', () => {
+  const map = {
+    1: { name: 'M249 | Aztec', type: 'machine guns', rare: 'Factory New', default: 200, painted: 227 },
+    2: { name: 'AK-47 | Redline', type: 'assault rifles', rare: 'Field Tested', default: 400, painted: 1000 },
+  };
+  const text = serializePriceMap(map);
+  assert.deepEqual(JSON.parse(text), map);
+  assert.deepEqual(text.split('\n'), [
+    '{',
+    `"1":${JSON.stringify(map[1])},`,
+    `"2":${JSON.stringify(map[2])}`,
+    '}',
+    '',
+  ]);
 });

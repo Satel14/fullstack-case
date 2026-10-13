@@ -35,4 +35,11 @@ const buildPriceEntry = (item, marketIndex, rate) => {
     return { default: defaultUAH, painted: paintedUAH, matched };
 };
 
-module.exports = { buildPriceEntry, toUAH, STATTRAK_MULT };
+const serializePriceMap = (priceMap) => {
+    const lines = Object.entries(priceMap).map(([id, entry]) => `${JSON.stringify(id)}:${JSON.stringify(entry)}`);
+    return `{\n${lines.join(',\n')}\n}\n`;
+};
+
+module.exports = {
+    buildPriceEntry, serializePriceMap, toUAH, STATTRAK_MULT,
+};
