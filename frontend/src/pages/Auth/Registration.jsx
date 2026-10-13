@@ -1,20 +1,18 @@
-/* eslint-disable */
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
     Form,
     Input,
     Checkbox,
     Button,
     Radio,
-} from "antd";
-import {userPostRegisterFetch} from "../../store/actions/user";
-import {connect} from "react-redux";
-import capitalize from "lodash/capitalize";
-import openNotification from '../../components/mini/openNotification';
+} from 'antd';
+import { connect } from 'react-redux';
+import capitalize from 'lodash/capitalize';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { userPostRegisterFetch } from '../../store/actions/user';
+import openNotification from '../../components/mini/openNotification';
 import { LOGIN_PATTERN, acceptablePassword, acceptableEmail } from '../../helpers/credentials';
-
 
 const formItemLayout = {
     labelCol: {
@@ -37,49 +35,49 @@ const tailFormItemLayout = {
             offset: 8,
         },
     },
-}
+};
 
 const Images = [
-    {url: './img/avatars/1.png', id:1},
-    {url: './img/avatars/2.png', id:2},
-    {url: './img/avatars/3.png', id:3},
-    {url: './img/avatars/4.png', id:4},
-    {url: './img/avatars/5.png', id:5},
-    {url: './img/avatars/6.png', id:6},
-]
+    { url: './img/avatars/1.png', id: 1 },
+    { url: './img/avatars/2.png', id: 2 },
+    { url: './img/avatars/3.png', id: 3 },
+    { url: './img/avatars/4.png', id: 4 },
+    { url: './img/avatars/5.png', id: 5 },
+    { url: './img/avatars/6.png', id: 6 },
+];
 
 const mapDispatchToProps = (dispatch) => ({
     userPostRegisterFetch: (userInfo) => dispatch(userPostRegisterFetch(userInfo)),
 });
 const Registration = (props) => {
     const { t } = useTranslation();
-    const [form] = Form.useForm()
+    const [form] = Form.useForm();
     const [avatar, setAvatar] = useState(1);
     const [loading, setLoading] = useState(false);
     const [sentTo, setSentTo] = useState('');
 
     const onFinish = (values) => {
         setLoading(true);
-        values.avatar = avatar;
-        props.userPostRegisterFetch({
+        return props.userPostRegisterFetch({
             login: values.username,
             password: values.password,
             email: values.email,
-            avatar: values.avatar,
+            avatar,
         }).then((result) => {
-            setLoading(false)
+            setLoading(false);
             if (result && result.status === 'confirm-email') {
-                setSentTo(values.email.trim())
-                return
+                setSentTo(values.email.trim());
+                return undefined;
             }
-            if(result) {
-                openNotification('error', t('auth.register.errorTitle'), result)
-                return
+            if (result) {
+                openNotification('error', t('auth.register.errorTitle'), result);
+                return undefined;
             }
-            props.history.push('/')
-            openNotification('success', t('auth.register.successTitle'), t('auth.register.welcome', { name: capitalize(values.username) }))
-        })
-    }
+            props.history.push('/');
+            openNotification('success', t('auth.register.successTitle'), t('auth.register.welcome', { name: capitalize(values.username) }));
+            return undefined;
+        });
+    };
 
     if (sentTo) {
         return (
@@ -89,16 +87,17 @@ const Registration = (props) => {
                 <p>{t('auth.confirm.sentHint')}</p>
                 <Link to="/">{t('auth.confirm.toHome')}</Link>
             </div>
-        )
+        );
     }
 
     return (
         <div className="registrationpage">
             <h1 className="title">{t('auth.register.title')}</h1>
             <Form
-                {...formItemLayout}
+                labelCol={formItemLayout.labelCol}
+                wrapperCol={formItemLayout.wrapperCol}
                 form={form}
-                name='register'
+                name="register"
                 onFinish={onFinish}
                 scrollToFirstError
             >
@@ -114,7 +113,7 @@ const Registration = (props) => {
                         {
                             pattern: LOGIN_PATTERN,
                             message: t('auth.register.loginInvalid'),
-                        }
+                        },
                     ]}
                     hasFeedback
                 >
@@ -132,7 +131,7 @@ const Registration = (props) => {
                             validator: (_, value) => (!value || acceptablePassword(value)
                                 ? Promise.resolve()
                                 : Promise.reject(new Error(t('auth.register.passwordLength')))),
-                        }
+                        },
                     ]}
                 >
                     <Input.Password />
@@ -140,7 +139,7 @@ const Registration = (props) => {
                 <Form.Item
                     name="confirm"
                     label={t('auth.register.confirmLabel')}
-                    dependencies={["password"]}
+                    dependencies={['password']}
                     hasFeedback
                     rules={[
                         {
@@ -150,12 +149,13 @@ const Registration = (props) => {
                         ({ getFieldValue }) => ({
                             validator(_, value) {
                                 if (!value || getFieldValue('password') === value) {
-                                    return Promise.resolve()
+                                    return Promise.resolve();
                                 }
-                                return Promise.reject(new Error(t('auth.register.confirmMismatch')))
-                            }
-                        })
-                    ]}>
+                                return Promise.reject(new Error(t('auth.register.confirmMismatch')));
+                            },
+                        }),
+                    ]}
+                >
                     <Input.Password />
                 </Form.Item>
                 <Form.Item
@@ -170,46 +170,46 @@ const Registration = (props) => {
                         },
                         {
                             required: true,
-                            message: t('auth.register.emailRequired')
-                        }
+                            message: t('auth.register.emailRequired'),
+                        },
                     ]}
                 >
                     <Input />
                 </Form.Item>
                 <Form.Item label={t('auth.register.chooseAvatar')}>
-                        <Radio.Group defaultValue={avatar} buttonStyle="solid">
-                        {Images.map((item)=>(
+                    <Radio.Group defaultValue={avatar} buttonStyle="solid">
+                        {Images.map((item) => (
                             <Radio.Button value={item.id} key={item.id} className="radio-avatar" onClick={() => setAvatar(item.id)}>
-                                    <img src={item.url} alt={item.id + "avatar"}/>
+                                <img src={item.url} alt={`${item.id}avatar`} />
                             </Radio.Button>
                         ))}
-                        </Radio.Group>
+                    </Radio.Group>
                 </Form.Item>
                 <Form.Item
                     name="agreement"
                     valuePropName="checked"
                     rules={[
                         {
-                            validator: (_, value) =>
-                                value
-                                    ? Promise.resolve()
-                                    : Promise.reject(new Error(t('auth.register.agreementRequired'))),
+                            validator: (_, value) => (value
+                                ? Promise.resolve()
+                                : Promise.reject(new Error(t('auth.register.agreementRequired')))),
                         },
                     ]}
-                    {...tailFormItemLayout}
+                    wrapperCol={tailFormItemLayout.wrapperCol}
                 >
-                        <Checkbox>
-                            {t('auth.register.agreementPre')} <a href="">{t('auth.register.agreementLink')}</a>
-                        </Checkbox>
+                    <Checkbox>
+                        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                        {t('auth.register.agreementPre')} <a href="">{t('auth.register.agreementLink')}</a>
+                    </Checkbox>
                 </Form.Item>
-                <Form.Item {...tailFormItemLayout}>
-                        <Button type="primary" htmlType="submit" loading={loading}>
-                            {t('auth.register.submit')}
-                        </Button>
+                <Form.Item wrapperCol={tailFormItemLayout.wrapperCol}>
+                    <Button type="primary" htmlType="submit" loading={loading}>
+                        {t('auth.register.submit')}
+                    </Button>
                 </Form.Item>
             </Form>
-        </div >
-    )
-}
+        </div>
+    );
+};
 
 export default connect(null, mapDispatchToProps)(Registration);

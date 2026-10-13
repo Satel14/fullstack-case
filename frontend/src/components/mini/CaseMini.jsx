@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import CasePrice, { hasDiscount } from './CasePrice';
@@ -34,9 +33,9 @@ const CaseMini = ({ data }) => {
             <div className="case-openstats">
                 <span className="case-openstats__progress">{stats.progressText}</span>
             </div>
-            <img className="case-img" src={data.case_img} alt={caseTitle}/>
+            <img className="case-img" src={data.case_img} alt={caseTitle} />
             <div className="case-name">{caseTitle}</div>
-            <CasePrice data={data}/>
+            <CasePrice data={data} />
         </Link>
     );
 };

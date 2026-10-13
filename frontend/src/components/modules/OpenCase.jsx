@@ -1,5 +1,3 @@
-/* eslint-disable guard-for-in */
-/* eslint-disable no-restricted-syntax */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 
@@ -381,11 +379,11 @@ class OpenCase extends Component {
         const randomList = [];
         const winnerList = [];
 
-        for (const key in result.data) {
+        Object.keys(result.data).forEach((key) => {
             const element = result.data[key];
             randomList.push(element.resultWithItem);
             winnerList.push(element.winner);
-        }
+        });
         this.setState({
             randomItemsList: randomList,
             winner: winnerList,

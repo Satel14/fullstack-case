@@ -1,5 +1,3 @@
-/* eslint-disable promise/always-return */
-/* eslint-disable guard-for-in */
 import { LOAD_MODULES } from '../types';
 import { API_URL } from '../../api/config';
 
@@ -18,11 +16,10 @@ export const getAllModules = () => (dispatch) => fetch(`${API_URL}/module/all`, 
     },
 })
     .then((resp) => resp.json())
-    // eslint-disable-next-line promise/always-return
     .then((data) => {
         const modulesAll = data.data;
-        // eslint-disable-next-line no-restricted-syntax
-        for (const key in modulesAll) {
+        Object.keys(modulesAll || {}).forEach((key) => {
             dispatch(loadModules(modulesAll[key].param, modulesAll[key]));
-        }
+        });
+        return undefined;
     });
