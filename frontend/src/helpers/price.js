@@ -1,3 +1,5 @@
+import { salePayout } from './salePayout';
+
 export const computeItemPriceUAH = (pricesObj, color, creditRate = 1) => {
     if (!pricesObj) {
         return null;
@@ -7,5 +9,5 @@ export const computeItemPriceUAH = (pricesObj, color, creditRate = 1) => {
     if (!raw) {
         return null;
     }
-    return parseInt(raw * creditRate * 100, 10) / 100;
+    return salePayout(raw, parseFloat(creditRate));
 };
