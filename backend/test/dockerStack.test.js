@@ -88,3 +88,8 @@ test('the backend and the mysql app user read the same password variable', () =>
 test('the mysql root password is overridable from the environment with the current default', () => {
     assert.match(composeService('mysql-db'), /^\s*MYSQL_ROOT_PASSWORD: \$\{MYSQL_ROOT_PASSWORD:-root\}$/m);
 });
+
+test('the backend container receives the Resend settings', () => {
+    assert.match(composeService('backend'), /^ {6}RESEND_API_KEY: \$\{RESEND_API_KEY:-\}$/m);
+    assert.match(composeService('backend'), /^ {6}RESEND_FROM: \$\{RESEND_FROM:-\}$/m);
+});
