@@ -21,22 +21,24 @@ const composeService = (name) => {
     const start = lines.indexOf(`  ${name}:`);
     assert.ok(start !== -1, `docker-compose has no service ${name}`);
     const rest = lines.slice(start + 1);
-    const end = rest.findIndex((line) => /^ {0,2}\S/.test(line));
+    const end = rest.findIndex((line) => /^(\S|  [\w.-]+:)/.test(line) && !/^\s*#/.test(line));
     return rest.slice(0, end === -1 ? rest.length : end).join('\n');
 };
 
 test('the frontend image is built to call the API and Socket.IO on the host it is served from', () => {
+    const stage = frontendDockerfile.search(/^FROM \S+ AS build$/m);
     const build = frontendDockerfile.indexOf('RUN npm run build');
-    assert.ok(build !== -1, 'the frontend Dockerfile builds the bundle');
-    const beforeBuild = frontendDockerfile.slice(0, build);
-    assert.match(beforeBuild, /^ARG REACT_APP_API_URL=\/api$/m);
-    assert.match(beforeBuild, /^ARG REACT_APP_WS_URL=\/$/m);
+    assert.ok(stage !== -1 && build > stage, 'the build stage builds the bundle');
+    const buildStage = frontendDockerfile.slice(stage, build);
+    assert.match(buildStage, /^ARG REACT_APP_API_URL=\/api$/m);
+    assert.match(buildStage, /^ARG REACT_APP_WS_URL=\/$/m);
+    assert.doesNotMatch(frontendDockerfile, /^ENV\s+REACT_APP_/m);
 });
 
 test('nginx sends the API to the backend and everything else to the frontend', () => {
     assert.match(location('/api'), /proxy_pass\s+http:\/\/backend;/);
     assert.match(location('/'), /proxy_pass\s+http:\/\/frontend;/);
-    assert.match(compose, /nginx:[\s\S]*?ports:\s*\n\s*- "3009:3009"/);
+    assert.match(composeService('nginx'), /ports:\s*\n\s*- "3009:3009"/);
 });
 
 test('the frontend container is reached only through nginx', () => {
