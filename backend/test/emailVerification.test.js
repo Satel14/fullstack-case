@@ -133,6 +133,113 @@ test('registering again clears expired and used pending rows', async () => {
     assert.deepStrictEqual((await pendingRows(sequelize)).map((row) => row.login), ['later']);
 });
 
+const mailLog = [];
+const mailPath = require.resolve('../src/modules/mailSender');
+const realMail = require('../src/modules/mailSender');
+require.cache[mailPath].exports = {
+    ...realMail,
+    isEnabled: () => true,
+    userRegistered: (mailTo, data) => { mailLog.push({ kind: 'welcome', mailTo, ...data }); },
+    emailConfirmationLink: (mailTo, data) => { mailLog.push({ kind: 'confirm', mailTo, ...data }); },
+    registrationAttemptNotice: (mailTo, data) => { mailLog.push({ kind: 'attempt', mailTo, ...data }); },
+};
+
+const routeHandlers = () => {
+    const handlers = {};
+    const app = { post: (path, ...chain) => { handlers[path] = chain[chain.length - 1]; } };
+    for (const route of ['../src/auth/register', '../src/auth/confirmEmail']) {
+        try {
+            delete require.cache[require.resolve(route)];
+            require(route)(app);
+        } catch (e) {
+            if (e.code !== 'MODULE_NOT_FOUND') {
+                throw e;
+            }
+        }
+    }
+    return handlers;
+};
+
+const post = (path, body) => new Promise((resolve) => {
+    const res = {
+        statusCode: 200,
+        status(code) { this.statusCode = code; return this; },
+        json(payload) { resolve({ code: this.statusCode, payload }); },
+    };
+    routeHandlers()[path]({ body }, res);
+});
+
+const register = (body) => post('/api/profile/register', {
+    login: 'newbie', password: 'secret123', email: 'newbie@e.ua', avatar: 1, ...body,
+});
+
+const withOwner = async (sequelize) => {
+    await sequelize.query(
+        "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES ('owner', 'x', 'owner@e.ua', 0, 0, 1)",
+    );
+};
+
+test('with mail, a new and a taken address get the same answer and nobody is signed in', async () => {
+    const sequelize = await fresh();
+    await withOwner(sequelize);
+    mailLog.length = 0;
+
+    const newAddress = await register();
+    const taken = await register({ login: 'someone', email: '  owner@e.ua ' });
+
+    assert.strictEqual(newAddress.code, 202);
+    assert.deepStrictEqual(taken, newAddress);
+    assert.strictEqual(newAddress.payload.status, 'confirm-email');
+    assert.ok(!('jwt' in newAddress.payload));
+    assert.deepStrictEqual((await users(sequelize)).map((u) => u.login), ['owner']);
+    assert.deepStrictEqual(mailLog.map((m) => [m.kind, m.mailTo]), [['confirm', 'newbie@e.ua'], ['attempt', 'owner@e.ua']]);
+    assert.strictEqual(mailLog[1].login, 'owner');
+});
+
+test('with mail, the letter links to the confirm page with the pending token', async () => {
+    const sequelize = await fresh();
+    mailLog.length = 0;
+    const saved = process.env.CLIENT_ORIGIN;
+    process.env.CLIENT_ORIGIN = 'http://192.168.1.10:3009/';
+    try {
+        await register();
+    } finally {
+        require('./helpers/env').restoreEnv('CLIENT_ORIGIN', saved);
+    }
+
+    const [{ link, hours }] = mailLog;
+    const match = /^http:\/\/192\.168\.1\.10:3009\/confirm-email\?token=([0-9a-f]{64})$/.exec(link);
+    assert.ok(match, link);
+    assert.strictEqual(hours, 24);
+    const [row] = await pendingRows(sequelize);
+    assert.strictEqual(row.tokenHash, sha256(match[1]));
+    assert.ok(row.passwordHash.startsWith('$2'));
+});
+
+test('with mail, a taken login is refused at once', async () => {
+    const sequelize = await fresh();
+    await withOwner(sequelize);
+    const MESSAGE = require('../src/constant/responseMessages');
+
+    const result = await register({ login: 'OWNER', email: 'free@e.ua' });
+
+    assert.strictEqual(result.code, 422);
+    assert.strictEqual(result.payload.message, MESSAGE.AUTH.LOGIN_TAKEN);
+    assert.deepStrictEqual(await pendingRows(sequelize), []);
+});
+
+test('with mail, an odd avatar cannot make a new address answer differently', async () => {
+    const sequelize = await fresh();
+    await withOwner(sequelize);
+
+    for (const avatar of ['x', 1e12, -3, 2.5, null, { a: 1 }]) {
+        const free = await register({ email: `free${String(Math.random()).slice(2)}@e.ua`, avatar });
+        const taken = await register({ email: 'owner@e.ua', avatar });
+        assert.deepStrictEqual(free, taken, JSON.stringify(avatar));
+    }
+    assert.ok((await pendingRows(sequelize)).every((row) => row.avatar === 1));
+});
+
 test('the confirmation and registration-attempt letters escape what the player typed', () => {
     const { emailConfirmationEmail, registrationAttemptEmail } = require('../src/modules/mailSender');
     const login = '<a href="https://evil.example">x</a>';

@@ -23,7 +23,7 @@ require.cache[mailPath] = {
     filename: mailPath,
     loaded: true,
     exports: {
-        isEnabled: () => true,
+        isEnabled: () => false,
         userRegistered: (mailTo, data) => { welcomes.push({ mailTo, login: data.login }); },
         passwordResetLink: () => {},
     },

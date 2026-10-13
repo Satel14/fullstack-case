@@ -5,8 +5,7 @@ const Encrypt = require('../modules/Encrypt');
 const PasswordResetService = require('../services/passwordReset');
 const { authLimiter } = require('../middleware/rateLimiters');
 const { isAcceptablePassword } = require('./credentials');
-
-const CLIENT_ORIGIN = (process.env.CLIENT_ORIGIN || 'http://localhost:3000').replace(/\/+$/, '');
+const clientOrigin = require('../config/clientOrigin');
 
 module.exports = (app) => {
     app.post('/api/profile/forgotpassword', authLimiter, async (req, res) => {
@@ -25,7 +24,7 @@ module.exports = (app) => {
                 const token = await PasswordResetService.issueToken(user.user_id);
                 mailSender.passwordResetLink(user.user_email, {
                     login: user.user_login,
-                    link: `${CLIENT_ORIGIN}/reset-password?token=${token}`,
+                    link: `${clientOrigin()}/reset-password?token=${token}`,
                     minutes: PasswordResetService.TOKEN_TTL_MS / 60000,
                 });
             }

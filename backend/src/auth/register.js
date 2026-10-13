@@ -8,6 +8,36 @@ const { authLimiter } = require('../middleware/rateLimiters');
 const {
     isAcceptablePassword, isAcceptableLogin, normalizeEmail, isAcceptableEmail,
 } = require('./credentials');
+const EmailVerificationService = require('../services/emailVerification');
+const clientOrigin = require('../config/clientOrigin');
+
+const AVATAR_IDS = [1, 2, 3, 4, 5, 6];
+
+const requestConfirmation = async (res, {
+    login, password, email, avatar,
+}) => {
+    if (await Users.count({ where: { user_login: login } })) {
+        return res.status(422).json({ message: message.AUTH.LOGIN_TAKEN });
+    }
+
+    const passwordHash = await Encrypt.cryptPassword(password);
+    const owner = await Users.findOne({ where: { user_email: email }, attributes: ['user_login'] });
+
+    if (owner) {
+        mailSender.registrationAttemptNotice(email, { login: owner.user_login });
+    } else {
+        const token = await EmailVerificationService.createPending({
+            login, email, passwordHash, avatar: AVATAR_IDS.includes(avatar) ? avatar : 1,
+        });
+        mailSender.emailConfirmationLink(email, {
+            login,
+            link: `${clientOrigin()}/confirm-email?token=${token}`,
+            hours: EmailVerificationService.TOKEN_TTL_MS / 3600000,
+        });
+    }
+
+    return res.status(202).json({ status: 'confirm-email', message: message.AUTH.CONFIRM_EMAIL_SENT });
+};
 
 module.exports = (app) => {
     app.post('/api/profile/register', authLimiter, async (req, res) => {
@@ -31,6 +61,12 @@ module.exports = (app) => {
             const email = normalizeEmail(rawEmail);
             if (!isAcceptableEmail(email)) {
                 return res.status(422).json({ message: message.AUTH.EMAIL_INVALID });
+            }
+
+            if (mailSender.isEnabled()) {
+                return await requestConfirmation(res, {
+                    login, password, email, avatar,
+                });
             }
 
             const user = await Users.findOne({
