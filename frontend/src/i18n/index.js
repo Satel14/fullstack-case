@@ -3,6 +3,11 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import uk from './locales/uk/translation.json';
 import en from './locales/en/translation.json';
+import { siteLanguage } from './language';
+
+i18n.on('languageChanged', (language) => {
+    document.documentElement.setAttribute('lang', siteLanguage(language));
+});
 
 i18n
     .use(LanguageDetector)
