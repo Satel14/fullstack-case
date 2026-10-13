@@ -62,3 +62,29 @@ test('the backend refuses to start without a real JWT secret', () => {
     assert.match(composeService('backend'), /^ {6}JWT_SECRET: \$\{JWT_SECRET:\?[^}]+\}$/m);
     assert.doesNotMatch(compose, /^\s*JWT_SECRET:\s*(?!\$\{)\S/m, 'no secret-looking literal should be assigned to JWT_SECRET');
 });
+
+test('every published port binds to loopback, except nginx\'s public port', () => {
+    const portLines = [...compose.matchAll(/^\s*- "([^"]+)"\s*$/gm)]
+        .map((m) => m[1])
+        .filter((p) => /^[0-9.]*:?\d+:\d+$/.test(p));
+    assert.ok(portLines.length > 0, 'the compose file should publish at least one port');
+    portLines.forEach((p) => {
+        if (p === '3009:3009') {
+            return;
+        }
+        assert.match(p, /^127\.0\.0\.1:/, `${p} should be bound to 127.0.0.1`);
+    });
+});
+
+test('the backend and the mysql app user read the same password variable', () => {
+    const dbAnchor = compose.slice(0, compose.indexOf('services:'));
+    const appPasswordMatch = dbAnchor.match(/^\s*MYSQL_PASSWORD:\s*(\$\{\w+(?::-[^}]*)?\})\s*$/m);
+    assert.ok(appPasswordMatch, 'the x-database anchor should read MYSQL_PASSWORD from a variable');
+    const prodDbPass = composeService('backend').match(/^\s*PROD_DB_PASS:\s*(\$\{\w+(?::-[^}]*)?\})\s*$/m);
+    assert.ok(prodDbPass, 'backend should read PROD_DB_PASS from a variable');
+    assert.strictEqual(prodDbPass[1], appPasswordMatch[1], 'backend and mysql should reference the same variable');
+});
+
+test('the mysql root password is overridable from the environment with the current default', () => {
+    assert.match(composeService('mysql-db'), /^\s*MYSQL_ROOT_PASSWORD: \$\{MYSQL_ROOT_PASSWORD:-root\}$/m);
+});

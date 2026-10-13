@@ -1,7 +1,7 @@
 x-database: &database
   MYSQL_DATABASE: case
   MYSQL_USER: fullstack
-  MYSQL_PASSWORD: "1234"
+  MYSQL_PASSWORD: ${DB_APP_PASSWORD:-1234}
 
 services:
   nginx:
@@ -36,9 +36,9 @@ services:
     container_name: fullstack-case
     environment:
       <<: *database
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
     ports:
-      - "3307:3306"
+      - "127.0.0.1:3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
@@ -64,7 +64,7 @@ services:
       DB_PORT: 3306
       PROD_DB_NAME: case
       PROD_DB_USER: fullstack
-      PROD_DB_PASS: "1234"
+      PROD_DB_PASS: ${DB_APP_PASSWORD:-1234}
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env before starting the stack}
