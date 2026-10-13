@@ -11,7 +11,7 @@ const sendMoneyForUser = (fields) => put('/profile/sendmoney', {
     ...fields,
 });
 
-const depositBalance = (amount) => post('/profile/deposit', { amount }, true);
+const depositBalance = (amount) => post('/profile/deposit', { amount });
 const getDepositHistory = () => get('/profile/deposit/history');
 
 export {

@@ -9,6 +9,7 @@ import H2A from '../components/mini/H2A';
 import openNotification from '../components/mini/openNotification';
 import { depositBalance } from '../api/all/profile';
 import { updateBalance } from '../store/actions/user';
+import { clientErrorMessage } from '../helpers/serverMessage';
 
 const PaymentGateway = (props) => {
     const { t } = useTranslation();
@@ -36,7 +37,7 @@ const PaymentGateway = (props) => {
             openNotification('error', t('payment.errorTitle'), t('payment.errorText'));
             setProcessing(false);
         } catch (e) {
-            openNotification('error', t('payment.errorTitle'), t('payment.errorText'));
+            openNotification('error', t('payment.errorTitle'), clientErrorMessage(e) || t('common.serverError'));
             setProcessing(false);
         }
     };

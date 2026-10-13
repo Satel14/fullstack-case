@@ -1,8 +1,5 @@
 import { get, post } from './fetch';
 
-jest.mock('../i18n', () => ({ t: (key) => key }));
-jest.mock('../components/mini/openNotification', () => ({ __esModule: true, default: jest.fn() }));
-
 const respond = (status, body = {}) => Promise.resolve({
     ok: status >= 200 && status < 300,
     status,

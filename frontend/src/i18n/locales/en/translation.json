@@ -420,7 +420,9 @@
         "loadFailed": "Could not load your seeds",
         "historyFailed": "Could not load the open history",
         "retry": "Try again",
-        "loadMore": "Load more"
+        "loadMore": "Load more",
+        "clientSeedSaved": "Client seed saved",
+        "rotated": "Server seed rotated, the previous one is revealed"
     },
     "admin": {
         "title": "Admin panel",

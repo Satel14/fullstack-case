@@ -1,5 +1,6 @@
-import { editProfile, sendMoneyForUser } from './profile';
+import { editProfile, sendMoneyForUser, depositBalance } from './profile';
 import { getProfileStorage } from './storage';
+import { setClientSeed, rotateSeed, verifyOpen } from './provablyFair';
 
 jest.mock('../../components/mini/openNotification', () => jest.fn());
 jest.mock('../../i18n', () => ({ t: (key) => key }));
@@ -23,6 +24,10 @@ test.each([
     ['editProfile', () => editProfile({ user_avatar: 3 })],
     ['sendMoneyForUser', () => sendMoneyForUser({ userIdTo: 2, money_count: 5 })],
     ['getProfileStorage', () => getProfileStorage({ status: 'inventory', limit: 200 })],
+    ['depositBalance', () => depositBalance(100)],
+    ['setClientSeed', () => setClientSeed('lucky')],
+    ['rotateSeed', () => rotateSeed()],
+    ['verifyOpen', () => verifyOpen({ serverSeed: 's', clientSeed: 'c', nonce: 0 })],
 ])('%s leaves the failure toast to its caller', async (name, call) => {
     await expect(call()).rejects.toEqual({ error: 429, message: 'Забагато запитів' });
     expect(openNotification).not.toHaveBeenCalled();

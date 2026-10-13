@@ -7,6 +7,8 @@ import {
 import { ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import Loader from '../components/mini/Loader';
+import openNotification from '../components/mini/openNotification';
+import { clientErrorMessage, isRefusal } from '../helpers/serverMessage';
 import {
     getProvablyFairState,
     setClientSeed as apiSetClientSeed,
@@ -92,13 +94,19 @@ const ProvablyFair = () => {
         return () => { generation.current += 1; };
     }, [load]);
 
+    const reportFailure = (failure) => {
+        openNotification('error', t('common.error'), clientErrorMessage(failure) || t('common.serverError'));
+    };
+
     const onSaveClientSeed = async () => {
         try {
             await apiSetClientSeed(clientSeedInput);
-            await load();
         } catch (e) {
-            // error toast is shown by the api layer
+            reportFailure(e);
+            return;
         }
+        openNotification('success', t('provablyFair.clientSeedSaved'));
+        await load();
     };
 
     const onRotate = () => {
@@ -107,10 +115,12 @@ const ProvablyFair = () => {
             onOk: async () => {
                 try {
                     await apiRotateSeed();
-                    await load();
                 } catch (e) {
-                    // error toast is shown by the api layer
+                    reportFailure(e);
+                    return;
                 }
+                openNotification('success', t('provablyFair.rotated'));
+                await load();
             },
         });
     };
@@ -144,7 +154,7 @@ const ProvablyFair = () => {
             const res = await verifyOpen(payload);
             setCalcResult(res.data);
         } catch (e) {
-            setCalcError(t('provablyFair.verifyFailed'));
+            setCalcError(isRefusal(e) ? t('provablyFair.verifyFailed') : t('common.serverError'));
         }
     };
 

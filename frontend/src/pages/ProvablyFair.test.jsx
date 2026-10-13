@@ -2,6 +2,7 @@ import React from 'react';
 import {
     render, screen, fireEvent, waitFor, within,
 } from '@testing-library/react';
+import { Modal } from 'antd';
 import ProvablyFair from './ProvablyFair';
 
 jest.mock('react-i18next', () => ({
@@ -16,7 +17,13 @@ jest.mock('../api/all/provablyFair', () => ({
     verifyOpen: jest.fn(),
 }));
 
+jest.mock('../components/mini/openNotification', () => ({
+    __esModule: true,
+    default: jest.fn(),
+}));
+
 const api = require('../api/all/provablyFair');
+const openNotification = require('../components/mini/openNotification').default;
 
 const ROWS = [
     {
@@ -62,6 +69,10 @@ beforeEach(() => {
     api.verifyOpen.mockReset();
 });
 
+afterEach(() => {
+    Modal.destroyAll();
+});
+
 test('seeds that cannot be loaded leave an error with a retry instead of a blank page', async () => {
     api.getProvablyFairState.mockRejectedValueOnce({ error: 500 });
     render(<ProvablyFair />);
@@ -88,6 +99,66 @@ test('a history that cannot be loaded is shown as an error, not as an empty tabl
 
     expect(await screen.findAllByText('dust2')).toHaveLength(2);
     expect(screen.queryByText('provablyFair.historyFailed')).toBeNull();
+});
+
+const saveClientSeed = async (value) => {
+    render(<ProvablyFair />);
+    await screen.findByText('hash');
+    fireEvent.change(screen.getByDisplayValue('client'), { target: { value } });
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.save' }));
+};
+
+test('a saved client seed is confirmed and the seeds are reloaded', async () => {
+    api.setClientSeed.mockResolvedValue({ status: 200, message: 'Client seed оновлено' });
+
+    await saveClientSeed('lucky');
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('success', 'provablyFair.clientSeedSaved'));
+    expect(api.setClientSeed).toHaveBeenCalledWith('lucky');
+    expect(api.getProvablyFairState).toHaveBeenCalledTimes(2);
+});
+
+test('a client seed the server refuses shows its reason in a single toast', async () => {
+    api.setClientSeed.mockRejectedValue({ error: 422, message: 'Некоректний client seed' });
+
+    await saveClientSeed(' ');
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Некоректний client seed'));
+    expect(openNotification).toHaveBeenCalledTimes(1);
+});
+
+test('a client seed change that fails on the server shows a server error, not its text', async () => {
+    api.setClientSeed.mockRejectedValue({ error: 500, message: 'ER_LOCK_DEADLOCK raw text' });
+
+    await saveClientSeed('lucky');
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'common.serverError'));
+    expect(openNotification).toHaveBeenCalledTimes(1);
+});
+
+const confirmRotation = async () => {
+    render(<ProvablyFair />);
+    await screen.findByText('hash');
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.rotate' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'OK' }));
+};
+
+test('a rotation is confirmed', async () => {
+    api.rotateSeed.mockResolvedValue({ status: 200, data: {} });
+
+    await confirmRotation();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('success', 'provablyFair.rotated'));
+    expect(api.getProvablyFairState).toHaveBeenCalledTimes(2);
+});
+
+test('a rotation stopped by the limiter shows its reason in a single toast', async () => {
+    api.rotateSeed.mockRejectedValue({ error: 429, message: 'Забагато запитів. Зачекайте трохи.' });
+
+    await confirmRotation();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Забагато запитів. Зачекайте трохи.'));
+    expect(openNotification).toHaveBeenCalledTimes(1);
 });
 
 const opensFrom = (firstId, count) => Array.from({ length: count }, (_, i) => ({
@@ -291,4 +362,26 @@ test('an unknown old open whose seed is not revealed yet says it awaits a rotati
     const row = await rowOf(7);
     expect(within(row).getByText('provablyFair.awaitingRotate')).toBeInTheDocument();
     expect(within(row).queryByText('provablyFair.verificationUnknown')).toBeNull();
+});
+
+test('a verification the server refuses keeps the hint about the inputs', async () => {
+    api.verifyOpen.mockRejectedValue({ error: 422, message: 'Такого відкриття не існує' });
+    render(<ProvablyFair />);
+
+    fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+
+    expect(await screen.findByText('provablyFair.verifyFailed')).toBeInTheDocument();
+    expect(openNotification).not.toHaveBeenCalled();
+});
+
+test('a verification the server cannot run is reported once, under the calculator', async () => {
+    api.verifyOpen.mockRejectedValue(new TypeError('Failed to fetch'));
+    render(<ProvablyFair />);
+
+    fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+
+    expect(await screen.findByText('common.serverError')).toBeInTheDocument();
+    expect(openNotification).not.toHaveBeenCalled();
 });

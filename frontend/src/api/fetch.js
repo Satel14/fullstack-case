@@ -1,7 +1,5 @@
 import { API_URL } from './config';
 import { getToken, removeToken } from './token';
-import openNotification from '../components/mini/openNotification';
-import i18n from '../i18n';
 
 const getHeaders = () => {
     const token = getToken();
@@ -37,7 +35,7 @@ const errorPayload = async (result) => {
     }
 };
 
-export const post = async (destination, body, notificationErr = false) => {
+export const post = async (destination, body) => {
     const headers = getHeaders();
 
     const result = await fetch(`${API_URL}${destination}`, {
@@ -50,14 +48,11 @@ export const post = async (destination, body, notificationErr = false) => {
         return result.json();
     }
     endSessionIfRevoked(result, headers);
-    if (notificationErr) {
-        openNotification('error', i18n.t('common.error'), i18n.t('common.serverError'));
-    }
 
     const failure = await errorPayload(result);
     throw failure;
 };
-export const put = async (destination, body, notificationErr = false) => {
+export const put = async (destination, body) => {
     const headers = getHeaders();
 
     const result = await fetch(`${API_URL}${destination}`, {
@@ -70,10 +65,6 @@ export const put = async (destination, body, notificationErr = false) => {
         return result.json();
     }
     endSessionIfRevoked(result, headers);
-
-    if (notificationErr) {
-        openNotification('error', i18n.t('common.error'), i18n.t('common.serverError'));
-    }
 
     const failure = await errorPayload(result);
     throw failure;

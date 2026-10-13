@@ -1,4 +1,14 @@
-import { clientErrorMessage } from './serverMessage';
+import { clientErrorMessage, isRefusal } from './serverMessage';
+
+test('only a 4xx answer counts as a refusal', () => {
+    expect(isRefusal({ error: 400 })).toBe(true);
+    expect(isRefusal({ error: 422, message: 'x' })).toBe(true);
+    expect(isRefusal({ error: 499 })).toBe(true);
+    expect(isRefusal({ error: 500 })).toBe(false);
+    expect(isRefusal({ error: 302 })).toBe(false);
+    expect(isRefusal(new TypeError('Failed to fetch'))).toBe(false);
+    expect(isRefusal(null)).toBe(false);
+});
 
 test.each([
     [{ error: 400, message: 'Посилання недійсне' }, 'Посилання недійсне'],
