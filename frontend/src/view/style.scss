@@ -34,13 +34,16 @@
     display: flex;
     flex-wrap: wrap;
 
-    >div {
+    >button {
+        appearance: none;
         margin: 3px;
         height: 28px;
         width: 28px;
+        background-color: transparent;
         background-repeat: no-repeat;
         background-position: center;
         background-size: contain;
+        border: 0;
         border-radius: 6px;
         padding: 5px;
 

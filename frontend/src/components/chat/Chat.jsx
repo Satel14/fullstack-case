@@ -315,7 +315,9 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                                     content={(
                                         <div className="smiles-list">
                                             {smiles.map((smile, i) => (
-                                                <div
+                                                <button
+                                                    type="button"
+                                                    aria-label={smile.name}
                                                     // eslint-disable-next-line react/no-array-index-key
                                                     key={`smile${i}`}
                                                     style={{

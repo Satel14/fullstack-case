@@ -2,6 +2,7 @@ import React from 'react';
 import {
  render, screen, fireEvent, act,
 } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { message } from 'antd';
 import { Chat } from './Chat';
@@ -149,6 +150,28 @@ test('the online list follows the roster the server sends', () => {
     expect(screen.getByText('bob')).toBeInTheDocument();
     expect(screen.getByText('carol')).toBeInTheDocument();
     expect(document.querySelector('.chat-header_name__online').textContent).toBe('2');
+});
+
+test('a smiley can be picked from the keyboard as well as with the mouse', () => {
+    render(
+        <MemoryRouter>
+            <Chat user={user} enabled={false} refreshProfile={jest.fn()} />
+        </MemoryRouter>,
+    );
+    const input = document.querySelector('input[name="message"]');
+    const openPicker = () => fireEvent.click(document.querySelector('.anticon-smile').closest('button'));
+
+    openPicker();
+    const [ez] = screen.getAllByRole('button', { name: 'EZ' });
+    expect(ez).toHaveAttribute('type', 'button');
+    ez.focus();
+    expect(ez).toHaveFocus();
+    userEvent.type(ez, '{enter}', { skipClick: true });
+    expect(input.value).toBe(' EZ');
+
+    openPicker();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Clap' })[0]);
+    expect(input.value).toBe(' EZ Clap');
 });
 
 test('smileys and image links still render after escaping', () => {
