@@ -19,14 +19,17 @@ const forgotPasswordHandler = () => {
     return handlers['/api/profile/forgotpassword'];
 };
 
-const call = (handler, body) => new Promise((resolve) => {
+const call = async (handler, body) => {
+    const answers = [];
     const res = {
         statusCode: 200,
         status(code) { this.statusCode = code; return this; },
-        json(payload) { resolve({ code: this.statusCode, payload }); },
+        json(payload) { answers.push({ code: this.statusCode, payload }); return this; },
     };
-    handler({ body }, res);
-});
+    await handler({ body }, res);
+    assert.strictEqual(answers.length, 1, `answered ${answers.length} times: ${JSON.stringify(answers)}`);
+    return answers[0];
+};
 
 test('without a mail provider the password is left alone and the reset is reported unavailable', async () => {
     const sequelize = await resetTestDatabase();

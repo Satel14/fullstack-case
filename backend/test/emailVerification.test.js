@@ -158,18 +158,25 @@ const routeHandlers = () => {
     return handlers;
 };
 
-const post = (path, body) => new Promise((resolve) => {
+const post = async (path, body, trace = []) => {
+    const answers = [];
     const res = {
         statusCode: 200,
         status(code) { this.statusCode = code; return this; },
-        json(payload) { resolve({ code: this.statusCode, payload }); },
+        json(payload) {
+            trace.push('answer');
+            answers.push({ code: this.statusCode, payload });
+            return this;
+        },
     };
-    routeHandlers()[path]({ body }, res);
-});
+    await routeHandlers()[path]({ body }, res);
+    assert.strictEqual(answers.length, 1, `answered ${answers.length} times: ${JSON.stringify(answers)}`);
+    return answers[0];
+};
 
-const register = (body) => post('/api/profile/register', {
+const register = (body, trace) => post('/api/profile/register', {
     login: 'newbie', password: 'secret123', email: 'newbie@e.ua', avatar: 1, ...body,
-});
+}, trace);
 
 const withOwner = async (sequelize) => {
     await sequelize.query(
@@ -212,6 +219,58 @@ test('with mail, the letter links to the confirm page with the pending token', a
     const [row] = await pendingRows(sequelize);
     assert.strictEqual(row.tokenHash, sha256(match[1]));
     assert.ok(row.passwordHash.startsWith('$2'));
+});
+
+test('with mail, the answer goes out before the password is hashed or the address is looked up', async () => {
+    const sequelize = await fresh();
+    await withOwner(sequelize);
+    const Encrypt = require('../src/modules/Encrypt');
+    const Users = require('../src/models/user');
+    const Service = require('../src/services/emailVerification');
+    const real = { hash: Encrypt.cryptPassword, find: Users.findOne, create: Service.createPending };
+    const trace = [];
+    Encrypt.cryptPassword = (...args) => { trace.push('hash'); return real.hash(...args); };
+    Users.findOne = function findOne(...args) { trace.push('lookup'); return real.find.apply(this, args); };
+    Service.createPending = (...args) => { trace.push('store'); return real.create(...args); };
+    try {
+        await register({ email: 'free@e.ua' }, trace);
+        const newAddress = trace.splice(0);
+        await register({ login: 'someone', email: 'owner@e.ua' }, trace);
+
+        assert.deepStrictEqual(newAddress, ['answer', 'hash', 'lookup', 'store']);
+        assert.deepStrictEqual(trace, ['answer', 'hash', 'lookup']);
+    } finally {
+        Encrypt.cryptPassword = real.hash;
+        Users.findOne = real.find;
+        Service.createPending = real.create;
+    }
+});
+
+test('with mail, a failure after the answer is logged and never changes the answer', async () => {
+    const sequelize = await fresh();
+    await withOwner(sequelize);
+    const MESSAGE = require('../src/constant/responseMessages');
+    const Service = require('../src/services/emailVerification');
+    const mailSender = require('../src/modules/mailSender');
+    const real = { create: Service.createPending, notice: mailSender.registrationAttemptNotice, error: console.error };
+    const errors = [];
+    Service.createPending = async () => { throw new Error('pending store is down'); };
+    mailSender.registrationAttemptNotice = () => { throw new Error('mail queue is down'); };
+    console.error = (...args) => { errors.push(args.join(' ')); };
+    let results;
+    try {
+        results = [await register({ email: 'free@e.ua' }), await register({ login: 'someone', email: 'owner@e.ua' })];
+    } finally {
+        Service.createPending = real.create;
+        mailSender.registrationAttemptNotice = real.notice;
+        console.error = real.error;
+    }
+
+    const expected = { code: 202, payload: { status: 'confirm-email', message: MESSAGE.AUTH.CONFIRM_EMAIL_SENT } };
+    assert.deepStrictEqual(results, [expected, expected]);
+    assert.ok(errors.some((line) => line.includes('pending store is down')), JSON.stringify(errors));
+    assert.ok(errors.some((line) => line.includes('mail queue is down')), JSON.stringify(errors));
+    assert.deepStrictEqual(await pendingRows(sequelize), []);
 });
 
 test('with mail, a taken login is refused at once', async () => {

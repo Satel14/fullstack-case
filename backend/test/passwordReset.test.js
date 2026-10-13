@@ -22,14 +22,21 @@ const routes = () => {
     return handlers;
 };
 
-const call = (handler, body) => new Promise((resolve) => {
+const call = async (handler, body, trace = []) => {
+    const answers = [];
     const res = {
         statusCode: 200,
         status(code) { this.statusCode = code; return this; },
-        json(payload) { resolve({ code: this.statusCode, payload }); },
+        json(payload) {
+            trace.push('answer');
+            answers.push({ code: this.statusCode, payload });
+            return this;
+        },
     };
-    handler({ body }, res);
-});
+    await handler({ body }, res);
+    assert.strictEqual(answers.length, 1, `answered ${answers.length} times: ${JSON.stringify(answers)}`);
+    return answers[0];
+};
 
 const withMail = async (fn) => {
     const mailSender = require('../src/modules/mailSender');
@@ -104,6 +111,52 @@ test('an unknown email gets the same answer and nothing is issued', async () => 
 
     const [rows] = await sequelize.query('SELECT COUNT(*) AS n FROM password_resets');
     assert.strictEqual(Number(rows[0].n), 1);
+});
+
+test('the answer goes out before the address is looked up or a token is issued', async () => {
+    await setup();
+    const Users = require('../src/models/user');
+    const PasswordResetService = require('../src/services/passwordReset');
+    const real = { find: Users.findOne, issue: PasswordResetService.issueToken };
+    const trace = [];
+    Users.findOne = function findOne(...args) { trace.push('lookup'); return real.find.apply(this, args); };
+    PasswordResetService.issueToken = (...args) => { trace.push('issue'); return real.issue(...args); };
+    try {
+        await withMail(async (sent) => {
+            await call(routes()['/api/profile/forgotpassword'], { email: 'player@e.ua' }, trace);
+            const known = trace.splice(0);
+            await call(routes()['/api/profile/forgotpassword'], { email: 'nobody@e.ua' }, trace);
+
+            assert.deepStrictEqual(known, ['answer', 'lookup', 'issue']);
+            assert.deepStrictEqual(trace, ['answer', 'lookup']);
+            assert.strictEqual(sent.length, 1);
+        });
+    } finally {
+        Users.findOne = real.find;
+        PasswordResetService.issueToken = real.issue;
+    }
+});
+
+test('a failure after the answer is logged and never changes the answer', async () => {
+    await setup();
+    const MESSAGE = require('../src/constant/responseMessages');
+    const PasswordResetService = require('../src/services/passwordReset');
+    const real = { issue: PasswordResetService.issueToken, error: console.error };
+    const errors = [];
+    PasswordResetService.issueToken = async () => { throw new Error('reset store is down'); };
+    console.error = (...args) => { errors.push(args.join(' ')); };
+    try {
+        await withMail(async (sent) => {
+            const result = await call(routes()['/api/profile/forgotpassword'], { email: 'player@e.ua' });
+
+            assert.deepStrictEqual(result, { code: 200, payload: { message: MESSAGE.AUTH.RESET_LINK_SENT, status: 'sended' } });
+            assert.deepStrictEqual(sent, []);
+        });
+    } finally {
+        PasswordResetService.issueToken = real.issue;
+        console.error = real.error;
+    }
+    assert.ok(errors.some((line) => line.includes('reset store is down')), JSON.stringify(errors));
 });
 
 test('a token sets the new password once and invalidates the other outstanding links', async () => {

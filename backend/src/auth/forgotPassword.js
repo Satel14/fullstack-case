@@ -7,32 +7,38 @@ const { authLimiter } = require('../middleware/rateLimiters');
 const { isAcceptablePassword } = require('./credentials');
 const clientOrigin = require('../config/clientOrigin');
 
+const mailResetLink = async (email) => {
+    const user = await Users.findOne({ where: { user_email: email } });
+    if (!user) {
+        return;
+    }
+    const token = await PasswordResetService.issueToken(user.user_id);
+    mailSender.passwordResetLink(user.user_email, {
+        login: user.user_login,
+        link: `${clientOrigin()}/reset-password?token=${token}`,
+        minutes: PasswordResetService.TOKEN_TTL_MS / 60000,
+    });
+};
+
 module.exports = (app) => {
     app.post('/api/profile/forgotpassword', authLimiter, async (req, res) => {
-        try {
-            const { email } = req.body;
+        const email = req.body && req.body.email;
 
-            if (typeof email !== 'string' || !email.trim()) {
-                return res.status(200).json({ message: message.AUTH.EMPTY_DATA });
-            }
-            if (!mailSender.isEnabled()) {
-                return res.status(503).json({ message: message.AUTH.PASSWORD_RESET_UNAVAILABLE });
-            }
-
-            const user = await Users.findOne({ where: { user_email: email.trim() } });
-            if (user) {
-                const token = await PasswordResetService.issueToken(user.user_id);
-                mailSender.passwordResetLink(user.user_email, {
-                    login: user.user_login,
-                    link: `${clientOrigin()}/reset-password?token=${token}`,
-                    minutes: PasswordResetService.TOKEN_TTL_MS / 60000,
-                });
-            }
-
-            return res.status(200).json({ message: message.AUTH.RESET_LINK_SENT, status: 'sended' });
-        } catch (e) {
-            return res.status(500).json({ message: e.message });
+        if (typeof email !== 'string' || !email.trim()) {
+            return res.status(200).json({ message: message.AUTH.EMPTY_DATA });
         }
+        if (!mailSender.isEnabled()) {
+            return res.status(503).json({ message: message.AUTH.PASSWORD_RESET_UNAVAILABLE });
+        }
+
+        res.status(200).json({ message: message.AUTH.RESET_LINK_SENT, status: 'sended' });
+
+        try {
+            await mailResetLink(email.trim());
+        } catch (e) {
+            console.error('[forgot-password] reset link not sent after the answer:', e.message);
+        }
+        return res;
     });
 
     app.post('/api/profile/reset-password', authLimiter, async (req, res) => {

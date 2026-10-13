@@ -13,30 +13,40 @@ const clientOrigin = require('../config/clientOrigin');
 
 const AVATAR_IDS = [1, 2, 3, 4, 5, 6];
 
-const requestConfirmation = async (res, {
+const mailConfirmationOrNotice = async ({
     login, password, email, avatar,
 }) => {
-    if (await Users.count({ where: { user_login: login } })) {
-        return res.status(422).json({ message: message.AUTH.LOGIN_TAKEN });
-    }
-
     const passwordHash = await Encrypt.cryptPassword(password);
     const owner = await Users.findOne({ where: { user_email: email }, attributes: ['user_login', 'user_email'] });
 
     if (owner) {
         mailSender.registrationAttemptNotice(owner.user_email, { login: owner.user_login });
-    } else {
-        const token = await EmailVerificationService.createPending({
-            login, email, passwordHash, avatar: AVATAR_IDS.includes(avatar) ? avatar : 1,
-        });
-        mailSender.emailConfirmationLink(email, {
-            login,
-            link: `${clientOrigin()}/confirm-email?token=${token}`,
-            hours: EmailVerificationService.TOKEN_TTL_MS / 3600000,
-        });
+        return;
     }
 
-    return res.status(202).json({ status: 'confirm-email', message: message.AUTH.CONFIRM_EMAIL_SENT });
+    const token = await EmailVerificationService.createPending({
+        login, email, passwordHash, avatar: AVATAR_IDS.includes(avatar) ? avatar : 1,
+    });
+    mailSender.emailConfirmationLink(email, {
+        login,
+        link: `${clientOrigin()}/confirm-email?token=${token}`,
+        hours: EmailVerificationService.TOKEN_TTL_MS / 3600000,
+    });
+};
+
+const requestConfirmation = async (res, registration) => {
+    if (await Users.count({ where: { user_login: registration.login } })) {
+        return res.status(422).json({ message: message.AUTH.LOGIN_TAKEN });
+    }
+
+    res.status(202).json({ status: 'confirm-email', message: message.AUTH.CONFIRM_EMAIL_SENT });
+
+    try {
+        await mailConfirmationOrNotice(registration);
+    } catch (e) {
+        console.error('[register] confirmation not sent after the answer:', e.message);
+    }
+    return res;
 };
 
 module.exports = (app) => {
