@@ -198,8 +198,7 @@ const Registration = (props) => {
                     wrapperCol={tailFormItemLayout.wrapperCol}
                 >
                     <Checkbox>
-                        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                        {t('auth.register.agreementPre')} <a href="">{t('auth.register.agreementLink')}</a>
+                        {t('auth.register.agreementPre')} <a href="/article/6" target="_blank" rel="noopener noreferrer">{t('auth.register.agreementLink')}</a>
                     </Checkbox>
                 </Form.Item>
                 <Form.Item wrapperCol={tailFormItemLayout.wrapperCol}>

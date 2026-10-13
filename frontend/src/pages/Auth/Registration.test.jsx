@@ -147,6 +147,16 @@ test.each([
     expect(userPostRegisterFetch).toHaveBeenCalledWith(expect.objectContaining({ email }));
 });
 
+test('the site rules open in a new tab, so the filled form is not lost', () => {
+    renderForm();
+
+    const rules = screen.getByRole('link', { name: 'auth.register.agreementLink' });
+
+    expect(rules).toHaveAttribute('href', '/article/6');
+    expect(rules).toHaveAttribute('target', '_blank');
+    expect(rules.getAttribute('rel')).toContain('noopener');
+});
+
 test('a registration that needs confirming shows where the link went and signs nobody in', async () => {
     userPostRegisterFetch.mockImplementation(() => () => Promise.resolve({ status: 'confirm-email' }));
     renderForm();
