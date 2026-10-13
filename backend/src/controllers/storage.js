@@ -362,33 +362,8 @@ module.exports.getFavoriteCaseByUserId = async (req, res) => {
 
         const { id } = req.params;
 
-        const allItems = await StorageService.getStorageLastItemsByUserId(id, 1000, 0);
-
-        const massiveCases = [];
-
-        // eslint-disable-next-line no-restricted-syntax
-        for (const key in allItems) {
-            massiveCases.push(allItems[key].storage_caseId);
-        }
-
-
-        const result = massiveCases.reduce((data, curr) => {
-            data[curr] = data[curr] ? ++data[curr] : 1;
-            return data;
-        }, {});
-
-        const maxUsed = { caseId: null, value: 0 };
-
-        for (const key in result) {
-            if (maxUsed.value < result[key]) {
-                maxUsed.value = result[key];
-                maxUsed.caseId = [key];
-            }
-        }
-        let caseInfo = null;
-        if (maxUsed.caseId) {
-            caseInfo = await CaseService.getCaseById(maxUsed.caseId);
-        }
+        const favoriteCaseId = await StorageService.getFavoriteCaseIdByUserId(id);
+        const caseInfo = favoriteCaseId === null ? null : await CaseService.getCaseById(favoriteCaseId);
 
         return res.status(200).json({ status: 200, data: caseInfo });
     } catch (e) {

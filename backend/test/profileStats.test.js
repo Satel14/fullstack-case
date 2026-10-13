@@ -24,14 +24,17 @@ require.cache[managerPath] = {
     id: managerPath, filename: managerPath, loaded: true, exports: { getAllDataHashWithKey: async () => ({}) },
 };
 
-const countFor = (id) => new Promise((resolve) => {
+const answerOf = (handlerName, id) => new Promise((resolve) => {
     const res = {
         statusCode: 200,
         status(code) { this.statusCode = code; return this; },
-        json(payload) { resolve({ code: this.statusCode, payload }); },
+        json(payload) { resolve({ code: this.statusCode, payload: JSON.parse(JSON.stringify(payload)) }); },
     };
-    require('../src/controllers/storage').getStorageItemsCountByUserId({ params: { id: String(id) } }, res);
+    require('../src/controllers/storage')[handlerName]({ params: { id: String(id) } }, res);
 });
+
+const countFor = (id) => answerOf('getStorageItemsCountByUserId', id);
+const favoriteFor = (id) => answerOf('getFavoriteCaseByUserId', id);
 
 const ITEMS = [
     [100, 'Glock-18 | Sand Dune', 'Factory New', { default: 3, painted: 5 }],
@@ -191,5 +194,56 @@ test('the profile statistics read storage from its indexes alone, without a temp
         { data: result.payload.data, uniqueCases: result.payload.uniqueCases, bestDrop: result.payload.bestDrop },
         { data: 400, uniqueCases: 7, bestDrop: { storage_id: 391, storage_itemId: 300, storage_color: 'painted' } },
     );
+    await assertIndexOnlyStorageReads(sequelize, recorded);
+});
+
+const addCases = (sequelize, ids) => sequelize.query(
+    'INSERT INTO cases (id, title, price, discount, categoryId, published, img, openedCount, type, openLimit) VALUES '
+    + ids.map(() => "(?, ?, 100, 0, 1, 1, '', 0, 'weapon', 1000)").join(', '),
+    { replacements: ids.flatMap((id) => [id, id.toUpperCase()]) },
+);
+
+const dropsOf = (userId, caseIds) => caseIds.map((caseId) => ({
+    userId, itemId: 100, color: 'default', caseId,
+}));
+
+const caseAnswer = async (id) => ({
+    status: 200,
+    data: JSON.parse(JSON.stringify(await require('../src/services/case').getCaseById(id))),
+});
+
+test('the favourite case counts the whole history, not just the newest 1000 drops', async () => {
+    const sequelize = await fresh();
+    await addCases(sequelize, ['dust2', 'mirage', 'nuke']);
+    await addDrops(sequelize, dropsOf(1, Array(700).fill('mirage')));
+    await addDrops(sequelize, dropsOf(1, [...Array(600).fill('dust2'), ...Array(400).fill('nuke')]));
+
+    const result = await favoriteFor(1);
+
+    assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
+    assert.deepStrictEqual(result.payload, await caseAnswer('mirage'));
+});
+
+test('a tie for the favourite case goes to the case dropped most recently, and no drops means no favourite', async () => {
+    const sequelize = await fresh();
+    await addCases(sequelize, ['dust2', 'nuke']);
+    await addDrops(sequelize, dropsOf(1, ['dust2', 'nuke', 'nuke', 'dust2']));
+    await addDrops(sequelize, dropsOf(2, ['nuke', 'dust2', 'dust2', 'nuke']));
+
+    assert.deepStrictEqual((await favoriteFor(1)).payload, await caseAnswer('dust2'));
+    assert.deepStrictEqual((await favoriteFor(2)).payload, await caseAnswer('nuke'));
+    assert.deepStrictEqual(await favoriteFor(3), { code: 200, payload: { status: 200, data: null } });
+});
+
+test('the favourite case reads storage from its index alone, without a temporary table', async () => {
+    const sequelize = await fresh();
+    await addCases(sequelize, Array.from({ length: 7 }, (_, i) => `case-${i}`));
+    await addDrops(sequelize, manyDrops());
+    await sequelize.query('ANALYZE TABLE storage');
+
+    let result;
+    const recorded = await recordQueries(sequelize, async () => { result = await favoriteFor(1); });
+
+    assert.deepStrictEqual(result.payload, await caseAnswer('case-0'));
     await assertIndexOnlyStorageReads(sequelize, recorded);
 });

@@ -290,6 +290,23 @@ module.exports.getDropStatsByUserId = async (userId) => {
     };
 };
 
+module.exports.getFavoriteCaseIdByUserId = async (userId) => {
+    const [dropsByCase] = await Storage.sequelize.query(
+        'SELECT caseId, COUNT(*) AS drops, MAX(id) AS newestDrop FROM storage WHERE userId = ? GROUP BY caseId',
+        { replacements: [userId] },
+    );
+
+    const favorite = dropsByCase.reduce((best, row) => {
+        const candidate = { caseId: row.caseId, drops: Number(row.drops), newestDrop: Number(row.newestDrop) };
+        if (!best || candidate.drops > best.drops || (candidate.drops === best.drops && candidate.newestDrop > best.newestDrop)) {
+            return candidate;
+        }
+        return best;
+    }, null);
+
+    return favorite ? favorite.caseId : null;
+};
+
 module.exports.getCountOpenedCases = async (status = null) => {
     try {
         let obj = {};
