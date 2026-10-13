@@ -36,6 +36,8 @@ module.exports = sequelize.define(
         case_openedCount: {
             field: 'openedCount',
             type: Sequelize.INTEGER,
+            allowNull: false,
+            defaultValue: 0,
         },
         case_type: {
             field: 'type',
@@ -44,6 +46,8 @@ module.exports = sequelize.define(
         case_openLimit: {
             field: 'openLimit',
             type: Sequelize.INTEGER,
+            allowNull: false,
+            defaultValue: 0,
         },
     },
     {

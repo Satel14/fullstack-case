@@ -58,6 +58,9 @@ const DOWN_EFFECTS = {
         'drops the (status, updated_at) index, so the withdrawal sweep scans the whole storage table every 10 seconds',
     '20261013000000-email-verifications.js':
         'drops email_verifications, so every outstanding confirmation link stops working and those registrations are lost',
+    '20261013000100-counters-not-null.js':
+        'lets cases.openedCount, cases.openLimit, users.balance and users.rank hold NULL again; stored values stay, '
+        + 'but a case whose openedCount is NULL is never closed by its open limit and a NULL balance swallows every credit',
 };
 
 const status = async (migrator) => {

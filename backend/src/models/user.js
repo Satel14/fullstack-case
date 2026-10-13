@@ -31,11 +31,13 @@ module.exports = sequelize.define(
         user_balance: {
             field: "balance",
             type: Sequelize.DECIMAL(12, 2),
+            allowNull: false,
             defaultValue: 0,
         },
         user_rank: {
             field: "rank",
             type: Sequelize.DECIMAL(16, 6),
+            allowNull: false,
             defaultValue: 0,
         },
         user_receiveInfo: {
