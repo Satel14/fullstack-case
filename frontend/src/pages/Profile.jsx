@@ -14,7 +14,6 @@ import {
     getStorageLastItemsByUserId,
 } from '../api/all/storage';
 import { itemInfoFetch } from '../store/actions/itemCache';
-import { computeItemPriceUAH } from '../helpers/price';
 import roles from '../enum/role';
 
 const STORAGE_LOAD_LIMIT = 200;
@@ -39,68 +38,23 @@ const ROLE_KEYS = {
 
 const roleKey = (role) => ROLE_KEYS[Number(role)] || 'user';
 
-const parsePrices = (prices) => {
-    if (typeof prices !== 'string') {
-        return prices;
-    }
-    try {
-        return JSON.parse(prices);
-    } catch (e) {
-        return null;
-    }
-};
-
-const dropValue = (item, color) => computeItemPriceUAH(parsePrices(item.pricesInCredits), color) || 0;
-
 const itemName = (item, storageItem, t) => item.item_name || t('item.placeholder', { id: storageItem.storage_itemId });
 
-const pickBestDrop = (storageItems, itemInfoById, t) => {
-    let best = null;
+const describeDrop = (storageItem, itemInfoById, t) => {
+    const item = itemInfoById[storageItem.storage_itemId];
+    if (!item) {
+        return null;
+    }
 
-    storageItems.forEach((storageItem) => {
-        const item = itemInfoById[storageItem.storage_itemId];
-        if (!item) {
-            return;
-        }
-
-        const candidate = {
-            storageId: Number(storageItem.storage_id || 0),
-            rank: dropValue(item, storageItem.storage_color),
-            name: itemName(item, storageItem, t),
-            imagePath: item.item_imagePath || '',
-        };
-
-        if (!best) {
-            best = candidate;
-            return;
-        }
-
-        if (candidate.rank > best.rank) {
-            best = candidate;
-            return;
-        }
-
-        if (candidate.rank === best.rank && candidate.storageId > best.storageId) {
-            best = candidate;
-        }
-    });
-
-    return best;
+    return {
+        key: storageItem.storage_id,
+        name: itemName(item, storageItem, t),
+        imagePath: item.item_imagePath || '',
+    };
 };
 
 const buildHistoryItems = (storageItems, itemInfoById, t) => storageItems
-    .map((storageItem) => {
-        const item = itemInfoById[storageItem.storage_itemId];
-        if (!item) {
-            return null;
-        }
-
-        return {
-            key: storageItem.storage_id,
-            name: itemName(item, storageItem, t),
-            imagePath: item.item_imagePath || '',
-        };
-    })
+    .map((storageItem) => describeDrop(storageItem, itemInfoById, t))
     .filter(Boolean);
 
 class Profile extends Component {
@@ -175,18 +129,22 @@ class Profile extends Component {
         const profileUser = userResp?.data || null;
         const favoriteCase = favoriteResp?.data || null;
         const openedCases = Number(countResp?.data || 0);
+        const uniqueCases = Number(countResp?.uniqueCases || 0);
+        const bestDropRecord = countResp?.bestDrop || null;
 
         const storageItems = Array.isArray(historyResp?.data) ? historyResp.data : [];
-        const uniqueCases = new Set(storageItems.map((item) => item.storage_caseId)).size;
 
-        const uniqueItemIds = [...new Set(storageItems.map((item) => item.storage_itemId).filter(Boolean))];
+        const uniqueItemIds = [...new Set([
+            ...storageItems.map((item) => item.storage_itemId),
+            bestDropRecord?.storage_itemId,
+        ].filter(Boolean))];
         const items = await Promise.all(uniqueItemIds.map((itemId) => this.props.itemInfoFetch(itemId)));
         const itemInfoById = Object.fromEntries(uniqueItemIds
             .map((itemId, index) => [itemId, items[index]])
             .filter(([, item]) => !item.placeholder));
 
         const { t } = this.props;
-        const bestDrop = pickBestDrop(storageItems, itemInfoById, t);
+        const bestDrop = bestDropRecord ? describeDrop(bestDropRecord, itemInfoById, t) : null;
         const historyItems = buildHistoryItems(storageItems, itemInfoById, t);
 
         if (!isCurrent()) {

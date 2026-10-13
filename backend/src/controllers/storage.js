@@ -253,8 +253,11 @@ module.exports.getStorageItemsCountByUserId = async (req, res) => {
         const { id } = req.params;
 
         const result = await StorageService.getStorageItemsCountByUserId(id);
+        const { uniqueCases, bestDrop } = await StorageService.getDropStatsByUserId(id);
 
-        return res.status(200).json({ status: 200, data: result });
+        return res.status(200).json({
+            status: 200, data: result, uniqueCases, bestDrop,
+        });
     } catch (e) {
         return answerFailure(res, e, { status: 500, where: 'storage.count' });
     }

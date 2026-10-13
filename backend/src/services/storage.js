@@ -1,4 +1,5 @@
 const Storage = require('../models/storage');
+const ItemService = require('./item');
 const MESSAGE = require('../constant/responseMessages');
 const { Op } = require('sequelize');
 
@@ -236,6 +237,57 @@ module.exports.getStorageItemsCountByUserId = async (id) => {
     } catch (e) {
         throw Error(e.message);
     }
+};
+
+const parsedPrices = (raw) => {
+    let prices = raw;
+    while (typeof prices === 'string') {
+        try {
+            prices = JSON.parse(prices);
+        } catch (e) {
+            return null;
+        }
+    }
+    return prices;
+};
+
+const dropValue = (item, color) => {
+    const prices = parsedPrices(item.pricesInCredits);
+    const key = String(color || '').toLowerCase().replace(' ', '');
+    return (prices && Number(prices[key])) || 0;
+};
+
+module.exports.getDropStatsByUserId = async (userId) => {
+    const [[{ uniqueCases }]] = await Storage.sequelize.query(
+        'SELECT COUNT(DISTINCT caseId) AS uniqueCases FROM storage WHERE userId = ?',
+        { replacements: [userId] },
+    );
+    const [drops] = await Storage.sequelize.query(
+        'SELECT itemId, color, MAX(id) AS storageId FROM storage WHERE userId = ? GROUP BY itemId, color',
+        { replacements: [userId] },
+    );
+
+    const itemIds = [...new Set(drops.map((drop) => drop.itemId))];
+    const items = itemIds.length ? await ItemService.getItemsWithPrices(itemIds) : {};
+
+    let best = null;
+    drops.forEach((drop) => {
+        const item = items[drop.itemId];
+        if (!item) {
+            return;
+        }
+        const value = dropValue(item, drop.color);
+        if (!best || value > best.value || (value === best.value && drop.storageId > best.drop.storageId)) {
+            best = { value, drop };
+        }
+    });
+
+    return {
+        uniqueCases: Number(uniqueCases),
+        bestDrop: best
+            ? { storage_id: best.drop.storageId, storage_itemId: best.drop.itemId, storage_color: best.drop.color }
+            : null,
+    };
 };
 
 module.exports.getCountOpenedCases = async (status = null) => {

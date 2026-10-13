@@ -101,37 +101,68 @@ test('the viewer\'s own profile shows their own identity', async () => {
     expect(screen.getByText('profile.roles.admin')).toBeInTheDocument();
 });
 
-test('the best drop is the most valuable item, not the one with the rarest wear label', async () => {
+const statNumbers = (container) => [...container.querySelectorAll('.profilepage-firstblock__stats__info span')]
+    .map((node) => node.textContent);
+
+test('unique cases and the best drop are the server\'s, over the whole history, not the newest drops the page loads', async () => {
     getUserById.mockResolvedValue({
         data: {
             user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
         },
     });
+    getStorageItemsCountByUserId.mockResolvedValue({
+        data: 250,
+        uniqueCases: 7,
+        bestDrop: { storage_id: 1, storage_itemId: 88, storage_color: 'painted' },
+    });
     getStorageLastItemsByUserId.mockResolvedValue({
         data: [
             {
-                storage_id: 3, storage_itemId: 1507, storage_color: 'default', storage_caseId: 1,
+                storage_id: 250, storage_itemId: 1507, storage_color: 'default', storage_caseId: 1,
             },
             {
-                storage_id: 2, storage_itemId: 361, storage_color: 'default', storage_caseId: 1,
-            },
-            {
-                storage_id: 1, storage_itemId: 88, storage_color: 'painted', storage_caseId: 1,
+                storage_id: 249, storage_itemId: 361, storage_color: 'painted', storage_caseId: 1,
             },
         ],
     });
     const items = {
-        1507: { item_name: 'Nova | Caged Steel', item_rare: 'Factory New', pricesInCredits: { default: 7, painted: 10 } },
-        361: { item_name: 'Shadow Daggers | Safari Mesh', item_rare: 'Field Tested', pricesInCredits: { default: 1939, painted: 2715 } },
-        88: { item_name: 'AWP | Worm God', item_rare: 'Battle Scarred', pricesInCredits: JSON.stringify({ default: 300, painted: 2000 }) },
+        1507: { item_name: 'Nova | Caged Steel', item_imagePath: '/img/items/nova.png', pricesInCredits: { default: 7, painted: 10 } },
+        361: { item_name: 'Shadow Daggers | Safari Mesh', item_imagePath: '/img/items/daggers.png', pricesInCredits: { default: 1939, painted: 2715 } },
+        88: { item_name: 'AWP | Worm God', item_imagePath: '/img/items/awp worm.png', pricesInCredits: { default: 300, painted: 2000 } },
     };
     getItemsInfo.mockImplementation((ids) => Promise.resolve({ data: Object.fromEntries(ids.map((id) => [id, items[id]])) }));
 
     const { container } = renderProfile('5');
 
     await screen.findByText('testopen');
-    const bestDrop = container.querySelector('.profilepage-firstblock__bestdrop span');
-    expect(bestDrop.textContent).toBe('AWP | Worm God');
+    expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('AWP | Worm God');
+    expect(container.querySelector('.profilepage-firstblock__bestdrop__drop').style.backgroundImage)
+        .toBe('url(/img/items/awp%20worm.png)');
+    expect(statNumbers(container)).toEqual(['250', '7']);
+    expect(getItemsInfo).toHaveBeenCalledTimes(1);
+    expect([...getItemsInfo.mock.calls[0][0]].map(Number).sort((a, b) => a - b)).toEqual([88, 361, 1507]);
+});
+
+test('a player whose statistics did not load shows no unique cases and no best drop', async () => {
+    getUserById.mockResolvedValue({
+        data: {
+            user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
+        },
+    });
+    getStorageItemsCountByUserId.mockRejectedValue({ error: 500 });
+    getStorageLastItemsByUserId.mockResolvedValue({
+        data: [{
+            storage_id: 1, storage_itemId: 1507, storage_color: 'default', storage_caseId: 1,
+        }],
+    });
+    getItemsInfo.mockResolvedValue({ data: { 1507: { item_name: 'Nova | Caged Steel', pricesInCredits: { default: 7 } } } });
+
+    const { container } = renderProfile('5');
+
+    await screen.findByText('testopen');
+    expect(statNumbers(container)).toEqual(['0', '0']);
+    expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('profile.noDrop');
+    expect(container.querySelectorAll('.casehistory-itemlist_item')).toHaveLength(1);
 });
 
 test('items that could not be loaded are left out of the history and the best drop', async () => {
@@ -139,6 +170,9 @@ test('items that could not be loaded are left out of the history and the best dr
         data: {
             user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
         },
+    });
+    getStorageItemsCountByUserId.mockResolvedValue({
+        data: 1, uniqueCases: 1, bestDrop: { storage_id: 1, storage_itemId: 4242, storage_color: 'default' },
     });
     getStorageLastItemsByUserId.mockResolvedValue({
         data: [{
@@ -201,6 +235,9 @@ test('an item without a name is shown under the translated item placeholder', as
             user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
         },
     });
+    getStorageItemsCountByUserId.mockResolvedValue({
+        data: 1, uniqueCases: 1, bestDrop: { storage_id: 1, storage_itemId: 1507, storage_color: 'default' },
+    });
     getStorageLastItemsByUserId.mockResolvedValue({
         data: [{
             storage_id: 1, storage_itemId: 1507, storage_color: 'default', storage_caseId: 1,
@@ -224,6 +261,9 @@ test('every item of the history is loaded with one request', async () => {
         data: {
             user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
         },
+    });
+    getStorageItemsCountByUserId.mockResolvedValue({
+        data: 30, uniqueCases: 1, bestDrop: { storage_id: 24, storage_itemId: 111, storage_color: 'default' },
     });
     getStorageLastItemsByUserId.mockResolvedValue({
         data: Array.from({ length: 30 }, (_, i) => ({
