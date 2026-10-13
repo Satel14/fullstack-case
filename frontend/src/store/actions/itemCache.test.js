@@ -112,7 +112,7 @@ test('nothing is requested when every id is one the server would refuse', async 
     expect(getItemsInfo).not.toHaveBeenCalled();
 });
 
-test('a failed request gives every item in it a placeholder and lets a later request through', async () => {
+test('a failed request gives every item in it a placeholder that the next lookup asks for again', async () => {
     getItemsInfo.mockRejectedValueOnce({ error: 500 });
     const { state, dispatch } = makeStore();
 
@@ -120,8 +120,33 @@ test('a failed request gives every item in it a placeholder and lets a later req
     expect(failed.map((r) => r.item_name)).toEqual(['Item 1', 'Item 2']);
     expect(state.itemCache[2].item_name).toBe('Item 2');
 
-    expect((await dispatch(itemInfoFetch(3))).item_name).toBe('name 3');
-    expect(getItemsInfo).toHaveBeenCalledTimes(2);
+    expect((await dispatch(itemInfoFetch(2))).item_name).toBe('name 2');
+    expect(state.itemCache[2].item_name).toBe('name 2');
+    expect(requestedIds()).toEqual([['1', '2'], ['2']]);
+});
+
+test('an item the server does not know is not asked for again', async () => {
+    getItemsInfo.mockImplementation(answerWith({}));
+    const { dispatch } = makeStore();
+
+    await dispatch(itemInfoFetch(999));
+    expect((await dispatch(itemInfoFetch(999))).item_name).toBe('Item 999');
+
+    expect(getItemsInfo).toHaveBeenCalledTimes(1);
+});
+
+test('a failed request does not replace an item the drop feed delivered meanwhile', async () => {
+    let fail;
+    getItemsInfo.mockReturnValueOnce(new Promise((resolve, reject) => { fail = reject; }));
+    const { state, dispatch } = makeStore();
+
+    const lookup = dispatch(itemInfoFetch(707));
+    await Promise.resolve();
+    dispatch(addItemsToCache({ 707: { item_itemId: 707, item_name: 'AK', pricesInCredits: { default: 5 } } }));
+    fail({ error: 500 });
+
+    expect((await lookup).item_name).toBe('AK');
+    expect(state.itemCache[707]).toEqual({ item_itemId: 707, item_name: 'AK', pricesInCredits: { default: 5 } });
 });
 
 test('the same id as a number and as a string is looked up once', async () => {

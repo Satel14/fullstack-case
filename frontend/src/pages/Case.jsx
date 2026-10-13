@@ -148,16 +148,10 @@ class Case extends Component {
     }
 
     addItemsToCache(arrayItemIds) {
-        const { itemCache } = this.props;
-        if (!itemCache || !arrayItemIds || arrayItemIds.length === 0) {
+        if (!arrayItemIds) {
             return;
         }
-        for (let index = 0; index < arrayItemIds.length; index++) {
-            const id = arrayItemIds[index];
-            if (!itemCache[id]) {
-                this.props.itemInfoFetch(id);
-            }
-        }
+        arrayItemIds.forEach((id) => this.props.itemInfoFetch(id));
     }
 
     render() {

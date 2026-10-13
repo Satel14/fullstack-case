@@ -36,6 +36,30 @@ beforeEach(() => {
 
 const imagePath = '/img/items/Rifles/AK-47/AK-47 Redline.png';
 
+test('an item whose earlier lookup failed is asked for again', async () => {
+    getStorageLastItemsByUserId.mockResolvedValue({
+        data: [{
+            storage_id: 21, storage_itemId: 31, storage_color: 'default', storage_status: 'inventory',
+        }],
+    });
+    getItemsInfo.mockResolvedValue({ data: { 31: { item_name: 'M4A1-S | Hot Rod', item_imagePath: imagePath } } });
+    const store = createStore(combineReducers({ itemCache: itemCacheReducer }), applyMiddleware(thunk));
+    store.dispatch({
+        type: ADD_ITEMS_CACHE,
+        payloadKey: 31,
+        payloadData: { item_itemId: 31, item_name: 'Item 31', placeholder: 'failed' },
+    });
+
+    render(
+        <Provider store={store}>
+            <InventoryHistory id={7} />
+        </Provider>,
+    );
+
+    await waitFor(() => expect(store.getState().itemCache[31].item_name).toBe('M4A1-S | Hot Rod'));
+    expect(getItemsInfo).toHaveBeenCalledWith(['31']);
+});
+
 test('each history row shows the item picture from the item cache', async () => {
     const store = createStore(combineReducers({ itemCache: itemCacheReducer }), applyMiddleware(thunk));
     store.dispatch({

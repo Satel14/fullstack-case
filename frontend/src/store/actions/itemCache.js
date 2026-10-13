@@ -7,12 +7,15 @@ const ITEM_ID = /^[1-9]\d{0,9}$/;
 const pending = new Map();
 let queue = [];
 
-const placeholderItem = (id) => ({
+const placeholderItem = (id, failed) => ({
     item_itemId: id,
     item_name: `Item ${id}`,
     item_rare: 'Factory New',
     item_type: 'Unknown',
+    placeholder: failed ? 'failed' : 'unknown',
 });
+
+const isSettled = (itemInfo) => Boolean(itemInfo) && itemInfo.placeholder !== 'failed';
 
 const fetchKnownItems = async (ids) => {
     if (!ids.length) {
@@ -22,14 +25,14 @@ const fetchKnownItems = async (ids) => {
         const result = await getItemsInfo(ids);
         return (result && result.data) || {};
     } catch (e) {
-        return {};
+        return null;
     }
 };
 
 const requestBatch = async (entries) => {
     const ids = [...new Set(entries.map((entry) => String(entry.id)))].filter((id) => ITEM_ID.test(id));
     const found = await fetchKnownItems(ids);
-    entries.forEach(({ id, resolve }) => resolve(found[id] || placeholderItem(id)));
+    entries.forEach(({ id, resolve }) => resolve((found && found[id]) || placeholderItem(id, !found)));
 };
 
 const flush = () => {
@@ -56,11 +59,11 @@ export const addItemsToCache = (itemList) => (dispatch) => {
 };
 
 export const itemInfoFetch = (id) => (dispatch, getState) => {
-    const { itemCache } = getState();
+    const cached = getState().itemCache[id];
     const key = String(id);
 
-    if (itemCache[id]) {
-        return Promise.resolve(itemCache[id]);
+    if (isSettled(cached)) {
+        return Promise.resolve(cached);
     }
     if (pending.has(key)) {
         return pending.get(key);
@@ -68,6 +71,10 @@ export const itemInfoFetch = (id) => (dispatch, getState) => {
 
     const request = enqueue(id)
         .then((itemInfo) => {
+            const current = getState().itemCache[id];
+            if (!isSettled(itemInfo) && current) {
+                return current;
+            }
             dispatch({ type: ADD_ITEMS_CACHE, payloadKey: id, payloadData: itemInfo });
             return itemInfo;
         })

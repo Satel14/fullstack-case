@@ -52,13 +52,7 @@ class InventoryHistory extends React.Component {
   }
 
   addItemsToCache(arrayItemIds) {
-    const { itemCache } = this.props;
-    for (let index = 0; index < arrayItemIds.length; index++) {
-      const id = arrayItemIds[index];
-      if (!itemCache[id]) {
-        this.props.itemInfoFetch(id);
-      }
-    }
+    arrayItemIds.forEach((id) => this.props.itemInfoFetch(id));
   }
 
   async componentDidMount() {
