@@ -120,17 +120,85 @@ test('two confirmations at once create exactly one account', async () => {
     assert.strictEqual((await users(sequelize)).length, 1);
 });
 
-test('registering again clears expired and used pending rows', async () => {
+test('registering leaves stale pending rows alone and the sweep deletes the expired and used ones', async () => {
     const sequelize = await fresh();
     const Service = require('../src/services/emailVerification');
     const now = new Date('2026-10-13T10:00:00Z');
-    await Service.createPending(pending({ login: 'stale' }), now);
-    const used = await Service.createPending(pending({ login: 'used', email: 'used@e.ua' }), now);
-    await Service.confirm(used, now);
+    const second = new Date(now.getTime() + 1000);
+    const sweepAt = new Date(now.getTime() + Service.TOKEN_TTL_MS);
+    await Service.createPending(pending({ login: 'expired' }), now);
+    const used = await Service.createPending(pending({ login: 'used', email: 'used@e.ua' }), second);
+    await Service.confirm(used, second);
+    await Service.createPending(pending({ login: 'live', email: 'live@e.ua' }), second);
+    await Service.createPending(pending({ login: 'later', email: 'later@e.ua' }), new Date(sweepAt.getTime() + 1));
 
-    await Service.createPending(pending({ login: 'later', email: 'later@e.ua' }), new Date(now.getTime() + Service.TOKEN_TTL_MS + 1));
+    assert.deepStrictEqual((await pendingRows(sequelize)).map((row) => row.login), ['expired', 'used', 'live', 'later']);
 
-    assert.deepStrictEqual((await pendingRows(sequelize)).map((row) => row.login), ['later']);
+    assert.strictEqual(await Service.sweepStale(sweepAt), 2);
+    assert.deepStrictEqual((await pendingRows(sequelize)).map((row) => row.login), ['live', 'later']);
+    assert.strictEqual(await Service.sweepStale(sweepAt), 0, 'a second sweep deletes nothing');
+});
+
+const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
+
+test('the stale sweep repeats, never overlaps, and stops when asked', async () => {
+    const Service = require('../src/services/emailVerification');
+    let running = 0;
+    let mostAtOnce = 0;
+    let runs = 0;
+    const slowSweep = async () => {
+        running += 1;
+        runs += 1;
+        mostAtOnce = Math.max(mostAtOnce, running);
+        await sleep(40);
+        running -= 1;
+        return 0;
+    };
+
+    const sweep = Service.startSweep({ intervalMs: 5, run: slowSweep });
+    await sleep(300);
+    sweep.stop();
+    await sleep(60);
+    const afterStop = runs;
+    await sleep(100);
+
+    assert.ok(afterStop >= 3, `only ${afterStop} sweeps ran`);
+    assert.strictEqual(mostAtOnce, 1);
+    assert.strictEqual(runs, afterStop, 'a stopped sweep must not run again');
+});
+
+test('a failed stale sweep is logged and the next one still runs', async () => {
+    const Service = require('../src/services/emailVerification');
+    let runs = 0;
+    const errors = [];
+    const originalError = console.error;
+    console.error = (...args) => { errors.push(args.join(' ')); };
+    try {
+        const sweep = Service.startSweep({
+            intervalMs: 5,
+            run: async () => { runs += 1; throw new Error('database gone'); },
+        });
+        await sleep(100);
+        sweep.stop();
+    } finally {
+        console.error = originalError;
+    }
+
+    assert.ok(runs >= 2, `only ${runs} sweeps ran`);
+    assert.ok(errors.some((line) => line.includes('database gone')));
+});
+
+test('the server starts the stale sweep once, after migrations are verified and it is listening', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const server = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+    const start = "require('./src/services/emailVerification').startSweep()";
+    const gateOpens = server.indexOf('assertMigrationsApplied(sequelize).then(');
+    const gateCloses = server.indexOf('}).catch(', gateOpens);
+    const listenAt = server.indexOf('app.listen(', gateOpens);
+    const sweepAt = server.indexOf(start);
+    assert.ok(sweepAt > listenAt && listenAt > gateOpens && sweepAt < gateCloses, 'the sweep must start inside the gate, after listen');
+    assert.strictEqual(server.split(start).length - 1, 1, 'the sweep must be started exactly once');
 });
 
 const mailLog = [];

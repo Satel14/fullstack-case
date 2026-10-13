@@ -46,6 +46,7 @@ assertMigrationsApplied(sequelize).then(() => {
     RedisManager.startItemCacheSync();
 
     require('./src/services/withdrawal').startSweep();
+    require('./src/services/emailVerification').startSweep();
 }).catch((err) => {
     console.error(err.message);
     process.exit(1);

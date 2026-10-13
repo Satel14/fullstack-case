@@ -5,6 +5,7 @@ const EmailVerification = require('../models/emailVerification');
 const User = require('../models/user');
 
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const SWEEP_INTERVAL_MS = 60 * 60 * 1000;
 const TOKEN_FORMAT = /^[0-9a-f]{64}$/;
 
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
@@ -25,12 +26,38 @@ const takenBy = async (pending, options = {}) => {
 
 module.exports.TOKEN_TTL_MS = TOKEN_TTL_MS;
 
+const sweepStale = (now = new Date()) => EmailVerification.destroy({
+    where: { [Op.or]: [{ ev_expiresAt: { [Op.lte]: now } }, { ev_usedAt: { [Op.ne]: null } }] },
+});
+
+module.exports.sweepStale = sweepStale;
+
+module.exports.startSweep = ({ intervalMs = SWEEP_INTERVAL_MS, run = sweepStale } = {}) => {
+    let stopped = false;
+    let timer = null;
+    const tick = async () => {
+        try {
+            await run();
+        } catch (e) {
+            console.error('[EmailVerification] sweep failed:', e.message);
+        }
+        if (!stopped) {
+            timer = setTimeout(tick, intervalMs);
+            timer.unref();
+        }
+    };
+    tick();
+    return {
+        stop: () => {
+            stopped = true;
+            clearTimeout(timer);
+        },
+    };
+};
+
 module.exports.createPending = async ({
     login, email, passwordHash, avatar,
 }, now = new Date()) => {
-    await EmailVerification.destroy({
-        where: { [Op.or]: [{ ev_expiresAt: { [Op.lte]: now } }, { ev_usedAt: { [Op.ne]: null } }] },
-    });
     const token = crypto.randomBytes(32).toString('hex');
     await EmailVerification.create({
         ev_login: login,

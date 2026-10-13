@@ -99,10 +99,11 @@ test('the server starts the sweep only once migrations are verified and it is li
     const gateOpens = server.indexOf('assertMigrationsApplied(sequelize).then(');
     const gateCloses = server.indexOf('}).catch(', gateOpens);
     const listenAt = server.indexOf('app.listen(', gateOpens);
-    const sweepAt = server.indexOf("require('./src/services/withdrawal').startSweep()");
+    const start = "require('./src/services/withdrawal').startSweep()";
+    const sweepAt = server.indexOf(start);
     assert.ok(gateOpens !== -1 && gateCloses > gateOpens, 'server.js no longer gates the listen on migrations');
     assert.ok(sweepAt > listenAt && listenAt > gateOpens && sweepAt < gateCloses, 'the sweep must start inside the gate, after listen');
-    assert.strictEqual(server.split('startSweep(').length - 1, 1, 'the sweep must be started exactly once');
+    assert.strictEqual(server.split(start).length - 1, 1, 'the sweep must be started exactly once');
 });
 
 test('importing the withdrawal service neither schedules nor runs a sweep', async () => {
