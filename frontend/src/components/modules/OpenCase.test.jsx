@@ -3,13 +3,15 @@ import {
     render, screen, fireEvent, waitFor,
 } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { createStore } from 'redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import thunk from 'redux-thunk';
+import itemCacheReducer from '../../store/reducers/itemCache';
 import { MemoryRouter } from 'react-router-dom';
 import OpenCase from './OpenCase';
 
 jest.mock('react-i18next', () => {
     const mockReact = require('react');
-    const t = (key) => key;
+    const t = (key, options) => (options ? `${key} ${JSON.stringify(options)}` : key);
     return {
         useTranslation: () => ({ t }),
         withTranslation: () => (Component) => (props) => mockReact.createElement(Component, { ...props, t }),
@@ -21,10 +23,11 @@ jest.mock('react-reveal/Zoom', () => ({ __esModule: true, default: ({ children }
 
 jest.mock('../../api/all/cases', () => ({ openCaseById: jest.fn() }));
 jest.mock('../../api/all/storage', () => ({ sellItemByStorageId: jest.fn() }));
-jest.mock('../../api/all/item', () => ({ getItemPriceById: jest.fn() }));
+jest.mock('../../api/all/item', () => ({ getItemsInfo: jest.fn() }));
 jest.mock('../mini/openNotification', () => jest.fn());
 
 const { openCaseById } = require('../../api/all/cases');
+const { getItemsInfo } = require('../../api/all/item');
 const openNotification = require('../mini/openNotification');
 
 const baseCase = {
@@ -37,8 +40,16 @@ const baseCase = {
     case_openedCount: 0,
 };
 
-const renderOpenCase = (data = baseCase, props = {}) => {
-    const store = createStore(() => ({ user: { login: 'player' }, itemCache: {}, modules: {} }));
+const renderOpenCase = (data = baseCase, props = {}, itemCache = {}) => {
+    const store = createStore(
+        combineReducers({
+            user: (state = { login: 'player' }) => state,
+            itemCache: itemCacheReducer,
+            modules: (state = {}) => state,
+        }),
+        { itemCache },
+        applyMiddleware(thunk),
+    );
     return render(
         <Provider store={store}>
             <MemoryRouter>
@@ -146,8 +157,6 @@ test('the price shown follows the selected count and the sale price', () => {
 });
 
 test('a successful open asks the page to refresh the case', async () => {
-    const { getItemPriceById } = require('../../api/all/item');
-    getItemPriceById.mockResolvedValue({ prices: { default: 10 } });
     const item = {
         id: 'ak', color: 'default', name: 'AK', rare: 'Field-Tested', type: 'rifles',
     };
@@ -173,4 +182,58 @@ test('an open refused by the server also refreshes the case', async () => {
     fireEvent.click(screen.getByRole('button', { name: /openCase\.fast$/ }));
 
     await waitFor(() => expect(onCaseChanged).toHaveBeenCalledTimes(1));
+});
+
+const wonItem = (id, color) => ({
+    id, color, name: `Gun ${id}`, rare: 'Field-Tested', type: 'rifles',
+});
+
+const openTwo = () => {
+    const items = [wonItem(101, 'painted'), wonItem(102, 'default')];
+    openCaseById.mockResolvedValue({
+        status: 200,
+        balance: 900,
+        data: items.map((item, i) => ({ winner: { item, winIndex: 71, storageId: 50 + i }, resultWithItem: [item] })),
+    });
+};
+
+const cachedGuns = {
+    101: { item_itemId: 101, item_name: 'Gun 101', pricesInCredits: { default: 10, painted: 25 } },
+    102: { item_itemId: 102, item_name: 'Gun 102', pricesInCredits: { default: 4, painted: 6 } },
+};
+
+test('the prices of the won items come from the item cache without any request', async () => {
+    openTwo();
+    renderOpenCase(baseCase, {}, cachedGuns);
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.fast$/ }));
+
+    expect(await screen.findByText('openCase.sellFor {"price":25}')).toBeInTheDocument();
+    expect(screen.getByText('openCase.sellFor {"price":4}')).toBeInTheDocument();
+    expect(screen.getByText('openCase.sellAllFor {"sum":"29.00"}')).toBeInTheDocument();
+    expect(getItemsInfo).not.toHaveBeenCalled();
+});
+
+test('won items that are not cached are fetched with one request', async () => {
+    openTwo();
+    getItemsInfo.mockResolvedValue({ status: 200, data: cachedGuns });
+    renderOpenCase();
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.fast$/ }));
+
+    expect(await screen.findByText('openCase.sellFor {"price":25}')).toBeInTheDocument();
+    expect(screen.getByText('openCase.sellFor {"price":4}')).toBeInTheDocument();
+    expect(getItemsInfo).toHaveBeenCalledTimes(1);
+    expect(getItemsInfo.mock.calls[0][0].sort()).toEqual(['101', '102']);
+});
+
+test('a won item without a price offers no sell button for it', async () => {
+    openTwo();
+    renderOpenCase(baseCase, {}, { ...cachedGuns, 102: { item_itemId: 102, item_name: 'Gun 102', pricesInCredits: null } });
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.fast$/ }));
+
+    expect(await screen.findByText('openCase.sellFor {"price":25}')).toBeInTheDocument();
+    expect(screen.getAllByText(/openCase\.sellFor/)).toHaveLength(1);
+    expect(screen.getByText('openCase.sellAllFor {"sum":"25.00"}')).toBeInTheDocument();
 });

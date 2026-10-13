@@ -26,7 +26,6 @@ jest.mock('../components/mini/openNotification', () => jest.fn());
 
 jest.mock('../api/all/item', () => ({
     getItemsInfo: jest.fn(),
-    getItemPriceById: jest.fn(),
 }));
 
 jest.mock('../api/all/storage', () => ({
@@ -36,7 +35,7 @@ jest.mock('../api/all/storage', () => ({
 
 const openNotification = require('../components/mini/openNotification');
 const { getProfileStorage, sellItemByStorageId } = require('../api/all/storage');
-const { getItemsInfo, getItemPriceById } = require('../api/all/item');
+const { getItemsInfo } = require('../api/all/item');
 
 const server = { inventory: [], sold: [], balance: 0 };
 
@@ -107,7 +106,6 @@ test('sell prices come with the item info, without a price request per row', asy
     expect(screen.getByText('inventory.sell')).toBeInTheDocument();
     expect(getItemsInfo).toHaveBeenCalledTimes(1);
     expect(getItemsInfo.mock.calls[0][0].sort()).toEqual(['1', '2', '3']);
-    expect(getItemPriceById).not.toHaveBeenCalled();
 });
 
 test('the inventory still opens when the item lookup fails, with plain sell buttons', async () => {

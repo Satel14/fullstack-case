@@ -20,7 +20,6 @@ import { Link } from 'react-router-dom';
 import { isAuthorized } from '../../helpers/Player';
 import { openCaseById } from '../../api/all/cases';
 import { sellItemByStorageId } from '../../api/all/storage';
-import { getItemPriceById } from '../../api/all/item';
 import openNotification from '../mini/openNotification';
 import { itemInfoFetch } from '../../store/actions/itemCache';
 import ItemColor from '../mini/ItemColor';
@@ -347,23 +346,15 @@ class OpenCase extends Component {
             return false;
         }
 
-        const actualPricesD = [];
-
-        for (const key in result.data) {
-            const element = result.data[key];
-
-            try {
-                // eslint-disable-next-line no-await-in-loop
-                const itemPrice = await getItemPriceById(element.winner.item.id);
-                const prices = typeof itemPrice.prices === 'string' ? JSON.parse(itemPrice.prices) : itemPrice.prices;
-                const moduleRate = this.props.modules && this.props.modules['uah-credit-rate'];
-                const creditToUAH = moduleRate ? moduleRate.extraData : 1;
-                actualPricesD.push(computeItemPriceUAH(prices, element.winner.item.color, creditToUAH));
-            } catch (priceErr) {
-                console.error('Price calculation error:', priceErr);
-                actualPricesD.push(null);
-            }
-        }
+        const won = Object.values(result.data);
+        const wonItems = await Promise.all(won.map((element) => this.props.itemInfoFetch(element.winner.item.id).catch(() => null)));
+        const moduleRate = this.props.modules && this.props.modules['uah-credit-rate'];
+        const creditToUAH = moduleRate ? moduleRate.extraData : 1;
+        const actualPricesD = won.map((element, index) => computeItemPriceUAH(
+            wonItems[index] && wonItems[index].pricesInCredits,
+            element.winner.item.color,
+            creditToUAH,
+        ));
 
         const randomList = [];
         const winnerList = [];
