@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { Op } = require('sequelize');
 const Category = require('../src/models/category');
 const Case = require('../src/models/case');
 const sequelize = require('../src/config/db');
@@ -60,6 +61,15 @@ const imageMap = {
     'zephyr': 'case-zephyr.png'
 };
 
+const clearStaleSale = async (caseId, transaction) => {
+    const notBelowPrice = { case_id: caseId, case_discount: { [Op.gte]: sequelize.col('price') } };
+    const stale = await Case.findOne({ attributes: ['case_price', 'case_discount'], where: notBelowPrice, transaction });
+    if (stale) {
+        await Case.update({ case_discount: null }, { where: notBelowPrice, transaction });
+    }
+    return stale;
+};
+
 const seedCases = async ({ casePrices = readCasePrices(), log = console } = {}) => {
     requireCasePrices(Object.keys(allCases), casePrices);
     log.log('🚀 Starting cases and categories seed...');
@@ -81,17 +91,23 @@ const seedCases = async ({ casePrices = readCasePrices(), log = console } = {}) 
     for (const [caseId, caseConfig] of Object.entries(allCases)) {
         try {
             const imgFilename = imageMap[caseId] || `${caseId}.png`;
-            await Case.upsert({
-                case_id: caseId,
-                case_title: caseConfig.name || caseId.toUpperCase(),
-                case_price: casePrices[caseId],
-                case_categoryId: caseConfig.type === 'souvenir' ? 3 : 1,
-                case_published: 1,
-                case_img: `/img/case/${imgFilename}`,
-                case_openedCount: 0,
-                case_type: caseConfig.type || 'weapon',
-                case_openLimit: 1000
+            const stale = await sequelize.transaction(async (transaction) => {
+                await Case.upsert({
+                    case_id: caseId,
+                    case_title: caseConfig.name || caseId.toUpperCase(),
+                    case_price: casePrices[caseId],
+                    case_categoryId: caseConfig.type === 'souvenir' ? 3 : 1,
+                    case_published: 1,
+                    case_img: `/img/case/${imgFilename}`,
+                    case_openedCount: 0,
+                    case_type: caseConfig.type || 'weapon',
+                    case_openLimit: 1000
+                }, { transaction });
+                return clearStaleSale(caseId, transaction);
             });
+            if (stale) {
+                log.warn(`⚠ ${caseId}: sale price ${stale.case_discount} is not below the new price ${stale.case_price}; the sale is cleared`);
+            }
             count++;
         } catch (err) {
             log.error(`Error adding case ${caseId}:`, err.message);
