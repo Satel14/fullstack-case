@@ -230,23 +230,28 @@ test('a used link of an address that has an account sends the player to sign in,
     assert.deepStrictEqual(await Service.confirm(orphan), { outcome: 'invalid' });
 });
 
-test('registering leaves stale pending rows alone and the sweep deletes the expired and used ones', async () => {
+test('registering leaves stale pending rows alone; the sweep deletes only what has expired, used or not', async () => {
     const sequelize = await fresh();
     const Service = require('../src/services/emailVerification');
     const now = new Date('2026-10-13T10:00:00Z');
     const second = new Date(now.getTime() + 1000);
+    const third = new Date(now.getTime() + 2000);
     const sweepAt = new Date(now.getTime() + Service.TOKEN_TTL_MS);
     await Service.createPending(pending({ login: 'expired' }), now);
     const used = await Service.createPending(pending({ login: 'used', email: 'used@e.ua' }), second);
     await Service.confirm(used, second);
-    await Service.createPending(pending({ login: 'live', email: 'live@e.ua' }), second);
+    await Service.createPending(pending({ login: 'live', email: 'live@e.ua' }), third);
     await Service.createPending(pending({ login: 'later', email: 'later@e.ua' }), new Date(sweepAt.getTime() + 1));
 
     assert.deepStrictEqual((await pendingRows(sequelize)).map((row) => row.login), ['expired', 'used', 'live', 'later']);
 
-    assert.strictEqual(await Service.sweepStale(sweepAt), 2);
+    assert.strictEqual(await Service.sweepStale(sweepAt), 1, 'only the expired row is gone; the used link has not expired yet');
+    assert.deepStrictEqual((await pendingRows(sequelize)).map((row) => row.login), ['used', 'live', 'later']);
+    assert.strictEqual(await Service.sweepStale(sweepAt), 0, 'a second sweep at the same time deletes nothing more');
+
+    const usedExpiry = new Date(sweepAt.getTime() + 1500);
+    assert.strictEqual(await Service.sweepStale(usedExpiry), 1, 'the used link is swept once it expires too');
     assert.deepStrictEqual((await pendingRows(sequelize)).map((row) => row.login), ['live', 'later']);
-    assert.strictEqual(await Service.sweepStale(sweepAt), 0, 'a second sweep deletes nothing');
 });
 
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });

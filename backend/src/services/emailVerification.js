@@ -33,7 +33,7 @@ const takenBy = async (pending, options = {}) => {
 module.exports.TOKEN_TTL_MS = TOKEN_TTL_MS;
 
 const sweepStale = (now = new Date()) => EmailVerification.destroy({
-    where: { [Op.or]: [{ ev_expiresAt: { [Op.lte]: now } }, { ev_usedAt: { [Op.ne]: null } }] },
+    where: { ev_expiresAt: { [Op.lte]: now } },
 });
 
 module.exports.sweepStale = sweepStale;
