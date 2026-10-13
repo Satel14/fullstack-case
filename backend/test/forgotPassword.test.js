@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const bcrypt = require('bcrypt');
 const { resetTestDatabase } = require('./helpers/db');
+const { restoreEnv } = require('./helpers/env');
 
 let activeSequelize;
 
@@ -45,7 +46,7 @@ test('without a mail provider the password is left alone and the reset is report
         assert.strictEqual(result.code, 503);
         assert.strictEqual(result.payload.message, MESSAGE.AUTH.PASSWORD_RESET_UNAVAILABLE);
     } finally {
-        process.env.RESEND_API_KEY = savedKey;
+        restoreEnv('RESEND_API_KEY', savedKey);
     }
 
     const [rows] = await sequelize.query("SELECT password FROM users WHERE login = 'player'");
@@ -74,11 +75,7 @@ test('a site address ending in a slash still gives a reset link the site can ope
         assert.strictEqual(links.length, 1);
         assert.match(links[0], /^http:\/\/192\.168\.1\.10:3009\/reset-password\?token=[^/]+$/);
     } finally {
-        if (saved.origin === undefined) {
-            delete process.env.CLIENT_ORIGIN;
-        } else {
-            process.env.CLIENT_ORIGIN = saved.origin;
-        }
+        restoreEnv('CLIENT_ORIGIN', saved.origin);
         mailSender.isEnabled = saved.isEnabled;
         mailSender.passwordResetLink = saved.send;
         delete require.cache[routePath];
@@ -93,7 +90,7 @@ test('the mail sender loads and reports itself disabled without an API key', () 
         assert.strictEqual(mailSender.isEnabled(), false);
         assert.doesNotThrow(() => mailSender.userRegistered('player@e.ua', { login: 'player' }));
     } finally {
-        process.env.RESEND_API_KEY = savedKey;
+        restoreEnv('RESEND_API_KEY', savedKey);
     }
 });
 

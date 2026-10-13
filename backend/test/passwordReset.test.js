@@ -3,6 +3,7 @@ const assert = require('node:assert');
 const crypto = require('node:crypto');
 const bcrypt = require('bcrypt');
 const { resetTestDatabase } = require('./helpers/db');
+const { restoreEnv } = require('./helpers/env');
 
 let activeSequelize;
 
@@ -41,7 +42,7 @@ const withMail = async (fn) => {
         return await fn(sent);
     } finally {
         mailSender.passwordResetLink = original;
-        process.env.RESEND_API_KEY = savedKey;
+        restoreEnv('RESEND_API_KEY', savedKey);
     }
 };
 
