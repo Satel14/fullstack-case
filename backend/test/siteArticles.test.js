@@ -65,3 +65,29 @@ test('reverting removes the site articles, but keeps one that was retitled since
     const rows = await articles(sequelize);
     assert.deepStrictEqual(rows.map((row) => [row.id, row.title]), [[8, 'Як заробити більше']]);
 });
+
+const listAfter = (html, heading) => {
+    const section = html.split(`<h3>${heading}</h3>`)[1].split('</ul>')[0];
+    return [...section.matchAll(/<li>([\s\S]*?)<\/li>/g)].map((match) => match[1]);
+};
+
+test('the chat rules in the service rules are word for word the rules the chat shows, in both languages', async () => {
+    const sequelize = await databaseAt(MIGRATION);
+    const uk = require('../../frontend/src/i18n/locales/uk/translation.json');
+    const en = require('../../frontend/src/i18n/locales/en/translation.json');
+    const ruleKeys = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7'];
+
+    const [[rules]] = await sequelize.query('SELECT text, textEn FROM articles WHERE id = 6');
+
+    assert.deepStrictEqual(listAfter(rules.text, 'Чат'), ruleKeys.map((key) => uk.rules[key]));
+    assert.deepStrictEqual(listAfter(rules.textEn, 'Chat'), ruleKeys.map((key) => en.rules[key]));
+});
+
+test('the user agreement lists the withdrawal information and the chat messages among the stored data', async () => {
+    const sequelize = await databaseAt(MIGRATION);
+
+    const [[agreement]] = await sequelize.query('SELECT text, textEn FROM articles WHERE id = 3');
+
+    assert.match(agreement.text, /Steam[\s\S]*повідомлення в чаті/);
+    assert.match(agreement.textEn, /Steam[\s\S]*chat messages/);
+});

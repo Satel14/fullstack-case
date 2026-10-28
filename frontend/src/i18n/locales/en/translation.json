@@ -298,10 +298,10 @@
         "title": "CHAT RULES",
         "close": "Close",
         "r1": "Using a name or links leading to a third-party site in your nickname is forbidden.",
-        "r2": "Advertising Youtube / Twitch / Discord channels is forbidden.",
+        "r2": "Advertising YouTube / Twitch / Discord channels is forbidden.",
         "r3": "Insulting other chat / site participants is forbidden.",
         "r4": "Mentioning payment details for the purpose of begging is forbidden.",
-        "r5": "Distributing URL links and promo codes is forbidden (except Administration and Moderators).",
+        "r5": "Distributing links and promocodes is forbidden (except by the staff).",
         "r6": "Spamming the chat with one-character messages is forbidden.",
         "r7": "Every site/chat participant must treat all participants with respect, without exception."
     },
