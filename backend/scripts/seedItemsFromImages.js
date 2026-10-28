@@ -2,11 +2,13 @@ const Item = require('../src/models/item');
 const sequelize = require('../src/config/db');
 const { assertMigrationsApplied } = require('../src/db/migrator');
 const { enumerateItems } = require('./lib/enumerateItems');
+const { withGrades } = require('./lib/marketGrade');
+const gradeMap = require('./data/gradeMap.json');
 
 async function seedDatabase() {
     try {
         console.log('🚀 Seeding items from images...\n');
-        const items = enumerateItems();
+        const items = withGrades(enumerateItems(), gradeMap);
         console.log(`✓ Found ${items.length} items`);
 
         await assertMigrationsApplied(sequelize);
@@ -22,6 +24,7 @@ async function seedDatabase() {
                     item_colors: item.colors,
                     item_type: item.type,
                     item_imagePath: item.imagePath,
+                    item_grade: item.grade,
                 });
                 successCount++;
                 if (successCount % 200 === 0) {

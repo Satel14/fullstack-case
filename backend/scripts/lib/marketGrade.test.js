@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
-    GRADES, gradeOfColor, skinKey, gradesBySkin, gradeItems, serializeGradeMap,
+    GRADES, gradeOfColor, skinKey, gradesBySkin, gradeItems, serializeGradeMap, withGrades,
 } = require('./marketGrade');
 const ITEMS = require('../../src/constant/itemConfigs');
 
@@ -69,4 +69,18 @@ test('gradeItems marks real knives special, grades the rest by their skin and li
 
 test('serializeGradeMap writes one item per line in id order', () => {
     assert.equal(serializeGradeMap({ 10: 'covert', 2: 'consumer' }), '{\n"2":"consumer",\n"10":"covert"\n}\n');
+});
+
+test('withGrades puts the committed grade on every item', () => {
+    assert.deepEqual(
+        withGrades([{ itemId: 1, name: 'M249 | Aztec' }, { itemId: 2, name: 'Bayonet | Fade' }], { 1: 'restricted', 2: 'special' }),
+        [{ itemId: 1, name: 'M249 | Aztec', grade: 'restricted' }, { itemId: 2, name: 'Bayonet | Fade', grade: 'special' }],
+    );
+});
+
+test('withGrades refuses, naming them, items the grade map does not know', () => {
+    assert.throws(
+        () => withGrades([{ itemId: 1, name: 'M249 | Aztec' }, { itemId: 7, name: 'New | Skin' }], { 1: 'restricted' }),
+        /1 items have no grade in scripts\/data\/gradeMap\.json: 7 New \| Skin\..*fetchMarketGrades/,
+    );
 });

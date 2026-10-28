@@ -71,6 +71,17 @@ const serializeGradeMap = (grades) => {
     return `{\n${lines.join(',\n')}\n}\n`;
 };
 
+const withGrades = (items, gradeMap) => {
+    const missing = items.filter((item) => !gradeMap[item.itemId]).map((item) => `${item.itemId} ${item.name}`);
+    if (missing.length > 0) {
+        throw new Error(
+            `${missing.length} items have no grade in scripts/data/gradeMap.json: ${missing.join(', ')}. `
+            + 'Run node scripts/fetchMarketGrades.js and commit the file before seeding.',
+        );
+    }
+    return items.map((item) => ({ ...item, grade: gradeMap[item.itemId] }));
+};
+
 module.exports = {
-    GRADES, GRADE_COLORS, gradeOfColor, skinKey, gradesBySkin, gradeItems, serializeGradeMap,
+    GRADES, GRADE_COLORS, gradeOfColor, skinKey, gradesBySkin, gradeItems, serializeGradeMap, withGrades,
 };
