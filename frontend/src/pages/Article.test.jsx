@@ -51,3 +51,13 @@ test('an article that has no English version is shown in Ukrainian on the Englis
     expect(await screen.findByText('Правила сервісу')).toBeInTheDocument();
     expect(screen.getByText('Український текст')).toBeInTheDocument();
 });
+
+test('the browser tab carries the article title in the site language', async () => {
+    mockLanguage = 'en';
+    getArticleById.mockResolvedValue({ data: bilingual });
+
+    renderArticle();
+
+    await screen.findByText('Service rules');
+    expect(document.title).toBe('Service rules — CASES.UA');
+});

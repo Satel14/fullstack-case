@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Loader from '../components/mini/Loader';
 import { getArticleById } from '../api/all/article';
+import { SITE_NAME } from '../config/publicInfo';
 
 const formatDate = (value) => {
     if (!value) {
@@ -14,6 +15,16 @@ const formatDate = (value) => {
         return '';
     }
     return date.toLocaleDateString('uk-UA');
+};
+
+const versionIn = (article, language) => {
+    if (!article) {
+        return { title: '', text: '' };
+    }
+    if (String(language).startsWith('en') && article.article_titleEn && article.article_textEn) {
+        return { title: article.article_titleEn, text: article.article_textEn };
+    }
+    return { title: article.article_title, text: article.article_text };
 };
 
 const Article = ({ match }) => {
@@ -47,6 +58,14 @@ const Article = ({ match }) => {
         };
     }, [articleId]);
 
+    const { title, text } = versionIn(article, i18n.language);
+
+    useEffect(() => {
+        if (title) {
+            document.title = `${title} — ${SITE_NAME}`;
+        }
+    }, [title]);
+
     if (loading) {
         return (
             <div className="articlepage">
@@ -75,9 +94,6 @@ const Article = ({ match }) => {
 
     const publishedAt = formatDate(article.created_at);
     const updatedAt = formatDate(article.updated_at);
-    const english = String(i18n.language).startsWith('en') && article.article_titleEn && article.article_textEn;
-    const title = english ? article.article_titleEn : article.article_title;
-    const text = english ? article.article_textEn : article.article_text;
 
     return (
         <div className="articlepage">
