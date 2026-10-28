@@ -203,6 +203,11 @@ test('the menu button tells assistive technology whether the menu is open and wh
 });
 
 test('the chat button tells assistive technology whether the chat is open and which panel it opens', async () => {
+    renderHeader({ onOpenMenu: () => {}, chatOpen: false });
+    await act(async () => { window.HeaderSecond.chatButtonStatusHeader(true); });
+    expect(screen.getByRole('button', { name: 'header.chat' })).toHaveAttribute('aria-expanded', 'false');
+    cleanup();
+
     renderHeader({ onOpenMenu: () => {}, chatOpen: true });
     await act(async () => { window.HeaderSecond.chatButtonStatusHeader(true); });
 

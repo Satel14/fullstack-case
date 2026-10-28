@@ -135,6 +135,7 @@ test('a phone keeps the chat closed, even for a player who keeps it open on the 
     fireEvent.click(screen.getByRole('button', { name: 'hide chat' }));
     expect(chatDrawerOpen()).toBe(false);
     expect(screen.getByText('chat off')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'open chat' })).toHaveAttribute('aria-expanded', 'false');
     expect(window.HeaderSecond.chatButtonStatusHeader).toHaveBeenLastCalledWith(true);
     expect(localStorage.getItem('collapsedChat')).toBe('false');
 });
@@ -189,21 +190,16 @@ test('blocked site storage leaves the page working', () => {
 });
 
 test('a browser that refuses to hand out site storage at all leaves the page working', () => {
-    const original = Object.getOwnPropertyDescriptor(window, 'localStorage');
-    Object.defineProperty(window, 'localStorage', {
-        configurable: true,
-        get: () => { throw new DOMException('The operation is insecure.', 'SecurityError'); },
+    jest.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
+        throw new DOMException('The operation is insecure.', 'SecurityError');
     });
-    try {
-        renderLayout(1400);
-        expect(screen.getByText('page')).toBeInTheDocument();
 
-        fireEvent.click(screen.getByRole('button', { name: 'hide chat' }));
+    renderLayout(1400);
+    expect(screen.getByText('page')).toBeInTheDocument();
 
-        expect(screen.getByText('chat off')).toBeInTheDocument();
-    } finally {
-        Object.defineProperty(window, 'localStorage', original);
-    }
+    fireEvent.click(screen.getByRole('button', { name: 'hide chat' }));
+
+    expect(screen.getByText('chat off')).toBeInTheDocument();
 });
 
 test('tapping the link of the page already open closes the menu as well', () => {
@@ -235,4 +231,13 @@ test('the floating chat covers a phone screen and keeps the panel width on a tab
 
     act(() => setScreenWidth(1024));
     expect(chatWidth()).toBe('360px');
+});
+
+test('the header reports the docked chat as open or collapsed', () => {
+    renderLayout(1400);
+    expect(screen.getByRole('button', { name: 'open chat' })).toHaveAttribute('aria-expanded', 'true');
+
+    fireEvent.click(screen.getByRole('button', { name: 'hide chat' }));
+
+    expect(screen.getByRole('button', { name: 'open chat' })).toHaveAttribute('aria-expanded', 'false');
 });
