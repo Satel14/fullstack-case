@@ -64,3 +64,11 @@ test('no component draws a dollar, euro, pound or yuan icon, since every amount 
 
     expect(foreignCurrency).toEqual([]);
 });
+
+test('no component writes Ukrainian text itself, so every text has an English version', () => {
+    const ukrainian = sources(__dirname)
+        .filter((file) => /[а-яіїєґ]/i.test(fs.readFileSync(file, 'utf8')))
+        .map((file) => path.relative(__dirname, file).replace(/\\/g, '/'));
+
+    expect(ukrainian).toEqual([]);
+});

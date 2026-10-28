@@ -15,12 +15,12 @@ const UNTRUE = [
     /cases\s?ua(?!\.)|caseua/i,
     /трейдер|trader/i,
     /перенаправлені на сайт платіжної|redirected to the payment/i,
-    /\bUAH\b/i,
     /\bEpic\b/,
     /(?<![а-яіїєґ])(?<!за )рахун|депозит|\bdeposit/i,
 ];
 
-const MONEY = /грош|кошт(и|ів|ам|ах)|грив(н|ен)|(?<![а-яіїєґ])грн(?![а-яіїєґ])|долар|євро|\bmoney|\bfunds\b|\bcash\b|hryvn|\bUSD\b|\bdollar|\beuro|\$/i;
+const CURRENCY = /(?<![а-яіїєґ])грн(?![а-яіїєґ])|грив(н|ен)|дол+ар|євро(?!п)|(?<![a-z])(uah|usd|dollar|euro(?!pe)|hryvn)|\$|€/i;
+const MONEY = /грош|кошт(и|ів|ам|ах)|\bmoney|\bfunds\b|\bcash\b/i;
 const SAYS_NO_REAL_MONEY = /справжні гроші не|реальні кошти не|не є грошима|no real money|not money/i;
 const SAY_THE_DEMO_TAKES_NO_MONEY = ['faq.q2.answer', 'faq.q8.question', 'faq.q8.answer', 'deposit.info', 'payment.note'];
 
@@ -30,6 +30,14 @@ test('no text promises something the demo does not have: a captcha, a group, tra
         .map(([language, key]) => `${language} ${key}`);
 
     expect(untrue).toEqual([]);
+});
+
+test('no text names a currency other than ₴', () => {
+    const foreign = everyText
+        .filter(([, , text]) => CURRENCY.test(text))
+        .map(([language, key]) => `${language} ${key}`);
+
+    expect(foreign).toEqual([]);
 });
 
 test('only the texts saying the demo takes no real money speak of money', () => {
