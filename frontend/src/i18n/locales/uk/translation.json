@@ -19,6 +19,16 @@
         "color": "Колір",
         "placeholder": "Предмет #{{id}}"
     },
+    "grade": {
+        "consumer": "Ширвжиток",
+        "industrial": "Промислова якість",
+        "milspec": "Армійська якість",
+        "restricted": "Заборонене",
+        "classified": "Засекречене",
+        "covert": "Таємне",
+        "contraband": "Контрабанда",
+        "special": "★ Рідкісний особливий предмет"
+    },
     "menu": {
         "cases": "Кейси",
         "topPlayers": "Топ гравців",

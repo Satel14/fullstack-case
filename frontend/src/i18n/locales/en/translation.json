@@ -19,6 +19,16 @@
         "color": "Color",
         "placeholder": "Item #{{id}}"
     },
+    "grade": {
+        "consumer": "Consumer Grade",
+        "industrial": "Industrial Grade",
+        "milspec": "Mil-Spec Grade",
+        "restricted": "Restricted",
+        "classified": "Classified",
+        "covert": "Covert",
+        "contraband": "Contraband",
+        "special": "★ Rare Special Item"
+    },
     "menu": {
         "cases": "Cases",
         "topPlayers": "Top players",
