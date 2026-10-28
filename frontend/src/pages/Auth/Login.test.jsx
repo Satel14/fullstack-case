@@ -90,6 +90,32 @@ test('a guest who was sent here from a private page goes back to it after signin
     expect(screen.queryByText('home page')).toBeNull();
 });
 
+test('after signing in, the page that asked for it replaces the sign-in page in history and keeps its state', async () => {
+    const from = {
+        pathname: '/payment', search: '', hash: '', state: { amount: 50 },
+    };
+    render(
+        <Provider store={createStore(() => ({}), applyMiddleware(thunk))}>
+            <MemoryRouter initialEntries={['/top', { pathname: '/login', state: { from } }]} initialIndex={1}>
+                <Switch>
+                    <Route path="/login" component={Login} />
+                    <Route
+                        path="/payment"
+                        render={({ history, location }) => (
+                            <div>{`payment ${location.state ? location.state.amount : 'none'} | ${history.entries.map((e) => e.pathname).join(',')}`}</div>
+                        )}
+                    />
+                    <Route path="/" render={() => <div>home page</div>} />
+                </Switch>
+            </MemoryRouter>
+        </Provider>,
+    );
+
+    fill();
+
+    await waitFor(() => expect(screen.getByText('payment 50 | /top,/payment')).toBeInTheDocument());
+});
+
 test('"remember me" is ticked by default, and unticking it asks for a session that ends with the browser', async () => {
     renderForm();
     const remember = screen.getByRole('checkbox', { name: 'auth.login.remember' });

@@ -16,10 +16,7 @@ const mapDispatchToProps = (dispatch) => ({
     userPostFetch: (userInfo, remember) => dispatch(userPostFetch(userInfo, remember)),
 });
 
-const pageThatAskedForSignIn = (location) => {
-    const from = location && location.state && location.state.from;
-    return from ? `${from.pathname}${from.search || ''}${from.hash || ''}` : '/';
-};
+const pageThatAskedForSignIn = (location) => (location && location.state && location.state.from) || '/';
 
 const Login = (props) => {
     const { t } = useTranslation();
@@ -49,7 +46,7 @@ const Login = (props) => {
                     openNotification('error', t('auth.login.errorTitle'), failureText(failure));
                     return undefined;
                 }
-                props.history.push(pageThatAskedForSignIn(props.location));
+                props.history.replace(pageThatAskedForSignIn(props.location));
                 openNotification(
                     'success',
                     t('auth.login.successTitle'),
