@@ -271,3 +271,25 @@ test.each([
     await waitFor(() => expect(container.querySelector('.casepage-title-second i')?.textContent).toBe('case.openedCount 7'));
     expect(screen.queryByText('common.loadFailed')).toBeNull();
 });
+
+test('the contents run from the rarest grade down, the dearer item first within a grade, each tile in its grade colour', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    const item = (id, grade, price) => ({
+        item_itemId: id, item_name: `Item ${id}`, item_type: 'rifles', item_rare: 'Field Tested', item_grade: grade, pricesInCredits: { default: price },
+    });
+    getCaseById.mockResolvedValue({ ...caseResponse(0), caseCollection: { ITEMS: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }] } });
+    const store = createStore(() => ({
+        itemCache: {
+            1: item(1, 'milspec', 900), 2: item(2, 'special', 3000), 3: item(3, 'covert', 400), 4: item(4, 'covert', 700),
+        },
+    }));
+
+    render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
+
+    await waitFor(() => expect(document.querySelectorAll('.casepage-itemlist_item')).toHaveLength(4));
+    const tiles = [...document.querySelectorAll('.casepage-itemlist_item')];
+    expect(tiles.map((tile) => tile.querySelector('.casepage-itemlist_item__name').textContent))
+        .toEqual(['Item 2', 'Item 4', 'Item 3', 'Item 1']);
+    expect(tiles.map((tile) => tile.style.getPropertyValue('--rarity')))
+        .toEqual(['#f7c948', '#eb4b4b', '#eb4b4b', '#4b69ff']);
+});

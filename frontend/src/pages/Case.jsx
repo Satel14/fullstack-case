@@ -9,7 +9,7 @@ import { itemInfoFetch } from '../store/actions/itemCache';
 import { getCaseById } from '../api/all/cases';
 import { getProvablyFairState } from '../api/all/provablyFair';
 import { renderItemProp } from '../helpers/Case';
-import { wearRank, valueGrade } from '../helpers/rarity';
+import { gradeRank, gradeStyle } from '../helpers/grade';
 import { computeItemPriceUAH } from '../helpers/price';
 import { marketUrl } from '../helpers/market';
 import { isRefusal } from '../helpers/serverMessage';
@@ -95,12 +95,12 @@ class Case extends Component {
         const items = (caseCollection && caseCollection.ITEMS) ? caseCollection.ITEMS : [];
 
         return [...items].sort((a, b) => {
-            const priceDiff = this.getItemPrice(b) - this.getItemPrice(a);
-            if (priceDiff !== 0) {
-                return priceDiff;
+            const gradeDiff = gradeRank(this.getShortInfoItem(b, 'item_grade'))
+                - gradeRank(this.getShortInfoItem(a, 'item_grade'));
+            if (gradeDiff !== 0) {
+                return gradeDiff;
             }
-            return wearRank(this.getShortInfoItem(b, 'item_rare'))
-                - wearRank(this.getShortInfoItem(a, 'item_rare'));
+            return this.getItemPrice(b) - this.getItemPrice(a);
         });
     }
 
@@ -225,7 +225,6 @@ class Case extends Component {
                                 const name = this.getShortInfoItem(item, 'item_name');
                                 const type = this.getShortInfoItem(item, 'item_type');
                                 const price = this.getItemPrice(item);
-                                const grade = valueGrade(price);
                                 return (
                                     <Tooltip
                                         placement="bottom"
@@ -238,7 +237,7 @@ class Case extends Component {
                                                 href={marketUrl(name, type === 'knife')}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                style={{ '--rarity': grade.color }}
+                                                style={gradeStyle(this.getShortInfoItem(item, 'item_grade'))}
                                             >
                                                 <div
                                                     className="casepage-itemlist_item__img"

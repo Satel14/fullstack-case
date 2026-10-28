@@ -1,18 +1,5 @@
-import { valueGrade } from './rarity';
 import { itemDropChance } from './Case';
 import { marketUrl } from './market';
-
-describe('valueGrade', () => {
-  it('maps low prices to Consumer and high to Gold', () => {
-    expect(valueGrade(10).name).toBe('Consumer');
-    expect(valueGrade(80000).name).toBe('Gold');
-  });
-  it('is monotonic across tiers', () => {
-    const order = ['Consumer', 'Industrial', 'Mil-Spec', 'Restricted', 'Classified', 'Covert', 'Gold'];
-    const seen = [10, 100, 300, 1500, 5000, 30000, 80000].map((p) => valueGrade(p).name);
-    expect(seen).toEqual(order);
-  });
-});
 
 describe('itemDropChance', () => {
   const caseCollection = {
