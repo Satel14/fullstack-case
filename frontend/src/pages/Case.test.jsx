@@ -21,8 +21,8 @@ jest.mock('react-reveal/Fade', () => ({ __esModule: true, default: ({ children }
 jest.mock('../api/all/cases', () => ({ getCaseById: jest.fn() }));
 jest.mock('../api/all/provablyFair', () => ({ getProvablyFairState: jest.fn() }));
 jest.mock('../store/actions/itemCache', () => ({ itemInfoFetch: jest.fn() }));
-jest.mock('../components/modules/OpenCase', () => ({ onCaseChanged, location }) => (
-    <button type="button" onClick={onCaseChanged} data-from={location ? location.pathname : ''}>opened</button>
+jest.mock('../components/modules/OpenCase', () => ({ onCaseChanged }) => (
+    <button type="button" onClick={onCaseChanged}>opened</button>
 ));
 
 const { getCaseById } = require('../api/all/cases');
@@ -270,23 +270,4 @@ test.each([
 
     await waitFor(() => expect(container.querySelector('.casepage-title-second i')?.textContent).toBe('case.openedCount 7'));
     expect(screen.queryByText('common.loadFailed')).toBeNull();
-});
-
-test('the case page hands its address to the open block, so a guest sent to sign in can come back', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
-    getCaseById.mockResolvedValue(caseResponse(7));
-
-    render(
-        <Provider store={createStore(() => ({ itemCache: {} }))}>
-            <MemoryRouter>
-                <Case
-                    match={{ params: { id: 'havoc' } }}
-                    location={{ pathname: '/case/havoc' }}
-                    history={{ push: jest.fn(), replace: jest.fn() }}
-                />
-            </MemoryRouter>
-        </Provider>,
-    );
-
-    expect(await screen.findByRole('button', { name: 'opened' })).toHaveAttribute('data-from', '/case/havoc');
 });

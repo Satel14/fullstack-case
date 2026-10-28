@@ -888,7 +888,7 @@ class OpenCase extends Component {
                             />
                         </div>
 
-                        <Link to={{ pathname: '/login', state: { from: this.props.location } }}>
+                        <Link to={{ pathname: '/login', state: { goBack: true } }}>
                             <Button
                                 size="large"
                                 type="primary"

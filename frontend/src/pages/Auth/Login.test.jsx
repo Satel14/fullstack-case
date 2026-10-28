@@ -116,6 +116,29 @@ test('after signing in, the page that asked for it replaces the sign-in page in 
     await waitFor(() => expect(screen.getByText('payment 50 | /top,/payment')).toBeInTheDocument());
 });
 
+test('a guest who chose to sign in from a page goes back to it, leaving no second copy of it in history', async () => {
+    render(
+        <Provider store={createStore(() => ({}), applyMiddleware(thunk))}>
+            <MemoryRouter initialEntries={['/', '/case/havoc', { pathname: '/login', state: { goBack: true } }]} initialIndex={2}>
+                <Switch>
+                    <Route path="/login" component={Login} />
+                    <Route
+                        path="/case/:id"
+                        render={({ history, location }) => (
+                            <div>{`${location.pathname} | ${history.entries.slice(0, history.index + 1).map((e) => e.pathname).join(',')}`}</div>
+                        )}
+                    />
+                    <Route path="/" render={() => <div>home page</div>} />
+                </Switch>
+            </MemoryRouter>
+        </Provider>,
+    );
+
+    fill();
+
+    await waitFor(() => expect(screen.getByText('/case/havoc | /,/case/havoc')).toBeInTheDocument());
+});
+
 test('"remember me" is ticked by default, and unticking it asks for a session that ends with the browser', async () => {
     renderForm();
     const remember = screen.getByRole('checkbox', { name: 'auth.login.remember' });

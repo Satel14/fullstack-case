@@ -425,7 +425,7 @@ test('revealed block tiles leave the tab order and ignore the keyboard, closed o
     }
 });
 
-test('a guest sent to sign in from a case comes back to that case afterwards', async () => {
+test('a guest sent to sign in from a case is marked to go back to it afterwards', async () => {
     const store = createStore(
         combineReducers({
             user: (state = { login: '' }) => state,
@@ -441,10 +441,10 @@ test('a guest sent to sign in from a case comes back to that case afterwards', a
                     <Route
                         path="/login"
                         render={({ location }) => (
-                            <div>{`sign-in for ${location.state && location.state.from ? location.state.from.pathname : 'nothing'}`}</div>
+                            <div>{`sign-in, go back: ${Boolean(location.state && location.state.goBack)}`}</div>
                         )}
                     />
-                    <Route path="/case/:id" render={({ location }) => <OpenCase data={baseCase} location={location} />} />
+                    <Route path="/case/:id" render={() => <OpenCase data={baseCase} />} />
                 </Switch>
             </MemoryRouter>
         </Provider>,
@@ -452,5 +452,5 @@ test('a guest sent to sign in from a case comes back to that case afterwards', a
 
     fireEvent.click(screen.getByRole('button', { name: /openCase\.authorize/ }));
 
-    expect(await screen.findByText('sign-in for /case/havoc')).toBeInTheDocument();
+    expect(await screen.findByText('sign-in, go back: true')).toBeInTheDocument();
 });
