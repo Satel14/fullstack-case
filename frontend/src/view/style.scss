@@ -28,6 +28,32 @@
     src: url(./fonts/Roboto-Slab.ttf) format("truetype");
 }
 
+$ukrainian-letters-muller-lacks: U+0404, U+0406-0407, U+0454, U+0456-0457, U+0490-0491, U+2116;
+$cyrillic-avenir-lacks: U+0400-04FF, U+2116;
+$hryvnia-sign: U+20B4;
+$system-fonts-with-hryvnia: local("Segoe UI"), local("Arial"), local("ArialMT"), local("Helvetica Neue"), local("Liberation Sans"), local("DejaVu Sans"), local("Noto Sans");
+$bold-system-fonts-with-hryvnia: local("Segoe UI Bold"), local("Arial Bold"), local("Arial-BoldMT"), local("Helvetica Neue Bold"), local("Liberation Sans Bold"), local("DejaVu Sans Bold"), local("Noto Sans Bold");
+
+@mixin borrow-glyphs($family, $src, $range) {
+    @font-face {
+        font-family: $family;
+        src: $src;
+        unicode-range: $range;
+    }
+}
+
+@include borrow-glyphs("Muller Regular", url(./fonts/Roboto-Regular.ttf) format("truetype"), $ukrainian-letters-muller-lacks);
+@include borrow-glyphs("Muller Bold", url(./fonts/Roboto-Bold.ttf) format("truetype"), $ukrainian-letters-muller-lacks);
+@include borrow-glyphs("Avenir Next LT Pro Bold", url(./fonts/Roboto-Bold.ttf) format("truetype"), $cyrillic-avenir-lacks);
+
+@each $family in ("Muller Regular", "Roboto Regular", "Roboto Slab") {
+    @include borrow-glyphs($family, $system-fonts-with-hryvnia, $hryvnia-sign);
+}
+
+@each $family in ("Muller Bold", "Roboto Bold", "Avenir Next LT Pro Bold") {
+    @include borrow-glyphs($family, $bold-system-fonts-with-hryvnia, $hryvnia-sign);
+}
+
 .smiles-list {
     max-width: 240px;
     margin: 0 -2px;
