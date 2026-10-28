@@ -149,7 +149,6 @@ body {
     display: flex;
     flex-direction: column;
     background-position-y: 20%;
-    min-width: 68.75rem;
     padding: 0;
     margin: 0;
     color: #fff;
@@ -1936,6 +1935,10 @@ blockquote {
     padding: 20px;
     min-height: 80vh;
     overflow-x: hidden;
+
+    @media (max-width: 767px) {
+        padding: 12px 10px;
+    }
 }
 
 .header-sitename {
@@ -2097,6 +2100,46 @@ blockquote {
 
     &-chat {
         margin-right: 15px;
+    }
+
+    &-leftblock {
+        flex: 1 1 0;
+        min-width: 0;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        height: 64px;
+        overflow: hidden;
+
+        .headersecond-stats {
+            height: 64px;
+        }
+    }
+
+    &-rightblock {
+        flex: none;
+    }
+
+    @media (max-width: 767px) {
+        padding: 0 6px;
+
+        .headersecond-leftblock,
+        .headersecond-label,
+        .headersecond-profile__info .nickname {
+            display: none;
+        }
+
+        .headersecond-chat {
+            margin-right: 8px;
+        }
+
+        .headersecond-profile {
+            margin-left: 8px;
+
+            .ant-dropdown-trigger {
+                margin-right: 0;
+                padding-right: 4px;
+            }
+        }
     }
 
     &-profile {
@@ -2343,6 +2386,20 @@ footer.ant-layout-footer {
         width: 600px;
         font-size: 13px;
         color: #5d6477;
+    }
+
+    @media (max-width: 767px) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+
+        &>* {
+            margin: 0 16px;
+        }
+
+        .leftblock {
+            width: auto;
+        }
     }
 
     .rightblock {
