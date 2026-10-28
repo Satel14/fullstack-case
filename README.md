@@ -29,4 +29,4 @@ by `node scripts/fetchMarketPrices.js`) `buildPriceMap.js` loads the committed `
 it. Email is off while `RESEND_API_KEY` in `.env` is empty: registration then signs in without confirming the email,
 and password recovery is unavailable. To turn it on, set `RESEND_API_KEY` and set `RESEND_FROM` to an address on a
 domain verified in Resend. With the default `onboarding@resend.dev` sender, mail reaches only the Resend account owner,
-so no one else can confirm a registration.
+so no one else can confirm a registration or receive a password-reset link.
