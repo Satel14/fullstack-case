@@ -2,7 +2,7 @@ import React from 'react';
 import {
  Button, Dropdown, Layout, Tooltip,
 } from 'antd';
-import { DollarOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
+import { SettingOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import CountUp from 'react-countup';
 import { connect } from 'react-redux';
@@ -110,7 +110,7 @@ class HeaderSecond extends React.Component {
             },
             {
                 key: '15deposit',
-                icon: <DollarOutlined />,
+                icon: <WalletOutlined />,
                 label: <Link to="/deposit">{t('header.depositAccount')}</Link>,
             },
             {

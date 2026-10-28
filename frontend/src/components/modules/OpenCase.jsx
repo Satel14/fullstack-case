@@ -5,7 +5,7 @@ import { Button, Radio, Alert } from 'antd';
 import styled, { keyframes } from 'styled-components';
 import {
     SyncOutlined,
-    DollarOutlined,
+    WalletOutlined,
     RollbackOutlined, UnlockOutlined, BlockOutlined, ThunderboltOutlined,
 } from '@ant-design/icons';
 import { connect } from 'react-redux';
@@ -749,7 +749,7 @@ class OpenCase extends Component {
                                                 ) : (this.state.prices && this.state.prices[i] && (
                                                     <Button
                                                         type="primary"
-                                                        icon={<DollarOutlined />}
+                                                        icon={<WalletOutlined />}
                                                         ghost
                                                         size="small"
                                                         loading={selling.includes(w.storageId)}
@@ -786,7 +786,7 @@ class OpenCase extends Component {
                                             {this.state.prices && this.state.prices.length > 1 && this.getSummAll() && (
                                                 <Button
                                                     type="primary"
-                                                    icon={<DollarOutlined />}
+                                                    icon={<WalletOutlined />}
                                                     ghost
                                                     size="large"
                                                     loading={sellingAll}

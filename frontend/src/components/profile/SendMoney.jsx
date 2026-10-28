@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
  Button, Modal, Form, InputNumber,
 } from 'antd';
-import { DollarCircleOutlined } from '@ant-design/icons';
+import { SendOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { sendMoneyForUser } from '../../api/all/profile';
 import openNotification from '../mini/openNotification';
@@ -88,7 +88,7 @@ const SendMoney = (props) => {
     <div style={{ display: 'inline' }}>
       <Button
         type="link"
-        icon={<DollarCircleOutlined />}
+        icon={<SendOutlined />}
         className="send-money"
         onClick={() => {
           setVisible(true);

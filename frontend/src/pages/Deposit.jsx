@@ -7,7 +7,6 @@ import {
     Button,
     Form,
 } from 'antd';
-import { DollarOutlined } from '@ant-design/icons';
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import Fade from 'react-reveal/Fade';
@@ -117,7 +116,7 @@ class Deposit extends Component {
                                         max={MAX_AMOUNT}
                                         value={amount}
                                         onChange={(e) => this.setState({ amount: e.target.value })}
-                                        prefix={<DollarOutlined className="site-form-item-icon" />}
+                                        prefix="₴"
                                     />
                                 </Form.Item>
 

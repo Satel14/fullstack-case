@@ -10,7 +10,7 @@ import {
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import {
-    DollarOutlined,
+    WalletOutlined,
 } from '@ant-design/icons';
 import H2A from '../components/mini/H2A';
 import ProfileAvatar from '../components/profile/ProfileAvatar';
@@ -87,7 +87,7 @@ class Settings extends Component {
                             >
                                 <Input value={user.balance} disabled style={{ maxWidth: '120px' }} />
 
-                                <Button type="primary" icon={<DollarOutlined />} className="color-green" onClick={() => this.getDepositePage()}>
+                                <Button type="primary" icon={<WalletOutlined />} className="color-green" onClick={() => this.getDepositePage()}>
                                     {t('settings.topUp')}
                                 </Button>
 

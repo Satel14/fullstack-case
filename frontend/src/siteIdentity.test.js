@@ -48,3 +48,19 @@ test('the manifest declares exactly the sizes the icon file holds', () => {
 test('no social preview tag points at a relative image', () => {
     expect(indexHtml).not.toMatch(/(og|twitter):image" content="(%PUBLIC_URL%)?\//);
 });
+
+const sources = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+        return sources(file);
+    }
+    return /\.(jsx?|tsx?)$/.test(entry.name) && !entry.name.includes('.test.') ? [file] : [];
+});
+
+test('no component draws a dollar, euro, pound or yuan icon, since every amount is in ₴', () => {
+    const foreignCurrency = sources(__dirname)
+        .filter((file) => /\b(Dollar|Euro|Pound|PayCircle)\w*(Outlined|Filled|TwoTone)\b/.test(fs.readFileSync(file, 'utf8')))
+        .map((file) => path.relative(__dirname, file).replace(/\\/g, '/'));
+
+    expect(foreignCurrency).toEqual([]);
+});

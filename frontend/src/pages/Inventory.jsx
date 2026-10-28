@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import { Tabs, Button, Empty } from 'antd';
-import { DollarOutlined, ExportOutlined, RollbackOutlined } from '@ant-design/icons';
+import { ExportOutlined, RollbackOutlined, WalletOutlined } from '@ant-design/icons';
 import map from 'lodash/map';
 import {
     getProfileStorage, sellItemByStorageId, receiveItemByStorageId, cancelWithdrawalByStorageId,
@@ -341,7 +341,7 @@ const Inventory = ({
         <>
             <Button
                 type="primary"
-                icon={<DollarOutlined />}
+                icon={<WalletOutlined />}
                 ghost
                 size="small"
                 disabled={selling || acting}
@@ -389,7 +389,7 @@ const Inventory = ({
                     {active.length ? (
                         <>
                             <div className="inventorypage-actions">
-                                <Button type="primary" icon={<DollarOutlined />} disabled={selling || acting} onClick={onSellAll}>
+                                <Button type="primary" icon={<WalletOutlined />} disabled={selling || acting} onClick={onSellAll}>
                                     {t('inventory.sellAll')}
                                 </Button>
                             </div>
