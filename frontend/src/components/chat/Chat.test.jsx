@@ -267,3 +267,31 @@ test('the chat asks the shared socket helper to connect instead of calling conne
     expect(connectSocket).toHaveBeenCalledTimes(1);
     expect(socket.connect).not.toHaveBeenCalled();
 });
+
+test('hiding the chat closes the popups it opened, so they do not stay over the page', () => {
+    const chatAt = (enabled) => (
+        <MemoryRouter>
+            <Chat user={user} enabled={enabled} refreshProfile={jest.fn()} />
+        </MemoryRouter>
+    );
+    const openPopover = () => document.querySelector('.ant-popover:not(.ant-popover-hidden)');
+    const openModal = () => document.querySelector('.ant-modal-wrap:not([style*="display: none"])');
+    const { rerender } = render(chatAt(true));
+
+    fireEvent.click(screen.getByText('chat.whoIsHere'));
+    expect(openPopover()).not.toBeNull();
+    rerender(chatAt(false));
+    expect(openPopover()).toBeNull();
+
+    rerender(chatAt(true));
+    fireEvent.click(document.querySelector('.anticon-smile').closest('button'));
+    expect(openPopover()).not.toBeNull();
+    rerender(chatAt(false));
+    expect(openPopover()).toBeNull();
+
+    rerender(chatAt(true));
+    fireEvent.click(screen.getByText('rules.trigger'));
+    expect(openModal()).not.toBeNull();
+    rerender(chatAt(false));
+    expect(openModal()).toBeNull();
+});

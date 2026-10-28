@@ -81,9 +81,17 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
     const [chat, setChat] = useState([]);
     const [msg, setMsg] = useState('');
     const [visible, setVisible] = useState(false);
+    const [rosterOpen, setRosterOpen] = useState(false);
     const pendingAck = useRef(null);
 
     useEffect(() => () => clearTimeout(pendingAck.current), []);
+
+    useEffect(() => {
+        if (!enabled) {
+            setVisible(false);
+            setRosterOpen(false);
+        }
+    }, [enabled]);
 
     useEffect(() => {
         if (!enabled) {
@@ -266,12 +274,14 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                                 </div>
                               )}
                             trigger="click"
+                            open={rosterOpen}
+                            onOpenChange={setRosterOpen}
                         >
                             <Button className="color-white small">{t('chat.whoIsHere')}</Button>
                         </Popover>
                     </div>
                     <div className="chat-header_sub_rules">
-                        <Rules />
+                        <Rules enabled={enabled} />
                     </div>
                 </div>
 

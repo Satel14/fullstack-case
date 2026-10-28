@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 
-export const Rules = () => {
+export const Rules = ({ enabled = true }) => {
     const { t } = useTranslation();
     const [isModalVisible, setModalVisible] = useState(false);
+
+    useEffect(() => {
+        if (!enabled) {
+            setModalVisible(false);
+        }
+    }, [enabled]);
 
     const showModal = () => {
         setModalVisible(true);
