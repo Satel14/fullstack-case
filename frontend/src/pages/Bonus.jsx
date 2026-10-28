@@ -35,7 +35,7 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 const Bonus = ({
-    user, history, updateBalance: setBalance, t,
+    user, history, location, updateBalance: setBalance, t,
 }) => {
     const loggedIn = isAuthorized(user);
     const [bonuses, setBonuses] = useState([]);
@@ -122,7 +122,9 @@ const Bonus = ({
             <div className="bonuspage">
                 <h2>{t('bonus.title')}</h2>
                 <p>{t('bonus.loginCta')}</p>
-                <Button type="primary" onClick={() => history.push('/login')}>{t('bonus.loginButton')}</Button>
+                <Button type="primary" onClick={() => history.push({ pathname: '/login', state: { from: location } })}>
+                    {t('bonus.loginButton')}
+                </Button>
             </div>
         );
     }

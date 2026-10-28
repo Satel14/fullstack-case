@@ -66,6 +66,10 @@ const logIn = (store) => store.dispatch({
     type: LOGIN_USER, payloadUser: { user_id: 7, user_login: 'player', user_balance: '0.00' },
 });
 
+const BONUS_LOCATION = {
+    pathname: '/bonus', search: '', hash: '', state: undefined,
+};
+
 const renderBonus = (loggedIn = true, history = { push: jest.fn() }) => {
     const store = createStore(combineReducers({ user: usersReducer }), applyMiddleware(thunk));
     if (loggedIn) {
@@ -74,7 +78,7 @@ const renderBonus = (loggedIn = true, history = { push: jest.fn() }) => {
     render(
         <Provider store={store}>
             <MemoryRouter>
-                <Bonus history={history} />
+                <Bonus history={history} location={BONUS_LOCATION} />
             </MemoryRouter>
         </Provider>,
     );
@@ -83,13 +87,13 @@ const renderBonus = (loggedIn = true, history = { push: jest.fn() }) => {
 
 const card = async (id) => screen.findByTestId(`bonus-${id}`);
 
-test('a guest is asked to log in and nothing is requested', async () => {
+test('a guest is asked to log in, comes back to the bonuses afterwards, and nothing is requested', async () => {
     const history = { push: jest.fn() };
     renderBonus(false, history);
 
     expect(await screen.findByText('bonus.loginCta')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'bonus.loginButton' }));
-    expect(history.push).toHaveBeenCalledWith('/login');
+    expect(history.push).toHaveBeenCalledWith({ pathname: '/login', state: { from: BONUS_LOCATION } });
     expect(getBonusList).not.toHaveBeenCalled();
 });
 
