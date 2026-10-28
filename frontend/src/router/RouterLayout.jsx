@@ -23,12 +23,8 @@ const mapStateToProps = (state) => ({
 
 class RouterLayout extends Component {
     async componentDidMount() {
-        try {
-            await this.props.getAllModules();
-            await this.props.getProfileFetch();
-        } catch (error) {
-            console.error('Error fetching modules or profile:', error);
-        }
+        await this.props.getAllModules().catch((error) => console.error('Error fetching modules:', error));
+        await Promise.resolve(this.props.getProfileFetch()).catch((error) => console.error('Error fetching profile:', error));
     }
 
     render() {
