@@ -380,7 +380,7 @@
         "limitExceededTitle": "Перевищено ліміт",
         "limitExceededText": "Можна відкрити ще тільки {{remaining}}",
         "authRequired": "Щоб відкрити кейс, потрібно увійти",
-        "authorize": "Авторизуватися"
+        "authorize": "Увійти"
     },
     "footer": {
         "about": "Відкривайте кейси CS2/CS:GO на прозорих умовах та з історією дій у профілі.",

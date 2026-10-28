@@ -380,7 +380,7 @@
         "limitExceededTitle": "Limit exceeded",
         "limitExceededText": "You can open only {{remaining}} more",
         "authRequired": "To open a case, you need to sign in",
-        "authorize": "Sign in"
+        "authorize": "Log in"
     },
     "footer": {
         "about": "Open CS2/CS:GO cases on transparent terms with an action history in your profile.",
