@@ -399,12 +399,12 @@
     },
     "time": {
         "months": ["Січня", "Лютого", "Березня", "Квітня", "Травня", "Червня", "Липня", "Серпня", "Вересня", "Жовтня", "Листопада", "Грудня"],
-        "someday": "коли-небудь",
+        "someday": "давно",
         "ago": "{{value}} тому",
         "days_one": "{{count}} день",
         "days_few": "{{count}} дні",
         "days_many": "{{count}} днів",
-        "hours_one": "{{count}} година",
+        "hours_one": "{{count}} годину",
         "hours_few": "{{count}} години",
         "hours_many": "{{count}} годин",
         "minutes": "{{count}} хв"
