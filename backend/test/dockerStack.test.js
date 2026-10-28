@@ -166,6 +166,16 @@ test('the backend container receives the Resend settings', () => {
     assert.match(composeService('backend'), /^ {6}RESEND_FROM: \$\{RESEND_FROM:-\}$/m);
 });
 
+test('a support address can be given to the frontend build from the root .env', () => {
+    const stage = frontendDockerfile.slice(
+        frontendDockerfile.search(/^FROM \S+ AS build$/m),
+        frontendDockerfile.search(/^RUN npm run build$/m),
+    );
+    assert.match(stage, /^ARG REACT_APP_SUPPORT_EMAIL=$/m);
+    assert.match(composeService('frontend'), /^ {6}args:\n {8}REACT_APP_SUPPORT_EMAIL: \$\{REACT_APP_SUPPORT_EMAIL:-\}$/m);
+    assert.match(read('.env.example'), /^REACT_APP_SUPPORT_EMAIL=$/m);
+});
+
 test('the backend Dockerfile exposes the real port, not the unused default of 80', () => {
     const backendDockerfile = read('backend/Dockerfile');
     assert.doesNotMatch(

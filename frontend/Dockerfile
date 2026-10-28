@@ -10,6 +10,7 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 ARG REACT_APP_API_URL=/api
 ARG REACT_APP_WS_URL=/
+ARG REACT_APP_SUPPORT_EMAIL=
 RUN npm run build
 
 FROM nginx
