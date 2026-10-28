@@ -6,6 +6,8 @@ import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import Loader from '../components/mini/Loader';
+import LoadError from '../components/mini/LoadError';
+import { isRefusal } from '../helpers/serverMessage';
 import ErrorPage from './ErrorPage';
 import { getUserById } from '../api/all/user';
 import {
@@ -62,6 +64,7 @@ class Profile extends Component {
         super(props);
         this.state = {
             fetching: true,
+            failed: false,
             profileUser: null,
             favoriteCase: null,
             openedCases: 0,
@@ -113,16 +116,21 @@ class Profile extends Component {
             return;
         }
 
-        this.setState({ fetching: true });
+        this.setState({ fetching: true, failed: false });
 
         const [userResp, favoriteResp, countResp, historyResp] = await Promise.all([
-            getUserById(profileId).catch(() => null),
+            getUserById(profileId).catch((failure) => ({ failure })),
             getFavoriteCaseByUserId(profileId).catch(() => null),
             getStorageItemsCountByUserId(profileId).catch(() => null),
             getStorageLastItemsByUserId(profileId, STORAGE_LOAD_LIMIT, 0).catch(() => null),
         ]);
 
         if (!isCurrent()) {
+            return;
+        }
+
+        if (userResp?.failure && !isRefusal(userResp.failure)) {
+            this.setState({ fetching: false, failed: true });
             return;
         }
 
@@ -165,6 +173,7 @@ class Profile extends Component {
     render() {
         const {
             fetching,
+            failed,
             profileUser,
             favoriteCase,
             openedCases,
@@ -177,6 +186,15 @@ class Profile extends Component {
         const favoriteCaseId = favoriteCase?.case_id || null;
         const favoriteCaseImg = favoriteCase?.case_img || '';
         const favoriteCaseName = favoriteCase?.case_title || t('profile.noCase');
+
+        if (failed) {
+            return (
+                <div className="profilepage">
+                    <h1 className="title">{t('profile.title')}</h1>
+                    <LoadError onRetry={() => this.loadProfileData()} />
+                </div>
+            );
+        }
 
         if (!fetching && !profileUser) {
             return <ErrorPage />;

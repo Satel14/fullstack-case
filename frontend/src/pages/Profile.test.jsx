@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    act, render, screen, waitFor,
+    act, render, screen, waitFor, fireEvent,
 } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
@@ -280,4 +280,25 @@ test('every item of the history is loaded with one request', async () => {
     expect(getItemsInfo).toHaveBeenCalledTimes(1);
     expect(getItemsInfo.mock.calls[0][0]).toHaveLength(12);
     expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('Gun 111');
+});
+
+test.each([
+    ['network', new TypeError('Failed to fetch')],
+    ['server', { error: 500 }],
+])('a profile that fails to load for a %s reason says so instead of not-found, and a retry loads it', async (_, failure) => {
+    getUserById.mockRejectedValueOnce(failure).mockResolvedValueOnce({
+        data: {
+            user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
+        },
+    });
+
+    renderProfile('5');
+
+    expect(await screen.findByText('common.loadFailed')).toBeInTheDocument();
+    expect(screen.queryByText('error.notFound')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /common\.retry/ }));
+
+    expect(await screen.findByText('testopen')).toBeInTheDocument();
+    expect(screen.queryByText('common.loadFailed')).toBeNull();
 });
