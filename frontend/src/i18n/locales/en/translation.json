@@ -256,7 +256,8 @@
         "reset": "Reset",
         "foundTitle": "Found",
         "casesWord": "Cases",
-        "allTitle": "All"
+        "allTitle": "All",
+        "nothingFound": "Nothing found. Change the search or the filters."
     },
     "top": {
         "heading": "TOP 50 PLAYERS",

@@ -256,7 +256,8 @@
         "reset": "Скинути",
         "foundTitle": "Знайдено",
         "casesWord": "Кейси",
-        "allTitle": "Всі"
+        "allTitle": "Всі",
+        "nothingFound": "Нічого не знайдено. Змініть пошук або фільтри."
     },
     "top": {
         "heading": "ТОП 50 ГРАВЦІВ",

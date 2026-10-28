@@ -129,3 +129,19 @@ test('when the cases cannot be loaded the page says so instead of staying blank,
     expect(screen.queryByText('common.loadFailed')).toBeNull();
     expect(getAllCases).toHaveBeenCalledTimes(2);
 });
+
+test('a search that matches no case says that nothing was found', async () => {
+    render(<Cases />);
+    await waitFor(() => expect(shownTitles()).toHaveLength(4));
+    expect(screen.queryByText('cases.nothingFound')).toBeNull();
+
+    fireEvent.change(screen.getByPlaceholderText('cases.searchPlaceholder'), { target: { value: 'zzz' } });
+
+    expect(screen.getByText('cases.nothingFound')).toBeInTheDocument();
+    expect(shownTitles()).toEqual([]);
+
+    fireEvent.change(screen.getByPlaceholderText('cases.searchPlaceholder'), { target: { value: 'mid' } });
+
+    expect(screen.queryByText('cases.nothingFound')).toBeNull();
+    expect(shownTitles()).toEqual(['Mid']);
+});

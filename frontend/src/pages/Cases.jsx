@@ -310,6 +310,7 @@ class Cases extends Component {
                         {sortedCases ? (
                             <>
                             <H2A title={t('cases.foundTitle')} subTitle={t('cases.casesWord')} />
+                                {sortedCases.length === 0 && <p className="caselist-empty">{t('cases.nothingFound')}</p>}
                                 <div className="caselist">
                                     {map(sortedCases, (item, index) => (
                                         <div style={{ position: 'relative' }} key={`caselist-sorted-${item.case_id}-${index}`}>
