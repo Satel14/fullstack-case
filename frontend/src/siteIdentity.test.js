@@ -36,3 +36,15 @@ test('the site has its own icon in every size the browser and the manifest ask f
     const sizes = Array.from({ length: ico.readUInt16LE(4) }, (_, i) => ico[6 + i * 16]);
     expect(sizes).toEqual([16, 32, 48]);
 });
+
+test('the manifest declares exactly the sizes the icon file holds', () => {
+    const ico = fs.readFileSync(path.join(publicDir, 'favicon.ico'));
+    const sizes = Array.from({ length: ico.readUInt16LE(4) }, (_, i) => ico[6 + i * 16]);
+    const declared = manifest.icons.find((icon) => icon.src === 'favicon.ico').sizes.split(' ');
+
+    expect(declared.sort()).toEqual(sizes.map((size) => `${size}x${size}`).sort());
+});
+
+test('no social preview tag points at a relative image', () => {
+    expect(indexHtml).not.toMatch(/(og|twitter):image" content="(%PUBLIC_URL%)?\//);
+});
