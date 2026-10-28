@@ -145,7 +145,7 @@
         },
         "q2": {
             "question": "How do I top up my balance?",
-            "answer": "Open the \"Top up\" page and enter an amount — the credits are added at once. This is a demo: top-ups are simulated and no real money is charged. Bonuses and promocodes add to your balance for free."
+            "answer": "Open the \"Top up\" page and enter an amount — the credits are added at once. This is a demo: top-ups are simulated and no real money is charged. Bonuses and promocodes also add to your balance."
         },
         "q3": {
             "question": "What if an item didn't appear in my inventory?",
@@ -158,11 +158,11 @@
         },
         "q5": {
             "question": "Can I use promocodes?",
-            "answer": "Yes. Enter a code on the \"Promocodes\" page or in the settings, and the bonus is added at once. Each code can be used once."
+            "answer": "Yes. Enter a code on the \"Promocodes\" page or in the settings, and the bonus is added at once. Each code works once per account, and every code has a limited number of activations."
         },
         "q6": {
             "question": "Are the openings fair?",
-            "answer": "Yes, the result is decided by a provably fair algorithm. Before opening you see the hash of the server seed, and you can change your client seed at any time. After you change the server seed, you can verify every one of your openings on the \"Provably Fair\" page."
+            "answer": "Yes, the result is decided by a provably fair algorithm. Before opening you see the hash of the server seed, and you can change your client seed at any time. After you rotate the server seed on the \"Provably Fair\" page, you can verify the openings made with the previous seed."
         },
         "q7": {
             "question": "How do I withdraw an item?",
@@ -257,7 +257,7 @@
     "receiveInfo": {
         "cardTitle": "Item withdrawal information",
         "tooltip": "Leave a link to your Steam profile. Withdrawals are simulated in the demo, so this information is not passed on to anyone.",
-        "placeholder": "Enter your Steam or EpicId",
+        "placeholder": "Link to your Steam profile",
         "save": "Save",
         "emptyError": "Don't leave the field empty",
         "errorTitle": "Error",
