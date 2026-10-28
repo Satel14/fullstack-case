@@ -8,6 +8,7 @@ import { withTranslation } from 'react-i18next';
 import Flip from 'react-reveal/Flip';
 import { getAllCases } from '../api/all/cases';
 import Loader from '../components/mini/Loader';
+import LoadError from '../components/mini/LoadError';
 import H2A from '../components/mini/H2A';
 import CaseMini from '../components/mini/CaseMini';
 import { effectivePrice, hasDiscount } from '../components/mini/CasePrice';
@@ -21,6 +22,7 @@ class Cases extends Component {
         super(props);
         this.state = {
             fetching: false,
+            failed: false,
             categories: [],
             allCases: [],
             sortedCases: null,
@@ -83,7 +85,7 @@ class Cases extends Component {
     }
 
     getData() {
-        this.setState({ fetching: true });
+        this.setState({ fetching: true, failed: false });
 
         getAllCases().then((data) => {
            if (this.mounted) {
@@ -96,10 +98,9 @@ class Cases extends Component {
         return null;
         })
         .catch((err) => {
-           // eslint-disable-next-line no-console
-           console.log('Error fetching cases:', err);
+           console.error('Error fetching cases:', err);
            if (this.mounted) {
-               this.setState({ fetching: false });
+               this.setState({ fetching: false, failed: true });
            }
         });
     }
@@ -230,9 +231,16 @@ class Cases extends Component {
 
     render() {
         const {
- fetching, sortedCases, sortOptions,
+ fetching, failed, sortedCases, sortOptions,
 } = this.state;
         const { t } = this.props;
+        if (failed) {
+            return (
+                <div className="casepage">
+                    <LoadError onRetry={() => this.getData()} />
+                </div>
+            );
+        }
         return (
             <div className="casepage">
                 {fetching ? (

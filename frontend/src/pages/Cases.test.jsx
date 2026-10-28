@@ -115,3 +115,17 @@ test('a text search is narrowed by the other filters, and a search with no match
     fireEvent.click(screen.getByText('20-49₴'));
     expect(shownTitles()).toEqual([]);
 });
+
+test('when the cases cannot be loaded the page says so instead of staying blank, and loads them on retry', async () => {
+    getAllCases.mockRejectedValueOnce({ error: 500 });
+    render(<Cases />);
+
+    expect(await screen.findByText('common.loadFailed')).toBeInTheDocument();
+    expect(shownTitles()).toEqual([]);
+
+    fireEvent.click(screen.getByRole('button', { name: /common\.retry/ }));
+
+    await waitFor(() => expect(shownTitles()).toHaveLength(4));
+    expect(screen.queryByText('common.loadFailed')).toBeNull();
+    expect(getAllCases).toHaveBeenCalledTimes(2);
+});

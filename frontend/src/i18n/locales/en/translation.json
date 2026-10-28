@@ -4,6 +4,8 @@
         "whatIsThis": "What is this?",
         "error": "Error",
         "serverError": "A server error occurred",
+        "loadFailed": "Could not load the data",
+        "retry": "Try again",
         "discount": "Discount",
         "case": "Case"
     },
