@@ -414,7 +414,6 @@ p {
 
         .low {
             display: block;
-            font-size: 20px !important;
         }
 
         .header-sitename_beta {
@@ -428,11 +427,8 @@ p {
             display: none;
         }
 
-        a {
-            span {
-                font-size: 20px !important;
-                margin-left: 0;
-            }
+        .header-sitename a span {
+            display: none;
         }
     }
 
@@ -1982,9 +1978,8 @@ blockquote {
 
     .low {
         display: none;
-        font-size: 32px;
-        text-shadow: 0 0 10px rgba(101, 163, 255, 0.8),
-            0 0 20px rgba(71, 99, 191, 0.4);
+        width: 40px;
+        height: 40px;
     }
 
     .full {

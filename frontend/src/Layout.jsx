@@ -1,12 +1,12 @@
 import React from 'react';
 import { Layout } from 'antd';
-import { Link } from 'react-router-dom';
 import ContentLayout from './components/ContentLayout';
 import MenuLayoutSlider from './components/MenuLayoutSlider';
 import HeaderSecond from './components/HeaderSecond';
 import FooterLayout from './components/FooterLayout';
 import HeaderThird from './components/HeaderThird';
 import ConnectedChat from './components/chat/Chat';
+import SiteLogo from './components/SiteLogo';
 
 const { Sider, Content } = Layout;
 export default class App extends React.Component {
@@ -64,14 +64,7 @@ export default class App extends React.Component {
             left: 0,
           }}
         >
-          <div className="header-sitename">
-            <div className="header-sitename_beta">CS</div>
-            <Link to="/">
-              <div className="low">GO</div>
-              <div className="full">CASES</div>
-              <span>.ua</span>
-            </Link>
-          </div>
+          <SiteLogo />
           <MenuLayoutSlider />
         </Sider>
 
