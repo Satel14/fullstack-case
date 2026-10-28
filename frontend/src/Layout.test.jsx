@@ -18,16 +18,21 @@ jest.mock('./components/MenuLayoutSlider', () => () => {
     const { Link } = jest.requireActual('react-router-dom');
     return (
         <nav>
+            <Link to="/">cases</Link>
             <Link to="/top">top players</Link>
         </nav>
     );
 });
-jest.mock('./components/chat/Chat', () => ({ enabled }) => (
-    <div>
-        {`chat ${enabled ? 'on' : 'off'}`}
-        <button type="button" onClick={() => global.Layout.onCollapseChat(true)}>hide chat</button>
-    </div>
-));
+jest.mock('./components/chat/Chat', () => ({ enabled }) => {
+    const { Link } = jest.requireActual('react-router-dom');
+    return (
+        <div>
+            {`chat ${enabled ? 'on' : 'off'}`}
+            <button type="button" onClick={() => global.Layout.onCollapseChat(true)}>hide chat</button>
+            <Link to="/profile/9">player in chat</Link>
+        </div>
+    );
+});
 
 const originalMatchMedia = window.matchMedia;
 let lists;
@@ -175,4 +180,24 @@ test('blocked site storage leaves the page working', () => {
     fireEvent.click(screen.getByRole('button', { name: 'hide chat' }));
 
     expect(screen.getByText('chat off')).toBeInTheDocument();
+});
+
+test('tapping the link of the page already open closes the menu as well', () => {
+    renderLayout(390);
+    fireEvent.click(screen.getByRole('button', { name: 'open menu' }));
+    expect(menuDrawerOpen()).toBe(true);
+
+    fireEvent.click(screen.getByText('cases'));
+
+    expect(menuDrawerOpen()).toBe(false);
+});
+
+test('following a link from the floating chat closes it, so the page it opens is not hidden behind it', () => {
+    renderLayout(390);
+    fireEvent.click(screen.getByRole('button', { name: 'open chat' }));
+    expect(chatDrawerOpen()).toBe(true);
+
+    fireEvent.click(screen.getByText('player in chat'));
+
+    expect(chatDrawerOpen()).toBe(false);
 });

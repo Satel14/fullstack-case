@@ -49,10 +49,11 @@ class App extends React.Component {
 
   componentDidUpdate(prevProps) {
     const { location, dockedMenu, dockedChat } = this.props;
-    if (this.state.menuOpen && (prevProps.location.pathname !== location.pathname || (dockedMenu && !prevProps.dockedMenu))) {
+    const navigated = prevProps.location !== location;
+    if (this.state.menuOpen && (navigated || (dockedMenu && !prevProps.dockedMenu))) {
       this.setState({ menuOpen: false });
     }
-    if (this.state.chatOpen && dockedChat && !prevProps.dockedChat) {
+    if (this.state.chatOpen && (navigated || (dockedChat && !prevProps.dockedChat))) {
       this.setState({ chatOpen: false });
     }
     if (prevProps.dockedChat !== dockedChat) {
