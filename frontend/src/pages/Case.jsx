@@ -201,7 +201,7 @@ class Case extends Component {
                 ) : (
                     <>
                         <div className="casepage-openbutton">
-                            <OpenCase data={caseData} onCaseChanged={() => this.refreshCase()} />
+                            <OpenCase data={caseData} location={this.props.location} onCaseChanged={() => this.refreshCase()} />
                         </div>
 
                         {serverSeedHash && (

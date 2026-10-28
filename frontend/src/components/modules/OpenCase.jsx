@@ -122,7 +122,6 @@ class OpenCase extends Component {
         this.openBlockMethod = this.openBlockMethod.bind(this);
         this.openScrollMethod = this.openScrollMethod.bind(this);
         this.getBack = this.getBack.bind(this);
-        this.getLoginPage = this.getLoginPage.bind(this);
         this.resetView = this.resetView.bind(this);
 
         this.blockRef = React.createRef();
@@ -198,13 +197,6 @@ class OpenCase extends Component {
             selling: [],
             sellingAll: false,
         });
-    }
-
-    getLoginPage() {
-        const { history } = this.props;
-        if (history) {
-            history.push('/login');
-        }
     }
 
     getSummAll() {
@@ -896,9 +888,8 @@ class OpenCase extends Component {
                             />
                         </div>
 
-                        <Link to="/login">
+                        <Link to={{ pathname: '/login', state: { from: this.props.location } }}>
                             <Button
-                                onClick={() => this.getLoginPage()}
                                 size="large"
                                 type="primary"
                                 icon={<ThunderboltOutlined />}

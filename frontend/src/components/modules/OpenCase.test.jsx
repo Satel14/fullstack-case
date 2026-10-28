@@ -5,7 +5,7 @@ import {
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Switch } from 'react-router-dom';
 import itemCacheReducer from '../../store/reducers/itemCache';
 import OpenCase from './OpenCase';
 
@@ -423,4 +423,34 @@ test('revealed block tiles leave the tab order and ignore the keyboard, closed o
     } finally {
         jest.useRealTimers();
     }
+});
+
+test('a guest sent to sign in from a case comes back to that case afterwards', async () => {
+    const store = createStore(
+        combineReducers({
+            user: (state = { login: '' }) => state,
+            itemCache: itemCacheReducer,
+            modules: (state = {}) => state,
+        }),
+        applyMiddleware(thunk),
+    );
+    render(
+        <Provider store={store}>
+            <MemoryRouter initialEntries={['/case/havoc']}>
+                <Switch>
+                    <Route
+                        path="/login"
+                        render={({ location }) => (
+                            <div>{`sign-in for ${location.state && location.state.from ? location.state.from.pathname : 'nothing'}`}</div>
+                        )}
+                    />
+                    <Route path="/case/:id" render={({ location }) => <OpenCase data={baseCase} location={location} />} />
+                </Switch>
+            </MemoryRouter>
+        </Provider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.authorize/ }));
+
+    expect(await screen.findByText('sign-in for /case/havoc')).toBeInTheDocument();
 });
