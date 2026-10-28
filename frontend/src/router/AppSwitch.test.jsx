@@ -6,8 +6,12 @@ import roles from '../enum/role';
 
 const page = (name) => () => <div>{name}</div>;
 
+const SignIn = ({ location }) => (
+    <div>{`sign-in for ${location.state && location.state.from ? location.state.from.pathname : 'nothing'}`}</div>
+);
+
 const routes = {
-    public: [{ path: '/', exact: true, component: page('home') }],
+    public: [{ path: '/', exact: true, component: page('home') }, { path: '/login', exact: true, component: SignIn }],
     private: [{ path: '/inventory', exact: true, component: page('inventory') }],
     admin: [{ path: '/admin', exact: true, component: page('admin') }],
 };
@@ -16,9 +20,9 @@ const guest = {};
 const player = { login: 'player', role: roles.NORMAL };
 const admin = { login: 'admin', role: roles.ADMINISTRATOR };
 
-const renderAt = (path, user) => render(
+const renderAt = (path, user, { sessionChecked = true } = {}) => render(
     <MemoryRouter initialEntries={[path]}>
-        <AppSwitch routes={routes} user={user} fallback={page('not-found')} />
+        <AppSwitch routes={routes} user={user} sessionChecked={sessionChecked} fallback={page('not-found')} />
     </MemoryRouter>,
 );
 
@@ -37,12 +41,34 @@ test('a player who is not an administrator gets not-found on the admin page', ()
     expect(screen.getByText('not-found')).toBeInTheDocument();
 });
 
-test('a guest gets not-found on private and admin pages', () => {
-    const { unmount } = renderAt('/inventory', guest);
+test('a guest on a private page is sent to sign in, and the sign-in page learns which page they wanted', () => {
+    renderAt('/inventory', guest);
+    expect(screen.getByText('sign-in for /inventory')).toBeInTheDocument();
+});
+
+test('a guest gets not-found on the admin page', () => {
+    renderAt('/admin', guest);
     expect(screen.getByText('not-found')).toBeInTheDocument();
+});
+
+test('while the session is being checked, private and admin pages show a loader instead of a verdict', () => {
+    const { container, unmount } = renderAt('/inventory', guest, { sessionChecked: false });
+    expect(container.querySelector('.loader')).not.toBeNull();
+    expect(screen.queryByText('not-found')).toBeNull();
+    expect(screen.queryByText(/^sign-in for/)).toBeNull();
     unmount();
 
-    renderAt('/admin', guest);
+    const adminPage = renderAt('/admin', guest, { sessionChecked: false });
+    expect(adminPage.container.querySelector('.loader')).not.toBeNull();
+    expect(screen.queryByText('not-found')).toBeNull();
+});
+
+test('public pages and unknown pages do not wait for the session check', () => {
+    const { unmount } = renderAt('/', guest, { sessionChecked: false });
+    expect(screen.getByText('home')).toBeInTheDocument();
+    unmount();
+
+    renderAt('/nope', guest, { sessionChecked: false });
     expect(screen.getByText('not-found')).toBeInTheDocument();
 });
 
@@ -64,7 +90,7 @@ test('a user update re-renders the current page without remounting it', () => {
     };
     const at = (user) => (
         <MemoryRouter initialEntries={['/settings']}>
-            <AppSwitch routes={probeRoutes} user={user} fallback={page('not-found')} />
+            <AppSwitch routes={probeRoutes} user={user} sessionChecked fallback={page('not-found')} />
         </MemoryRouter>
     );
 

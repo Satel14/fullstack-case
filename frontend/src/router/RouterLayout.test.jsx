@@ -1,5 +1,7 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import {
+    render, screen, waitFor, act,
+} from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
@@ -62,6 +64,35 @@ beforeEach(() => {
 
 afterEach(() => {
     console.error.mockRestore();
+});
+
+test('a private page shows a loader while the session is checked, then the page itself', async () => {
+    let finishCheck;
+    getProfileFetch.mockImplementation(() => (dispatch) => new Promise((resolve) => {
+        finishCheck = () => {
+            dispatch({ type: LOGIN_USER, payloadUser: PLAYER });
+            resolve();
+        };
+    }));
+
+    const { container } = renderAt('/inventory');
+
+    await waitFor(() => expect(finishCheck).toBeDefined());
+    expect(container.querySelector('.loader')).not.toBeNull();
+    expect(screen.queryByText('error.notFound')).toBeNull();
+
+    act(() => finishCheck());
+
+    expect(await screen.findByText('inventory page')).toBeInTheDocument();
+});
+
+test('a guest who opens a private page is sent to the sign-in page', async () => {
+    getProfileFetch.mockImplementation(() => () => null);
+
+    renderAt('/inventory');
+
+    expect(await screen.findByText('login page')).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/login');
 });
 
 test('a signed-in player reaches a private page even when the modules request fails', async () => {
