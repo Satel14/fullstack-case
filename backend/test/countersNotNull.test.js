@@ -52,6 +52,26 @@ const databaseBeforeTheMigration = async () => {
 
 const migrateRest = (sequelize) => createMigrator(sequelize, { quiet: true }).up();
 
+const READS_OPENS_OR_DROPS = /\b(?:FROM|JOIN)\s+`?(?:storage|case_opens)\b/i;
+
+const migrateWatchingReadsOfOpensAndDrops = async (sequelize) => {
+    const query = sequelize.query.bind(sequelize);
+    const reads = [];
+    sequelize.query = async (sql, options) => {
+        if (typeof sql === 'string' && READS_OPENS_OR_DROPS.test(sql)) {
+            const [plan] = await query(`EXPLAIN ${sql}`);
+            reads.push({ sql, selectTypes: plan.map((step) => step.select_type) });
+        }
+        return query(sql, options);
+    };
+    try {
+        await createMigrator(sequelize, { quiet: true }).up({ to: MIGRATION });
+    } finally {
+        delete sequelize.query;
+    }
+    return reads;
+};
+
 const open = (userId) => {
     const CaseController = require('../src/controllers/case');
     return respond(CaseController.openCaseById, {
@@ -125,6 +145,51 @@ test('a NULL opened count resumes at the opens already made, and a case they too
     assert.deepStrictEqual(results.map((r) => r.code), [200, 200, 422], JSON.stringify(results.map((r) => r.payload.message)));
     const [[dust2]] = await sequelize.query("SELECT openedCount, published FROM cases WHERE id = 'dust2'");
     assert.deepStrictEqual({ openedCount: dust2.openedCount, published: dust2.published }, { openedCount: 5, published: 0 });
+});
+
+test('the opens already made are counted in one pass over the opens and the drops, not once per case', async () => {
+    const sequelize = await databaseBeforeTheMigration();
+    await sequelize.query(
+        "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES ('player', 'x', 'p@e.ua', 10000, 0, 1)",
+    );
+    await sequelize.query(
+        "INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) VALUES "
+        + "('dust2', 'DUST2', 100, 0, 1, 1, NULL, 'weapon', 5), "
+        + "('mirage', 'MIRAGE', 100, 0, 1, 1, NULL, 'weapon', 1), "
+        + "('nuke', 'NUKE', 100, 0, 1, 1, NULL, 'weapon', -1)",
+    );
+    await sequelize.query("INSERT INTO case_opens (userId, caseId) VALUES (1, 'dust2'), (1, 'dust2'), (1, 'nuke')");
+    await sequelize.query(
+        "INSERT INTO storage (userId, itemId, color, caseId, status) VALUES (1, 1, 'default', 'mirage', 'received'), (1, 1, 'default', 'dust2', 'received')",
+    );
+
+    const reads = await migrateWatchingReadsOfOpensAndDrops(sequelize);
+
+    assert.ok(reads.length > 0, 'the NULL counters are filled from the opens and the drops');
+    assert.deepStrictEqual(reads.filter((read) => read.selectTypes.includes('DEPENDENT SUBQUERY')).map((read) => read.sql), []);
+    const [migrated] = await sequelize.query('SELECT id, openedCount, published FROM cases ORDER BY id');
+    assert.deepStrictEqual(migrated.map((c) => [c.id, c.openedCount, c.published]), [
+        ['dust2', 2, 1], ['mirage', 1, 0], ['nuke', 1, 1],
+    ]);
+});
+
+test('a database without NULL opened counts is migrated without reading the opens or the drops', async () => {
+    const sequelize = await databaseBeforeTheMigration();
+    await sequelize.query(
+        "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES ('player', 'x', 'p@e.ua', 10000, 0, 1)",
+    );
+    await sequelize.query(
+        "INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) VALUES "
+        + "('kept', 'KEPT', 100, 0, 1, 1, 7, 'weapon', 1000)",
+    );
+    await sequelize.query("INSERT INTO case_opens (userId, caseId) VALUES (1, 'kept')");
+    await sequelize.query("INSERT INTO storage (userId, itemId, color, caseId, status) VALUES (1, 1, 'default', 'kept', 'received')");
+
+    const reads = await migrateWatchingReadsOfOpensAndDrops(sequelize);
+
+    assert.deepStrictEqual(reads.map((read) => read.sql), []);
+    const [[kept]] = await sequelize.query("SELECT openedCount, published FROM cases WHERE id = 'kept'");
+    assert.deepStrictEqual([kept.openedCount, kept.published], [7, 1]);
 });
 
 test('NULL counters on cases and players become 0 and the columns refuse NULL from then on', async () => {
