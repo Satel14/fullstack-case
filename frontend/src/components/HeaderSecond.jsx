@@ -104,7 +104,7 @@ class HeaderSecond extends React.Component {
 
     render() {
         const {
-            user, t, onOpenMenu, menuOpen,
+            user, t, onOpenMenu, menuOpen, chatOpen,
         } = this.props;
         const { chatButton, onlineUser, stats } = this.state;
         const profileMenuItems = [
@@ -204,6 +204,8 @@ class HeaderSecond extends React.Component {
                             className="color-white small headersecond-chat"
                             icon={<MessageOutlined />}
                             aria-label={t('header.chat')}
+                            aria-expanded={Boolean(chatOpen)}
+                            aria-controls="site-chat"
                             onClick={() => window.Layout.onCollapseChat(false)}
                         >
                             <span className="headersecond-label">{t('header.chat')}</span>

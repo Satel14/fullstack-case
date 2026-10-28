@@ -7,8 +7,10 @@ import Layout from './Layout';
 
 jest.mock('./components/HeaderSecond', () => (props) => (
     <header>
-        {props.onOpenMenu && <button type="button" onClick={props.onOpenMenu}>open menu</button>}
-        <button type="button" onClick={() => global.Layout.onCollapseChat(false)}>open chat</button>
+        {props.onOpenMenu && (
+            <button type="button" aria-expanded={Boolean(props.menuOpen)} onClick={props.onOpenMenu}>open menu</button>
+        )}
+        <button type="button" aria-expanded={Boolean(props.chatOpen)} onClick={() => global.Layout.onCollapseChat(false)}>open chat</button>
     </header>
 ));
 jest.mock('./components/HeaderThird', () => () => null);
@@ -110,9 +112,11 @@ test('a phone docks nothing: the menu opens from the header and closes after a l
 
     fireEvent.click(screen.getByRole('button', { name: 'open menu' }));
     expect(menuDrawerOpen()).toBe(true);
+    expect(screen.getByRole('button', { name: 'open menu' })).toHaveAttribute('aria-expanded', 'true');
 
     fireEvent.click(screen.getByText('top players'));
     expect(menuDrawerOpen()).toBe(false);
+    expect(screen.getByRole('button', { name: 'open menu' })).toHaveAttribute('aria-expanded', 'false');
 });
 
 test('a phone keeps the chat closed, even for a player who keeps it open on the desktop, until the header opens it; the header button stays for focus to return to', () => {
@@ -126,6 +130,7 @@ test('a phone keeps the chat closed, even for a player who keeps it open on the 
     expect(chatDrawerOpen()).toBe(true);
     expect(screen.getByText('chat on')).toBeInTheDocument();
     expect(window.HeaderSecond.chatButtonStatusHeader).not.toHaveBeenCalledWith(false);
+    expect(screen.getByRole('button', { name: 'open chat' })).toHaveAttribute('aria-expanded', 'true');
 
     fireEvent.click(screen.getByRole('button', { name: 'hide chat' }));
     expect(chatDrawerOpen()).toBe(false);
@@ -181,6 +186,24 @@ test('blocked site storage leaves the page working', () => {
     fireEvent.click(screen.getByRole('button', { name: 'hide chat' }));
 
     expect(screen.getByText('chat off')).toBeInTheDocument();
+});
+
+test('a browser that refuses to hand out site storage at all leaves the page working', () => {
+    const original = Object.getOwnPropertyDescriptor(window, 'localStorage');
+    Object.defineProperty(window, 'localStorage', {
+        configurable: true,
+        get: () => { throw new DOMException('The operation is insecure.', 'SecurityError'); },
+    });
+    try {
+        renderLayout(1400);
+        expect(screen.getByText('page')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: 'hide chat' }));
+
+        expect(screen.getByText('chat off')).toBeInTheDocument();
+    } finally {
+        Object.defineProperty(window, 'localStorage', original);
+    }
 });
 
 test('tapping the link of the page already open closes the menu as well', () => {

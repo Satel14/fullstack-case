@@ -132,6 +132,7 @@ class App extends React.Component {
               <HeaderSecond
                 onOpenMenu={dockedMenu ? null : () => this.setState({ menuOpen: true })}
                 menuOpen={menuOpen}
+                chatOpen={dockedChat ? !collapsedChat : chatOpen}
               />
               <HeaderThird />
               <ContentLayout>{this.props.children}</ContentLayout>
@@ -146,6 +147,7 @@ class App extends React.Component {
                 width={360}
                 trigger={null}
                 collapsedWidth={0}
+                id="site-chat"
               >
                 <ConnectedChat enabled={!collapsedChat} />
               </Sider>
@@ -156,6 +158,7 @@ class App extends React.Component {
                 onClose={() => this.onCollapseChat(true)}
                 closable={false}
                 width={fullScreenChat ? '100%' : 360}
+                id="site-chat"
                 className="chat-drawer"
                 bodyStyle={{ padding: 0 }}
               >

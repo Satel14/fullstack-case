@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    render, act, screen, fireEvent, waitFor,
+    render, act, screen, fireEvent, waitFor, cleanup,
 } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
@@ -189,10 +189,24 @@ test('a signed-in player gets no sign-in link in the header', async () => {
 });
 
 test('the menu button tells assistive technology whether the menu is open and which panel it opens', async () => {
+    renderHeader({ onOpenMenu: () => {}, menuOpen: false });
+    await act(async () => {});
+    expect(screen.getByRole('button', { name: 'header.openMenu' })).toHaveAttribute('aria-expanded', 'false');
+    cleanup();
+
     renderHeader({ onOpenMenu: () => {}, menuOpen: true });
     await act(async () => {});
 
     const burger = screen.getByRole('button', { name: 'header.openMenu' });
     expect(burger).toHaveAttribute('aria-expanded', 'true');
     expect(burger).toHaveAttribute('aria-controls', 'site-menu');
+});
+
+test('the chat button tells assistive technology whether the chat is open and which panel it opens', async () => {
+    renderHeader({ onOpenMenu: () => {}, chatOpen: true });
+    await act(async () => { window.HeaderSecond.chatButtonStatusHeader(true); });
+
+    const chat = screen.getByRole('button', { name: 'header.chat' });
+    expect(chat).toHaveAttribute('aria-expanded', 'true');
+    expect(chat).toHaveAttribute('aria-controls', 'site-chat');
 });
