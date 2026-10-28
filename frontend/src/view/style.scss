@@ -2669,13 +2669,15 @@ footer.ant-layout-footer {
         }
     }
 
-    @container (min-width: 720px) {
-        .depositpage-promocode {
-            position: absolute;
-            top: 4px;
-            right: 8px;
-            z-index: 1;
-            margin: 0;
+    @media (min-width: 768px) {
+        @container (min-width: 720px) {
+            .depositpage-promocode {
+                position: absolute;
+                top: 4px;
+                right: 8px;
+                z-index: 1;
+                margin: 0;
+            }
         }
     }
 
