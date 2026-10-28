@@ -366,10 +366,9 @@
     },
     "footer": {
         "about": "Open CS2/CS:GO cases on transparent terms with an action history in your profile.",
-        "recaptcha": "This site is protected by reCAPTCHA; Google's Privacy Policy and Terms of Service also apply.",
         "agreement": "User Agreement",
         "rules": "Service Rules",
-        "reviews": "User Reviews"
+        "contacts": "Contacts"
     },
     "article": {
         "loading": "Article",

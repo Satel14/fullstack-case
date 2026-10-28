@@ -14,16 +14,12 @@ const FooterLayout = () => {
             <div className="leftblock">
                 <div>{`© ${currentYear} ${SITE_NAME}`}</div>
             </div>
-            <div>
-                {t('footer.about')}
-                {' '}
-                {t('footer.recaptcha')}
-            </div>
+            <div>{t('footer.about')}</div>
             <div className="rightblock">
                 <Link to="/article/3">{t('footer.agreement')}</Link>
                 <Link to="/article/6">{t('footer.rules')}</Link>
                 <Link to="/faq">FAQ</Link>
-                <Link to="/article/9">{t('footer.reviews')}</Link>
+                <Link to="/article/9">{t('footer.contacts')}</Link>
             </div>
         </Footer>
     );
