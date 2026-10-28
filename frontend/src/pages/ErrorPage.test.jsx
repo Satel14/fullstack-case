@@ -17,4 +17,5 @@ test('the not-found page says so and offers the way back to the home page', () =
     expect(screen.getByText('error.notFound')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'error.goHome' })).toHaveAttribute('href', '/');
     expect(container.querySelector('.errorpage .errorpage-message')).not.toBeNull();
+    expect(document.title).toBe('error.notFound — CASES.UA');
 });

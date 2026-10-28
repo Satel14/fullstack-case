@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Link } from 'react-router-dom';
 import AppSwitch from './AppSwitch';
+import ErrorPage from '../pages/ErrorPage';
 import roles from '../enum/role';
 
 jest.mock('react-i18next', () => {
@@ -136,6 +137,24 @@ test('a page that crashes is contained, and the next page the player opens rende
     expect(screen.getByText('home')).toBeInTheDocument();
     expect(screen.queryByText('crash.title')).toBeNull();
     errors.mockRestore();
+});
+
+test('a player who may not open the admin page gets a not-found tab title, not the admin one', () => {
+    const adminRoutes = {
+        public: [],
+        private: [],
+        admin: [{
+            path: '/admin', exact: true, component: page('admin'), titleKey: 'admin.title',
+        }],
+    };
+    render(
+        <MemoryRouter initialEntries={['/admin']}>
+            <AppSwitch routes={adminRoutes} user={player} sessionChecked fallback={ErrorPage} />
+        </MemoryRouter>,
+    );
+
+    expect(screen.getByText('error.notFound')).toBeInTheDocument();
+    expect(document.title).toBe('error.notFound — CASES.UA');
 });
 
 test('a page receives the router props', () => {
