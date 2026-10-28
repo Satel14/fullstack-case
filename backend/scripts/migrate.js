@@ -69,6 +69,9 @@ const DOWN_EFFECTS = {
     '20261028000100-site-articles.js':
         'deletes the user agreement, the service rules, the "more credits" page and the contacts (articles 3, 6, 8 and 9) '
         + 'unless their title was changed since, so the footer, menu and registration links show "article not found" again',
+    '20261029000000-item-grade.js':
+        'drops items.grade, so every item loses its CS2 rarity grade and the site shows items without grade colours '
+        + 'until the column is restored and npm run seed fills it again',
 };
 
 const status = async (migrator) => {

@@ -29,6 +29,11 @@ module.exports = sequelize.define(
             field: 'imagePath',
             type: Sequelize.STRING,
         },
+        item_grade: {
+            field: 'grade',
+            type: Sequelize.STRING(16),
+            allowNull: true,
+        },
     },
     {
         timestamps: false,
