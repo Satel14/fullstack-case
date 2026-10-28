@@ -1,8 +1,17 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter, Link } from 'react-router-dom';
 import AppSwitch from './AppSwitch';
 import roles from '../enum/role';
+
+jest.mock('react-i18next', () => {
+    const mockReact = require('react');
+    const t = (key) => key;
+    return {
+        useTranslation: () => ({ t }),
+        withTranslation: () => (Component) => (props) => mockReact.createElement(Component, { ...props, t }),
+    };
+});
 
 const page = (name) => () => <div>{name}</div>;
 
@@ -100,6 +109,33 @@ test('a user update re-renders the current page without remounting it', () => {
 
     expect(screen.getByText('probe')).toBeInTheDocument();
     expect(mounts).toBe(1);
+});
+
+test('a page that crashes is contained, and the next page the player opens renders normally', () => {
+    const errors = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const Broken = () => {
+        throw new Error('render failed');
+    };
+    render(
+        <MemoryRouter initialEntries={['/broken']}>
+            <Link to="/">go home</Link>
+            <AppSwitch
+                routes={{ public: [{ path: '/broken', exact: true, component: Broken }, ...routes.public], private: [], admin: [] }}
+                user={guest}
+                sessionChecked
+                fallback={page('not-found')}
+            />
+        </MemoryRouter>,
+    );
+
+    expect(screen.getByText('crash.title')).toBeInTheDocument();
+    expect(screen.getByText('go home')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('go home'));
+
+    expect(screen.getByText('home')).toBeInTheDocument();
+    expect(screen.queryByText('crash.title')).toBeNull();
+    errors.mockRestore();
 });
 
 test('a page receives the router props', () => {

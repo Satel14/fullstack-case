@@ -10,9 +10,14 @@ import usersReducer from '../store/reducers/user';
 import moduleReducer from '../store/reducers/module';
 import { LOGIN_USER } from '../store/types';
 
-jest.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (key) => key }),
-}));
+jest.mock('react-i18next', () => {
+    const mockReact = require('react');
+    const t = (key) => key;
+    return {
+        useTranslation: () => ({ t }),
+        withTranslation: () => (Component) => (props) => mockReact.createElement(Component, { ...props, t }),
+    };
+});
 
 jest.mock('../Layout.jsx', () => ({
     __esModule: true,

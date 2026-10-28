@@ -124,6 +124,11 @@
         "notFound": "Page not found",
         "goHome": "Back to the home page"
     },
+    "crash": {
+        "title": "Something went wrong",
+        "text": "This page broke because of an error in the app. Reload it or go back to the home page.",
+        "reload": "Reload the page"
+    },
     "banned": {
         "message": "This account is banned on the site!",
         "logout": "Log out of account"
