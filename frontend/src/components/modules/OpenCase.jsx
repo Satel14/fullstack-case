@@ -19,6 +19,7 @@ import { itemInfoFetch } from '../../store/actions/itemCache';
 import ItemColor from '../mini/ItemColor';
 import CasePrice from '../mini/CasePrice';
 import { computeItemPriceUAH } from '../../helpers/price';
+import { gradeLabelKey, gradeStyle } from '../../helpers/grade';
 
 const delayAnimation = 4;
 
@@ -63,18 +64,6 @@ const ShadowOverlay = styled.div`
 const randomInteger = (min, max) => {
     const rand = min + Math.random() * (max + 1 - min);
     return Math.floor(rand);
-};
-
-const getColorRariest = (rare) => {
-    const colors = {
-        'Consumer Grade': '#B0C3D9',
-        'Industrial Grade': '#5E98D9',
-        'Mil-Spec': '#4B69FF',
-        Restricted: '#8847FF',
-        Classified: '#D32CE6',
-        Covert: '#EB4B4B',
-    };
-    return colors[rare] || '#B0C3D9';
 };
 
 const mapDispatchToProps = (dispatch) => ({
@@ -619,11 +608,9 @@ class OpenCase extends Component {
                     <div className="back">
                         {newMassive.length && (
                             <div
-                                className={`casepage-itemlist_item rc-${this.getShortInfoItem(
-                                    item.id,
-                                    'item_rare',
-                                )}`}
+                                className="casepage-itemlist_item"
                                 style={{
+                                    ...gradeStyle(item.grade),
                                     backgroundImage: `url(${this.getImagePath(item.id)})`,
                                     backgroundSize: 'contain',
                                     backgroundPosition: 'center',
@@ -729,7 +716,11 @@ class OpenCase extends Component {
                                         {winner && winner.map((w, i) => {
                                             const isSold = this.state.sold.includes(i);
                                             return (
-                                            <div key={`winner-${w.storageId}`} className={`opencase-result__item${isSold ? ' selled' : ''}`}>
+                                            <div
+                                                key={`winner-${w.storageId}`}
+                                                className={`opencase-result__item${isSold ? ' selled' : ''}`}
+                                                style={gradeStyle(w.item.grade)}
+                                            >
                                                 <div
                                                     className="opencase-result__img"
                                                     style={{
@@ -737,12 +728,15 @@ class OpenCase extends Component {
                                                         backgroundSize: 'contain',
                                                         backgroundPosition: 'center',
                                                         backgroundRepeat: 'no-repeat',
-                                                        boxShadow: `inset 0px -30px 60px -30px ${getColorRariest(w.item.rare)}`,
+                                                        boxShadow: 'inset 0px -30px 60px -30px var(--rarity)',
                                                     }}
                                                 />
                                                 <div className="opencase-result__name">{w.item.name}</div>
                                                 <span>
-                                                    {w.item.rare} {w.item.type}
+                                                    {[
+                                                        gradeLabelKey(w.item.grade) && t(gradeLabelKey(w.item.grade)),
+                                                        `${w.item.rare} ${w.item.type}`,
+                                                    ].filter(Boolean).join(' · ')}
                                                 </span>
                                                 {isSold ? (
                                                     <div className="opencase-result__sold-label">{t('inventory.soldLabel')}</div>
@@ -852,8 +846,8 @@ class OpenCase extends Component {
                                                                 <div
                                                                     // eslint-disable-next-line react/no-array-index-key
                                                                     key={`scroll-item-${listIndex}-${i}`}
-                                                                    className={`casepage-itemlist_item rc-${item.rare}`}
-                                                                    style={{ backgroundImage: `url(${this.getImagePath(item.id)})` }}
+                                                                    className="casepage-itemlist_item"
+                                                                    style={{ ...gradeStyle(item.grade), backgroundImage: `url(${this.getImagePath(item.id)})` }}
                                                                 >
                                                                     <span>{item.name}</span>
                                                                     <ItemColor color={item.color} />

@@ -1050,7 +1050,12 @@ p {
             overflow: hidden;
             border-radius: 10px;
             border: 1px solid #262e43;
-            background: linear-gradient(180deg, #161a29 0%, #10131e 100%);
+            border-bottom: 3px solid var(--rarity, #262e43);
+            background:
+                radial-gradient(120% 70% at 50% 120%,
+                    color-mix(in srgb, var(--rarity, transparent) 42%, transparent) 0%,
+                    transparent 62%),
+                linear-gradient(180deg, #161a29 0%, #10131e 100%);
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
             display: flex;
             flex-direction: column;
@@ -1288,6 +1293,7 @@ p {
     border-radius: 8px;
     border: 1px solid #2a3350;
     border-top-color: #3c5680;
+    border-bottom: 3px solid var(--rarity, #2a3350);
     background-color: #161a29;
     background-repeat: no-repeat;
     background-position: center;
@@ -1295,8 +1301,8 @@ p {
     background-origin: content-box;
     background-clip: padding-box;
     box-shadow:
+        inset 0 -64px 46px -34px color-mix(in srgb, var(--rarity, transparent) 55%, transparent),
         inset 0 34px 34px -28px rgba(127, 199, 243, 0.14),
-        inset 0 -30px 30px -22px rgba(0, 0, 0, 0.55),
         inset 0 0 0 1px rgba(255, 255, 255, 0.025),
         0 2px 6px rgba(0, 0, 0, 0.38);
     transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
@@ -1317,12 +1323,13 @@ p {
     &:hover {
         border-color: #4a6ea8;
         border-top-color: #5f8bc9;
+        border-bottom-color: var(--rarity, #4a6ea8);
         box-shadow:
+            inset 0 -64px 46px -34px color-mix(in srgb, var(--rarity, transparent) 65%, transparent),
             inset 0 34px 34px -28px rgba(127, 199, 243, 0.2),
-            inset 0 -30px 30px -22px rgba(0, 0, 0, 0.5),
             inset 0 0 0 1px rgba(255, 255, 255, 0.04),
             0 4px 14px rgba(0, 0, 0, 0.45),
-            0 0 14px rgba(0, 160, 255, 0.18);
+            0 0 14px color-mix(in srgb, var(--rarity, #00a0ff) 25%, transparent);
         transform: translateY(-1px);
     }
 

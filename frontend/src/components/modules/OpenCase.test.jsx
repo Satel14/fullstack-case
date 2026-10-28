@@ -454,3 +454,37 @@ test('a guest sent to sign in from a case is marked to go back to it afterwards'
 
     expect(await screen.findByText('sign-in, go back: true')).toBeInTheDocument();
 });
+
+test('each won item wears its grade colour and names its grade beside the wear', async () => {
+    const items = [{ ...wonItem(101, 'painted'), grade: 'covert' }, { ...wonItem(102, 'default'), grade: 'special' }];
+    openCaseById.mockResolvedValue({
+        status: 200,
+        balance: 900,
+        data: items.map((item, i) => ({ winner: { item, winIndex: 71, storageId: 50 + i }, resultWithItem: [item] })),
+    });
+    renderOpenCase(baseCase, {}, cachedGuns);
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.fast$/ }));
+
+    await screen.findByText('openCase.sellFor {"price":25}');
+    const cards = [...document.querySelectorAll('.opencase-result__item')];
+    expect(cards.map((card) => card.style.getPropertyValue('--rarity'))).toEqual(['#eb4b4b', '#f7c948']);
+    expect(cards[0].textContent).toContain('grade.covert · Field-Tested rifles');
+    expect(cards[1].textContent).toContain('grade.special · Field-Tested rifles');
+});
+
+test('every tile of the roulette wears its grade colour', async () => {
+    const strip = [{ ...wonItem(101, 'default'), grade: 'milspec' }, { ...wonItem(102, 'default'), grade: 'classified' }];
+    openCaseById.mockResolvedValue({
+        status: 200,
+        balance: 900,
+        data: [{ winner: { item: strip[1], winIndex: 2, storageId: 60 }, resultWithItem: strip }],
+    });
+    renderOpenCase(baseCase, {}, cachedGuns);
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.open$/ }));
+
+    await waitFor(() => expect(document.querySelectorAll('.opencase-block .casepage-itemlist_item')).toHaveLength(2));
+    const tiles = [...document.querySelectorAll('.opencase-block .casepage-itemlist_item')];
+    expect(tiles.map((tile) => tile.style.getPropertyValue('--rarity'))).toEqual(['#4b69ff', '#d32ce6']);
+});
