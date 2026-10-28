@@ -19,7 +19,7 @@ const UNTRUE = [
     /(?<![а-яіїєґ])(?<!за )рахун|депозит|\bdeposit/i,
 ];
 
-const CURRENCY = /(?<![а-яіїєґ])грн(?![а-яіїєґ])|грив(н|ен)|дол+ар|євро(?!п)|(?<![a-z])(uah|usd|dollar|euro(?!pe)|hryvn)|\$|€/i;
+const CURRENCY = /(?<![а-яіїєґ])грн(?![а-яіїєґ])|грив(н|ен)|дол+ар|євро(?!п)|(?<![а-яіїєґ])руб(л|\.|(?![а-яіїєґ]))|копійк|копійок|(?<![а-яіїєґ])коп\.|(?<![a-z])(uah|usd|eur(?![a-z])|dollar|euro(?!pe)|hryvn|r(o)?ubl)|\$|€|₽|£|¥/i;
 const MONEY = /грош|кошт(и|ів|ам|ах)|\bmoney|\bfunds\b|\bcash\b/i;
 const SAYS_NO_REAL_MONEY = /справжні гроші не|реальні кошти не|не є грошима|no real money|not money/i;
 const SAY_THE_DEMO_TAKES_NO_MONEY = ['faq.q2.answer', 'faq.q8.question', 'faq.q8.answer', 'deposit.info', 'payment.note'];
