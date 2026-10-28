@@ -13,6 +13,7 @@ import { computeItemPriceUAH } from '../helpers/price';
 import ItemColor from '../components/mini/ItemColor';
 import openNotification from '../components/mini/openNotification';
 import Loader from '../components/mini/Loader';
+import LoadError from '../components/mini/LoadError';
 
 const { TabPane } = Tabs;
 
@@ -42,6 +43,7 @@ const Inventory = ({
     const [pending, setPending] = useState([]);
     const [withdrawn, setWithdrawn] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [failed, setFailed] = useState(false);
     const [selling, setSelling] = useState(false);
     const [now, setNow] = useState(Date.now());
     const busy = useRef(false);
@@ -82,6 +84,7 @@ const Inventory = ({
         const generation = epoch.current;
         const isCurrent = () => generation === epoch.current;
         setLoading(true);
+        setFailed(false);
         try {
             const [inv, money] = await Promise.all([
                 getProfileStorage({ status: 'inventory', limit: PAGE_LIMIT }),
@@ -100,7 +103,7 @@ const Inventory = ({
             if (!isCurrent()) {
                 return;
             }
-            openNotification('error', t('common.error'), t('common.serverError'));
+            setFailed(true);
         }
         if (isCurrent()) {
             setLoading(false);
@@ -345,6 +348,15 @@ const Inventory = ({
 
     if (loading) {
         return <Loader />;
+    }
+
+    if (failed) {
+        return (
+            <div className="inventorypage">
+                <h2>{t('inventory.title')}</h2>
+                <LoadError onRetry={load} />
+            </div>
+        );
     }
 
     return (

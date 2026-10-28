@@ -170,11 +170,18 @@ test('a load that fails after the page closed does not report an error on the pa
     expect(openNotification).not.toHaveBeenCalled();
 });
 
-test('a load that fails while the page is open still reports the error', async () => {
-    getProfileStorage.mockImplementation(() => Promise.reject({ error: 500 }));
+test('a load that fails while the page is open says so in place of empty tabs, and a retry loads the items', async () => {
+    server.inventory = inventoryRows(1);
+    getProfileStorage.mockImplementationOnce(() => Promise.reject({ error: 500 }));
     renderInventory();
 
-    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'common.serverError'));
+    expect(await screen.findByText('common.loadFailed')).toBeInTheDocument();
+    expect(screen.queryByText('inventory.emptyActive')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /common\.retry/ }));
+
+    expect(await screen.findByText('openCase.sellFor {"price":10}')).toBeInTheDocument();
+    expect(screen.queryByText('common.loadFailed')).toBeNull();
 });
 
 const clickSellAll = async () => {
