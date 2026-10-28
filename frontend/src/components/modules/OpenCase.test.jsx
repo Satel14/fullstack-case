@@ -127,13 +127,13 @@ test('a rate-limited open shows the limiter message', async () => {
 });
 
 test('an open refused for missing funds in block mode brings the open controls back', async () => {
-    openCaseById.mockResolvedValue({ status: 200, message: 'Недостатньо грошей' });
+    openCaseById.mockResolvedValue({ status: 200, message: 'Недостатньо кредитів на балансі' });
     renderOpenCase();
 
     fireEvent.click(screen.getByRole('button', { name: /openCase\.openBlocks$/ }));
     fireEvent.click(document.querySelector('.opencase-blocklist .front'));
 
-    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Недостатньо грошей'));
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Недостатньо кредитів на балансі'));
     openControlsAreBack();
 });
 
@@ -347,7 +347,7 @@ test.each([
 });
 
 test('case blocks are focusable buttons, and Space opens one without scrolling the page', async () => {
-    openCaseById.mockResolvedValue({ status: 200, message: 'Недостатньо грошей' });
+    openCaseById.mockResolvedValue({ status: 200, message: 'Недостатньо кредитів на балансі' });
     renderOpenCase();
     fireEvent.click(screen.getByRole('button', { name: /openCase\.openBlocks$/ }));
     const [tile] = blockTiles();
@@ -363,7 +363,7 @@ test('case blocks are focusable buttons, and Space opens one without scrolling t
     expect(openCaseById).not.toHaveBeenCalled();
 
     expect(fireEvent.keyDown(tile, { key: ' ' })).toBe(false);
-    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Недостатньо грошей'));
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Недостатньо кредитів на балансі'));
     expect(openCaseById).toHaveBeenCalledTimes(1);
     openControlsAreBack();
 });

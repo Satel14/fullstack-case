@@ -8,6 +8,7 @@ const texts = (node, at = '') => (typeof node === 'string'
 
 const UNTRUE = [
     /Epic/,
+    /грош/i,
 ];
 
 test('no server text contradicts what the site says about itself', () => {

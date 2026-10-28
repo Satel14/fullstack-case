@@ -12,6 +12,7 @@ const UNTRUE = [
     /перенаправлені на сайт платіжної|redirected to the payment/i,
     /\bUAH\b|Ще грошей|More money|^Обміняли на гроші$|^Exchanged for money$/i,
     /\bEpic\b/,
+    /(надіслати|переказати) гроші|гроші надіслано|send (the )?money|money sent/i,
 ];
 
 test('no text promises something the demo does not have: a captcha, a group, traders or a payment provider', () => {

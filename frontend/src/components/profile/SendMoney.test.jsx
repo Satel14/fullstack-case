@@ -38,11 +38,11 @@ test('a rejected transfer tells the player the money was not sent', async () => 
 });
 
 test('a refused transfer shows the server message', async () => {
-    sendMoneyForUser.mockResolvedValue({ sended: false, message: 'Недостатньо коштів' });
+    sendMoneyForUser.mockResolvedValue({ sended: false, message: 'Недостатньо кредитів на балансі' });
 
     send(25);
 
-    expect(await screen.findByText('Недостатньо коштів')).toBeInTheDocument();
+    expect(await screen.findByText('Недостатньо кредитів на балансі')).toBeInTheDocument();
     expect(screen.getByText('sendMoney.failTitle')).toBeInTheDocument();
 });
 

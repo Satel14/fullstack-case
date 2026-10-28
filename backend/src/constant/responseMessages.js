@@ -34,7 +34,7 @@ module.exports = {
         ERROR_CATEGORY: 'Помилка категорії',
         NOT_EXIST: 'Такий кейс не існує',
         NOT_PUBLISHED: 'Кейс недоступний для відкриття',
-        NOT_HAVE_MONEY: 'Недостатньо грошей',
+        NOT_HAVE_MONEY: 'Недостатньо кредитів на балансі',
         LIMIT_EXCEEDED: 'Перевищено ліміт відкриттів кейсу'
     },
     ITEM: {
@@ -53,7 +53,7 @@ module.exports = {
     },
     USER: {
         NOT_EXIST: 'Такого користувача не існує',
-        MONEY_NOT_ENOUGH: 'Недостатньо грошей',
+        MONEY_NOT_ENOUGH: 'Недостатньо кредитів на балансі',
         CANT_UPDATE_FIELD: 'Це поле не можна змінювати',
         AVATAR_INVALID: 'Оберіть аватар зі списку'
     },

@@ -266,15 +266,15 @@
         "saveError": "Could not save. Please try again."
     },
     "sendMoney": {
-        "modalTitle": "Send money to {{nickname}}",
+        "modalTitle": "Send credits to {{nickname}}",
         "transfer": "Transfer",
         "close": "Close",
         "amountLabel": "Amount",
         "amountRequired": "Enter the amount!",
-        "trigger": "Send money",
-        "successTitle": "Money sent",
+        "trigger": "Send credits",
+        "successTitle": "Credits sent",
         "failTitle": "Failed",
-        "failed": "Failed to send the money"
+        "failed": "Failed to send the credits"
     },
     "cases": {
         "searchPlaceholder": "Case name",

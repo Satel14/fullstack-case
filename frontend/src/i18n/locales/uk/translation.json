@@ -266,15 +266,15 @@
         "saveError": "Не вдалося зберегти. Спробуйте ще раз."
     },
     "sendMoney": {
-        "modalTitle": "Надіслати гроші гравцю {{nickname}}",
+        "modalTitle": "Надіслати кредити гравцю {{nickname}}",
         "transfer": "Переказати",
         "close": "Закрити",
         "amountLabel": "Сума",
         "amountRequired": "Введіть суму!",
-        "trigger": "Переказати гроші",
-        "successTitle": "Гроші надіслано",
+        "trigger": "Переказати кредити",
+        "successTitle": "Кредити надіслано",
         "failTitle": "Не вдалося",
-        "failed": "Не вдалося надіслати гроші"
+        "failed": "Не вдалося надіслати кредити"
     },
     "cases": {
         "searchPlaceholder": "Назва кейсу",
