@@ -3535,3 +3535,54 @@ footer.ant-layout-footer {
         color: #4763bf;
     }
 }
+
+.articlepage {
+    max-width: 980px;
+    margin: 0 auto;
+
+    .articlepage-content {
+        background: rgba(16, 19, 30, 0.85);
+        border: 1px solid #262e43;
+        border-radius: 8px;
+        padding: 18px 24px;
+        color: #adb0b9;
+        font-size: 14px;
+        line-height: 1.65;
+
+        p {
+            color: inherit;
+            margin-bottom: 10px;
+        }
+
+        > p:first-child,
+        > p:nth-child(2) {
+            color: #7a8194;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        h3 {
+            color: #fff;
+            font-family: "Roboto Bold";
+            font-size: 17px;
+            margin: 22px 0 8px;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        strong {
+            color: #fff;
+        }
+
+        a {
+            color: #00a0ff;
+        }
+    }
+}
