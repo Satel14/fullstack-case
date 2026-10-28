@@ -1062,6 +1062,7 @@ p {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
+            gap: 10px 0;
             margin: 20px -10px;
             font-family: "Muller Regular";
 
@@ -1109,6 +1110,18 @@ p {
             font-size: 32px;
             padding-left: 15px;
             letter-spacing: 1px;
+        }
+
+        @media (max-width: 767px) {
+            flex-wrap: wrap;
+            font-size: 28px;
+            line-height: 32px;
+            letter-spacing: 1px;
+
+            span {
+                font-size: 22px;
+                padding-left: 10px;
+            }
         }
     }
 
