@@ -861,6 +861,24 @@ p {
     }
 }
 
+@mixin profile-header-stacked {
+    flex-direction: column;
+
+    &__stats {
+        order: -1;
+        width: auto;
+        border-left: 0;
+        border-right: 0;
+    }
+
+    &__favoritecase,
+    &__bestdrop {
+        width: auto;
+        margin: 0;
+        padding: 20px;
+    }
+}
+
 .profilepage {
     container-type: inline-size;
 
@@ -883,7 +901,6 @@ p {
         display: flex;
         justify-content: space-between;
         flex-direction: row-reverse;
-        max-width: 800px;
         margin: 30px auto 20px auto;
         border-radius: 6px;
         font-family: "Muller Bold";
@@ -976,21 +993,11 @@ p {
         }
 
         @container (max-width: 700px) {
-            flex-direction: column;
+            @include profile-header-stacked;
+        }
 
-            &__stats {
-                order: -1;
-                width: auto;
-                border-left: 0;
-                border-right: 0;
-            }
-
-            &__favoritecase,
-            &__bestdrop {
-                width: auto;
-                margin: 0;
-                padding: 20px;
-            }
+        @media (max-width: 767px) {
+            @include profile-header-stacked;
         }
     }
 }
