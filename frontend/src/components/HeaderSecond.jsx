@@ -103,7 +103,9 @@ class HeaderSecond extends React.Component {
     }
 
     render() {
-        const { user, t, onOpenMenu } = this.props;
+        const {
+            user, t, onOpenMenu, menuOpen,
+        } = this.props;
         const { chatButton, onlineUser, stats } = this.state;
         const profileMenuItems = [
             {
@@ -143,6 +145,8 @@ class HeaderSecond extends React.Component {
                             className="headersecond-burger"
                             icon={<MenuOutlined />}
                             aria-label={t('header.openMenu')}
+                            aria-expanded={Boolean(menuOpen)}
+                            aria-controls="site-menu"
                             onClick={onOpenMenu}
                         />
                         <Link to="/" className="headersecond-home" aria-label={SITE_NAME}>

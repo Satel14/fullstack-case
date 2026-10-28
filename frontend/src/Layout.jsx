@@ -118,6 +118,7 @@ class App extends React.Component {
             onClose={() => this.setState({ menuOpen: false })}
             closable={false}
             width={260}
+            id="site-menu"
             className="menu-drawer"
             bodyStyle={{ padding: 0 }}
           >
@@ -128,7 +129,10 @@ class App extends React.Component {
         <Layout className="site-layout">
           <Layout>
             <Content className="layout-content-max">
-              <HeaderSecond onOpenMenu={dockedMenu ? null : () => this.setState({ menuOpen: true })} />
+              <HeaderSecond
+                onOpenMenu={dockedMenu ? null : () => this.setState({ menuOpen: true })}
+                menuOpen={menuOpen}
+              />
               <HeaderThird />
               <ContentLayout>{this.props.children}</ContentLayout>
               <FooterLayout />

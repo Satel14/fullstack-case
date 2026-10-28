@@ -187,3 +187,12 @@ test('a signed-in player gets no sign-in link in the header', async () => {
 
     expect(screen.queryByRole('link', { name: 'menu.login' })).not.toBeInTheDocument();
 });
+
+test('the menu button tells assistive technology whether the menu is open and which panel it opens', async () => {
+    renderHeader({ onOpenMenu: () => {}, menuOpen: true });
+    await act(async () => {});
+
+    const burger = screen.getByRole('button', { name: 'header.openMenu' });
+    expect(burger).toHaveAttribute('aria-expanded', 'true');
+    expect(burger).toHaveAttribute('aria-controls', 'site-menu');
+});
