@@ -110,7 +110,7 @@ test('a phone docks nothing: the menu opens from the header and closes after a l
     expect(menuDrawerOpen()).toBe(false);
 });
 
-test('a phone keeps the chat closed, even for a player who keeps it open on the desktop, until the header opens it', () => {
+test('a phone keeps the chat closed, even for a player who keeps it open on the desktop, until the header opens it; the header button stays for focus to return to', () => {
     localStorage.setItem('collapsedChat', 'false');
     renderLayout(390);
 
@@ -120,6 +120,7 @@ test('a phone keeps the chat closed, even for a player who keeps it open on the 
     fireEvent.click(screen.getByRole('button', { name: 'open chat' }));
     expect(chatDrawerOpen()).toBe(true);
     expect(screen.getByText('chat on')).toBeInTheDocument();
+    expect(window.HeaderSecond.chatButtonStatusHeader).not.toHaveBeenCalledWith(false);
 
     fireEvent.click(screen.getByRole('button', { name: 'hide chat' }));
     expect(chatDrawerOpen()).toBe(false);

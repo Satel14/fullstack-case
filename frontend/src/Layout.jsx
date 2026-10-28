@@ -44,7 +44,7 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    window.HeaderSecond.chatButtonStatusHeader(this.chatHidden());
+    window.HeaderSecond.chatButtonStatusHeader(this.chatButtonShown());
   }
 
   componentDidUpdate(prevProps) {
@@ -56,7 +56,7 @@ class App extends React.Component {
       this.setState({ chatOpen: false });
     }
     if (prevProps.dockedChat !== dockedChat) {
-      window.HeaderSecond.chatButtonStatusHeader(this.chatHidden());
+      window.HeaderSecond.chatButtonStatusHeader(this.chatButtonShown());
     }
   }
 
@@ -68,7 +68,6 @@ class App extends React.Component {
   onCollapseChat(collapsedChat) {
     if (!this.props.dockedChat) {
       this.setState({ chatOpen: !collapsedChat });
-      window.HeaderSecond.chatButtonStatusHeader(collapsedChat);
       return;
     }
     this.setState({ collapsedChat });
@@ -76,8 +75,8 @@ class App extends React.Component {
     saveSetting('collapsedChat', collapsedChat);
   }
 
-  chatHidden() {
-    return this.props.dockedChat ? this.state.collapsedChat : !this.state.chatOpen;
+  chatButtonShown() {
+    return !this.props.dockedChat || this.state.collapsedChat;
   }
 
   render() {
