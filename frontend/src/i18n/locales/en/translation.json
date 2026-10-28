@@ -16,6 +16,7 @@
         "name": "Name",
         "type": "Type",
         "rarity": "Rarity",
+        "wear": "Wear",
         "color": "Color",
         "placeholder": "Item #{{id}}"
     },

@@ -1,4 +1,5 @@
 import { itemColors } from '../data/itemConfig';
+import { gradeLabelKey } from './grade';
 
 const itemName = (item, t) => {
     if (item.item_name) {
@@ -15,7 +16,8 @@ const renderItemProp = (item, color, t) => {
     return [
         [t('item.name'), itemName(item, t)],
         [t('item.type'), item.item_type],
-        [t('item.rarity'), item.item_rare],
+        [t('item.rarity'), gradeLabelKey(item.item_grade) && t(gradeLabelKey(item.item_grade))],
+        [t('item.wear'), item.item_rare],
         [t('item.color'), color],
     ]
         .filter(([, value]) => value)

@@ -8,18 +8,19 @@ const ak = {
     item_type: 'rifles',
     item_rare: 'Field Tested',
     item_colors: 'default',
+    item_grade: 'classified',
 };
 
 test('the colour shown is the colour that dropped, not the colour stored with the item', () => {
     expect(renderItemProp(ak, 'painted', t))
-        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.rarity: Field Tested, item.color: painted');
+        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.rarity: grade.classified, item.wear: Field Tested, item.color: painted');
     expect(renderItemProp({ ...ak, item_colors: 'painted' }, 'default', t))
-        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.rarity: Field Tested, item.color: default');
+        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.rarity: grade.classified, item.wear: Field Tested, item.color: default');
 });
 
 test('without a dropped colour no colour is shown', () => {
     expect(renderItemProp({ ...ak, item_colors: 'painted' }, null, t))
-        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.rarity: Field Tested');
+        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.rarity: grade.classified, item.wear: Field Tested');
 });
 
 test('an item that has no name yet is named by its id and never shows "undefined"', () => {
@@ -41,4 +42,9 @@ test('a placeholder from the item cache shows only what is known about it', () =
 
 test('nothing is shown for an item that is not loaded', () => {
     expect(renderItemProp(undefined, 'default', t)).toBe('');
+});
+
+test('an item whose grade is not known yet shows its wear but no rarity', () => {
+    expect(renderItemProp({ ...ak, item_grade: null }, null, t))
+        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.wear: Field Tested');
 });
