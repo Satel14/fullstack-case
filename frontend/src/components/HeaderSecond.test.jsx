@@ -166,3 +166,24 @@ test('the deposit button keeps its name when only its icon is shown', async () =
 
     expect(screen.getByRole('button', { name: 'header.deposit' })).toBeInTheDocument();
 });
+
+test('a guest on a screen without the side menu can sign in from the header', async () => {
+    const store = createStore(combineReducers({ user: usersReducer }), applyMiddleware(thunk));
+    render(
+        <Provider store={store}>
+            <MemoryRouter>
+                <HeaderSecond onOpenMenu={() => {}} />
+            </MemoryRouter>
+        </Provider>,
+    );
+    await act(async () => {});
+
+    expect(screen.getByRole('link', { name: 'menu.login' })).toHaveAttribute('href', '/login');
+});
+
+test('a signed-in player gets no sign-in link in the header', async () => {
+    renderHeader({ onOpenMenu: () => {} });
+    await act(async () => {});
+
+    expect(screen.queryByRole('link', { name: 'menu.login' })).not.toBeInTheDocument();
+});

@@ -2209,6 +2209,14 @@ blockquote {
         margin-right: 15px;
     }
 
+    &-login.ant-btn {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 0 12px;
+        font-size: 12px;
+    }
+
     &-leftblock {
         flex: 1 1 0;
         min-width: 0;

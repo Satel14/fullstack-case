@@ -205,6 +205,11 @@ class HeaderSecond extends React.Component {
                             <span className="headersecond-label">{t('header.chat')}</span>
                         </Button>
                     )}
+                    {onOpenMenu && !isAuthorized(user) && (
+                        <Link to="/login" className="ant-btn ant-btn-primary ant-btn-sm headersecond-login">
+                            {t('menu.login')}
+                        </Link>
+                    )}
                     {isAuthorized(user) && (
                         <>
                             <Link to="/deposit">
