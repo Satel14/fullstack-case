@@ -17,7 +17,7 @@ const formatDate = (value) => {
 };
 
 const Article = ({ match }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const articleId = Number(match.params.id);
     const [article, setArticle] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -75,17 +75,20 @@ const Article = ({ match }) => {
 
     const publishedAt = formatDate(article.created_at);
     const updatedAt = formatDate(article.updated_at);
+    const english = String(i18n.language).startsWith('en') && article.article_titleEn && article.article_textEn;
+    const title = english ? article.article_titleEn : article.article_title;
+    const text = english ? article.article_textEn : article.article_text;
 
     return (
         <div className="articlepage">
             <Fade>
-                <h1 className="title">{article.article_title}</h1>
+                <h1 className="title">{title}</h1>
                 <div className="articlepage-content">
                     {publishedAt && <p>{`${t('article.published')}: ${publishedAt}`}</p>}
                     {updatedAt && <p>{`${t('article.updated')}: ${updatedAt}`}</p>}
                     <div
                         // eslint-disable-next-line react/no-danger
-                        dangerouslySetInnerHTML={{ __html: article.article_text }}
+                        dangerouslySetInnerHTML={{ __html: text }}
                     />
                 </div>
             </Fade>

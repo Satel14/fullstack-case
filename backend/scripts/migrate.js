@@ -64,6 +64,8 @@ const DOWN_EFFECTS = {
     '20261013000200-storage-profile-stats-indexes.js':
         'drops the (userId, caseId) and (userId, itemId, color) indexes on storage, so every view of a public profile '
         + "and its favourite case reads each of the player's drops row by row and groups them in a temporary table again",
+    '20261028000000-article-translations.js':
+        'drops articles.titleEn and articles.textEn, so every English article text is lost and English pages show the Ukrainian one',
 };
 
 const status = async (migrator) => {

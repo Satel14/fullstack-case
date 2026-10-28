@@ -17,6 +17,14 @@ module.exports = sequelize.define(
             field: 'text',
             type: Sequelize.TEXT,
         },
+        article_titleEn: {
+            field: 'titleEn',
+            type: Sequelize.TEXT,
+        },
+        article_textEn: {
+            field: 'textEn',
+            type: Sequelize.TEXT,
+        },
         article_views: {
             field: 'views',
             type: Sequelize.INTEGER,
