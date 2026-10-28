@@ -99,11 +99,13 @@ test('the data section of the user agreement names every stored item, every lett
     const dataSection = (html, heading) => html.split(heading)[1];
     const uk = dataSection(agreement.text, '<h3>6. Дані</h3>');
     ['логін', 'адресу пошти', 'хеш пароля', 'інформацію для виводу', 'Steam', 'повідомлення в чаті', 'історію дій',
-        'Крім вас, пошту бачать лише адміністратори', 'Resend', 'IP-адресу', ...Object.values(LETTERS).map((letter) => letter.uk)]
+        'Крім вас, на сайті пошту бачать лише адміністратори', 'Resend', 'текст кожного листа', 'разове посилання', 'IP-адресу',
+        'номер вашого акаунта', ...Object.values(LETTERS).map((letter) => letter.uk)]
         .forEach((item) => assert.ok(uk.includes(item), `uk §6 misses "${item}"`));
     const en = dataSection(agreement.textEn, '<h3>6. Your data</h3>');
     ['login', 'email address', 'password hash', 'item withdrawal information', 'Steam', 'chat messages', 'history',
-        'Apart from you, only the site administrators can see', 'Resend', 'IP address', ...Object.values(LETTERS).map((letter) => letter.en)]
+        'Apart from you, only the site administrators can see', 'Resend', 'text of each letter', 'one-time link', 'IP address',
+        'account number', ...Object.values(LETTERS).map((letter) => letter.en)]
         .forEach((item) => assert.ok(en.includes(item), `en §6 misses "${item}"`));
 });
 
