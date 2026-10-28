@@ -24,7 +24,7 @@
         "topPlayers": "Top players",
         "bonus": "Bonuses",
         "faq": "FAQ",
-        "moreMoney": "More money",
+        "moreMoney": "More credits",
         "login": "Log in"
     },
     "header": {
@@ -182,24 +182,24 @@
         "subtitle": "balance",
         "tabTopUp": "Top up",
         "tabHistory": "Top-up history",
-        "amountLabel": "ENTER AMOUNT (UAH)",
+        "amountLabel": "ENTER AMOUNT (₴)",
         "submit": "Top up balance",
         "info": "This is a demo: top-ups are simulated, no real money is charged, and the site's virtual currency cannot be exchanged for money. The credits are added at once.",
         "promocodeBtn": "Use a promocode to top up",
         "historyEmpty": "No top-ups yet.",
         "invalidTitle": "Invalid amount",
-        "invalidText": "Enter a whole number from {{min}} to {{max}} UAH.",
-        "historyAmount": "+{{amount}} UAH"
+        "invalidText": "Enter a whole number from {{min}} to {{max}} ₴.",
+        "historyAmount": "+{{amount}} ₴"
     },
     "payment": {
         "title": "Payment",
         "subtitle": "payment system",
-        "amount": "Payment of {{amount}} UAH",
+        "amount": "Payment of {{amount}} ₴",
         "note": "This is a demo payment page. No real money is charged.",
         "pay": "Pay",
         "cancel": "Cancel",
         "successTitle": "Payment successful",
-        "successText": "Balance topped up by {{amount}} UAH.",
+        "successText": "Balance topped up by {{amount}} ₴.",
         "errorTitle": "Error",
         "errorText": "Failed to top up the balance.",
         "cancelTitle": "Payment cancelled",
@@ -322,7 +322,7 @@
             "inventory": "In inventory",
             "received": "Item withdrawn",
             "waitingtrade": "Withdrawal pending",
-            "money": "Exchanged for money"
+            "money": "Sold"
         },
         "title": "Inventory",
         "active": "Active",
