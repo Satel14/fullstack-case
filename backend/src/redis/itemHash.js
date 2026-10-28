@@ -19,6 +19,7 @@ function buildItemHash(items, prices) {
             name: element.item_name,
             rare: element.item_rare,
             type: element.item_type,
+            grade: element.item_grade || null,
             item_imagePath: element.item_imagePath,
             pricesInCredits: price.pricesInCredits,
         });

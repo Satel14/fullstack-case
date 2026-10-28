@@ -40,6 +40,7 @@ module.exports = class OpenCase {
                 name: itemCache.name,
                 type: itemCache.type,
                 rare: itemCache.rare,
+                grade: itemCache.grade || null,
                 color: this.getPaintedRandom(item),
                 id: item.id,
             });
@@ -55,6 +56,7 @@ module.exports = class OpenCase {
             name: winnerCache.name,
             type: winnerCache.type,
             rare: winnerCache.rare,
+            grade: winnerCache.grade || null,
             color: winner.color,
             id: winner.itemId,
         };

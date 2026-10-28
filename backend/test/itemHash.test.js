@@ -8,7 +8,7 @@ const item = (id, name, extra = {}) => ({
 
 test('each priced item becomes one cache entry in the shape the case opener reads', () => {
     const hash = buildItemHash(
-        [item(1, 'AK-47 | Redline'), item(2, 'P250 | Sand Dune')],
+        [item(1, 'AK-47 | Redline', { item_grade: 'classified' }), item(2, 'P250 | Sand Dune')],
         [{ name: 'AK-47 | Redline', pricesInCredits: '{"default":10,"painted":12}' }, { name: 'P250 | Sand Dune', pricesInCredits: '{"default":1}' }],
     );
 
@@ -17,9 +17,11 @@ test('each priced item becomes one cache entry in the shape the case opener read
         name: 'AK-47 | Redline',
         rare: 'Factory New',
         type: 'rifles',
+        grade: 'classified',
         item_imagePath: '/img/1.png',
         pricesInCredits: '{"default":10,"painted":12}',
     });
+    assert.strictEqual(JSON.parse(hash[2]).grade, null);
 });
 
 test('items without a name or without a price row are left out', () => {
