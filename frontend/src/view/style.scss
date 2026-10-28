@@ -1578,6 +1578,7 @@ blockquote {
         background-position: center;
         background-size: 50px;
         border: 1px #92929270 solid;
+        border-bottom: 3px solid var(--rarity, #92929270);
         cursor: pointer;
         transition: border-color 0.2s;
 

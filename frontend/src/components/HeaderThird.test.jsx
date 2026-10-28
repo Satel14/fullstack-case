@@ -120,3 +120,22 @@ test('a feed closed after loading removes the same listener it added', async () 
     expect(registered('on')).toHaveLength(1);
     expect(registered('off')).toEqual(registered('on'));
 });
+
+test('each drop in the feed wears its item grade colour', async () => {
+    const finishLoad = deferredFeed();
+    render(
+        <Provider store={createStore(combineReducers({
+            itemCache: (state = { 10: { item_name: 'Knife', item_grade: 'special' }, 20: { item_name: 'Rifle', item_grade: 'restricted' } }) => state,
+        }))}
+        >
+            <MemoryRouter>
+                <HeaderThird />
+            </MemoryRouter>
+        </Provider>,
+    );
+
+    await act(async () => { finishLoad([1, 2]); });
+
+    expect([...document.querySelectorAll('.headersecond.third .casepage-itemlist_item')].map((tile) => tile.style.getPropertyValue('--rarity')))
+        .toEqual(['#f7c948', '#8847ff']);
+});

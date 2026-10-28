@@ -5,6 +5,7 @@ import map from 'lodash/map';
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import { renderItemProp } from '../helpers/Case';
+import { gradeStyle } from '../helpers/grade';
 import ItemColor from './mini/ItemColor';
 import { getStorageLastItemsWithUserInfo } from '../api/all/storage';
 import { itemInfoFetch, addItemsToCache } from '../store/actions/itemCache';
@@ -108,8 +109,9 @@ class HeaderThird extends React.Component {
                             >
                                 <Link to={`/profile/${item.storage_userId}`}>
                                     <div
-                                        className={`casepage-itemlist_item r-${this.getShortInfoItem(item.storage_itemId, 'item_rare')}`}
+                                        className="casepage-itemlist_item"
                                         style={{
+                                            ...gradeStyle(this.getShortInfoItem(item.storage_itemId, 'item_grade')),
                                             backgroundImage: `url(${this.getImagePath(item.storage_itemId)})`,
                                             backgroundRepeat: 'no-repeat',
                                         }}
