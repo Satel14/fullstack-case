@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
     Redirect, Route, Switch, useLocation,
 } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { isAuthorized } from '../helpers/Player';
 import { isAdmin } from '../helpers/permissions';
 import Loader from '../components/mini/Loader';
 import ErrorBoundary from '../components/ErrorBoundary';
+import DocumentTitle from '../components/DocumentTitle';
 
 const allowed = (group, user) => (group === 'admin' ? isAdmin(user) : isAuthorized(user));
 
@@ -13,6 +14,7 @@ const AppSwitch = ({
     routes, user, sessionChecked, fallback: Fallback,
 }) => {
     const { pathname } = useLocation();
+    const allRoutes = useMemo(() => [...routes.public, ...routes.private, ...routes.admin], [routes]);
     const gate = (group, Page) => ({ history, location, match }) => {
         if (!sessionChecked) {
             return <Loader />;
@@ -28,6 +30,7 @@ const AppSwitch = ({
 
     return (
         <ErrorBoundary resetKey={pathname}>
+            <DocumentTitle routes={allRoutes} />
             <Switch>
                 {routes.public.map((route) => (
                     <Route

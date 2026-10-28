@@ -1,4 +1,7 @@
 {
+    "site": {
+        "tagline": "CS2/CS:GO cases"
+    },
     "common": {
         "language": "Language",
         "whatIsThis": "What is this?",
