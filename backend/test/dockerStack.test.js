@@ -29,6 +29,8 @@ const composeService = (name) => {
 
 const unquote = (value) => value.trim().replace(/\s+#.*$/, '').replace(/^(['"])(.*)\1$/, '$2');
 
+const withoutComment = (line) => line.replace(/(^|\s+)#.*$/, '');
+
 const publishedPorts = (text) => {
     const lines = text.split('\n');
     const entries = [];
@@ -38,14 +40,19 @@ const publishedPorts = (text) => {
             return;
         }
         if (header[2]) {
-            entries.push(...header[2].replace(/^\[|\]$/g, '').split(',').map(unquote).filter(Boolean));
+            let flow = withoutComment(header[2]).trim();
+            for (let j = i + 1; flow.startsWith('[') && !flow.includes(']') && j < lines.length; j += 1) {
+                flow += ` ${withoutComment(lines[j])}`;
+            }
+            entries.push(...flow.trim().replace(/^\[|\]$/g, '').split(',').map(unquote).filter(Boolean));
             return;
         }
         const indent = header[1].length;
         for (let j = i + 1; j < lines.length; j += 1) {
             const next = lines[j];
             if (next.trim() && !/^\s*#/.test(next)) {
-                if (next.search(/\S/) <= indent) {
+                const depth = next.search(/\S/);
+                if (depth < indent || (depth === indent && !/^\s*-(\s|$)/.test(next))) {
                     break;
                 }
                 const item = next.match(/^\s*-\s*(.*)$/);
@@ -109,9 +116,20 @@ test('published ports are found however they are written', () => {
         '    ports:',
         '      - target: 80',
         '        published: 8081',
+        '  d:',
+        '    ports:',
+        '    - "3308:3306"',
+        '    - 3309:3306 # indentless',
+        '    restart: always',
+        '  e:',
+        '    ports: [',
+        '      "9002:9002", # first',
+        "      '9003:9003'",
+        '    ]',
     ].join('\n');
     assert.deepStrictEqual(publishedPorts(sample), [
         '127.0.0.1:1:1', '3307:3306', '6379:6379', '8080:80', '9000:9000', '9001:9001', 'target: 80', 'published: 8081',
+        '3308:3306', '3309:3306', '9002:9002', '9003:9003',
     ]);
 });
 
