@@ -241,7 +241,6 @@ p {
     position: relative;
     text-align: center;
     align-items: center;
-    width: 100%;
     margin: 10px 15px;
 
     &__l {
@@ -270,6 +269,15 @@ p {
             font-weight: 400;
             color: #65a3ff;
             text-shadow: 0 0 4px rgba(101, 163, 255, 0.6);
+        }
+    }
+
+    @media (max-width: 767px) {
+        margin: 6px 0;
+
+        &__heading {
+            font-size: 24px;
+            margin: 0 10px;
         }
     }
 }
@@ -821,6 +829,13 @@ p {
     font-size: 30px !important;
     color: #fff;
 
+    @media (max-width: 767px) {
+        min-width: 0;
+        padding: 0 16px 6px;
+        margin-bottom: 24px;
+        white-space: normal;
+        font-size: 24px !important;
+    }
 }
 
 .profilepage {
