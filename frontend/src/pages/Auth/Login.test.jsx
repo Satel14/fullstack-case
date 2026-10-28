@@ -29,11 +29,12 @@ jest.mock('../../components/mini/openNotification', () => ({
 const { userPostFetch } = require('../../store/actions/user');
 const openNotification = require('../../components/mini/openNotification').default;
 
-const renderForm = () => render(
+const renderForm = (entry = '/login') => render(
     <Provider store={createStore(() => ({}), applyMiddleware(thunk))}>
-        <MemoryRouter initialEntries={['/login']}>
+        <MemoryRouter initialEntries={[entry]}>
             <Switch>
                 <Route path="/login" component={Login} />
+                <Route path="/inventory" render={({ location }) => <div>{`inventory page ${location.search}`}</div>} />
                 <Route path="/" render={() => <div>home page</div>} />
             </Switch>
         </MemoryRouter>
@@ -78,6 +79,15 @@ test('a correct login and password logs in with the typed values and goes home',
     await waitFor(() => expect(screen.getByText('home page')).toBeInTheDocument());
     expect(userPostFetch).toHaveBeenCalledWith({ login: 'satel7', password: 'secret1' }, true);
     expect(openNotification).toHaveBeenCalledWith('success', 'auth.login.successTitle', 'auth.login.welcome');
+});
+
+test('a guest who was sent here from a private page goes back to it after signing in', async () => {
+    renderForm({ pathname: '/login', state: { from: { pathname: '/inventory', search: '?tab=sold', hash: '' } } });
+
+    fill();
+
+    await waitFor(() => expect(screen.getByText('inventory page ?tab=sold')).toBeInTheDocument());
+    expect(screen.queryByText('home page')).toBeNull();
 });
 
 test('"remember me" is ticked by default, and unticking it asks for a session that ends with the browser', async () => {
