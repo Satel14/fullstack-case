@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const { recreateTestDatabase } = require('./helpers/db');
 const { createMigrator } = require('../src/db/migrator');
+const mailSender = require('../src/modules/mailSender');
 
 const MIGRATION = '20261028000100-site-articles.js';
 const PREVIOUS = '20261028000000-article-translations.js';
@@ -83,7 +84,14 @@ test('the chat rules in the service rules are word for word the rules the chat s
     assert.deepStrictEqual(listAfter(rules.textEn, 'Chat'), ruleKeys.map((key) => en.rules[key]));
 });
 
-test('the data section of the user agreement names every stored item, every letter and who sees the address', async () => {
+const LETTERS = {
+    emailConfirmationEmail: { uk: 'підтвердження реєстрації', en: 'registration confirmation' },
+    welcomeEmail: { uk: 'привітання', en: 'welcome letter' },
+    registrationAttemptEmail: { uk: 'спробу зареєструватися', en: 'tries to register' },
+    passwordResetEmail: { uk: 'відновлення пароля', en: 'password reset' },
+};
+
+test('the data section of the user agreement names every stored item, every letter and everyone who gets the data', async () => {
     const sequelize = await databaseAt(MIGRATION);
 
     const [[agreement]] = await sequelize.query('SELECT text, textEn FROM articles WHERE id = 3');
@@ -91,10 +99,16 @@ test('the data section of the user agreement names every stored item, every lett
     const dataSection = (html, heading) => html.split(heading)[1];
     const uk = dataSection(agreement.text, '<h3>6. Дані</h3>');
     ['логін', 'адресу пошти', 'хеш пароля', 'інформацію для виводу', 'Steam', 'повідомлення в чаті', 'історію дій',
-        'бачать лише адміністратори', 'підтвердження реєстрації', 'привітання', 'спробу зареєструватися', 'відновлення пароля']
+        'Крім вас, пошту бачать лише адміністратори', 'Resend', 'IP-адресу', ...Object.values(LETTERS).map((letter) => letter.uk)]
         .forEach((item) => assert.ok(uk.includes(item), `uk §6 misses "${item}"`));
     const en = dataSection(agreement.textEn, '<h3>6. Your data</h3>');
     ['login', 'email address', 'password hash', 'item withdrawal information', 'Steam', 'chat messages', 'history',
-        'Only the site staff can see', 'registration confirmation', 'welcome letter', 'tries to register', 'password reset']
+        'Apart from you, only the site administrators can see', 'Resend', 'IP address', ...Object.values(LETTERS).map((letter) => letter.en)]
         .forEach((item) => assert.ok(en.includes(item), `en §6 misses "${item}"`));
+});
+
+test('the agreement accounts for every letter the site can send', () => {
+    const templates = Object.keys(mailSender).filter((name) => name.endsWith('Email'));
+
+    assert.deepStrictEqual(templates.sort(), Object.keys(LETTERS).sort());
 });
