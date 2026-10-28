@@ -1,5 +1,5 @@
 import i18n from '../i18n';
-import { timeLeft } from './Time';
+import { timeConverterDDMMYY, timeLeft } from './Time';
 
 const HOUR = 3600 * 1000;
 const NOW = Date.parse('2026-10-28T12:00:00Z');
@@ -22,4 +22,8 @@ test.each([
     [40 * 24 * HOUR, 'давно'],
 ])('a moment %d ms ago reads "%s" in Ukrainian', (ago, text) => {
     expect(timeLeft(new Date(NOW - ago).toISOString())).toBe(text);
+});
+
+test('a date names its month in lower case, as Ukrainian writes it', () => {
+    expect(timeConverterDDMMYY('2026-10-28T12:00:00Z')).toBe('28 жовтня 2026');
 });

@@ -57,7 +57,7 @@
             "or": "or",
             "registerLink": "Sign up",
             "errorTitle": "Error",
-            "errorWrong": "Invalid credentials",
+            "errorWrong": "Wrong login or password",
             "successTitle": "Signed in",
             "welcome": "Welcome to the site, {{name}}!"
         },
@@ -100,7 +100,7 @@
         "forgot": {
             "trigger": "Forgot password",
             "modalTitle": "Recover password",
-            "ok": "Recover",
+            "ok": "Send link",
             "cancel": "Close",
             "emailLabel": "Email",
             "emailInvalid": "Invalid email",
@@ -333,9 +333,9 @@
         "emptyActive": "No items to sell",
         "emptySold": "Nothing sold yet",
         "soldLabel": "Sold",
-        "sellAllStopped": "Sold {{sold}} items, then a sale failed. The rest are still in your inventory.",
-        "sellAllRateLimited": "Sold {{sold}} items. You are selling too fast: wait a minute and try again.",
-        "sellAllSkipped": "Sold {{sold}} items. {{skipped}} could not be sold and stay in your inventory.",
+        "sellAllStopped": "Items sold: {{sold}}. Then a sale failed, and the rest are still in your inventory.",
+        "sellAllRateLimited": "Items sold: {{sold}}. You are selling too fast: wait a minute and try again.",
+        "sellAllSkipped": "Items sold: {{sold}}. Not sold and still in your inventory: {{skipped}}.",
         "withdraw": "Withdraw",
         "withdrawTab": "Withdrawals",
         "withdrawPending": "Waiting",
@@ -370,7 +370,7 @@
         "caseFallback": "Case",
         "tryAgain": "Try again",
         "goBack": "Go back",
-        "sellFor": "Sell {{price}} ₴",
+        "sellFor": "Sell for {{price}} ₴",
         "sellAllFor": "Sell all for {{sum}} ₴",
         "sold": "Item sold",
         "allSold": "All items sold",
@@ -379,7 +379,7 @@
         "limitReached": "This case has reached its opening limit. It can no longer be opened!",
         "limitExceededTitle": "Limit exceeded",
         "limitExceededText": "You can open only {{remaining}} more",
-        "authRequired": "To open a case you need to sign in",
+        "authRequired": "To open a case, you need to sign in",
         "authorize": "Sign in"
     },
     "footer": {
