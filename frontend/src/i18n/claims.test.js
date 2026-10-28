@@ -20,8 +20,8 @@ const UNTRUE = [
     /(?<![а-яіїєґ])(?<!за )рахун|депозит|\bdeposit/i,
 ];
 
-const MONEY = /грош|кошт(и|ів|ам|ах)|гривн|\bmoney|\bfunds\b|\bcash\b|hryvn/i;
-const NEGATION = /(^|[^а-яіїєґ])(не|ні)([^а-яіїєґ]|$)|\b(no|not|cannot)\b/i;
+const MONEY = /грош|кошт(и|ів|ам|ах)|грив(н|ен)|(?<![а-яіїєґ])грн(?![а-яіїєґ])|долар|євро|\bmoney|\bfunds\b|\bcash\b|hryvn|\bUSD\b|\bdollar|\beuro|\$/i;
+const SAYS_NO_REAL_MONEY = /справжні гроші не|реальні кошти не|не є грошима|no real money|not money/i;
 const SAY_THE_DEMO_TAKES_NO_MONEY = ['faq.q2.answer', 'faq.q8.question', 'faq.q8.answer', 'deposit.info', 'payment.note'];
 
 test('no text promises something the demo does not have: a captcha, a group, traders or a payment provider', () => {
@@ -40,9 +40,9 @@ test('only the texts saying the demo takes no real money speak of money', () => 
     expect(money).toEqual([]);
 });
 
-test('every answer allowed to speak of money says no', () => {
+test('every answer allowed to speak of money says the demo takes none', () => {
     const affirming = everyText
-        .filter(([, key, text]) => SAY_THE_DEMO_TAKES_NO_MONEY.includes(key) && !text.trim().endsWith('?') && !NEGATION.test(text))
+        .filter(([, key, text]) => SAY_THE_DEMO_TAKES_NO_MONEY.includes(key) && !text.trim().endsWith('?') && !SAYS_NO_REAL_MONEY.test(text))
         .map(([language, key]) => `${language} ${key}`);
 
     expect(affirming).toEqual([]);
