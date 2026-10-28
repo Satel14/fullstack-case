@@ -2189,8 +2189,13 @@ blockquote {
     }
 
     &-burger.ant-btn {
+        width: 40px;
+        height: 40px;
         color: #adb0b9;
-        font-size: 20px;
+
+        >.anticon {
+            font-size: 22px;
+        }
 
         &:hover,
         &:focus {
@@ -2248,7 +2253,29 @@ blockquote {
         }
 
         .headersecond-chat {
+            min-width: 36px;
+            min-height: 36px;
             margin-right: 8px;
+            padding: 0 8px;
+            font-size: 16px;
+        }
+
+        .headersecond-rightblock a>.ant-btn {
+            min-width: 36px;
+            min-height: 36px;
+            font-size: 16px !important;
+        }
+
+        .headersecond-login.ant-btn {
+            min-height: 36px;
+        }
+
+        .headersecond-brand {
+            margin-right: 4px;
+        }
+
+        .headersecond-burger.ant-btn {
+            width: 36px;
         }
 
         .headersecond-profile {
