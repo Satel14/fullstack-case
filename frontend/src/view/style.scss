@@ -224,6 +224,10 @@ $colorRed: #f51417;
     color: #fff;
 }
 
+.ant-table-content {
+    overflow-x: auto;
+}
+
 .ant-modal-close-x {
     svg {
         color: #fff;
@@ -3421,6 +3425,10 @@ footer.ant-layout-footer {
         color: #adb0b9;
         border-bottom: 1px solid #1c2333;
         word-break: break-word;
+
+        @media (max-width: 767px) {
+            word-break: normal;
+        }
     }
 
     .ant-table-tbody > tr.ant-table-row:hover > td,
