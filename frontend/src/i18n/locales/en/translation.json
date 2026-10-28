@@ -346,7 +346,7 @@
         "withdrawCancel": "Cancel",
         "withdrawRequested": "Withdrawal requested",
         "withdrawCancelled": "Withdrawal cancelled, the item is back in your inventory",
-        "withdrawNeedsInfo": "First add your Steam or Epic details in your profile settings",
+        "withdrawNeedsInfo": "First add a link to your Steam profile in the settings",
         "withdrawErrorTitle": "Withdrawal failed"
     },
     "chat": {
@@ -535,7 +535,7 @@
             },
             "receiveInfo": {
                 "title": "Withdrawal details",
-                "condition": "Add your Steam or Epic details in the settings",
+                "condition": "Add a link to your Steam profile in the settings",
                 "hint": "Fill in the settings"
             },
             "firstCase": {

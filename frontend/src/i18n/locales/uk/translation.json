@@ -346,7 +346,7 @@
         "withdrawCancel": "Скасувати",
         "withdrawRequested": "Заявку на вивід створено",
         "withdrawCancelled": "Вивід скасовано, предмет повернувся в інвентар",
-        "withdrawNeedsInfo": "Спершу вкажіть ваш Steam або Epic у налаштуваннях профілю",
+        "withdrawNeedsInfo": "Спершу вкажіть у налаштуваннях посилання на свій профіль Steam",
         "withdrawErrorTitle": "Вивід не вдався"
     },
     "chat": {
@@ -537,7 +537,7 @@
             },
             "receiveInfo": {
                 "title": "Дані для виводу",
-                "condition": "Вкажіть ваш Steam або Epic у налаштуваннях",
+                "condition": "Вкажіть у налаштуваннях посилання на свій профіль Steam",
                 "hint": "Заповнити в налаштуваннях"
             },
             "firstCase": {

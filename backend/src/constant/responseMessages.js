@@ -40,7 +40,7 @@ module.exports = {
     ITEM: {
         NOT_EXIST: 'Такого предмету не існує',
         ERROR: 'Помилка предмету',
-        RECEIVE_INFO_REQUIRED: 'Вкажіть у налаштуваннях профілю дані вашого Steam або Epic',
+        RECEIVE_INFO_REQUIRED: 'Вкажіть у налаштуваннях посилання на свій профіль Steam',
         WITHDRAW_NOT_PENDING: 'Цей предмет не очікує виведення',
         NO_PRICE: 'Цей предмет зараз не можна продати'
     },
