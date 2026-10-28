@@ -185,7 +185,7 @@ test('"remember me" is ticked by default, and unticking it asks for a session th
 });
 
 test('a failed login shows the wrong-credentials message and stays on the page', async () => {
-    userPostFetch.mockImplementation(() => () => Promise.resolve({ error: 401, message: 'Дані не вірні' }));
+    userPostFetch.mockImplementation(() => () => Promise.resolve({ error: 401, message: 'Неправильний логін або пароль' }));
     renderForm();
 
     fill({ login: 'satel7', password: 'wrongpass' });

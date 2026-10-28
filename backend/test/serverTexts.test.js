@@ -23,7 +23,8 @@ const RUSSIAN = [
     /[ыэёъ]/i,
     /почт/i,
     /аккаунт/i,
-    /співпада/i,
+    /співпа[дл]/i,
+    /не\s?вірн/i,
 ];
 
 test('no server text uses Russian letters or Russian words', () => {

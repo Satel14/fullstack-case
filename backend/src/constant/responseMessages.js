@@ -3,7 +3,7 @@ module.exports = {
         ERROR: 'Сталася помилка на сервері. Спробуйте ще раз пізніше'
     },
     AUTH: {
-        NOT_CORRECT: 'Дані не вірні',
+        NOT_CORRECT: 'Неправильний логін або пароль',
         NOT_AUTHORIZED: 'Ви не авторизовані',
         SUCCESS_LOGOUT: 'Вийшли з акаунта',
         EMPTY_DATA: 'Дані не отримано',
