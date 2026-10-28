@@ -5,7 +5,7 @@ module.exports = {
     AUTH: {
         NOT_CORRECT: 'Дані не вірні',
         NOT_AUTHORIZED: 'Ви не авторизовані',
-        SUCCESS_LOGOUT: 'Вийшли з аккаунта',
+        SUCCESS_LOGOUT: 'Вийшли з акаунта',
         EMPTY_DATA: 'Дані не отримано',
         USER_IS_EXIST: 'Такий логін (або пошта) вже існує',
         RESET_LINK_SENT: 'Якщо акаунт із цією поштою існує, ми надіслали на неї посилання для зміни пароля',

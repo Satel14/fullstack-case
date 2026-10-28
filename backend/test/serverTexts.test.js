@@ -19,6 +19,21 @@ test('no server text contradicts what the site says about itself', () => {
     assert.deepStrictEqual(offending, []);
 });
 
+const RUSSIAN = [
+    /[ыэёъ]/i,
+    /почт/i,
+    /аккаунт/i,
+    /співпада/i,
+];
+
+test('no server text uses Russian letters or Russian words', () => {
+    const russian = texts(MESSAGE)
+        .filter(([, text]) => RUSSIAN.some((pattern) => pattern.test(text)))
+        .map(([key]) => key);
+
+    assert.deepStrictEqual(russian, []);
+});
+
 test('no server text uses the modifier apostrophe, which the site fonts lack', () => {
     const offending = texts(MESSAGE)
         .filter(([, text]) => /ʼ/.test(text))
