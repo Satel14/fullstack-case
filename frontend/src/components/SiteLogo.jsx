@@ -4,7 +4,7 @@ import { SITE_NAME } from '../config/publicInfo';
 
 const SiteLogo = () => (
     <div className="header-sitename">
-        <div className="header-sitename_beta">CS</div>
+        <div className="header-sitename_beta" aria-hidden="true">CS</div>
         <Link to="/" aria-label={SITE_NAME}>
             <img className="low" src="/favicon.svg" alt="" />
             <div className="full">CASES</div>

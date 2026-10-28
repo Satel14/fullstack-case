@@ -11,3 +11,9 @@ test('the logo links home as CASES.UA and shrinks to the site icon, not to anoth
     expect(container.querySelector('.low')).toHaveAttribute('src', '/favicon.svg');
     expect(container.textContent).not.toMatch(/GO/);
 });
+
+test('screen readers hear only the site name, not the "CS" badge before it', () => {
+    const { container } = render(<MemoryRouter><SiteLogo /></MemoryRouter>);
+
+    expect(container.querySelector('.header-sitename_beta')).toHaveAttribute('aria-hidden', 'true');
+});
