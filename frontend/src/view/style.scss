@@ -839,6 +839,8 @@ p {
 }
 
 .profilepage {
+    container-type: inline-size;
+
     &-secondblock {
         max-width: 800px;
         margin: auto;
@@ -858,7 +860,7 @@ p {
         display: flex;
         justify-content: space-between;
         flex-direction: row-reverse;
-        min-width: 800px;
+        max-width: 800px;
         margin: 30px auto 20px auto;
         border-radius: 6px;
         font-family: "Muller Bold";
@@ -948,6 +950,24 @@ p {
             background-size: cover;
             border: 1px #404250 solid;
             box-shadow: rgba(91, 36, 33, 1) 0px -30px 60px -30px inset;
+        }
+
+        @container (max-width: 700px) {
+            flex-direction: column;
+
+            &__stats {
+                order: -1;
+                width: auto;
+                border-left: 0;
+                border-right: 0;
+            }
+
+            &__favoritecase,
+            &__bestdrop {
+                width: auto;
+                margin: 0;
+                padding: 20px;
+            }
         }
     }
 }
