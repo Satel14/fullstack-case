@@ -2,7 +2,9 @@ import React from 'react';
 import {
  Button, Dropdown, Layout, Tooltip,
 } from 'antd';
-import { SettingOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
+import {
+    MenuOutlined, MessageOutlined, PlusOutlined, SettingOutlined, UserOutlined, WalletOutlined,
+} from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import CountUp from 'react-countup';
 import { connect } from 'react-redux';
@@ -11,6 +13,7 @@ import { isAuthorized } from '../helpers/Player';
 import { logoutProfile, updateBalance } from '../store/actions/user';
 import { API_URL } from '../api/config';
 import socket from '../api/all/ws';
+import { SITE_NAME } from '../config/publicInfo';
 
 const { Header } = Layout;
 
@@ -100,7 +103,7 @@ class HeaderSecond extends React.Component {
     }
 
     render() {
-        const { user, t } = this.props;
+        const { user, t, onOpenMenu } = this.props;
         const { chatButton, onlineUser, stats } = this.state;
         const profileMenuItems = [
             {
@@ -133,6 +136,20 @@ class HeaderSecond extends React.Component {
 
         return (
             <Header className="headersecond" style={{ borderBottom: '1px #22262f solid' }}>
+                {onOpenMenu && (
+                    <div className="headersecond-brand">
+                        <Button
+                            type="text"
+                            className="headersecond-burger"
+                            icon={<MenuOutlined />}
+                            aria-label={t('header.openMenu')}
+                            onClick={onOpenMenu}
+                        />
+                        <Link to="/" className="headersecond-home" aria-label={SITE_NAME}>
+                            <img src="/favicon.svg" alt="" />
+                        </Link>
+                    </div>
+                )}
                 <div className="headersecond-leftblock flex">
                     <div className="headersecond-stats">
                         <div className="headersecond-stats__opened" />
@@ -180,18 +197,24 @@ class HeaderSecond extends React.Component {
                 <div className="headersecond-rightblock flex" style={{ alignItems: 'center' }}>
                     {chatButton && (
                         <Button
-                            className="color-white small"
-                            style={{ marginRight: '15px' }}
+                            className="color-white small headersecond-chat"
+                            icon={<MessageOutlined />}
+                            aria-label={t('header.chat')}
                             onClick={() => window.Layout.onCollapseChat(false)}
                         >
-                            {t('header.chat')}
+                            <span className="headersecond-label">{t('header.chat')}</span>
                         </Button>
                     )}
                     {isAuthorized(user) && (
                         <>
                             <Link to="/deposit">
-                                <Button size="small" className="color-pink">
-                                    {t('header.deposit')}
+                                <Button
+                                    size="small"
+                                    className="color-pink"
+                                    icon={<PlusOutlined />}
+                                    aria-label={t('header.deposit')}
+                                >
+                                    <span className="headersecond-label">{t('header.deposit')}</span>
                                 </Button>
                             </Link>
                             <div className="headersecond-profile">

@@ -36,7 +36,7 @@ const stats = (data) => {
     }));
 };
 
-const renderHeader = () => {
+const renderHeader = (props = {}) => {
     const store = createStore(combineReducers({ user: usersReducer }), applyMiddleware(thunk));
     store.dispatch({
         type: LOGIN_USER,
@@ -47,7 +47,7 @@ const renderHeader = () => {
     render(
         <Provider store={store}>
             <MemoryRouter>
-                <HeaderSecond />
+                <HeaderSecond {...props} />
             </MemoryRouter>
         </Provider>,
     );
@@ -139,4 +139,30 @@ test('the online counter is fetched again once the own socket of the viewer conn
     await act(async () => { socketHandlers.connect(); });
 
     await waitFor(() => expect(onlineCount()).toBe('1'));
+});
+
+test('a screen without the side menu gets a menu button and a way home in the header', async () => {
+    const onOpenMenu = jest.fn();
+    renderHeader({ onOpenMenu });
+    await act(async () => {});
+
+    fireEvent.click(screen.getByRole('button', { name: 'header.openMenu' }));
+
+    expect(onOpenMenu).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('link', { name: 'CASES.UA' })).toHaveAttribute('href', '/');
+});
+
+test('a screen with the side menu shows no menu button', async () => {
+    renderHeader();
+    await act(async () => {});
+
+    expect(screen.queryByRole('button', { name: 'header.openMenu' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'CASES.UA' })).not.toBeInTheDocument();
+});
+
+test('the deposit button keeps its name when only its icon is shown', async () => {
+    renderHeader();
+    await act(async () => {});
+
+    expect(screen.getByRole('button', { name: 'header.deposit' })).toBeInTheDocument();
 });

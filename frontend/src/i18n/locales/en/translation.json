@@ -30,6 +30,7 @@
     "header": {
         "deposit": "Top up",
         "chat": "Chat",
+        "openMenu": "Menu",
         "profile": "My profile",
         "depositAccount": "Top up balance",
         "settings": "Settings",

@@ -2062,6 +2062,37 @@ blockquote {
         }
     }
 
+    &-brand {
+        display: flex;
+        align-items: center;
+        margin-right: 10px;
+    }
+
+    &-burger.ant-btn {
+        color: #adb0b9;
+        font-size: 20px;
+
+        &:hover,
+        &:focus {
+            color: #00a0ff;
+            background: transparent;
+        }
+    }
+
+    &-home {
+        display: flex;
+        margin-left: 6px;
+
+        img {
+            width: 32px;
+            height: 32px;
+        }
+    }
+
+    &-chat {
+        margin-right: 15px;
+    }
+
     &-profile {
         display: flex;
         align-items: center;

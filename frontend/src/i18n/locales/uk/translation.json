@@ -30,6 +30,7 @@
     "header": {
         "deposit": "Поповнити",
         "chat": "Чат",
+        "openMenu": "Меню",
         "profile": "Мій профіль",
         "depositAccount": "Поповнити баланс",
         "settings": "Налаштування",
