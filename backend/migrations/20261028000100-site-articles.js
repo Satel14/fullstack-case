@@ -18,7 +18,7 @@ const ARTICLES = [
 <h3>5. Порушення</h3>
 <p>За порушення цієї угоди або <a href="/article/6">правил сервісу</a> адміністрація може заборонити писати в чат або заблокувати акаунт.</p>
 <h3>6. Дані</h3>
-<p>Ми зберігаємо логін, адресу пошти, хеш пароля, інформацію для виводу, яку ви вказали (посилання на профіль Steam), ваші повідомлення в чаті та історію дій на сайті. Пошту використовуємо лише для листів про ваш акаунт: підтвердження реєстрації, привітання, попередження про спробу зареєструватися з вашою адресою та відновлення пароля.</p>`,
+<p>Ми зберігаємо логін, адресу пошти, хеш пароля, інформацію для виводу, яку ви вказали (посилання на профіль Steam), ваші повідомлення в чаті та історію дій на сайті. Пошту бачать лише адміністратори сайту, а використовуємо її тільки для листів про ваш акаунт: підтвердження реєстрації, привітання, попередження про спробу зареєструватися з вашою адресою та відновлення пароля.</p>`,
         titleEn: 'User Agreement',
         textEn: `<p>These terms govern the use of CASES.UA. By registering or using the site, you accept them.</p>
 <h3>1. What CASES.UA is</h3>
@@ -36,7 +36,7 @@ const ARTICLES = [
 <h3>5. Violations</h3>
 <p>For breaking these terms or the <a href="/article/6">service rules</a>, the staff may stop you from writing in the chat or ban your account.</p>
 <h3>6. Your data</h3>
-<p>We store your login, email address, password hash, the item withdrawal information you entered (a link to your Steam profile), your chat messages and your history on the site. The email address is used only for letters about your account: registration confirmation, a welcome letter, a warning when someone tries to register with your address, and password reset.</p>`,
+<p>We store your login, email address, password hash, the item withdrawal information you entered (a link to your Steam profile), your chat messages and your history on the site. Only the site staff can see your email address, and it is used only for letters about your account: registration confirmation, a welcome letter, a warning when someone tries to register with your address, and password reset.</p>`,
     },
     {
         id: 6,

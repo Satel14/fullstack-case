@@ -83,11 +83,18 @@ test('the chat rules in the service rules are word for word the rules the chat s
     assert.deepStrictEqual(listAfter(rules.textEn, 'Chat'), ruleKeys.map((key) => en.rules[key]));
 });
 
-test('the user agreement lists the withdrawal information and the chat messages among the stored data', async () => {
+test('the data section of the user agreement names every stored item, every letter and who sees the address', async () => {
     const sequelize = await databaseAt(MIGRATION);
 
     const [[agreement]] = await sequelize.query('SELECT text, textEn FROM articles WHERE id = 3');
 
-    assert.match(agreement.text, /Steam[\s\S]*повідомлення в чаті/);
-    assert.match(agreement.textEn, /Steam[\s\S]*chat messages/);
+    const dataSection = (html, heading) => html.split(heading)[1];
+    const uk = dataSection(agreement.text, '<h3>6. Дані</h3>');
+    ['логін', 'адресу пошти', 'хеш пароля', 'інформацію для виводу', 'Steam', 'повідомлення в чаті', 'історію дій',
+        'бачать лише адміністратори', 'підтвердження реєстрації', 'привітання', 'спробу зареєструватися', 'відновлення пароля']
+        .forEach((item) => assert.ok(uk.includes(item), `uk §6 misses "${item}"`));
+    const en = dataSection(agreement.textEn, '<h3>6. Your data</h3>');
+    ['login', 'email address', 'password hash', 'item withdrawal information', 'Steam', 'chat messages', 'history',
+        'Only the site staff can see', 'registration confirmation', 'welcome letter', 'tries to register', 'password reset']
+        .forEach((item) => assert.ok(en.includes(item), `en §6 misses "${item}"`));
 });
