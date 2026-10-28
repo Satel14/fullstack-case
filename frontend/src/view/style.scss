@@ -2647,20 +2647,28 @@ footer.ant-layout-footer {
 .depositpage {
     .depositpage-tabs {
         position: relative;
+        container-type: inline-size;
     }
 
     .depositpage-promocode {
-        position: absolute;
-        top: 4px;
-        right: 8px;
-        z-index: 1;
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 0 0 8px auto;
+        white-space: normal;
 
         @media (max-width: 767px) {
-            position: static;
             width: 100%;
-            height: auto;
-            margin-bottom: 8px;
-            white-space: normal;
+        }
+    }
+
+    @container (min-width: 720px) {
+        .depositpage-promocode {
+            position: absolute;
+            top: 4px;
+            right: 8px;
+            z-index: 1;
+            margin: 0;
         }
     }
 
