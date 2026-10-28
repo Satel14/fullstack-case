@@ -3261,7 +3261,7 @@ footer.ant-layout-footer {
 
     &-card {
         box-sizing: border-box;
-        width: 160px;
+        width: 180px;
         padding: 12px;
         border-radius: 10px;
         border: 1px solid #262e43;
@@ -3303,6 +3303,22 @@ footer.ant-layout-footer {
             top: 6px;
             right: 6px;
             bottom: unset;
+        }
+
+        .ant-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 100%;
+            min-height: 30px;
+            height: auto;
+            padding: 4px 8px;
+            font-size: 12px;
+            white-space: normal;
+        }
+
+        @media (max-width: 767px) {
+            width: calc(50% - 7px);
         }
     }
 }
