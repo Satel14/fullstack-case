@@ -61,3 +61,20 @@ test('the browser tab carries the article title in the site language', async () 
     await screen.findByText('Service rules');
     expect(document.title).toBe('Service rules — CASES.UA');
 });
+
+test('only the publication dates are styled as article metadata, never the not-found message', async () => {
+    mockLanguage = 'uk';
+    getArticleById.mockResolvedValue({ data: { ...bilingual, created_at: '2026-10-28T10:00:00Z', updated_at: '2026-10-28T10:00:00Z' } });
+    const { container, unmount } = renderArticle();
+    await screen.findByText('Правила сервісу');
+
+    expect(Array.from(container.querySelectorAll('.articlepage-meta')).map((p) => p.textContent))
+        .toEqual([expect.stringMatching(/^article\.published/), expect.stringMatching(/^article\.updated/)]);
+    unmount();
+
+    getArticleById.mockRejectedValue({ error: 400 });
+    const missing = renderArticle();
+    await screen.findByText('article.notFound');
+
+    expect(missing.container.querySelectorAll('.articlepage-meta')).toHaveLength(0);
+});

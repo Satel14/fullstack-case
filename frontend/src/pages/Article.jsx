@@ -100,8 +100,8 @@ const Article = ({ match }) => {
             <Fade>
                 <h1 className="title">{title}</h1>
                 <div className="articlepage-content">
-                    {publishedAt && <p>{`${t('article.published')}: ${publishedAt}`}</p>}
-                    {updatedAt && <p>{`${t('article.updated')}: ${updatedAt}`}</p>}
+                    {publishedAt && <p className="articlepage-meta">{`${t('article.published')}: ${publishedAt}`}</p>}
+                    {updatedAt && <p className="articlepage-meta">{`${t('article.updated')}: ${updatedAt}`}</p>}
                     <div
                         // eslint-disable-next-line react/no-danger
                         dangerouslySetInnerHTML={{ __html: text }}
