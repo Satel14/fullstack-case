@@ -84,6 +84,7 @@ beforeEach(() => {
 
 afterEach(() => {
     window.matchMedia = originalMatchMedia;
+    jest.restoreAllMocks();
 });
 
 test('a desktop screen docks the menu and the chat beside the page', () => {
@@ -160,4 +161,17 @@ test('widening the window and narrowing it again does not bring back a menu or c
 
     expect(menuDrawerOpen()).toBe(false);
     expect(chatDrawerOpen()).toBe(false);
+});
+
+test('blocked site storage leaves the page working', () => {
+    const blocked = () => { throw new DOMException('The operation is insecure.', 'SecurityError'); };
+    jest.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked);
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked);
+
+    renderLayout(1400);
+    expect(screen.getByText('page')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'hide chat' }));
+
+    expect(screen.getByText('chat off')).toBeInTheDocument();
 });

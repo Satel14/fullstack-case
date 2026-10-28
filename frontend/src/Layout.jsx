@@ -13,12 +13,29 @@ import { SCREEN_LG, SCREEN_MD, SCREEN_XL } from './config/breakpoints';
 
 const { Sider, Content } = Layout;
 
+const readSetting = (key) => {
+  try {
+    return window.localStorage.getItem(key);
+  } catch (e) {
+    return null;
+  }
+};
+
+const saveSetting = (key, value) => {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch (e) {
+    return false;
+  }
+  return true;
+};
+
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      collapsed: localStorage.getItem('menuCollapse') === 'true',
-      collapsedChat: localStorage.getItem('collapsedChat') === 'true',
+      collapsed: readSetting('menuCollapse') === 'true',
+      collapsedChat: readSetting('collapsedChat') === 'true',
       menuOpen: false,
       chatOpen: false,
     };
@@ -45,7 +62,7 @@ class App extends React.Component {
 
   onCollapse(collapsed) {
     this.setState({ collapsed });
-    localStorage.setItem('menuCollapse', collapsed);
+    saveSetting('menuCollapse', collapsed);
   }
 
   onCollapseChat(collapsedChat) {
@@ -56,7 +73,7 @@ class App extends React.Component {
     }
     this.setState({ collapsedChat });
     window.HeaderSecond.chatButtonStatusHeader(collapsedChat);
-    localStorage.setItem('collapsedChat', collapsedChat);
+    saveSetting('collapsedChat', collapsedChat);
   }
 
   chatHidden() {
