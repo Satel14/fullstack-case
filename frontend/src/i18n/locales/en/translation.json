@@ -245,7 +245,7 @@
     "promocode": {
         "pageTitle": "Promocodes",
         "cardTitle": "Use a promocode",
-        "tooltip": "Take part in giveaways from streamers or in the CasesUA group",
+        "tooltip": "CASES.UA staff hand out promocodes — keep an eye on the site chat.",
         "whereToGet": "Where to get?",
         "required": "Enter a promocode!",
         "placeholder": "Enter the code",
@@ -256,7 +256,7 @@
     },
     "receiveInfo": {
         "cardTitle": "Item withdrawal information",
-        "tooltip": "Leave a link to your Steam or EpicID and a convenient time. This information will be sent to traders.",
+        "tooltip": "Leave a link to your Steam profile. Withdrawals are simulated in the demo, so this information is not passed on to anyone.",
         "placeholder": "Enter your Steam or EpicId",
         "save": "Save",
         "emptyError": "Don't leave the field empty",
