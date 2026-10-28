@@ -235,3 +235,34 @@ test('every item of the case is looked up, cached or not, so a failed lookup is 
     await waitFor(() => expect(itemInfoFetch).toHaveBeenCalledTimes(2));
     expect(itemInfoFetch.mock.calls.map(([id]) => id)).toEqual([1, 2]);
 });
+
+test('a case the server does not know sends the player to not-found', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    getCaseById.mockRejectedValue({ error: 400, message: 'Кейс не існує' });
+    const history = { push: jest.fn() };
+
+    render(casePage(createStore(() => ({ itemCache: {} })), 'nope', history));
+
+    await waitFor(() => expect(history.push).toHaveBeenCalledWith('/404'));
+    expect(screen.queryByText('common.loadFailed')).toBeNull();
+});
+
+test.each([
+    ['network', new TypeError('Failed to fetch')],
+    ['server', { error: 500 }],
+])('a %s failure says the case could not be loaded instead of not-found, and a retry loads it', async (_, failure) => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    getCaseById.mockReset();
+    getCaseById.mockRejectedValueOnce(failure).mockResolvedValueOnce(caseResponse(7));
+    const history = { push: jest.fn() };
+
+    const { container } = render(casePage(createStore(() => ({ itemCache: {} })), 'havoc', history));
+
+    expect(await screen.findByText('common.loadFailed')).toBeInTheDocument();
+    expect(history.push).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /common\.retry/ }));
+
+    await waitFor(() => expect(container.querySelector('.casepage-title-second i')?.textContent).toBe('case.openedCount 7'));
+    expect(screen.queryByText('common.loadFailed')).toBeNull();
+});

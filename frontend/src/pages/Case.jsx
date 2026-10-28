@@ -12,7 +12,9 @@ import { renderItemProp } from '../helpers/Case';
 import { wearRank, valueGrade } from '../helpers/rarity';
 import { computeItemPriceUAH } from '../helpers/price';
 import { marketUrl } from '../helpers/market';
+import { isRefusal } from '../helpers/serverMessage';
 import Loader from '../components/mini/Loader';
+import LoadError from '../components/mini/LoadError';
 import OpenCase from '../components/modules/OpenCase';
 
 const mapStateToProps = (state) => ({
@@ -31,6 +33,7 @@ class Case extends Component {
             caseData: [],
             caseCollection: [],
             fetching: false,
+            failed: false,
             serverSeedHash: null,
         };
         this.mounted = false;
@@ -104,13 +107,24 @@ class Case extends Component {
     async getData() {
         this.loadGeneration += 1;
         const generation = this.loadGeneration;
-        this.setState({ fetching: true });
+        this.setState({ fetching: true, failed: false });
         const { id } = this.state;
         const { history } = this.props;
 
-        const caseData = await getCaseById(id).catch(() => null);
+        let caseData = null;
+        let failure = null;
+        try {
+            caseData = await getCaseById(id);
+        } catch (e) {
+            failure = e;
+        }
 
         if (!this.mounted || generation !== this.loadGeneration) {
+            return;
+        }
+
+        if (failure && !isRefusal(failure)) {
+            this.setState({ fetching: false, failed: true });
             return;
         }
 
@@ -170,9 +184,16 @@ class Case extends Component {
 
     render() {
         const {
-            caseData, fetching, serverSeedHash,
+            caseData, fetching, failed, serverSeedHash,
         } = this.state;
         const { t } = this.props;
+        if (failed) {
+            return (
+                <div className="casepage">
+                    <LoadError onRetry={() => this.getData()} />
+                </div>
+            );
+        }
         return (
             <div className="casepage">
                 {fetching ? (
