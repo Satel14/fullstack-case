@@ -3685,6 +3685,11 @@ footer.ant-layout-footer {
         &__hint {
             font-size: 12px;
         }
+
+        @media (max-width: 767px) {
+            width: calc(50% - 7px);
+            padding: 14px 10px;
+        }
     }
 }
 
