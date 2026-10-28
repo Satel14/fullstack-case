@@ -59,7 +59,7 @@ const sources = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e
 
 test('no component draws a dollar, euro, pound or yuan icon, since every amount is in ₴', () => {
     const foreignCurrency = sources(__dirname)
-        .filter((file) => /\b(Dollar|Euro|Pound|PayCircle)\w*(Outlined|Filled|TwoTone)\b/.test(fs.readFileSync(file, 'utf8')))
+        .filter((file) => /\b(Dollar|Euro|Pound|PayCircle|MoneyCollect|AccountBook|PropertySafety|RedEnvelope|Transaction)\w*(Outlined|Filled|TwoTone)\b/.test(fs.readFileSync(file, 'utf8')))
         .map((file) => path.relative(__dirname, file).replace(/\\/g, '/'));
 
     expect(foreignCurrency).toEqual([]);
