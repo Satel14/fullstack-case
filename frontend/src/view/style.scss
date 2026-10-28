@@ -3390,6 +3390,7 @@ footer.ant-layout-footer {
         padding: 12px;
         border-radius: 10px;
         border: 1px solid #262e43;
+        border-bottom: 3px solid var(--rarity, #262e43);
         background: linear-gradient(180deg, #161a29 0%, #10131e 100%);
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
         display: flex;

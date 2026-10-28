@@ -14,6 +14,7 @@ import ItemColor from '../components/mini/ItemColor';
 import openNotification from '../components/mini/openNotification';
 import Loader from '../components/mini/Loader';
 import LoadError from '../components/mini/LoadError';
+import { gradeLabelKey, gradeStyle } from '../helpers/grade';
 
 const { TabPane } = Tabs;
 
@@ -322,7 +323,7 @@ const Inventory = ({
     };
 
     const card = (row, actions) => (
-        <div key={row.storage_id} className="inventorypage-card">
+        <div key={row.storage_id} className="inventorypage-card" style={gradeStyle(info(row.storage_itemId, 'item_grade'))}>
             <div
                 className="inventorypage-card__img"
                 style={{ backgroundImage: info(row.storage_itemId, 'item_imagePath') ? `url(${encodeURI(info(row.storage_itemId, 'item_imagePath'))})` : 'none' }}
@@ -331,7 +332,10 @@ const Inventory = ({
             </div>
             <div className="inventorypage-card__name">{info(row.storage_itemId, 'item_name')}</div>
             <span className="inventorypage-card__meta">
-                {info(row.storage_itemId, 'item_rare')} {info(row.storage_itemId, 'item_type')}
+                {[
+                    gradeLabelKey(info(row.storage_itemId, 'item_grade')) && t(gradeLabelKey(info(row.storage_itemId, 'item_grade'))),
+                    `${info(row.storage_itemId, 'item_rare')} ${info(row.storage_itemId, 'item_type')}`,
+                ].filter(Boolean).join(' · ')}
             </span>
             {actions}
         </div>

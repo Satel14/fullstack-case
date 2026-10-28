@@ -462,3 +462,22 @@ test('a withdrawals retry that answers after the page closed updates nothing', a
     consoleError.mockRestore();
     expect(unmountedUpdates).toEqual([]);
 });
+
+test('each card wears its item grade colour and names the grade beside the wear', async () => {
+    server.inventory = [{
+        storage_id: 1, storage_itemId: 1, storage_color: 'default', storage_status: 'inventory',
+    }];
+    getItemsInfo.mockImplementation(() => Promise.resolve({
+        data: {
+            1: {
+                item_name: 'One', item_rare: 'Field Tested', item_type: 'rifles', item_grade: 'classified', pricesInCredits: { default: 10 },
+            },
+        },
+    }));
+    renderInventory();
+
+    await screen.findByText('One');
+    const card = document.querySelector('.inventorypage-card');
+    expect(card.style.getPropertyValue('--rarity')).toBe('#d32ce6');
+    expect(card.querySelector('.inventorypage-card__meta').textContent).toBe('grade.classified · Field Tested rifles');
+});
