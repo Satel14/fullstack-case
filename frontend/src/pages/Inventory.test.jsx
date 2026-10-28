@@ -362,3 +362,35 @@ test('if only the withdrawal lists fail, the loaded items stay usable and the wi
     expect(await screen.findByText('inventory.withdrawEmpty')).toBeInTheDocument();
     expect(screen.queryByText('common.loadFailed')).toBeNull();
 });
+
+test('a withdrawals retry shows that it is working and ignores further clicks until it answers', async () => {
+    server.inventory = inventoryRows(1);
+    let withdrawals = 'down';
+    const waiting = [];
+    getProfileStorage.mockImplementation(({ status, limit, offset = 0 }) => {
+        if (status === 'waitingtrade' || status === 'received') {
+            if (withdrawals === 'down') {
+                return Promise.reject({ error: 502 });
+            }
+            return new Promise((resolve) => { waiting.push(resolve); });
+        }
+        const byStatus = { inventory: server.inventory, money: server.sold };
+        const rows = byStatus[status] || [];
+        return Promise.resolve({ status: 200, data: rows.slice(offset, offset + Math.min(limit, 200)) });
+    });
+    renderInventory();
+    await screen.findByRole('button', { name: /openCase\.sellFor/ });
+    fireEvent.click(screen.getByText('inventory.withdrawTab'));
+    const retry = await screen.findByRole('button', { name: /common\.retry/ });
+
+    withdrawals = 'slow';
+    fireEvent.click(retry);
+    await waitFor(() => expect(retry).toHaveClass('ant-btn-loading'));
+    fireEvent.click(retry);
+    fireEvent.click(retry);
+
+    expect(waiting).toHaveLength(2);
+    await act(async () => { waiting.forEach((answer) => answer({ status: 200, data: [] })); });
+    expect(await screen.findByText('inventory.withdrawEmpty')).toBeInTheDocument();
+    expect(screen.queryByText('common.loadFailed')).toBeNull();
+});
