@@ -204,7 +204,7 @@
         "errorTitle": "Error",
         "errorText": "Failed to top up the balance.",
         "cancelTitle": "Payment cancelled",
-        "cancelText": "No money was charged."
+        "cancelText": "Your balance has not changed."
     },
     "settings": {
         "title": "Profile settings",
