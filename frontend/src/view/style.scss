@@ -46,11 +46,11 @@ $bold-system-fonts-with-hryvnia: local("Segoe UI Bold"), local("Arial Bold"), lo
 @include borrow-glyphs("Muller Bold", url(./fonts/Roboto-Bold.ttf) format("truetype"), $ukrainian-letters-muller-lacks);
 @include borrow-glyphs("Avenir Next LT Pro Bold", url(./fonts/Roboto-Bold.ttf) format("truetype"), $cyrillic-avenir-lacks);
 
-@each $family in ("Muller Regular", "Roboto Regular", "Roboto Slab") {
+@each $family in ("Muller Regular", "Roboto Regular") {
     @include borrow-glyphs($family, $system-fonts-with-hryvnia, $hryvnia-sign);
 }
 
-@each $family in ("Muller Bold", "Roboto Bold", "Avenir Next LT Pro Bold") {
+@each $family in ("Muller Bold", "Roboto Bold", "Roboto Slab", "Avenir Next LT Pro Bold") {
     @include borrow-glyphs($family, $bold-system-fonts-with-hryvnia, $hryvnia-sign);
 }
 
