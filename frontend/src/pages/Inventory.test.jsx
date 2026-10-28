@@ -394,3 +394,71 @@ test('a withdrawals retry shows that it is working and ignores further clicks un
     expect(await screen.findByText('inventory.withdrawEmpty')).toBeInTheDocument();
     expect(screen.queryByText('common.loadFailed')).toBeNull();
 });
+
+const withdrawalsScript = (answers) => {
+    let pair = 0;
+    getProfileStorage.mockImplementation(({ status, limit, offset = 0 }) => {
+        if (status === 'waitingtrade' || status === 'received') {
+            if (status === 'waitingtrade') {
+                pair += 1;
+            }
+            return answers(pair);
+        }
+        const byStatus = { inventory: server.inventory, money: server.sold };
+        const rows = byStatus[status] || [];
+        return Promise.resolve({ status: 200, data: rows.slice(offset, offset + Math.min(limit, 200)) });
+    });
+};
+
+test('a withdrawals retry that fails after a newer load succeeded does not cover the lists with an error', async () => {
+    server.inventory = inventoryRows(1);
+    const lateFailures = [];
+    withdrawalsScript((pair) => {
+        if (pair === 1) {
+            return Promise.reject({ error: 502 });
+        }
+        if (pair === 2) {
+            return new Promise((resolve, reject) => { lateFailures.push(reject); });
+        }
+        return Promise.resolve({ status: 200, data: [] });
+    });
+    renderInventory();
+    await screen.findByRole('button', { name: /openCase\.sellFor/ });
+    fireEvent.click(screen.getByText('inventory.withdrawTab'));
+    fireEvent.click(await screen.findByRole('button', { name: /common\.retry/ }));
+
+    fireEvent.click(screen.getByText('inventory.active'));
+    await clickSellAll();
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('success', 'openCase.allSold'));
+    fireEvent.click(await screen.findByText('inventory.withdrawTab'));
+    expect(await screen.findByText('inventory.withdrawEmpty')).toBeInTheDocument();
+
+    await act(async () => { lateFailures.forEach((reject) => reject({ error: 504 })); });
+
+    expect(screen.getByText('inventory.withdrawEmpty')).toBeInTheDocument();
+    expect(screen.queryByText('common.loadFailed')).toBeNull();
+});
+
+test('a withdrawals retry that answers after the page closed updates nothing', async () => {
+    server.inventory = inventoryRows(1);
+    const lateFailures = [];
+    withdrawalsScript((pair) => (pair === 1
+        ? Promise.reject({ error: 502 })
+        : new Promise((resolve, reject) => { lateFailures.push(reject); })));
+    const consoleError = jest.spyOn(console, 'error');
+    const { unmount } = render(
+        <Provider store={makeStore()}>
+            <Inventory />
+        </Provider>,
+    );
+    await screen.findByRole('button', { name: /openCase\.sellFor/ });
+    fireEvent.click(screen.getByText('inventory.withdrawTab'));
+    fireEvent.click(await screen.findByRole('button', { name: /common\.retry/ }));
+
+    unmount();
+    await act(async () => { lateFailures.forEach((reject) => reject({ error: 504 })); });
+
+    const unmountedUpdates = consoleError.mock.calls.filter(([message]) => String(message).includes('unmounted component'));
+    consoleError.mockRestore();
+    expect(unmountedUpdates).toEqual([]);
+});
