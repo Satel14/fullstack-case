@@ -2,6 +2,7 @@ import React from 'react';
 import { Layout } from 'antd';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { SITE_NAME } from '../config/publicInfo';
 
 const { Footer } = Layout;
 const currentYear = new Date().getFullYear();
@@ -11,7 +12,7 @@ const FooterLayout = () => {
     return (
         <Footer>
             <div className="leftblock">
-                <div>{`${currentYear} Case`}</div>
+                <div>{`© ${currentYear} ${SITE_NAME}`}</div>
             </div>
             <div>
                 {t('footer.about')}

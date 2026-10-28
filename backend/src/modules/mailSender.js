@@ -1,6 +1,7 @@
 const { Resend } = require('resend');
 
-const FROM = process.env.RESEND_FROM || 'caseUA <onboarding@resend.dev>';
+const SITE_NAME = 'CASES.UA';
+const FROM = process.env.RESEND_FROM || `${SITE_NAME} <onboarding@resend.dev>`;
 
 let client = null;
 
@@ -21,8 +22,8 @@ const escapeHtml = (value) => String(value)
     .replace(/'/g, '&#39;');
 
 const welcomeEmail = (data) => ({
-    subject: 'Успішна реєстрація на сайті',
-    html: `<h1>Вітаємо на caseUA!</h1>
+    subject: `Успішна реєстрація на ${SITE_NAME}`,
+    html: `<h1>Вітаємо на ${SITE_NAME}!</h1>
            <p>Ваша реєстрація успішна.</p>
            <p><strong>Ваш логін:</strong> ${escapeHtml(data.login)}</p>`,
 });
@@ -30,7 +31,7 @@ const welcomeEmail = (data) => ({
 const passwordResetEmail = (data) => {
     const link = escapeHtml(data.link);
     return {
-        subject: 'Відновлення доступу',
+        subject: `Відновлення доступу до ${SITE_NAME}`,
         html: `<h1>Відновлення пароля</h1>
                <p><strong>Ваш логін:</strong> ${escapeHtml(data.login)}</p>
                <p>Щоб задати новий пароль, перейдіть за посиланням (діє ${escapeHtml(data.minutes)} хв):</p>
@@ -42,17 +43,17 @@ const passwordResetEmail = (data) => {
 const emailConfirmationEmail = (data) => {
     const link = escapeHtml(data.link);
     return {
-        subject: 'Підтвердження пошти',
+        subject: `Підтвердження пошти на ${SITE_NAME}`,
         html: `<h1>Підтвердіть пошту</h1>
                <p><strong>Ваш логін:</strong> ${escapeHtml(data.login)}</p>
                <p>Щоб завершити реєстрацію, перейдіть за посиланням (діє ${escapeHtml(data.hours)} год):</p>
                <p><a href="${link}">${link}</a></p>
-               <p>Якщо ви не реєструвалися на caseUA, просто проігноруйте цей лист — акаунт не буде створено.</p>`,
+               <p>Якщо ви не реєструвалися на ${SITE_NAME}, просто проігноруйте цей лист — акаунт не буде створено.</p>`,
     };
 };
 
 const registrationAttemptEmail = (data) => ({
-    subject: 'Спроба реєстрації з вашою поштою',
+    subject: `Спроба реєстрації на ${SITE_NAME} з вашою поштою`,
     html: `<h1>Хтось намагався зареєструватися з вашою поштою</h1>
            <p>На цю адресу вже зареєстровано акаунт <strong>${escapeHtml(data.login)}</strong>.</p>
            <p>Якщо це були ви — просто увійдіть або відновіть пароль на сторінці входу.</p>
