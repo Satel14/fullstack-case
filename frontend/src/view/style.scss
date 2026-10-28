@@ -848,7 +848,7 @@ p {
         min-width: 800px;
         margin: 30px auto 20px auto;
         border-radius: 6px;
-        font-family: "Bebas Neue Regular";
+        font-family: "Muller Bold";
         background: #0d101a;
         text-shadow: 1px 1px 4px #00a0ff, 0 0 1em #00a0ff;
 
@@ -2149,7 +2149,7 @@ blockquote {
                     font-size: 11px;
                     line-height: 0.5;
                     color: #000;
-                    font-family: "ValueSansPro";
+                    font-family: "Roboto Regular";
                     font-weight: 300;
                     box-shadow: 0 0 10px #f94b6a;
                 }
@@ -2610,8 +2610,9 @@ footer.ant-layout-footer {
             th {
                 padding: 12px 14px;
                 text-align: left;
-                font-family: "Bebas Neue Regular";
-                font-size: 30px;
+                font-family: "Muller Bold";
+                font-size: 16px;
+                text-transform: uppercase;
                 letter-spacing: 0.8px;
                 color: #8fd7ff;
                 text-shadow: 0 0 8px rgba(0, 160, 255, 0.45);
@@ -2647,8 +2648,8 @@ footer.ant-layout-footer {
             td {
                 padding: 11px 14px;
                 border-top: 1px solid rgba(34, 74, 128, 0.55);
-                font-family: "Bebas Neue Regular";
-                font-size: 29px;
+                font-family: "Muller Bold";
+                font-size: 18px;
                 line-height: 1;
                 letter-spacing: 0.7px;
                 color: #9fd7ff;
