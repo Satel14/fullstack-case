@@ -399,7 +399,8 @@ p {
     }
 }
 
-.slider-left {
+.slider-left,
+.menu-drawer .ant-drawer-content {
     border-right: 1px solid rgb(34, 38, 47);
     background-color: $backgroundColor1;
 
@@ -462,6 +463,11 @@ p {
         background: transparent;
         padding: 15px;
     }
+}
+
+.chat-drawer .ant-drawer-content {
+    border-left: 1px solid rgb(34, 38, 47);
+    background-color: #0a0a13;
 }
 
 .slider-right {
