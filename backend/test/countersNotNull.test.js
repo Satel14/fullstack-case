@@ -166,7 +166,8 @@ test('the opens already made are counted in one pass over the opens and the drop
     const reads = await migrateWatchingReadsOfOpensAndDrops(sequelize);
 
     assert.ok(reads.length > 0, 'the NULL counters are filled from the opens and the drops');
-    assert.deepStrictEqual(reads.filter((read) => read.selectTypes.includes('DEPENDENT SUBQUERY')).map((read) => read.sql), []);
+    const perCase = (read) => read.selectTypes.some((type) => /^(DEPENDENT|UNCACHEABLE) /.test(type));
+    assert.deepStrictEqual(reads.filter(perCase).map((read) => read.sql), []);
     const [migrated] = await sequelize.query('SELECT id, openedCount, published FROM cases ORDER BY id');
     assert.deepStrictEqual(migrated.map((c) => [c.id, c.openedCount, c.published]), [
         ['dust2', 2, 1], ['mirage', 1, 0], ['nuke', 1, 1],
