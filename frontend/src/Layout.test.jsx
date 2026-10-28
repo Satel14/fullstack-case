@@ -163,6 +163,7 @@ test('widening the window and narrowing it again does not bring back a menu or c
     expect(chatDrawerOpen()).toBe(true);
 
     act(() => setScreenWidth(1400));
+    expect(window.HeaderSecond.chatButtonStatusHeader).toHaveBeenLastCalledWith(false);
     act(() => setScreenWidth(390));
 
     expect(menuDrawerOpen()).toBe(false);
@@ -200,4 +201,15 @@ test('following a link from the floating chat closes it, so the page it opens is
     fireEvent.click(screen.getByText('player in chat'));
 
     expect(chatDrawerOpen()).toBe(false);
+});
+
+test('the floating chat covers a phone screen and keeps the panel width on a tablet', () => {
+    const chatWidth = () => document.querySelector('.chat-drawer .ant-drawer-content-wrapper').style.width;
+
+    renderLayout(390);
+    fireEvent.click(screen.getByRole('button', { name: 'open chat' }));
+    expect(chatWidth()).toBe('100%');
+
+    act(() => setScreenWidth(1024));
+    expect(chatWidth()).toBe('360px');
 });
