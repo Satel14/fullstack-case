@@ -21,3 +21,18 @@ test('the page metadata speaks Ukrainian, like the site, and sets no relative og
     expect(description).toMatch(/[а-яіїєґ]/i);
     expect(indexHtml).not.toMatch(/og:url" content="\//);
 });
+
+const pngSize = (file) => {
+    const png = fs.readFileSync(path.join(publicDir, file));
+    return [png.readUInt32BE(16), png.readUInt32BE(20)];
+};
+
+test('the site has its own icon in every size the browser and the manifest ask for', () => {
+    expect(indexHtml).toMatch(/<link rel="icon" href="%PUBLIC_URL%\/favicon\.svg" type="image\/svg\+xml" \/>/);
+    expect(fs.readFileSync(path.join(publicDir, 'favicon.svg'), 'utf8')).toMatch(/#4763bf[\s\S]*#00a0ff/);
+    expect(pngSize('logo192.png')).toEqual([192, 192]);
+    expect(pngSize('logo512.png')).toEqual([512, 512]);
+    const ico = fs.readFileSync(path.join(publicDir, 'favicon.ico'));
+    const sizes = Array.from({ length: ico.readUInt16LE(4) }, (_, i) => ico[6 + i * 16]);
+    expect(sizes).toEqual([16, 32, 48]);
+});
