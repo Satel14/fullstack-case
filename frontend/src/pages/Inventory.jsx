@@ -44,6 +44,7 @@ const Inventory = ({
     const [withdrawn, setWithdrawn] = useState([]);
     const [loading, setLoading] = useState(true);
     const [failed, setFailed] = useState(false);
+    const [withdrawalsFailed, setWithdrawalsFailed] = useState(false);
     const [selling, setSelling] = useState(false);
     const [now, setNow] = useState(Date.now());
     const busy = useRef(false);
@@ -78,6 +79,18 @@ const Inventory = ({
         setNow(Date.now());
         setPending(waitingRows);
         setWithdrawn(doneRows);
+        setWithdrawalsFailed(false);
+    };
+
+    const loadWithdrawalsOrSayWhy = async () => {
+        const generation = epoch.current;
+        try {
+            await loadWithdrawals();
+        } catch (e) {
+            if (generation === epoch.current) {
+                setWithdrawalsFailed(true);
+            }
+        }
     };
 
     const load = async () => {
@@ -98,7 +111,7 @@ const Inventory = ({
             }
             setActive(invRows);
             setSold(moneyRows);
-            await loadWithdrawals();
+            await loadWithdrawalsOrSayWhy();
         } catch (e) {
             if (!isCurrent()) {
                 return;
@@ -385,7 +398,8 @@ const Inventory = ({
                     )}
                 </TabPane>
                 <TabPane tab={t('inventory.withdrawTab')} key="withdraw">
-                    {pending.length || withdrawn.length ? (
+                    {withdrawalsFailed && <LoadError onRetry={loadWithdrawalsOrSayWhy} />}
+                    {!withdrawalsFailed && (pending.length || withdrawn.length ? (
                         <>
                             {pending.length > 0 && (
                                 <>
@@ -404,7 +418,7 @@ const Inventory = ({
                         </>
                     ) : (
                         <Empty description={t('inventory.withdrawEmpty')} />
-                    )}
+                    ))}
                 </TabPane>
             </Tabs>
         </div>

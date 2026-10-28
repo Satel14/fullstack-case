@@ -330,3 +330,31 @@ test('a row that shifts onto the next page during sell all is not counted twice'
         'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped {"sold":0,"skipped":205}',
     ));
 });
+
+test('if only the withdrawal lists fail, the loaded items stay usable and the withdrawals tab says so, with a retry', async () => {
+    server.inventory = inventoryRows(1);
+    let withdrawalsDown = true;
+    getProfileStorage.mockImplementation(({ status, limit, offset = 0 }) => {
+        if (withdrawalsDown && (status === 'waitingtrade' || status === 'received')) {
+            return Promise.reject({ error: 502 });
+        }
+        const byStatus = { inventory: server.inventory, money: server.sold };
+        const rows = byStatus[status] || [];
+        return Promise.resolve({ status: 200, data: rows.slice(offset, offset + Math.min(limit, 200)) });
+    });
+    renderInventory();
+
+    expect(await screen.findByRole('button', { name: /openCase\.sellFor/ })).toBeEnabled();
+    expect(screen.queryByText('common.loadFailed')).toBeNull();
+
+    fireEvent.click(screen.getByText('inventory.withdrawTab'));
+
+    expect(await screen.findByText('common.loadFailed')).toBeInTheDocument();
+    expect(screen.queryByText('inventory.withdrawEmpty')).toBeNull();
+
+    withdrawalsDown = false;
+    fireEvent.click(screen.getByRole('button', { name: /common\.retry/ }));
+
+    expect(await screen.findByText('inventory.withdrawEmpty')).toBeInTheDocument();
+    expect(screen.queryByText('common.loadFailed')).toBeNull();
+});
