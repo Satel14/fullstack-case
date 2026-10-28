@@ -43,7 +43,7 @@ const ARTICLES = [
 <h3>6. Your data</h3>
 <ul>
 <li>We store your login, email address, password hash, the item withdrawal information you entered (a link to your Steam profile), your chat messages and your history on the site.</li>
-<li>Apart from you, only the administrators can see your email address. It is used only for letters about your account: registration confirmation, a welcome letter, a warning when someone tries to register with your address, and password reset.</li>
+<li>Apart from you, only the administrators can see your email address on the site. It is used only for letters about your account: registration confirmation, a welcome letter, a warning when someone tries to register with your address, and password reset.</li>
 <li>The letters are sent through the Resend mail service, which receives the address and the text of each letter: your login and, in the confirmation and reset letters, a one-time link.</li>
 <li>The web server logs the time, IP address, browser and URL of every request, plus your account number or login for signed-in requests.</li>
 </ul>`,

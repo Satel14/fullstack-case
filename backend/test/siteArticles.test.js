@@ -105,7 +105,7 @@ test('the data section of the user agreement names every stored item, every lett
         .forEach((item) => assert.ok(uk.includes(item), `uk §6 misses "${item}"`));
     const en = dataSection(agreement.textEn, '<h3>6. Your data</h3>');
     ['login', 'email address', 'password hash', 'item withdrawal information', 'Steam', 'chat messages', 'history',
-        'Apart from you, only the administrators can see', 'Resend', 'text of each letter', 'one-time link', 'IP address',
+        'Apart from you, only the administrators can see your email address on the site', 'Resend', 'text of each letter', 'one-time link', 'IP address',
         'account number or login', ...Object.values(LETTERS).map((letter) => letter.en)]
         .forEach((item) => assert.ok(en.includes(item), `en §6 misses "${item}"`));
 });
