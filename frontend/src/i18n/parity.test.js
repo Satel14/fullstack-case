@@ -30,3 +30,11 @@ test('no translation value is empty', () => {
 
     expect(empty).toEqual([]);
 });
+
+test('no translation uses the modifier apostrophe, which the site fonts lack', () => {
+    const modifierApostrophe = Object.entries(flatten(uk)).concat(Object.entries(flatten(en)))
+        .filter(([, value]) => typeof value === 'string' && /ʼ/.test(value))
+        .map(([key]) => key);
+
+    expect(modifierApostrophe).toEqual([]);
+});

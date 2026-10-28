@@ -18,3 +18,11 @@ test('no server text contradicts what the site says about itself', () => {
 
     assert.deepStrictEqual(offending, []);
 });
+
+test('no server text uses the modifier apostrophe, which the site fonts lack', () => {
+    const offending = texts(MESSAGE)
+        .filter(([, text]) => /ʼ/.test(text))
+        .map(([key]) => key);
+
+    assert.deepStrictEqual(offending, []);
+});

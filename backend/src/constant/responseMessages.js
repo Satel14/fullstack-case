@@ -79,7 +79,7 @@ module.exports = {
         BANNED: 'Ваш акаунт заблоковано',
         REASON_REQUIRED: 'Вкажіть причину',
         SELF_FORBIDDEN: 'Не можна змінювати власний акаунт',
-        NEGATIVE_BALANCE: 'Баланс не може бути відʼємним',
+        NEGATIVE_BALANCE: "Баланс не може бути від'ємним",
         ROLE_INVALID: 'Невідома роль',
         ROLE_ADMIN_FORBIDDEN: 'Роль адміністратора призначається лише через CLI',
         TARGET_ADMIN_FORBIDDEN: 'Роль іншого адміністратора не можна змінити через панель',
