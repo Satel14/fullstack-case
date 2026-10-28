@@ -39,8 +39,9 @@ const publishedPorts = (text) => {
         if (!header) {
             return;
         }
-        if (header[2]) {
-            let flow = withoutComment(header[2]).trim();
+        const inline = withoutComment(header[2]).trim();
+        if (inline) {
+            let flow = inline;
             for (let j = i + 1; flow.startsWith('[') && !flow.includes(']') && j < lines.length; j += 1) {
                 flow += ` ${withoutComment(lines[j])}`;
             }
@@ -126,10 +127,13 @@ test('published ports are found however they are written', () => {
         '      "9002:9002", # first',
         "      '9003:9003'",
         '    ]',
+        '  f:',
+        '    ports: # local tools',
+        '      - "3310:3306"',
     ].join('\n');
     assert.deepStrictEqual(publishedPorts(sample), [
         '127.0.0.1:1:1', '3307:3306', '6379:6379', '8080:80', '9000:9000', '9001:9001', 'target: 80', 'published: 8081',
-        '3308:3306', '3309:3306', '9002:9002', '9003:9003',
+        '3308:3306', '3309:3306', '9002:9002', '9003:9003', '3310:3306',
     ]);
 });
 
