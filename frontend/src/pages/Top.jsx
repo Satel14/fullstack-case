@@ -6,6 +6,8 @@ import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import { timeConverterDDMMYY } from '../helpers/Time';
 import Loader from '../components/mini/Loader';
+import LoadError from '../components/mini/LoadError';
+import openNotification from '../components/mini/openNotification';
 import { getStorageTop } from '../api/all/storage';
 
 const loadItemsCount = 10;
@@ -21,6 +23,7 @@ class Top extends Component {
         this.state = {
             items: [],
             fetching: false,
+            failed: false,
             loadingMore: false,
             offset: 0,
             loadMoreButton: true,
@@ -38,7 +41,7 @@ class Top extends Component {
     }
 
     async getData() {
-        this.setState({ fetching: true });
+        this.setState({ fetching: true, failed: false });
 
         try {
             const { data } = await getStorageTop(loadItemsCount, 0);
@@ -58,6 +61,7 @@ class Top extends Component {
                 this.setState({
                     items: [],
                     fetching: false,
+                    failed: true,
                     loadMoreButton: false,
                 });
             }
@@ -66,15 +70,24 @@ class Top extends Component {
 
     async loadMore() {
         const { offset, loadingMore } = this.state;
+        const { t } = this.props;
         if (loadingMore) {
             return;
         }
 
         this.setState({ loadingMore: true });
 
-        const itemsAdd = await getStorageTop(loadItemsCount, offset)
-            .then(({ data }) => (Array.isArray(data) ? data : []))
-            .catch(() => []);
+        let itemsAdd;
+        try {
+            const { data } = await getStorageTop(loadItemsCount, offset);
+            itemsAdd = Array.isArray(data) ? data : [];
+        } catch (err) {
+            if (this.mounted) {
+                this.setState({ loadingMore: false });
+                openNotification('error', t('common.error'), t('common.loadFailed'));
+            }
+            return;
+        }
 
         if (!this.mounted) {
             return;
@@ -136,9 +149,17 @@ class Top extends Component {
 
     render() {
         const {
-            items, fetching, loadMoreButton, loadingMore,
+            items, fetching, failed, loadMoreButton, loadingMore,
         } = this.state;
         const { t } = this.props;
+
+        if (failed) {
+            return (
+                <div className="toppage">
+                    <LoadError onRetry={() => this.getData()} />
+                </div>
+            );
+        }
 
         return (
             <div className="toppage">
