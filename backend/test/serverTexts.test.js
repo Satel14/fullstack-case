@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const MESSAGE = require('../src/constant/responseMessages');
+const { RUSSIAN, MONEY } = require('./helpers/ukrainian');
 
 const texts = (node, at = '') => (typeof node === 'string'
     ? [[at, node]]
@@ -8,7 +9,7 @@ const texts = (node, at = '') => (typeof node === 'string'
 
 const UNTRUE = [
     /Epic/,
-    /грош|кошт(и|ів)|гривн|UAH/i,
+    MONEY,
 ];
 
 test('no server text contradicts what the site says about itself', () => {
@@ -18,14 +19,6 @@ test('no server text contradicts what the site says about itself', () => {
 
     assert.deepStrictEqual(offending, []);
 });
-
-const RUSSIAN = [
-    /[ыэёъ]/i,
-    /почт/i,
-    /аккаунт/i,
-    /співпа[дл]/i,
-    /не\s?вірн/i,
-];
 
 test('no server text uses Russian letters or Russian words', () => {
     const russian = texts(MESSAGE)

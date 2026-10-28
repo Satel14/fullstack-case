@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const express = require('express');
 const { resetTestDatabase } = require('./helpers/db');
+const { MONEY, russianWordsIn } = require('./helpers/ukrainian');
 
 let activeSequelize;
 
@@ -251,6 +252,8 @@ test('every limiter tells the player in Ukrainian that they are going too fast',
             assert.ok(limited, `${name} never answered 429`);
             assert.match(limited.body.message, /[а-яіїєґ]/i, `${name} answers "${limited.body.message}"`);
             assert.doesNotMatch(limited.body.message, /[A-Za-z]/, `${name} answers "${limited.body.message}"`);
+            assert.deepStrictEqual(russianWordsIn(limited.body.message), [], `${name} answers "${limited.body.message}"`);
+            assert.doesNotMatch(limited.body.message, MONEY, `${name} answers "${limited.body.message}"`);
         } finally {
             await close();
         }

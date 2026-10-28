@@ -3,6 +3,7 @@ const assert = require('node:assert');
 const { recreateTestDatabase } = require('./helpers/db');
 const { createMigrator } = require('../src/db/migrator');
 const mailSender = require('../src/modules/mailSender');
+const { russianWordsIn } = require('./helpers/ukrainian');
 
 const MIGRATION = '20261028000100-site-articles.js';
 const PREVIOUS = '20261028000000-article-translations.js';
@@ -36,7 +37,7 @@ test('the agreement, the rules, the ways to get credits and the contacts exist i
     assert.deepStrictEqual(rows.map((row) => row.id), SITE_ARTICLES);
     rows.forEach((row) => {
         [row.title, row.text, row.titleEn, row.textEn].forEach((value) => assert.ok(value && value.trim(), `article ${row.id} has an empty field`));
-        assert.doesNotMatch(`${row.title} ${row.text}`, /[ыэёъЫЭЁЪ]/, `article ${row.id} must not contain Russian letters`);
+        assert.deepStrictEqual(russianWordsIn(`${row.title} ${row.text}`), [], `article ${row.id} must not contain Russian letters or words`);
         assert.doesNotMatch(`${row.titleEn} ${row.textEn}`, /[а-яіїєґА-ЯІЇЄҐ]/, `article ${row.id} English text must not contain Cyrillic`);
     });
     const byId = Object.fromEntries(rows.map((row) => [row.id, row]));
@@ -85,10 +86,10 @@ test('the chat rules in the service rules are word for word the rules the chat s
 });
 
 const LETTERS = {
-    emailConfirmationEmail: { uk: 'підтвердження реєстрації', en: 'registration confirmation' },
-    welcomeEmail: { uk: 'привітання', en: 'welcome letter' },
-    registrationAttemptEmail: { uk: 'спробу зареєструватися', en: 'tries to register' },
-    passwordResetEmail: { uk: 'відновлення пароля', en: 'password reset' },
+    emailConfirmationEmail: { sender: 'emailConfirmationLink', uk: 'підтвердження реєстрації', en: 'registration confirmation' },
+    welcomeEmail: { sender: 'userRegistered', uk: 'привітання', en: 'welcome letter' },
+    registrationAttemptEmail: { sender: 'registrationAttemptNotice', uk: 'спробу зареєструватися', en: 'tries to register' },
+    passwordResetEmail: { sender: 'passwordResetLink', uk: 'відновлення пароля', en: 'password reset' },
 };
 
 test('the data section of the user agreement names every stored item, every letter and everyone who gets the data', async () => {
@@ -110,7 +111,7 @@ test('the data section of the user agreement names every stored item, every lett
 });
 
 test('the agreement accounts for every letter the site can send', () => {
-    const templates = Object.keys(mailSender).filter((name) => name.endsWith('Email'));
+    const letterExports = Object.entries(LETTERS).flatMap(([template, letter]) => [template, letter.sender]);
 
-    assert.deepStrictEqual(templates.sort(), Object.keys(LETTERS).sort());
+    assert.deepStrictEqual(Object.keys(mailSender).filter((name) => name !== 'isEnabled').sort(), letterExports.sort());
 });
