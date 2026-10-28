@@ -170,21 +170,16 @@ class Deposit extends Component {
                 <H2A title={t('deposit.title')} subTitle={t('deposit.subtitle')} />
                 <Fade>
                     <Row gutter={16}>
-                        <Col className="gutter-row" span={24}>
-                            <Tabs
-                                defaultActiveKey="money"
-                                tabBarExtraContent={(
-                                    <Button
-                                        type="primary"
-                                        danger
-                                        className="color-orange"
-                                        onClick={() => this.getPromocodePage()}
-                                    >
-                                        {t('deposit.promocodeBtn')}
-                                    </Button>
-                                )}
-                                items={tabItems}
-                            />
+                        <Col className="gutter-row depositpage-tabs" span={24}>
+                            <Button
+                                type="primary"
+                                danger
+                                className="color-orange depositpage-promocode"
+                                onClick={() => this.getPromocodePage()}
+                            >
+                                {t('deposit.promocodeBtn')}
+                            </Button>
+                            <Tabs defaultActiveKey="money" items={tabItems} />
                         </Col>
                     </Row>
                 </Fade>

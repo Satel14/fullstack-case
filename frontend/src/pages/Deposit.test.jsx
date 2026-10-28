@@ -74,3 +74,21 @@ test('leaving the page before the history arrives updates nothing', async () => 
     expect(errors.mock.calls.filter(([message]) => String(message).includes('unmounted component'))).toEqual([]);
     errors.mockRestore();
 });
+
+test('the promocode button leads to the promocode page and is not part of the tab bar', () => {
+    const push = jest.fn();
+    render(
+        <Provider store={createStore(combineReducers({ user: usersReducer }))}>
+            <MemoryRouter>
+                <Deposit history={{ push }} />
+            </MemoryRouter>
+        </Provider>,
+    );
+
+    const button = screen.getByRole('button', { name: 'deposit.promocodeBtn' });
+    expect(button.closest('.ant-tabs-nav')).toBeNull();
+
+    fireEvent.click(button);
+
+    expect(push).toHaveBeenCalledWith('/promocode');
+});
