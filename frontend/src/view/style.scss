@@ -338,8 +338,9 @@ p {
 
     .errorpage {
         height: 681px;
+        position: relative;
 
-        .span {
+        .errorpage-message {
             font-size: 54px;
             position: absolute;
             top: 50%;
@@ -349,6 +350,7 @@ p {
             white-space: nowrap;
             line-height: 1;
             color: #f51417;
+            text-align: center;
 
             i {
                 text-shadow: 1px 1px 4px #f51417, 0 0 15px #f51417;
@@ -359,6 +361,13 @@ p {
                 font-family: "Muller Bold";
                 line-height: 130px;
                 color: #fffffe;
+            }
+
+            a {
+                display: block;
+                margin-top: 24px;
+                font-size: 24px;
+                color: #4763bf;
             }
         }
     }

@@ -119,7 +119,8 @@
         }
     },
     "error": {
-        "notFound": "Page not found"
+        "notFound": "Page not found",
+        "goHome": "Back to the home page"
     },
     "banned": {
         "message": "This account is banned on the site!",
