@@ -13,6 +13,7 @@ import { withTranslation } from 'react-i18next';
 import Fade from 'react-reveal/Fade';
 import H2A from '../components/mini/H2A';
 import Loader from '../components/mini/Loader';
+import LoadError from '../components/mini/LoadError';
 import openNotification from '../components/mini/openNotification';
 import { getDepositHistory } from '../api/all/profile';
 import { SUPPORT_EMAIL } from '../config/publicInfo.js';
@@ -42,6 +43,7 @@ class Deposit extends Component {
             amount: '',
             deposits: [],
             loadingHistory: true,
+            historyFailed: false,
         };
 
         this.goToPayment = this.goToPayment.bind(this);
@@ -57,6 +59,7 @@ class Deposit extends Component {
     }
 
     async loadHistory() {
+        this.setState({ loadingHistory: true, historyFailed: false });
         try {
             const resp = await getDepositHistory();
             this.setState({
@@ -64,7 +67,7 @@ class Deposit extends Component {
                 loadingHistory: false,
             });
         } catch (e) {
-            this.setState({ deposits: [], loadingHistory: false });
+            this.setState({ deposits: [], loadingHistory: false, historyFailed: true });
         }
     }
 
@@ -85,7 +88,9 @@ class Deposit extends Component {
     }
 
     render() {
-        const { amount, deposits, loadingHistory } = this.state;
+        const {
+            amount, deposits, loadingHistory, historyFailed,
+        } = this.state;
         const { t } = this.props;
 
         const tabItems = [
@@ -132,7 +137,8 @@ class Deposit extends Component {
                 children: (
                     <div className="depositpage-list">
                         {loadingHistory && <Loader />}
-                        {!loadingHistory && deposits.length === 0 && (
+                        {!loadingHistory && historyFailed && <LoadError onRetry={() => this.loadHistory()} />}
+                        {!loadingHistory && !historyFailed && deposits.length === 0 && (
                             <div style={{ textAlign: 'center', opacity: 0.8 }}>
                                 {t('deposit.historyEmpty')}
                             </div>
