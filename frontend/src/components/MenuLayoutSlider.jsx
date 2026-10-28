@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import {
@@ -22,6 +22,26 @@ import { isAdmin } from '../helpers/permissions';
 const mapStateToProps = (state) => ({
     user: state.user,
 });
+
+const KEY_OF_PAGE = {
+    '/': 'cases',
+    '/top': 'topplayers',
+    '/bonus': 'bonus',
+    '/faq': 'faq',
+    '/article/8': 'moneynotenough',
+    '/provably-fair': 'provablyfair',
+    '/inventory': 'inventory',
+    '/login': 'login',
+    '/admin': 'admin',
+};
+
+const selectedKeys = (pathname) => {
+    const page = pathname.replace(/\/+$/, '') || '/';
+    if (page.startsWith('/case/')) {
+        return ['cases'];
+    }
+    return KEY_OF_PAGE[page] ? [KEY_OF_PAGE[page]] : [];
+};
 
 class MenuLayoutSlider extends React.Component {
     constructor(props) {
@@ -75,7 +95,7 @@ class MenuLayoutSlider extends React.Component {
 
         if (!isAuthorized(user)) {
             defaultMenu.push({
-                key: '6',
+                key: 'login',
                 label: <Link to="/login">{t('menu.login')}</Link>,
                 icon: <UserOutlined />,
             });
@@ -98,7 +118,7 @@ class MenuLayoutSlider extends React.Component {
                 <Menu
                     theme="dark"
                     mode="inline"
-                    defaultSelectedKeys={['cases']}
+                    selectedKeys={selectedKeys(this.props.location.pathname)}
                     items={this.getMenuItems()}
                 />
 
@@ -108,4 +128,4 @@ class MenuLayoutSlider extends React.Component {
     }
 }
 
-export default connect(mapStateToProps, null)(withTranslation()(MenuLayoutSlider));
+export default connect(mapStateToProps, null)(withRouter(withTranslation()(MenuLayoutSlider)));
