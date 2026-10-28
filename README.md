@@ -26,5 +26,7 @@ The backend applies migrations on start. The database starts empty, so fill it o
 then <code>docker compose restart backend</code> to load the items into Redis. `seedCases.js` resets case counters and
 admin edits, so run it only on a fresh database. Without `backend/scripts/data/market-usd.json` (gitignored, produced
 by `node scripts/fetchMarketPrices.js`) `buildPriceMap.js` loads the committed `priceMap.json` instead of rebuilding
-it. Email is off unless `RESEND_API_KEY` (and `RESEND_FROM`) is set in `.env`; while it is off, registration signs in
-without confirming the email and password recovery is unavailable.
+it. Email is off while `RESEND_API_KEY` in `.env` is empty: registration then signs in without confirming the email,
+and password recovery is unavailable. To turn it on, set `RESEND_API_KEY` and set `RESEND_FROM` to an address on a
+domain verified in Resend. With the default `onboarding@resend.dev` sender, mail reaches only the Resend account owner,
+so no one else can confirm a registration.
