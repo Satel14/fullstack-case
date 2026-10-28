@@ -1844,22 +1844,6 @@ blockquote {
         margin-left: 15px;
     }
 
-    @media (max-width: 767px) {
-        >.ant-input-affix-wrapper {
-            flex: 1 1 100%;
-            max-width: none;
-            margin-right: 0;
-        }
-
-        >.ant-radio-group {
-            margin-right: 0;
-        }
-
-        >button {
-            margin-left: 0;
-        }
-    }
-
     >.ant-radio-group {
         margin-right: 15px;
 
@@ -1890,6 +1874,22 @@ blockquote {
         .ant-checkbox-inner {
             border-color: #262e43 !important;
             background: transparent !important;
+        }
+    }
+
+    @media (max-width: 767px) {
+        >.ant-input-affix-wrapper {
+            flex: 1 1 100%;
+            max-width: none;
+            margin-right: 0;
+        }
+
+        >.ant-radio-group {
+            margin-right: 0;
+        }
+
+        >button {
+            margin-left: 0;
         }
     }
 }
