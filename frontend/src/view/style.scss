@@ -1639,6 +1639,7 @@ blockquote {
         position: relative;
         margin: 8px;
         border: 1px #00a0ff3d solid;
+        border-bottom: 3px solid var(--rarity, #00a0ff3d);
         width: 100px;
         height: 100px;
 

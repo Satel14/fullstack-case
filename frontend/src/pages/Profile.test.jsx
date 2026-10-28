@@ -155,7 +155,7 @@ test('a player whose statistics did not load shows no unique cases and no best d
             storage_id: 1, storage_itemId: 1507, storage_color: 'default', storage_caseId: 1,
         }],
     });
-    getItemsInfo.mockResolvedValue({ data: { 1507: { item_name: 'Nova | Caged Steel', pricesInCredits: { default: 7 } } } });
+    getItemsInfo.mockResolvedValue({ data: { 1507: { item_name: 'Nova | Caged Steel', item_grade: 'milspec', pricesInCredits: { default: 7 } } } });
 
     const { container } = renderProfile('5');
 
@@ -163,6 +163,7 @@ test('a player whose statistics did not load shows no unique cases and no best d
     expect(statNumbers(container)).toEqual(['0', '0']);
     expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('profile.noDrop');
     expect(container.querySelectorAll('.casehistory-itemlist_item')).toHaveLength(1);
+    expect(container.querySelector('.casehistory-itemlist_item').style.getPropertyValue('--rarity')).toBe('#4b69ff');
 });
 
 test('items that could not be loaded are left out of the history and the best drop', async () => {

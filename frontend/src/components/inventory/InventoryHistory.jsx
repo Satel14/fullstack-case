@@ -10,6 +10,7 @@ import { renderItemProp } from '../../helpers/Case';
 import { timeLeft } from '../../helpers/Time';
 import ItemColor from '../mini/ItemColor';
 import { getStorageLastItemsByUserId } from '../../api/all/storage';
+import { gradeStyle } from '../../helpers/grade';
 
 const mapStateToProps = (state) => ({
   itemCache: state.itemCache,
@@ -180,14 +181,9 @@ class InventoryHistory extends React.Component {
                             )}
                           >
                             <div
-                              className={
-                                `casehistory-itemlist_item r-${
-                                this.getShortInfoItem(
-                                  item.storage_itemId,
-                                  'item_rare',
-                                )}`
-                              }
+                              className="casehistory-itemlist_item"
                               style={{
+                                ...gradeStyle(this.getShortInfoItem(item.storage_itemId, 'item_grade')),
                                 backgroundImage: this.itemImage(item.storage_itemId),
                               }}
                             >

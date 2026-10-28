@@ -116,7 +116,7 @@ test('each history row shows the item picture from the item cache', async () => 
         type: ADD_ITEM_LIST_CACHE,
         payloadItems: {
             5: {
-                item_name: 'AK-47 | Redline', item_rare: 'Field Tested', item_type: 'Rifle', item_imagePath: imagePath,
+                item_name: 'AK-47 | Redline', item_rare: 'Field Tested', item_type: 'Rifle', item_imagePath: imagePath, item_grade: 'classified',
             },
         },
     });
@@ -132,4 +132,6 @@ test('each history row shows the item picture from the item cache', async () => 
 
     expect(cached.style.backgroundImage).toBe(`url(${encodeURI(imagePath)})`);
     expect(uncached.style.backgroundImage).toBe('none');
+    expect(cached.style.getPropertyValue('--rarity')).toBe('#d32ce6');
+    expect(uncached.style.getPropertyValue('--rarity')).toBe('#6d81b0');
 });

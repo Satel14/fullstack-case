@@ -17,6 +17,7 @@ import {
 } from '../api/all/storage';
 import { itemInfoFetch } from '../store/actions/itemCache';
 import roles from '../enum/role';
+import { gradeStyle } from '../helpers/grade';
 
 const STORAGE_LOAD_LIMIT = 200;
 
@@ -52,6 +53,7 @@ const describeDrop = (storageItem, itemInfoById, t) => {
         key: storageItem.storage_id,
         name: itemName(item, storageItem, t),
         imagePath: item.item_imagePath || '',
+        grade: item.item_grade || null,
     };
 };
 
@@ -283,6 +285,7 @@ class Profile extends Component {
                                                             <div
                                                                 className="casehistory-itemlist_item"
                                                                 style={{
+                                                                    ...gradeStyle(item.grade),
                                                                     backgroundImage: item.imagePath
                                                                         ? `url(${encodeURI(item.imagePath)})`
                                                                         : 'none',
