@@ -40,3 +40,12 @@ test('the committed casePrices.json prices every case in _all.js and nothing els
     const allCases = require('../src/constant/cases/_all');
     assert.deepStrictEqual(Object.keys(readJson('casePrices.json')).sort(), Object.keys(allCases).sort());
 });
+
+test('the committed gradeMap.json gives every item of the image tree a known grade, and nothing else', () => {
+    const { enumerateItems } = require('../scripts/lib/enumerateItems');
+    const { GRADES } = require('../scripts/lib/marketGrade');
+    const grades = readJson('gradeMap.json');
+
+    assert.deepStrictEqual(Object.keys(grades).sort(), enumerateItems().map((item) => String(item.itemId)).sort());
+    assert.deepStrictEqual(Object.entries(grades).filter(([, grade]) => !GRADES.includes(grade)), []);
+});

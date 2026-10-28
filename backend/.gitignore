@@ -26,3 +26,4 @@ yarn-error.log*
 scripts/data/*
 !scripts/data/casePrices.json
 !scripts/data/priceMap.json
+!scripts/data/gradeMap.json
