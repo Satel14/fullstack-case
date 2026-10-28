@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    render, screen, fireEvent,
+    render, screen, fireEvent, act,
 } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
@@ -60,4 +60,17 @@ test('a player without deposits is told the history is empty', async () => {
 
     expect(await screen.findByText('deposit.historyEmpty')).toBeInTheDocument();
     expect(screen.queryByText('common.loadFailed')).toBeNull();
+});
+
+test('leaving the page before the history arrives updates nothing', async () => {
+    let answer;
+    getDepositHistory.mockImplementationOnce(() => new Promise((resolve) => { answer = resolve; }));
+    const errors = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const { unmount } = renderDeposit();
+
+    unmount();
+    await act(async () => { answer({ data: [] }); });
+
+    expect(errors.mock.calls.filter(([message]) => String(message).includes('unmounted component'))).toEqual([]);
+    errors.mockRestore();
 });

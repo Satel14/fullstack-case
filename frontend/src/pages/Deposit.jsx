@@ -50,7 +50,12 @@ class Deposit extends Component {
     }
 
     componentDidMount() {
+        this.mounted = true;
         this.loadHistory();
+    }
+
+    componentWillUnmount() {
+        this.mounted = false;
     }
 
     getPromocodePage() {
@@ -62,12 +67,16 @@ class Deposit extends Component {
         this.setState({ loadingHistory: true, historyFailed: false });
         try {
             const resp = await getDepositHistory();
-            this.setState({
-                deposits: Array.isArray(resp && resp.data) ? resp.data : [],
-                loadingHistory: false,
-            });
+            if (this.mounted) {
+                this.setState({
+                    deposits: Array.isArray(resp && resp.data) ? resp.data : [],
+                    loadingHistory: false,
+                });
+            }
         } catch (e) {
-            this.setState({ deposits: [], loadingHistory: false, historyFailed: true });
+            if (this.mounted) {
+                this.setState({ deposits: [], loadingHistory: false, historyFailed: true });
+            }
         }
     }
 
