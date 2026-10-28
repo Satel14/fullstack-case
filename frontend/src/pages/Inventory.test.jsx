@@ -150,7 +150,8 @@ test('a load that finishes after the page closed updates nothing', async () => {
     expect(unmountedUpdates).toEqual([]);
 });
 
-test('a load that fails after the page closed does not report an error on the page the player went to', async () => {
+test('a load that fails after the page closed updates nothing and reports nothing on the page the player went to', async () => {
+    const consoleError = jest.spyOn(console, 'error');
     let failInventory;
     getProfileStorage.mockImplementation(({ status }) => (status === 'inventory'
         ? new Promise((resolve, reject) => { failInventory = reject; })
@@ -167,6 +168,9 @@ test('a load that fails after the page closed does not report an error on the pa
         await new Promise((resolve) => { setTimeout(resolve, 50); });
     });
 
+    const unmountedUpdates = consoleError.mock.calls.filter(([message]) => String(message).includes('unmounted component'));
+    consoleError.mockRestore();
+    expect(unmountedUpdates).toEqual([]);
     expect(openNotification).not.toHaveBeenCalled();
 });
 
