@@ -46,7 +46,7 @@ test('the opened count is refreshed after an open', async () => {
     const { container } = render(
         <Provider store={store}>
             <MemoryRouter>
-                <Case match={{ params: { id: 'havoc' } }} history={{ push: jest.fn() }} />
+                <Case match={{ params: { id: 'havoc' } }} history={{ push: jest.fn(), replace: jest.fn() }} />
             </MemoryRouter>
         </Provider>,
     );
@@ -89,7 +89,7 @@ test('a late answer for the previous case does not replace the case now shown', 
         caseCollection: { ITEMS: [] },
     })));
     const store = createStore(() => ({ itemCache: {} }));
-    const history = { push: jest.fn() };
+    const history = { push: jest.fn(), replace: jest.fn() };
 
     const { container, rerender } = render(casePage(store, 'havoc', history));
     rerender(casePage(store, 'phoenix', history));
@@ -102,6 +102,7 @@ test('a late answer for the previous case does not replace the case now shown', 
 
     expect(openedCount()).toBe('case.openedCount 3');
     expect(history.push).not.toHaveBeenCalled();
+    expect(history.replace).not.toHaveBeenCalled();
 });
 
 test('a late failure for the previous case does not send the player to not-found', async () => {
@@ -112,7 +113,7 @@ test('a late failure for the previous case does not send the player to not-found
         caseCollection: { ITEMS: [] },
     })));
     const store = createStore(() => ({ itemCache: {} }));
-    const history = { push: jest.fn() };
+    const history = { push: jest.fn(), replace: jest.fn() };
 
     const { container, rerender } = render(casePage(store, 'havoc', history));
     rerender(casePage(store, 'phoenix', history));
@@ -124,6 +125,7 @@ test('a late failure for the previous case does not send the player to not-found
     await settle();
 
     expect(history.push).not.toHaveBeenCalled();
+    expect(history.replace).not.toHaveBeenCalled();
     expect(openedCount()).toBe('case.openedCount 3');
 });
 
@@ -132,7 +134,7 @@ test('a failure that arrives after the player left the case page does not naviga
     const havoc = deferred();
     getCaseById.mockReturnValue(havoc.promise);
     const store = createStore(() => ({ itemCache: {} }));
-    const history = { push: jest.fn() };
+    const history = { push: jest.fn(), replace: jest.fn() };
 
     const { unmount } = render(casePage(store, 'havoc', history));
     unmount();
@@ -141,6 +143,7 @@ test('a failure that arrives after the player left the case page does not naviga
     await settle();
 
     expect(history.push).not.toHaveBeenCalled();
+    expect(history.replace).not.toHaveBeenCalled();
 });
 
 const updatesAfterClosing = async (unmount, answer) => {
@@ -227,7 +230,7 @@ test('every item of the case is looked up, cached or not, so a failed lookup is 
     render(
         <Provider store={store}>
             <MemoryRouter>
-                <Case match={{ params: { id: 'havoc' } }} history={{ push: jest.fn() }} />
+                <Case match={{ params: { id: 'havoc' } }} history={{ push: jest.fn(), replace: jest.fn() }} />
             </MemoryRouter>
         </Provider>,
     );
@@ -239,11 +242,12 @@ test('every item of the case is looked up, cached or not, so a failed lookup is 
 test('a case the server does not know sends the player to not-found', async () => {
     getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockRejectedValue({ error: 400, message: 'Кейс не існує' });
-    const history = { push: jest.fn() };
+    const history = { push: jest.fn(), replace: jest.fn() };
 
     render(casePage(createStore(() => ({ itemCache: {} })), 'nope', history));
 
-    await waitFor(() => expect(history.push).toHaveBeenCalledWith('/404'));
+    await waitFor(() => expect(history.replace).toHaveBeenCalledWith('/404'));
+    expect(history.push).not.toHaveBeenCalled();
     expect(screen.queryByText('common.loadFailed')).toBeNull();
 });
 
@@ -254,12 +258,13 @@ test.each([
     getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockReset();
     getCaseById.mockRejectedValueOnce(failure).mockResolvedValueOnce(caseResponse(7));
-    const history = { push: jest.fn() };
+    const history = { push: jest.fn(), replace: jest.fn() };
 
     const { container } = render(casePage(createStore(() => ({ itemCache: {} })), 'havoc', history));
 
     expect(await screen.findByText('common.loadFailed')).toBeInTheDocument();
     expect(history.push).not.toHaveBeenCalled();
+    expect(history.replace).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: /common\.retry/ }));
 

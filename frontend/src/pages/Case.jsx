@@ -129,7 +129,7 @@ class Case extends Component {
         }
 
         if (!caseData) {
-            history.push('/404');
+            history.replace('/404');
             return;
         }
 
