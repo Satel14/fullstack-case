@@ -134,6 +134,7 @@
     },
     "banned": {
         "message": "This account is banned on the site!",
+        "appeal": "If you think this is a mistake, write to {{email}}.",
         "logout": "Log out of account"
     },
     "faq": {
