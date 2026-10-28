@@ -66,6 +66,9 @@ const DOWN_EFFECTS = {
         + "and its favourite case reads each of the player's drops row by row and groups them in a temporary table again",
     '20261028000000-article-translations.js':
         'drops articles.titleEn and articles.textEn, so every English article text is lost and English pages show the Ukrainian one',
+    '20261028000100-site-articles.js':
+        'deletes the user agreement, the service rules, the "more credits" page and the contacts (articles 3, 6, 8 and 9) '
+        + 'unless their title was changed since, so the footer, menu and registration links show "article not found" again',
 };
 
 const status = async (migrator) => {
