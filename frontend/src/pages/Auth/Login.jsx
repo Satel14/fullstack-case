@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import {
@@ -29,6 +29,8 @@ const Login = (props) => {
     const { t } = useTranslation();
 
     const [loading, setLoading] = useState(false);
+    const mounted = useRef(true);
+    useEffect(() => () => { mounted.current = false; }, []);
     const failureText = (failure) => {
         if (failure.error === TOKEN_NOT_SAVED) {
             return t('auth.tokenNotSaved');
@@ -42,18 +44,24 @@ const Login = (props) => {
         return t('common.serverError');
     };
     const onFinish = (values) => {
+        const { history, location } = props;
         setLoading(true);
         return props.userPostFetch({
             login: values.username,
             password: values.password,
         }, values.remember !== false)
             .then((failure) => {
+                if (!mounted.current) {
+                    return undefined;
+                }
                 setLoading(false);
                 if (failure) {
                     openNotification('error', t('auth.login.errorTitle'), failureText(failure));
                     return undefined;
                 }
-                returnToTheAskingPage(props.history, props.location);
+                if (history.location.key === location.key) {
+                    returnToTheAskingPage(history, location);
+                }
                 openNotification(
                     'success',
                     t('auth.login.successTitle'),
@@ -62,6 +70,9 @@ const Login = (props) => {
                 return undefined;
             })
             .catch(() => {
+                if (!mounted.current) {
+                    return;
+                }
                 setLoading(false);
                 openNotification('error', t('auth.login.errorTitle'), t('common.serverError'));
             });

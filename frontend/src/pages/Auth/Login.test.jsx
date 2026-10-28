@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    render, screen, fireEvent, waitFor,
+    render, screen, fireEvent, waitFor, act,
 } from '@testing-library/react';
 import { MemoryRouter, Route, Switch } from 'react-router-dom';
 import { Provider } from 'react-redux';
@@ -137,6 +137,39 @@ test('a guest who chose to sign in from a page goes back to it, leaving no secon
     fill();
 
     await waitFor(() => expect(screen.getByText('/case/havoc | /,/case/havoc')).toBeInTheDocument());
+});
+
+test.each([
+    ['goes back', (history) => history.goBack(), '/case/havoc'],
+    ['opens another page', (history) => history.push('/top'), '/top'],
+])('a player who %s while the sign-in is pending stays where they went', async (_, leave, expected) => {
+    let answer;
+    userPostFetch.mockImplementation(() => () => new Promise((resolve) => { answer = resolve; }));
+    const consoleError = jest.spyOn(console, 'error');
+    let routerHistory;
+    render(
+        <Provider store={createStore(() => ({}), applyMiddleware(thunk))}>
+            <MemoryRouter initialEntries={['/', '/case/havoc', { pathname: '/login', state: { goBack: true } }]} initialIndex={2}>
+                <Route render={({ history }) => { routerHistory = history; return null; }} />
+                <Switch>
+                    <Route path="/login" component={Login} />
+                    <Route path="/case/:id" render={() => <div>case page</div>} />
+                    <Route path="/top" render={() => <div>top page</div>} />
+                    <Route path="/" render={() => <div>home page</div>} />
+                </Switch>
+            </MemoryRouter>
+        </Provider>,
+    );
+
+    fill();
+    await waitFor(() => expect(answer).toBeDefined());
+    act(() => leave(routerHistory));
+    await act(async () => { answer(false); });
+
+    expect(routerHistory.location.pathname).toBe(expected);
+    const unmountedUpdates = consoleError.mock.calls.filter(([message]) => String(message).includes('unmounted component'));
+    consoleError.mockRestore();
+    expect(unmountedUpdates).toEqual([]);
 });
 
 test('"remember me" is ticked by default, and unticking it asks for a session that ends with the browser', async () => {
