@@ -61,7 +61,7 @@ class Settings extends Component {
             <div className="settingspage">
                 <H2A title={t('settings.title')} subTitle="" />
                 <Row gutter={16} style={{ marginTop: '30px' }}>
-                    <Col className="gutter-row" span={12}>
+                    <Col className="gutter-row" xs={24} md={12}>
                         <Form
                             labelCol={{ span: 6 }}
                             wrapperCol={{ span: 17 }}
@@ -110,7 +110,7 @@ class Settings extends Component {
 
                         </Form>
                     </Col>
-                    <Col className="gutter-row" span={11}>
+                    <Col className="gutter-row" xs={24} md={11}>
                         <div>
                             <Promocode />
                         </div>
