@@ -10,10 +10,15 @@ const { Panel } = Collapse;
 const Faq = () => {
     const { t } = useTranslation();
 
-    const faqItems = [1, 2, 3, 4, 5].map((n) => ({
+    const answer = (n) => {
+        const text = t(`faq.q${n}.answer`);
+        return n === 4 && SUPPORT_EMAIL ? `${text} ${t('faq.q4.email', { email: SUPPORT_EMAIL })}` : text;
+    };
+
+    const faqItems = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({
         key: String(n),
         question: t(`faq.q${n}.question`),
-        answer: t(`faq.q${n}.answer`, { email: SUPPORT_EMAIL }),
+        answer: answer(n),
     }));
 
     return (

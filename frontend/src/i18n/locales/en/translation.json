@@ -145,19 +145,36 @@
         },
         "q2": {
             "question": "How do I top up my balance?",
-            "answer": "Go to the \"Top up\" page and choose an amount. If the payment is not credited within an hour, contact support."
+            "answer": "Open the \"Top up\" page and enter an amount — the credits are added at once. This is a demo: top-ups are simulated and no real money is charged. Bonuses and promocodes add to your balance for free."
         },
         "q3": {
             "question": "What if an item didn't appear in my inventory?",
-            "answer": "Refresh the page and check your inventory history. If the problem persists, write to support with your ID and the time you opened the case."
+            "answer": "Refresh the page and check your inventory history. If the problem persists, write to the staff in the chat with your login and the time you opened the case."
         },
         "q4": {
             "question": "How do I contact support?",
-            "answer": "Write to us at {{email}}. Include the details of the problem: login, time of the event and, if possible, a screenshot."
+            "answer": "Write to the staff in the site chat (after signing in). Include your login, the time of the event and, if possible, a screenshot.",
+            "email": "Or write to {{email}}."
         },
         "q5": {
             "question": "Can I use promocodes?",
-            "answer": "Yes, promocodes can be entered in the profile settings. After activation the bonus is credited automatically."
+            "answer": "Yes. Enter a code on the \"Promocodes\" page or in the settings, and the bonus is added at once. Each code can be used once."
+        },
+        "q6": {
+            "question": "Are the openings fair?",
+            "answer": "Yes, the result is decided by a provably fair algorithm. Before opening you see the hash of the server seed, and you can change your client seed at any time. After you change the server seed, you can verify every one of your openings on the \"Provably Fair\" page."
+        },
+        "q7": {
+            "question": "How do I withdraw an item?",
+            "answer": "Fill in the item withdrawal information in the settings and press \"Withdraw\" on the item in your inventory. This is a demo: after about a minute the item is marked as received, and nothing is sent on Steam. You can cancel the request until it completes."
+        },
+        "q8": {
+            "question": "Can I withdraw money?",
+            "answer": "No. Your balance is the site's virtual currency: it is not money and cannot be exchanged for money."
+        },
+        "q9": {
+            "question": "What bonuses are there?",
+            "answer": "A daily bonus (50 ₴ once a day), a welcome bonus (100 ₴), one for filling in your item withdrawal information (50 ₴), one for your first opened case (100 ₴) and one for your first withdrawn item (200 ₴). Claim them on the \"Bonuses\" page."
         }
     },
     "deposit": {
@@ -167,7 +184,7 @@
         "tabHistory": "Top-up history",
         "amountLabel": "ENTER AMOUNT (UAH)",
         "submit": "Top up balance",
-        "info": "To top up your balance you will be redirected to the payment system's site. The balance is credited instantly, but if that doesn't happen within an hour, email us at {{email}} with the detailed payment information.",
+        "info": "This is a demo: top-ups are simulated, no real money is charged, and the site's virtual currency cannot be exchanged for money. The credits are added at once.",
         "promocodeBtn": "Use a promocode to top up",
         "historyEmpty": "No top-ups yet.",
         "invalidTitle": "Invalid amount",

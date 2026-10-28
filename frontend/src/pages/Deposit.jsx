@@ -16,7 +16,6 @@ import Loader from '../components/mini/Loader';
 import LoadError from '../components/mini/LoadError';
 import openNotification from '../components/mini/openNotification';
 import { getDepositHistory } from '../api/all/profile';
-import { SUPPORT_EMAIL } from '../config/publicInfo.js';
 
 const MIN_AMOUNT = 1;
 const MAX_AMOUNT = 100000;
@@ -135,7 +134,7 @@ class Deposit extends Component {
                         </div>
 
                         <div className="depositpage-list__paymentlist">
-                            {t('deposit.info', { email: SUPPORT_EMAIL })}
+                            {t('deposit.info')}
                         </div>
                     </div>
                 ),
