@@ -406,6 +406,21 @@ p {
                 font-size: 24px;
                 color: #4763bf;
             }
+
+            @media (max-width: 767px) {
+                width: 100%;
+                font-size: 28px;
+                white-space: normal;
+
+                i {
+                    font-size: 120px;
+                    line-height: 90px;
+                }
+
+                a {
+                    font-size: 18px;
+                }
+            }
         }
     }
 }
