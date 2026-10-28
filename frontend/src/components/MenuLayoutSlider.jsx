@@ -36,7 +36,7 @@ const KEY_OF_PAGE = {
 };
 
 const selectedKeys = (pathname) => {
-    const page = pathname.replace(/\/+$/, '') || '/';
+    const page = pathname.toLowerCase().replace(/\/+$/, '') || '/';
     if (page.startsWith('/case/')) {
         return ['cases'];
     }

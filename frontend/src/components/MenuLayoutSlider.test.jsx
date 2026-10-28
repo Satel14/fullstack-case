@@ -44,6 +44,19 @@ test('the menu highlights the item of the page that is open', () => {
     });
 });
 
+test('the highlight ignores letter case, as the routes do', () => {
+    const cases = [
+        ['/Top', guest, ['menu.topPlayers']],
+        ['/Case/dust2', guest, ['menu.cases']],
+        ['/INVENTORY', player, ['inventory.title']],
+    ];
+    cases.forEach(([path, user, expected]) => {
+        const { container, unmount } = renderMenu(user, path);
+        expect([path, highlighted(container)]).toEqual([path, expected]);
+        unmount();
+    });
+});
+
 test('a page without its own menu item highlights nothing', () => {
     ['/settings', '/profile/3', '/article/3', '/deposit'].forEach((path) => {
         const { container, unmount } = renderMenu(player, path);
