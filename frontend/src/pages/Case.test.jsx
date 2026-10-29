@@ -387,3 +387,26 @@ test('without odds there is no summary by grade', async () => {
     expect(screen.queryByRole('list', { name: 'case.oddsByGrade' })).toBeNull();
     expect(document.querySelector('.casepage-itemlist_item__chance')).toBeNull();
 });
+
+test('on the English site the chances are written the English way', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    getCaseById.mockResolvedValue({ ...caseResponse(0), caseCollection: { ITEMS: [{ id: 1 }] }, odds: { 1: 0.0917 } });
+    const store = createStore(() => ({
+        itemCache: {
+            1: {
+                item_itemId: 1, item_name: 'AK-47 | Redline', item_grade: 'classified', pricesInCredits: { default: 900 },
+            },
+        },
+    }));
+
+    render(
+        <Provider store={store}>
+            <MemoryRouter>
+                <Case match={{ params: { id: 'havoc' } }} history={{ push: jest.fn(), replace: jest.fn() }} i18n={{ language: 'en' }} />
+            </MemoryRouter>
+        </Provider>,
+    );
+
+    expect(await screen.findByText('9.17%', { selector: '.casepage-itemlist_item__chance' })).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'case.oddsByGrade' })).toHaveTextContent('grade.classified 9.17%');
+});

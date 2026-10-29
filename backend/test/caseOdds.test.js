@@ -43,3 +43,18 @@ test('a case comes with the chance of every item it holds, as the draw works the
         [...new Set(allCases.dust2.ITEMS.map((item) => String(item.id)))].sort(),
     );
 });
+
+test('a case that has no definition in code comes without odds', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await sequelize.query(
+        "INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) VALUES ('nocode', 'No code', 100, 0, 1, 1, 0, 'weapon', -1)",
+    );
+    const CaseController = require('../src/controllers/case');
+
+    const answer = await respond(CaseController.getCaseById, { params: { id: 'nocode' } });
+
+    assert.strictEqual(answer.code, 200);
+    assert.strictEqual(answer.payload.data.case_id, 'nocode');
+    assert.strictEqual(answer.payload.odds, undefined);
+});
