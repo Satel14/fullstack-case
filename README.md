@@ -24,7 +24,11 @@ The backend applies migrations on start. The database starts empty, so fill it o
 <code>docker exec fullstack_case_backend sh -c "npm run seed && node scripts/buildPriceMap.js && node scripts/seedCases.js"</code>
 
 then <code>docker compose restart backend</code> to load the items into Redis. `seedCases.js` resets case counters and
-admin edits, so run it only on a fresh database. Without `backend/scripts/data/market-usd.json` (gitignored, produced
+admin edits, so run it only on a fresh database. When an update brings regenerated cases (new contents and
+`casePrices.json`) to a stack that already has data, rebuild the backend first —
+<code>docker compose up -d --build backend</code>, then <code>docker compose restart nginx</code> — and straight away
+re-price the existing cases with <code>docker exec fullstack_case_backend node scripts/seedCases.js --prices-only</code>,
+which changes only the price (and clears a sale the new price meets or exceeds). Without `backend/scripts/data/market-usd.json` (gitignored, produced
 by `node scripts/fetchMarketPrices.js`) `buildPriceMap.js` loads the committed `priceMap.json` instead of rebuilding
 it. Email is off while `RESEND_API_KEY` in `.env` is empty: registration then signs in without confirming the email,
 and password recovery is unavailable. To turn it on, set `RESEND_API_KEY` and set `RESEND_FROM` to an address on a
