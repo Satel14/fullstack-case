@@ -23,6 +23,7 @@ const renderPage = (search) => render(
                 <Route path="/confirm-email" component={ConfirmEmail} />
                 <Route path="/" render={() => <div>home page</div>} />
             </Switch>
+            <Route render={({ location }) => <div data-testid="address">{`${location.pathname}${location.search}${location.hash}`}</div>} />
         </MemoryRouter>
     </Provider>,
 );
@@ -94,4 +95,22 @@ test('a link without a token says so', () => {
 
     expect(screen.getByText('auth.confirm.missingToken')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'auth.confirm.submit' })).toBeNull();
+});
+
+test('the token in the link fragment is confirmed and leaves the address bar at once', async () => {
+    renderPage(`#token=${'b'.repeat(64)}`);
+
+    expect(screen.getByTestId('address')).toHaveTextContent(/^\/confirm-email$/);
+    fireEvent.click(screen.getByRole('button', { name: 'auth.confirm.submit' }));
+
+    await waitFor(() => expect(confirmEmailFetch).toHaveBeenCalledWith('b'.repeat(64)));
+});
+
+test('a link mailed with ?token= still confirms, and its token leaves the address bar too', async () => {
+    renderPage(`?token=${'c'.repeat(64)}`);
+
+    expect(screen.getByTestId('address')).toHaveTextContent(/^\/confirm-email$/);
+    fireEvent.click(screen.getByRole('button', { name: 'auth.confirm.submit' }));
+
+    await waitFor(() => expect(confirmEmailFetch).toHaveBeenCalledWith('c'.repeat(64)));
 });

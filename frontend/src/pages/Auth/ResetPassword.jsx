@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useHistory, useLocation } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { Form, Input, Button } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -7,11 +7,12 @@ import { resetPassword } from '../../api/all/user';
 import openNotification from '../../components/mini/openNotification';
 import { acceptablePassword } from '../../helpers/credentials';
 import { clientErrorMessage } from '../../helpers/serverMessage';
+import { useLinkToken } from '../../helpers/linkToken';
 
 const ResetPassword = () => {
     const { t } = useTranslation();
     const history = useHistory();
-    const token = new URLSearchParams(useLocation().search).get('token');
+    const token = useLinkToken();
     const [loading, setLoading] = useState(false);
 
     if (!token) {

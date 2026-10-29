@@ -76,7 +76,7 @@ test('a site address ending in a slash still gives a reset link the site can ope
 
         assert.strictEqual(result.code, 200);
         assert.strictEqual(links.length, 1);
-        assert.match(links[0], /^http:\/\/192\.168\.1\.10:3009\/reset-password\?token=[^/]+$/);
+        assert.match(links[0], /^http:\/\/192\.168\.1\.10:3009\/reset-password#token=[^/]+$/);
     } finally {
         restoreEnv('CLIENT_ORIGIN', saved.origin);
         mailSender.isEnabled = saved.isEnabled;

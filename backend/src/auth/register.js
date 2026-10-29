@@ -29,7 +29,7 @@ const mailConfirmationOrNotice = async ({
     });
     mailSender.emailConfirmationLink(email, {
         login,
-        link: `${clientOrigin()}/confirm-email?token=${token}`,
+        link: `${clientOrigin()}/confirm-email#token=${token}`,
         hours: EmailVerificationService.TOKEN_TTL_MS / 3600000,
     });
 };

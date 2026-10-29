@@ -396,7 +396,7 @@ test('with mail, the letter links to the confirm page with the pending token', a
     }
 
     const [{ link, hours }] = mailLog;
-    const match = /^http:\/\/192\.168\.1\.10:3009\/confirm-email\?token=([0-9a-f]{64})$/.exec(link);
+    const match = /^http:\/\/192\.168\.1\.10:3009\/confirm-email#token=([0-9a-f]{64})$/.exec(link);
     assert.ok(match, link);
     assert.strictEqual(hours, 24);
     const [row] = await pendingRows(sequelize);

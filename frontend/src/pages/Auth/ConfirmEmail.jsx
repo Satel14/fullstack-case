@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { Link, useHistory, useLocation } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { confirmEmailFetch } from '../../store/actions/user';
 import { TOKEN_NOT_SAVED } from '../../api/token';
 import openNotification from '../../components/mini/openNotification';
+import { useLinkToken } from '../../helpers/linkToken';
 
 const ConfirmEmail = () => {
     const { t } = useTranslation();
     const history = useHistory();
     const dispatch = useDispatch();
-    const token = new URLSearchParams(useLocation().search).get('token');
+    const token = useLinkToken();
     const [loading, setLoading] = useState(false);
     const [failure, setFailure] = useState(null);
 

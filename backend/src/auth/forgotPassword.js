@@ -16,7 +16,7 @@ const mailResetLink = async (email) => {
     const token = await PasswordResetService.issueToken(user.user_id);
     mailSender.passwordResetLink(user.user_email, {
         login: user.user_login,
-        link: `${clientOrigin()}/reset-password?token=${token}`,
+        link: `${clientOrigin()}/reset-password#token=${token}`,
         minutes: PasswordResetService.TOKEN_TTL_MS / 60000,
     });
 };

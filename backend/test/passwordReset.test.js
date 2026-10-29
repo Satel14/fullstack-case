@@ -64,7 +64,7 @@ const setup = async () => {
     return { sequelize, userId: id, hash };
 };
 
-const tokenFromLink = (link) => new URL(link).searchParams.get('token');
+const tokenFromLink = (link) => new URLSearchParams(new URL(link).hash.slice(1)).get('token');
 
 const storedPassword = async (sequelize) => {
     const [rows] = await sequelize.query("SELECT password FROM users WHERE login = 'player'");
@@ -85,7 +85,7 @@ test('a reset request mails a link, stores only the token hash and leaves the pa
 
         const token = tokenFromLink(sent[0].link);
         assert.match(token, /^[0-9a-f]{64}$/);
-        assert.match(sent[0].link, /\/reset-password\?token=/);
+        assert.match(sent[0].link, /\/reset-password#token=/);
 
         const [rows] = await sequelize.query('SELECT tokenHash, usedAt, expiresAt FROM password_resets');
         assert.strictEqual(rows.length, 1);

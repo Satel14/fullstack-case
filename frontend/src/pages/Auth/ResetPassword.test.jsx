@@ -29,6 +29,7 @@ const renderAt = (url) => render(
             <Route path="/reset-password" component={ResetPassword} />
             <Route path="/login" render={() => <div>login page</div>} />
         </Switch>
+        <Route render={({ location }) => <div data-testid="address">{`${location.pathname}${location.search}${location.hash}`}</div>} />
     </MemoryRouter>,
 );
 
@@ -122,4 +123,24 @@ test('a Cyrillic password within 72 bytes is accepted', async () => {
     fill(cyrillic, cyrillic);
 
     await waitFor(() => expect(resetPassword).toHaveBeenCalledWith(TOKEN, cyrillic));
+});
+
+test('the token in the link fragment resets the password and leaves the address bar at once', async () => {
+    resetPassword.mockResolvedValue({ message: 'ok' });
+    renderAt(`/reset-password#token=${'b'.repeat(64)}`);
+
+    expect(screen.getByTestId('address')).toHaveTextContent(/^\/reset-password$/);
+    fill('newpass1', 'newpass1');
+
+    await waitFor(() => expect(resetPassword).toHaveBeenCalledWith('b'.repeat(64), 'newpass1'));
+});
+
+test('a link mailed with ?token= still resets, and its token leaves the address bar too', async () => {
+    resetPassword.mockResolvedValue({ message: 'ok' });
+    renderAt(`/reset-password?token=${TOKEN}`);
+
+    expect(screen.getByTestId('address')).toHaveTextContent(/^\/reset-password$/);
+    fill('newpass1', 'newpass1');
+
+    await waitFor(() => expect(resetPassword).toHaveBeenCalledWith(TOKEN, 'newpass1'));
 });
