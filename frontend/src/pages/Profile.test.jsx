@@ -372,3 +372,31 @@ test('pointing at a drop of the history or at the best drop names its grade', as
         'item.name: AWP | Worm God, item.type: sniper rifles, item.rarity: grade.restricted, item.wear: Field Tested, item.color: painted',
     ));
 });
+
+test('a screen reader hears the name and the grade of each drop', async () => {
+    getUserById.mockResolvedValue({
+        data: {
+            user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
+        },
+    });
+    getStorageItemsCountByUserId.mockResolvedValue({
+        data: 1, uniqueCases: 1, bestDrop: { storage_id: 1, storage_itemId: 88, storage_color: 'default' },
+    });
+    getStorageLastItemsByUserId.mockResolvedValue({
+        data: [{
+            storage_id: 2, storage_itemId: 1507, storage_color: 'default', storage_caseId: 1,
+        }],
+    });
+    const items = {
+        88: {
+            item_itemId: 88, item_name: 'AWP | Worm God', item_grade: 'restricted', pricesInCredits: { default: 300 },
+        },
+        1507: { item_itemId: 1507, item_name: 'Nova | Caged Steel', pricesInCredits: { default: 7 } },
+    };
+    getItemsInfo.mockImplementation((ids) => Promise.resolve({ data: Object.fromEntries(ids.map((id) => [id, items[id]])) }));
+
+    renderProfile('5');
+
+    expect(await screen.findByRole('img', { name: 'AWP | Worm God, grade.restricted' })).toHaveClass('profilepage-firstblock__bestdrop__drop');
+    expect(screen.getByRole('img', { name: 'Nova | Caged Steel' })).toHaveClass('casehistory-itemlist_item');
+});

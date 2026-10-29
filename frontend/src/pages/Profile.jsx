@@ -17,7 +17,7 @@ import {
 } from '../api/all/storage';
 import { itemInfoFetch } from '../store/actions/itemCache';
 import roles from '../enum/role';
-import { gradeStyle } from '../helpers/grade';
+import { gradeName, gradeStyle } from '../helpers/grade';
 import { renderItemProp } from '../helpers/Case';
 
 const STORAGE_LOAD_LIMIT = 200;
@@ -59,6 +59,8 @@ const describeDrop = (storageItem, itemInfoById, t) => {
         color: storageItem.storage_color,
     };
 };
+
+const dropLabel = (drop, t) => [drop.name, gradeName(drop.grade, t)].filter(Boolean).join(', ');
 
 const buildHistoryItems = (storageItems, itemInfoById, t) => storageItems
     .map((storageItem) => describeDrop(storageItem, itemInfoById, t))
@@ -258,6 +260,8 @@ class Profile extends Component {
                                 <Tooltip placement="bottom" title={bestDrop && renderItemProp(bestDrop.item, bestDrop.color, t)}>
                                     <div
                                         className="profilepage-firstblock__bestdrop__drop"
+                                        role={bestDrop ? 'img' : undefined}
+                                        aria-label={bestDrop ? dropLabel(bestDrop, t) : undefined}
                                         style={{
                                             ...(bestDrop && gradeStyle(bestDrop.grade)),
                                             backgroundImage: bestDropImg ? `url(${bestDropImg})` : 'none',
@@ -290,6 +294,8 @@ class Profile extends Component {
                                                         <Tooltip placement="bottom" title={renderItemProp(item.item, item.color, t)}>
                                                             <div
                                                                 className="casehistory-itemlist_item"
+                                                                role="img"
+                                                                aria-label={dropLabel(item, t)}
                                                                 style={{
                                                                     ...gradeStyle(item.grade),
                                                                     backgroundImage: item.imagePath
