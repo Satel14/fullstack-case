@@ -90,7 +90,7 @@ module.exports.verify = async (req, res) => {
             });
         }
 
-        const caseDef = allCases[caseId];
+        const caseDef = Object.hasOwn(allCases, caseId) ? allCases[caseId] : null;
         if (!caseDef) {
             return res.status(422).json({ status: 422, message: MESSAGE.CASE.NOT_EXIST });
         }
@@ -98,7 +98,7 @@ module.exports.verify = async (req, res) => {
         const result = deriveWinner(serverSeed, clientSeed, nonce, caseDef, itemHash);
         return res.status(200).json({ status: 200, data: { ...result, source: 'current' } });
     } catch (e) {
-        return res.status(400).json({ status: 400, message: MESSAGE.PROVABLY_FAIR.VERIFY_ERROR });
+        return answerFailure(res, e, { status: 400, where: 'provably-fair.verify' });
     }
 };
 

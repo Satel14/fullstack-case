@@ -17,6 +17,8 @@ const Article = require('../src/models/article');
 const Module = require('../src/models/module');
 const Storage = require('../src/models/storage');
 const ProvablyFairSeed = require('../src/models/provablyFairSeed');
+const CaseOpenRecord = require('../src/models/caseOpenRecord');
+const RedisManager = require('../src/redis/manager');
 
 const OUTAGE = 'connect ECONNREFUSED 10.20.30.40:3306';
 
@@ -54,6 +56,7 @@ const withStubs = async (stubs, fn) => {
 const outage = async () => { throw new Error(OUTAGE); };
 const nothing = async () => null;
 const player = { profile: { user_id: 1 } };
+const drawCheck = (fields) => ({ body: { serverSeed: 'server', clientSeed: 'client', nonce: '0', ...fields } });
 
 const OUTAGES = [
     {
@@ -90,6 +93,16 @@ const OUTAGES = [
         name: 'the provably fair state',
         stubs: [[ProvablyFairSeed, 'findOne', outage]],
         call: () => respond(require('../src/controllers/provablyFair').getState, { user: player }),
+    },
+    {
+        name: 'a draw check of a stored open',
+        stubs: [[CaseOpenRecord, 'findByPk', outage]],
+        call: () => respond(require('../src/controllers/provablyFair').verify, drawCheck({ openId: 5 })),
+    },
+    {
+        name: 'a draw check against the current case',
+        stubs: [[RedisManager, 'getAllDataHashWithKey', outage]],
+        call: () => respond(require('../src/controllers/provablyFair').verify, drawCheck({ caseId: 'dust2' })),
     },
     {
         name: 'the site stats',
@@ -137,6 +150,13 @@ const REFUSALS = [
         stubs: [[Case, 'findOne', nothing]],
         call: () => respond(require('../src/controllers/case').getCaseById, { params: { id: 'nope' } }),
         code: 400,
+        message: MESSAGE.CASE.NOT_EXIST,
+    },
+    {
+        name: 'a draw check of a name that is no case',
+        stubs: [],
+        call: () => respond(require('../src/controllers/provablyFair').verify, drawCheck({ caseId: 'constructor' })),
+        code: 422,
         message: MESSAGE.CASE.NOT_EXIST,
     },
     {
