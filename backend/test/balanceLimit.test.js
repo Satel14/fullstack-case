@@ -82,6 +82,49 @@ test('a credit too small to change the stored balance is not taken for a full ba
     assert.deepStrictEqual((await ledger(sequelize)).balances, [['player', '100.29']]);
 });
 
+test('a credit of nothing at the largest balance is not refused', async () => {
+    const sequelize = await freshDatabase([['player', '9999999999.99']]);
+    const UserService = require('../src/services/user');
+
+    await sequelize.transaction((transaction) => UserService.incrementBalance(0, 1, { transaction }));
+
+    assert.deepStrictEqual((await ledger(sequelize)).balances, [['player', '9999999999.99']]);
+});
+
+test('a credit outside a transaction is refused before it touches the balance', async () => {
+    const sequelize = await freshDatabase([['player', '100.00']]);
+    const UserService = require('../src/services/user');
+
+    await assert.rejects(UserService.incrementBalance(10, 1));
+    await assert.rejects(UserService.incrementBalance(10, 1, {}));
+
+    assert.deepStrictEqual((await ledger(sequelize)).balances, [['player', '100.00']]);
+});
+
+test('a credit to a player who does not exist is refused', async () => {
+    const sequelize = await freshDatabase([['player', '100.00']]);
+    const UserService = require('../src/services/user');
+
+    await assert.rejects(
+        sequelize.transaction((transaction) => UserService.incrementBalance(10, 99, { transaction })),
+        { message: MESSAGE.USER.NOT_EXIST },
+    );
+});
+
+test('two deposits that would pass the largest balance together: one goes through, the other is refused', async () => {
+    const sequelize = await freshDatabase([['player', '9999999849.99']]);
+    const { depositBalance } = require('../src/controllers/user');
+
+    const { result: results, lines } = await quietly(() => Promise.all([
+        respond(depositBalance, asPlayer(1, { body: { amount: 100 } })),
+        respond(depositBalance, asPlayer(1, { body: { amount: 100 } })),
+    ]));
+
+    assert.deepStrictEqual(results.map((r) => r.code).sort(), [200, 422]);
+    assert.deepStrictEqual(await ledger(sequelize), { balances: [['player', '9999999949.99']], history: 1 });
+    assert.deepStrictEqual(lines, []);
+});
+
 test('a deposit that would pass the largest balance is refused and credits nothing', async () => {
     const sequelize = await freshDatabase([['player', NEAR_THE_TOP]]);
     const before = await ledger(sequelize);
@@ -196,4 +239,16 @@ test('an admin correction that would pass the largest balance is refused and lea
     const [[{ actions }]] = await sequelize.query('SELECT COUNT(*) AS actions FROM admin_actions');
     assert.strictEqual(Number(actions), 0);
     assert.deepStrictEqual(lines, []);
+});
+
+test('an admin can lower a balance that sits at the largest balance', async () => {
+    const sequelize = await freshDatabase([['boss', '0.00', 10], ['rich', '9999999999.99']]);
+
+    const { result } = await quietly(() => respond(
+        require('../src/controllers/admin/users').adjustBalance,
+        asPlayer(1, { params: { id: '2' }, body: { delta: -100, reason: 'correction' } }),
+    ));
+
+    assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
+    assert.deepStrictEqual((await ledger(sequelize)).balances, [['boss', '0.00'], ['rich', '9999999899.99']]);
 });

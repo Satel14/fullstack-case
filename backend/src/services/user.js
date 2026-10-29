@@ -99,25 +99,27 @@ module.exports.getBalanceByUserId = async (id, options = {}) => {
     }
 };
 
-module.exports.incrementBalance = async (value, id, options = {}) => {
-    const { transaction } = options;
-    const replacements = { value: Number(value), id, max: BALANCE_MAX };
-    const changed = await User.sequelize.query(
-        "UPDATE users SET balance = balance + :value WHERE id = :id AND balance + :value <= :max",
-        { replacements, type: QueryTypes.BULKUPDATE, transaction },
-    );
-    if (changed > 0) {
-        return true;
+module.exports.incrementBalance = async (value, id, { transaction } = {}) => {
+    if (!transaction) {
+        throw new Error("incrementBalance needs a transaction to hold the users row");
     }
+    const replacements = { value: Number(value), id, max: BALANCE_MAX };
     const [row] = await User.sequelize.query(
         "SELECT balance + :value <= :max AS fits FROM users WHERE id = :id FOR UPDATE",
         { replacements, type: QueryTypes.SELECT, transaction },
     );
-    if (row && !Number(row.fits)) {
+    if (!row) {
+        throw new Error(MESSAGE.USER.NOT_EXIST);
+    }
+    if (!Number(row.fits)) {
         const refusal = new Error(MESSAGE.USER.BALANCE_LIMIT);
         refusal.code = "BALANCE_LIMIT";
         throw refusal;
     }
+    await User.sequelize.query(
+        "UPDATE users SET balance = balance + :value WHERE id = :id",
+        { replacements, type: QueryTypes.BULKUPDATE, transaction },
+    );
     return true;
 };
 
