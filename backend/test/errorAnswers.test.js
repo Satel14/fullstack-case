@@ -224,7 +224,7 @@ const sourceFiles = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMa
 });
 
 test('no response is built from the message of a caught error', () => {
-    const files = [...sourceFiles(SOURCE_ROOT), path.join(__dirname, '..', 'routes.js'), path.join(__dirname, '..', 'server.js')];
+    const files = [...sourceFiles(SOURCE_ROOT), path.join(__dirname, '..', 'routes.js'), path.join(__dirname, '..', 'server.js'), path.join(__dirname, '..', 'app.js')];
     const offenders = [];
 
     files.forEach((file) => {

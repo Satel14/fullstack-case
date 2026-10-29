@@ -3,7 +3,6 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
-const bodyParser = require('body-parser');
 const { assertSafeTestDatabase } = require('./helpers/db');
 
 const managerPath = require.resolve('../src/redis/manager');
@@ -28,7 +27,6 @@ test.after(async () => {
 
 const serve = async (mount) => {
     const app = express();
-    app.use(bodyParser.urlencoded({ extended: true }));
     app.use(jsonBody);
     mount(app);
     app.use(answerUnhandled);

@@ -215,9 +215,11 @@ test('every rule set a controller defines is mounted on a route', () => {
     assert.deepStrictEqual(defined.filter((ruleSet) => !mounted.has(ruleSet)), []);
 });
 
-test('every rule set sits right before the handler it is named after', () => {
+test('every rule set sits right before the handler it is named after, and every one a route mounts exists', () => {
     const files = ruleSetMounts();
+    const defined = new Set(definedRuleSets());
 
+    assert.deepStrictEqual(files.flatMap(({ mounts }) => mounts).filter(({ ruleSet }) => !defined.has(ruleSet)), []);
     assert.deepStrictEqual(files.filter(({ calls, mounts }) => calls !== mounts.length).map(({ file }) => file), []);
     assert.deepStrictEqual(
         files.flatMap(({ mounts }) => mounts).filter(({ ruleSet, handler }) => ruleSet !== handler),
