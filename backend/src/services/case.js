@@ -9,14 +9,16 @@ module.exports.getCasesByIds = async (ids) => {
     return Case.findAll({ where: { case_id: ids } });
 };
 
+module.exports.findCaseById = (id, options = {}) => Case.findOne({
+    where: {
+        case_id: id
+    },
+    ...options,
+});
+
 module.exports.getCaseById = async (id, options = {}) => {
     try {
-        const getCase = await Case.findOne({
-            where: {
-                case_id: id
-            },
-            ...options,
-        })
+        const getCase = await module.exports.findCaseById(id, options);
 
         if (!getCase) throw new Error(MESSAGE.CASE.NOT_EXIST);
 

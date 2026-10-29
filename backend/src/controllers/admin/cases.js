@@ -44,7 +44,7 @@ module.exports.update = async (req, res) => {
 
         const { id } = req.params;
         const fields = req.body.case_discount === null ? { ...req.body, case_discount: 0 } : req.body;
-        const existing = await CaseService.getCaseById(id).catch(() => null);
+        const existing = await CaseService.findCaseById(id);
         if (!existing) {
             return res.status(422).json({ status: 422, message: MESSAGE.CASE.NOT_EXIST });
         }

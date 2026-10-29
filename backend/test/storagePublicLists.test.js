@@ -158,7 +158,7 @@ test('the Top leaderboard keeps paging the way the site asks for it', async () =
 
     const first = await call('getStorageTop', { limit: '10', offset: '0' });
     assert.strictEqual(first.code, 200);
-    assert.deepStrictEqual(first.payload.data.map((r) => [r.userId, r.count]), [[1, 2]]);
+    assert.deepStrictEqual(first.payload.data.map((r) => [r.userId, r.count, r.info.user_login]), [[1, 2, 'owner']]);
 
     const next = await call('getStorageTop', { limit: '10', offset: '10' });
     assert.strictEqual(next.code, 200);

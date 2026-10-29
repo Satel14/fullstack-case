@@ -100,6 +100,11 @@ const OUTAGES = [
         ),
     },
     {
+        name: 'the players of the Top leaderboard',
+        stubs: [[Storage, 'findAll', async () => [{ storage_userId: 1, count: 2 }]], [User, 'findAll', outage]],
+        call: () => respond(require('../src/controllers/storage').getStorageTop, { params: { limit: '10', offset: '0' } }),
+    },
+    {
         name: 'the item lookup of a sale',
         stubs: [
             [Storage, 'findOne', async () => ({ dataValues: { storage_itemId: 707, storage_color: 'default' } })],
@@ -144,14 +149,15 @@ OUTAGES.forEach(({ name, stubs, call }) => {
 const loggedLines = (logged) => logged.map((args) => args.map((a) => (a instanceof Error ? a.message : String(a))).join(' '));
 
 const ADMIN_LOOKUPS = [
-    ['a role change', 'setRole', { params: { id: '2' }, body: { role: 1 } }],
-    ['a balance correction', 'adjustBalance', { params: { id: '2' }, body: { delta: 10, reason: 'gift' } }],
+    ['a role change', [User, 'findByPk'], 'users', 'setRole', { params: { id: '2' }, body: { role: 1 } }],
+    ['a balance correction', [User, 'findByPk'], 'users', 'adjustBalance', { params: { id: '2' }, body: { delta: 10, reason: 'gift' } }],
+    ['a case update', [Case, 'findOne'], 'cases', 'update', { params: { id: 'dust2' }, body: { case_price: 10 } }],
 ];
 
-ADMIN_LOOKUPS.forEach(([name, handler, req]) => {
-    test(`a database outage while ${name} looks the player up is logged, not answered as a missing player`, async () => {
-        const { result, logged } = await withStubs([[User, 'findByPk', outage]], () => respond(
-            require('../src/controllers/admin/users')[handler],
+ADMIN_LOOKUPS.forEach(([name, [model, method], controller, handler, req]) => {
+    test(`a database outage while ${name} looks its target up is logged, not answered as a missing one`, async () => {
+        const { result, logged } = await withStubs([[model, method, outage]], () => respond(
+            require(`../src/controllers/admin/${controller}`)[handler],
             { ...req, user: player },
         ));
 

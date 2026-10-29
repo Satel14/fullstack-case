@@ -317,13 +317,13 @@ module.exports.getStorageTop = async (req, res) => {
             ? await StorageService.getTopUsersByItemCount(effectiveLimit, parsedOffset)
             : [];
 
-        const data = await Promise.all(
-            top.map(async (row) => ({
-                userId: row.userId,
-                count: row.count,
-                info: await UserService.getUserById(row.userId).catch(() => null),
-            })),
-        );
+        const players = await UserService.getUsersByIds(top.map((row) => row.userId));
+        const playerById = new Map(players.map((player) => [player.user_id, player]));
+        const data = top.map((row) => ({
+            userId: row.userId,
+            count: row.count,
+            info: playerById.get(row.userId) || null,
+        }));
 
         return res.status(200).json({ status: 200, data });
     } catch (e) {
