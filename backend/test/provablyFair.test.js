@@ -168,3 +168,76 @@ test('a stored draw table keeps deciding the same way after the case and prices 
     const replayed = vectors.map(([s, c, n]) => pf.deriveFromTable(s, c, n, JSON.parse(stored)));
     assert.deepStrictEqual(replayed, before);
 });
+
+const sumOf = (odds) => Object.values(odds).reduce((a, b) => a + b, 0);
+const closeTo = (actual, expected) => Object.keys(expected).forEach((id) => {
+    assert.ok(Math.abs(actual[id] - expected[id]) < 1e-12, `item ${id}: ${actual[id]} vs ${expected[id]}`);
+});
+
+test('itemOdds splits each rarity\'s share evenly among its items and adds up to one', () => {
+    const odds = pf.itemOdds({
+        CHANCES: { FN: 30, MW: 70, COLORS: { DEFAULT: 90, PAINTED: 10, LIST: {} } },
+        ITEMS: [{ id: 1, rare: 'FN', colors: ['default'] }, { id: 2, rare: 'MW', colors: ['default'] }, { id: 3, rare: 'MW', colors: ['default'] }],
+    });
+
+    assert.deepStrictEqual(Object.keys(odds).sort(), ['1', '2', '3']);
+    closeTo(odds, { 1: 0.3, 2: 0.35, 3: 0.35 });
+    assert.ok(Math.abs(sumOf(odds) - 1) < 1e-12);
+});
+
+test('itemOdds gives an empty rarity\'s share to the most common rarity with items, as the draw does', () => {
+    const odds = pf.itemOdds({
+        CHANCES: { FN: 30, MW: 50, FT: 20, COLORS: { DEFAULT: 100, PAINTED: 0, LIST: {} } },
+        ITEMS: [{ id: 2, rare: 'MW', colors: ['default'] }, { id: 3, rare: 'FT', colors: ['default'] }],
+    });
+
+    closeTo(odds, { 2: 0.8, 3: 0.2 });
+});
+
+test('itemOdds adds up the chances of an item listed under two rarities', () => {
+    const odds = pf.itemOdds({
+        CHANCES: { FN: 50, MW: 50, COLORS: { DEFAULT: 100, PAINTED: 0, LIST: {} } },
+        ITEMS: [{ id: 1, rare: 'FN', colors: ['default'] }, { id: 1, rare: 'MW', colors: ['default'] }, { id: 2, rare: 'MW', colors: ['default'] }],
+    });
+
+    closeTo(odds, { 1: 0.75, 2: 0.25 });
+});
+
+test('itemOdds follows the whole-number roll of the draw when weights are not whole numbers', () => {
+    const fractional = {
+        CHANCES: { FN: 0.6, MW: 0.9, COLORS: { DEFAULT: 100, PAINTED: 0, LIST: {} } },
+        ITEMS: [{ id: 1, rare: 'FN', colors: ['default'] }, { id: 2, rare: 'MW', colors: ['default'] }],
+    };
+
+    closeTo(pf.itemOdds(fractional), { 1: 0, 2: 1 });
+    for (let n = 0; n < 500; n++) {
+        assert.strictEqual(pf.deriveWinner('s', 'c', n, fractional, ITEM_HASH).itemId, 2);
+    }
+});
+
+test('itemOdds matches how often the real draw picks each item of a real case over 100k opens', () => {
+    const caseDef = GOLDEN.cases.dust2;
+    const odds = pf.itemOdds(caseDef);
+    const counts = {};
+    const N = 100000;
+    for (let n = 0; n < N; n++) {
+        const { itemId } = pf.deriveWinner('odds-server', 'odds-client', n, caseDef, GOLDEN.itemHash);
+        counts[itemId] = (counts[itemId] || 0) + 1;
+    }
+
+    assert.ok(Math.abs(sumOf(odds) - 1) < 1e-9);
+    for (const [id, chance] of Object.entries(odds)) {
+        const freq = (counts[id] || 0) / N;
+        assert.ok(Math.abs(freq - chance) < 0.006, `item ${id}: drew ${freq}, odds ${chance}`);
+    }
+});
+
+test('itemOdds of a case whose weights are all zero follows the draw to the last rarity', () => {
+    const unweighted = {
+        CHANCES: { FN: 0, MW: 0, COLORS: { DEFAULT: 100, PAINTED: 0, LIST: {} } },
+        ITEMS: [{ id: 1, rare: 'FN', colors: ['default'] }, { id: 2, rare: 'MW', colors: ['default'] }],
+    };
+
+    closeTo(pf.itemOdds(unweighted), { 1: 0, 2: 1 });
+    assert.strictEqual(pf.deriveWinner('s', 'c', 0, unweighted, ITEM_HASH).itemId, 2);
+});

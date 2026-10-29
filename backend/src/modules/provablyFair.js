@@ -124,6 +124,28 @@ function buildDrawTable(caseDef, itemHash) {
     };
 }
 
+function rollSegments(maxWeight) {
+    if (!(maxWeight > 0)) return [{ share: 1, f0: 0 }];
+    const segments = [];
+    for (let start = 0; start < maxWeight; start += 1) {
+        const end = Math.min(start + 1, maxWeight);
+        segments.push({ share: (end - start) / maxWeight, f0: (start + end) / 2 / maxWeight });
+    }
+    return segments;
+}
+
+function itemOdds(caseDef) {
+    const odds = Object.fromEntries(caseDef.ITEMS.map((item) => [item.id, 0]));
+    const maxWeight = rarityKeys(caseDef).reduce((a, k) => a + caseDef.CHANCES[k], 0);
+    for (const { share, f0 } of rollSegments(maxWeight)) {
+        const { collection } = collectionFor(caseDef, pickRarity(caseDef, f0));
+        for (const item of collection) {
+            odds[item.id] += share / collection.length;
+        }
+    }
+    return odds;
+}
+
 function deriveFromTable(serverSeed, clientSeed, nonce, table) {
     const [f0, f1, f2, f3] = floatsFromDigest(hmacDigest(serverSeed, clientSeed, nonce), 4);
     const rarity = pickRarity(table, f0);
@@ -137,5 +159,5 @@ function deriveWinner(serverSeed, clientSeed, nonce, caseDef, itemHash) {
 }
 
 module.exports = {
-    sha256, hmacDigest, floatsFromDigest, buildDrawTable, deriveFromTable, deriveWinner,
+    sha256, hmacDigest, floatsFromDigest, buildDrawTable, deriveFromTable, deriveWinner, itemOdds,
 };
