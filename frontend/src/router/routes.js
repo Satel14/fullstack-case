@@ -52,13 +52,6 @@ export default {
             titleKey: 'payment.title',
         },
         {
-            path: '/provably-fair',
-            exact: true,
-            layout: Layout,
-            component: ProvablyFair,
-            titleKey: 'provablyFair.title',
-        },
-        {
             path: '/inventory',
             exact: true,
             layout: Layout,
@@ -76,6 +69,13 @@ export default {
         },
     ],
     public: [
+        {
+            path: '/provably-fair',
+            exact: true,
+            layout: Layout,
+            component: ProvablyFair,
+            titleKey: 'provablyFair.title',
+        },
         {
             path: '/',
             layout: Layout,

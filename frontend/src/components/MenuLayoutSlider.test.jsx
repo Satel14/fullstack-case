@@ -35,6 +35,7 @@ test('the menu highlights the item of the page that is open', () => {
         ['/article/8', guest, ['menu.moreMoney']],
         ['/login', guest, ['menu.login']],
         ['/provably-fair', player, ['provablyFair.title']],
+        ['/provably-fair', guest, ['provablyFair.title']],
         ['/inventory', player, ['inventory.title']],
     ];
     cases.forEach(([path, user, expected]) => {

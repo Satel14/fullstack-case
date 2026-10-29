@@ -23,3 +23,10 @@ test('settings and promocode each have their own page', () => {
     expect(source).toMatch(/path: '\/settings',\s*exact: true,\s*layout: Layout,\s*component: Settings,/);
     expect(source).toMatch(/path: '\/promocode',\s*exact: true,\s*layout: Layout,\s*component: Promocode,/);
 });
+
+test('the provably-fair page is open to guests, so anyone can check a draw', () => {
+    const routes = require('./routes').default;
+
+    expect(routes.public.map((route) => route.path)).toContain('/provably-fair');
+    expect(routes.private.map((route) => route.path)).not.toContain('/provably-fair');
+});

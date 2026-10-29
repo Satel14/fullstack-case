@@ -6,10 +6,13 @@ import {
 } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { useHistory } from 'react-router-dom';
 import Loader from '../components/mini/Loader';
 import openNotification from '../components/mini/openNotification';
 import { clientErrorMessage, isRefusal } from '../helpers/serverMessage';
 import { gradeName } from '../helpers/grade';
+import { isAuthorized } from '../helpers/Player';
 import {
     getProvablyFairState,
     setClientSeed as apiSetClientSeed,
@@ -44,6 +47,8 @@ const fetchOlderOpens = async (shown, offset, stillWanted) => {
 
 const ProvablyFair = () => {
     const { t } = useTranslation();
+    const routerHistory = useHistory();
+    const loggedIn = isAuthorized(useSelector((store) => store.user));
     const [state, setState] = useState(null);
     const [loadFailed, setLoadFailed] = useState(false);
     const [clientSeedInput, setClientSeedInput] = useState('');
@@ -86,7 +91,7 @@ const ProvablyFair = () => {
     }, []);
 
     const load = useCallback(async () => {
-        if (!mounted.current) {
+        if (!mounted.current || !loggedIn) {
             return;
         }
         generation.current += 1;
@@ -106,7 +111,7 @@ const ProvablyFair = () => {
             return;
         }
         await loadHistory(mine);
-    }, [loadHistory]);
+    }, [loadHistory, loggedIn]);
 
     const reloadHistory = () => loadHistory(generation.current);
 
@@ -200,7 +205,7 @@ const ProvablyFair = () => {
         setCalcResult(null);
     };
 
-    if (loadFailed) {
+    if (loggedIn && loadFailed) {
         return (
             <div className="provablyfairpage">
                 <h2>{t('provablyFair.title')}</h2>
@@ -210,7 +215,7 @@ const ProvablyFair = () => {
         );
     }
 
-    if (!state) {
+    if (loggedIn && !state) {
         return <Loader />;
     }
 
@@ -250,30 +255,41 @@ const ProvablyFair = () => {
             <p>{t('provablyFair.intro')}</p>
             <p>{t('provablyFair.colorNote')}</p>
 
-            <h3>{t('provablyFair.currentSeeds')}</h3>
-            <div>{t('provablyFair.serverSeedHash')}: <code>{state.active.serverSeedHash}</code></div>
-            <div>{t('provablyFair.nonce')}: {state.active.nonce}</div>
-            <div>
-                {t('provablyFair.clientSeed')}:
-                <Input value={clientSeedInput} onChange={(e) => setClientSeedInput(e.target.value)} style={{ maxWidth: 320 }} />
-                <Button onClick={onSaveClientSeed}>{t('provablyFair.save')}</Button>
-            </div>
-            <Button danger onClick={onRotate}>{t('provablyFair.rotate')}</Button>
-            {state.previous && (
-                <div>
-                    {t('provablyFair.revealedServerSeed')}: <code>{state.previous.serverSeed}</code>
-                    <div className="provablyfair-note">{t('provablyFair.revealedServerSeedNote')}</div>
-                </div>
-            )}
+            {loggedIn ? (
+                <>
+                    <h3>{t('provablyFair.currentSeeds')}</h3>
+                    <div>{t('provablyFair.serverSeedHash')}: <code>{state.active.serverSeedHash}</code></div>
+                    <div>{t('provablyFair.nonce')}: {state.active.nonce}</div>
+                    <div>
+                        {t('provablyFair.clientSeed')}:
+                        <Input value={clientSeedInput} onChange={(e) => setClientSeedInput(e.target.value)} style={{ maxWidth: 320 }} />
+                        <Button onClick={onSaveClientSeed}>{t('provablyFair.save')}</Button>
+                    </div>
+                    <Button danger onClick={onRotate}>{t('provablyFair.rotate')}</Button>
+                    {state.previous && (
+                        <div>
+                            {t('provablyFair.revealedServerSeed')}: <code>{state.previous.serverSeed}</code>
+                            <div className="provablyfair-note">{t('provablyFair.revealedServerSeedNote')}</div>
+                        </div>
+                    )}
 
-            <h3>{t('provablyFair.history')}</h3>
-            {historyLoaded && <Table rowKey="id" dataSource={history} columns={columns} pagination={false} />}
-            {historyFailed && <p className="provablyfair-error">{t('provablyFair.historyFailed')}</p>}
-            {historyFailed && !historyLoaded && (
-                <Button icon={<ReloadOutlined />} loading={historyLoading} onClick={reloadHistory}>{t('provablyFair.retry')}</Button>
-            )}
-            {historyLoaded && hasMoreHistory && (
-                <Button icon={<ReloadOutlined />} loading={historyLoading} onClick={loadMoreHistory}>{t('provablyFair.loadMore')}</Button>
+                    <h3>{t('provablyFair.history')}</h3>
+                    {historyLoaded && <Table rowKey="id" dataSource={history} columns={columns} pagination={false} />}
+                    {historyFailed && <p className="provablyfair-error">{t('provablyFair.historyFailed')}</p>}
+                    {historyFailed && !historyLoaded && (
+                        <Button icon={<ReloadOutlined />} loading={historyLoading} onClick={reloadHistory}>{t('provablyFair.retry')}</Button>
+                    )}
+                    {historyLoaded && hasMoreHistory && (
+                        <Button icon={<ReloadOutlined />} loading={historyLoading} onClick={loadMoreHistory}>{t('provablyFair.loadMore')}</Button>
+                    )}
+                </>
+            ) : (
+                <div className="provablyfair-guest">
+                    <p>{t('provablyFair.loginCta')}</p>
+                    <Button type="primary" onClick={() => routerHistory.push({ pathname: '/login', state: { goBack: true } })}>
+                        {t('menu.login')}
+                    </Button>
+                </div>
             )}
 
             <h3>{t('provablyFair.calculator')}</h3>

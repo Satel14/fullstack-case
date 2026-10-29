@@ -79,13 +79,13 @@ class MenuLayoutSlider extends React.Component {
             },
         ];
 
-        if (isAuthorized(user)) {
-            defaultMenu.splice(2, 0, {
-                key: 'provablyfair',
-                label: <Link to="/provably-fair">{t('provablyFair.title')}</Link>,
-                icon: <SafetyCertificateOutlined />,
-            });
+        defaultMenu.splice(2, 0, {
+            key: 'provablyfair',
+            label: <Link to="/provably-fair">{t('provablyFair.title')}</Link>,
+            icon: <SafetyCertificateOutlined />,
+        });
 
+        if (isAuthorized(user)) {
             defaultMenu.splice(3, 0, {
                 key: 'inventory',
                 label: <Link to="/inventory">{t('inventory.title')}</Link>,

@@ -425,6 +425,7 @@
     },
     "provablyFair": {
         "title": "Чесна гра",
+        "loginCta": "Увійдіть, щоб бачити свої сіди й історію відкриттів",
         "intro": "Кожне відкриття визначається наперед за формулою HMAC-SHA256(server seed, client seed:nonce). Хеш server seed публікується до відкриття — його неможливо підмінити.",
         "currentSeeds": "Поточні сіди",
         "serverSeedHash": "Хеш server seed (зобов'язання)",

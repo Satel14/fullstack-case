@@ -3,6 +3,11 @@ import {
     render, screen, fireEvent, waitFor, within, act,
 } from '@testing-library/react';
 import { Modal } from 'antd';
+import { Provider } from 'react-redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import thunk from 'redux-thunk';
+import { MemoryRouter, Route } from 'react-router-dom';
+import itemCacheReducer from '../store/reducers/itemCache';
 import ProvablyFair from './ProvablyFair';
 
 jest.mock('react-i18next', () => ({
@@ -23,6 +28,23 @@ jest.mock('../components/mini/openNotification', () => ({
 }));
 
 const api = require('../api/all/provablyFair');
+
+const PLAYER = { login: 'player', id: 1 };
+
+const renderPage = (user = PLAYER) => {
+    const store = createStore(
+        combineReducers({ user: (state = user) => state, itemCache: itemCacheReducer }),
+        applyMiddleware(thunk),
+    );
+    return render(
+        <Provider store={store}>
+            <MemoryRouter initialEntries={['/provably-fair']}>
+                <Route path="/provably-fair"><ProvablyFair /></Route>
+                <Route path="/login" render={({ location }) => <div>{`login page ${JSON.stringify(location.state)}`}</div>} />
+            </MemoryRouter>
+        </Provider>,
+    );
+};
 const openNotification = require('../components/mini/openNotification').default;
 
 const ROWS = [
@@ -75,7 +97,7 @@ afterEach(() => {
 
 test('seeds that cannot be loaded leave an error with a retry instead of a blank page', async () => {
     api.getProvablyFairState.mockRejectedValueOnce({ error: 500 });
-    render(<ProvablyFair />);
+    renderPage();
 
     expect(await screen.findByText('provablyFair.loadFailed')).toBeInTheDocument();
     expect(api.getOpenHistory).not.toHaveBeenCalled();
@@ -89,7 +111,7 @@ test('seeds that cannot be loaded leave an error with a retry instead of a blank
 
 test('a history that cannot be loaded is shown as an error, not as an empty table, and can be retried', async () => {
     api.getOpenHistory.mockRejectedValueOnce(new TypeError('Failed to fetch'));
-    const { container } = render(<ProvablyFair />);
+    const { container } = renderPage();
 
     expect(await screen.findByText('provablyFair.historyFailed')).toBeInTheDocument();
     expect(screen.getByText('hash')).toBeInTheDocument();
@@ -102,7 +124,7 @@ test('a history that cannot be loaded is shown as an error, not as an empty tabl
 });
 
 const saveClientSeed = async (value) => {
-    render(<ProvablyFair />);
+    renderPage();
     await screen.findByText('hash');
     fireEvent.change(screen.getByDisplayValue('client'), { target: { value } });
     fireEvent.click(screen.getByRole('button', { name: 'provablyFair.save' }));
@@ -137,7 +159,7 @@ test('a client seed change that fails on the server shows a server error, not it
 });
 
 const confirmRotation = async () => {
-    render(<ProvablyFair />);
+    renderPage();
     await screen.findByText('hash');
     fireEvent.click(screen.getByRole('button', { name: 'provablyFair.rotate' }));
     fireEvent.click(await screen.findByRole('button', { name: 'OK' }));
@@ -172,7 +194,7 @@ let pageRenders = 0;
 const renderNamedPage = () => {
     pageRenders += 1;
     ProvablyFair.displayName = `ProvablyFairPage${pageRenders}`;
-    return render(<ProvablyFair />);
+    return renderPage();
 };
 
 const settleAfterUnmount = async (unmount, pending, value) => {
@@ -227,7 +249,7 @@ test('older opens beyond the first page are reached with "load more"', async () 
     api.getOpenHistory
         .mockResolvedValueOnce({ data: opensFrom(60, 50) })
         .mockResolvedValueOnce({ data: opensFrom(10, 10) });
-    render(<ProvablyFair />);
+    renderPage();
 
     expect(await screen.findByText('case-60')).toBeInTheDocument();
     expect(screen.queryByText('case-10')).toBeNull();
@@ -246,7 +268,7 @@ test('an open that shifted onto the next page while loading is listed once', asy
     api.getOpenHistory
         .mockResolvedValueOnce({ data: opensFrom(60, 50) })
         .mockResolvedValueOnce({ data: opensFrom(11, 11) });
-    render(<ProvablyFair />);
+    renderPage();
     await screen.findByText('case-60');
 
     fireEvent.click(screen.getByRole('button', { name: /provablyFair\.loadMore/ }));
@@ -271,7 +293,7 @@ const shownCases = () => screen.getAllByText(/^case-\d+$/).map((cell) => cell.te
 
 test('"load more" reaches every older open, newest first and once each, after 60 new opens since the list loaded', async () => {
     const server = serveHistory(opensFrom(120, 120));
-    render(<ProvablyFair />);
+    renderPage();
     await screen.findByText('case-71');
 
     server.opens = [...opensFrom(180, 60), ...server.opens];
@@ -285,7 +307,7 @@ test('"load more" reaches every older open, newest first and once each, after 60
 
 test('"load more" still reaches the older opens when exactly a page of new opens pushed the shown ones down', async () => {
     const server = serveHistory(opensFrom(80, 80));
-    render(<ProvablyFair />);
+    renderPage();
     await screen.findByText('case-31');
 
     server.opens = [...opensFrom(130, 50), ...server.opens];
@@ -301,7 +323,7 @@ test('a "load more" that fails keeps the loaded opens and can be pressed again',
         .mockResolvedValueOnce({ data: opensFrom(60, 50) })
         .mockRejectedValueOnce({ error: 503 })
         .mockResolvedValueOnce({ data: opensFrom(10, 10) });
-    render(<ProvablyFair />);
+    renderPage();
     await screen.findByText('case-60');
 
     fireEvent.click(screen.getByRole('button', { name: /provablyFair\.loadMore/ }));
@@ -322,7 +344,7 @@ const rowOf = async (nonce) => {
 };
 
 test('an open made before snapshots is marked unverifiable and offers no verify button', async () => {
-    render(<ProvablyFair />);
+    renderPage();
 
     const legacy = await rowOf(0);
     expect(within(legacy).getByText('provablyFair.legacy')).toBeInTheDocument();
@@ -338,7 +360,7 @@ test('verifying from history sends the open id and reports that seed and result 
             itemId: 10, color: 'default', rarity: 'Factory New', source: 'snapshot', seedMatches: true, matchesRecord: true,
         },
     });
-    render(<ProvablyFair />);
+    renderPage();
 
     fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
     fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
@@ -356,7 +378,7 @@ test('a result that does not match the recorded drop is reported as such', async
             itemId: 99, color: 'default', rarity: 'Factory New', source: 'snapshot', seedMatches: false, matchesRecord: false,
         },
     });
-    render(<ProvablyFair />);
+    renderPage();
 
     fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
     fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
@@ -371,7 +393,7 @@ test('editing the case id by hand drops the open id and verifies against the cur
  itemId: 10, color: 'default', rarity: 'Factory New', source: 'current',
 },
 });
-    render(<ProvablyFair />);
+    renderPage();
 
     fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
     fireEvent.change(screen.getByPlaceholderText('provablyFair.caseIdPlaceholder'), { target: { value: 'train' } });
@@ -390,7 +412,7 @@ test('an old open that the current case still reproduces can be verified against
  itemId: 12, color: 'default', rarity: 'Factory New', source: 'current',
 },
 });
-    render(<ProvablyFair />);
+    renderPage();
 
     const row = await rowOf(7);
     expect(within(row).getByText('provablyFair.verifiableCurrent')).toBeInTheDocument();
@@ -408,7 +430,7 @@ test('editing the nonce or seeds by hand drops the open id', async () => {
  itemId: 10, color: 'default', rarity: 'Factory New', source: 'current',
 },
 });
-    render(<ProvablyFair />);
+    renderPage();
 
     fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
     fireEvent.change(screen.getByPlaceholderText('provablyFair.noncePlaceholder'), { target: { value: '2' } });
@@ -426,7 +448,7 @@ test('when the server cannot tell whether an old open replays, the row says so a
  itemId: 12, color: 'default', rarity: 'Factory New', source: 'current',
 },
 });
-    render(<ProvablyFair />);
+    renderPage();
 
     const row = await rowOf(7);
     expect(within(row).getByText('provablyFair.verificationUnknown')).toBeInTheDocument();
@@ -444,7 +466,7 @@ test('the client seed is sent exactly as recorded, surrounding spaces included',
             itemId: 10, color: 'default', rarity: 'Factory New', source: 'snapshot', seedMatches: true, matchesRecord: true,
         },
     });
-    render(<ProvablyFair />);
+    renderPage();
 
     await screen.findByText('dust2');
     fireEvent.click(screen.getByRole('button', { name: 'provablyFair.verify' }));
@@ -455,7 +477,7 @@ test('the client seed is sent exactly as recorded, surrounding spaces included',
 
 test('an unknown old open whose seed is not revealed yet says it awaits a rotation', async () => {
     api.getOpenHistory.mockResolvedValue({ data: [{ ...ROWS[2], verification: 'unknown', revealedServerSeed: null }] });
-    render(<ProvablyFair />);
+    renderPage();
 
     const row = await rowOf(7);
     expect(within(row).getByText('provablyFair.awaitingRotate')).toBeInTheDocument();
@@ -464,7 +486,7 @@ test('an unknown old open whose seed is not revealed yet says it awaits a rotati
 
 test('a verification the server refuses keeps the hint about the inputs', async () => {
     api.verifyOpen.mockRejectedValue({ error: 422, message: 'Такого відкриття не існує' });
-    render(<ProvablyFair />);
+    renderPage();
 
     fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
     fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
@@ -475,7 +497,7 @@ test('a verification the server refuses keeps the hint about the inputs', async 
 
 test('a verification the server cannot run is reported once, under the calculator', async () => {
     api.verifyOpen.mockRejectedValue(new TypeError('Failed to fetch'));
-    render(<ProvablyFair />);
+    renderPage();
 
     fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
     fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
@@ -506,7 +528,7 @@ test('the computed result names the grade a new open was drawn from', async () =
             itemId: 10, color: 'default', rarity: 'covert', source: 'current',
         },
     });
-    render(<ProvablyFair />);
+    renderPage();
 
     fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
     fireEvent.change(screen.getByPlaceholderText('provablyFair.caseIdPlaceholder'), { target: { value: 'train' } });
@@ -521,11 +543,46 @@ test('the computed result keeps the wear an old open was drawn from', async () =
             itemId: 10, color: 'default', rarity: 'Factory New', source: 'current',
         },
     });
-    render(<ProvablyFair />);
+    renderPage();
 
     fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
     fireEvent.change(screen.getByPlaceholderText('provablyFair.caseIdPlaceholder'), { target: { value: 'train' } });
     fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
 
     expect(await screen.findByText(/provablyFair\.computed.*\(Factory New\)/)).toBeInTheDocument();
+});
+
+test('a guest gets the algorithm and the calculator without asking for seeds or history', async () => {
+    api.verifyOpen.mockResolvedValue({
+        data: {
+            itemId: 10, color: 'default', rarity: 'milspec', source: 'current',
+        },
+    });
+    renderPage({});
+
+    expect(screen.getByText('provablyFair.algorithm')).toBeInTheDocument();
+    expect(screen.getByText('provablyFair.loginCta')).toBeInTheDocument();
+    expect(screen.queryByText('provablyFair.currentSeeds')).toBeNull();
+    expect(screen.queryByText('provablyFair.history')).toBeNull();
+    expect(api.getProvablyFairState).not.toHaveBeenCalled();
+    expect(api.getOpenHistory).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.serverSeedPlaceholder'), { target: { value: 'server' } });
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.clientSeedPlaceholder'), { target: { value: 'client' } });
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.noncePlaceholder'), { target: { value: '3' } });
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.caseIdPlaceholder'), { target: { value: 'dust2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+
+    await waitFor(() => expect(api.verifyOpen).toHaveBeenCalledWith({
+        serverSeed: 'server', clientSeed: 'client', nonce: 3, caseId: 'dust2',
+    }));
+    expect(await screen.findByText(/provablyFair\.computed/)).toBeInTheDocument();
+});
+
+test('a guest who signs in from the page comes back to it', async () => {
+    renderPage({});
+
+    fireEvent.click(screen.getByRole('button', { name: 'menu.login' }));
+
+    expect(await screen.findByText('login page {"goBack":true}')).toBeInTheDocument();
 });
