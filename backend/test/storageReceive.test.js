@@ -85,7 +85,7 @@ test('a withdrawal of an item that is not in the inventory is refused', async ()
     const result = await receive(1);
 
     assert.strictEqual(result.code, 422, JSON.stringify(result.payload));
-    assert.strictEqual(result.payload.message, MESSAGE.ITEM.NOT_EXIST);
+    assert.strictEqual(result.payload.message, MESSAGE.ITEM.NOT_IN_INVENTORY);
     assert.deepStrictEqual(await storageRow(sequelize), { status: 'money', extraData: null });
 });
 

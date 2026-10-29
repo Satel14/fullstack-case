@@ -191,6 +191,11 @@ test('selling an item twice at once sells it once and leaves nothing in the log'
     const { result, lines } = await withLogsCaught(() => Promise.all([sell(1), sell(1), sell(1)]));
 
     assert.deepStrictEqual(result.map(({ code }) => code).sort(), [200, 422, 422]);
+    const MESSAGE = require('../src/constant/responseMessages');
+    assert.deepStrictEqual(
+        result.filter(({ code }) => code === 422).map(({ payload }) => payload.message),
+        [MESSAGE.ITEM.NOT_IN_INVENTORY, MESSAGE.ITEM.NOT_IN_INVENTORY],
+    );
     assert.deepStrictEqual(lines, []);
     assert.deepStrictEqual((await sellOutcome(sequelize)).history, [['sellitem', 120]]);
 });
@@ -212,6 +217,20 @@ test('a sale that fails for an unexpected reason is logged once', async () => {
     assert.strictEqual(outcome.result.code, 500);
     assert.strictEqual(outcome.lines.length, 1);
     assert.match(outcome.lines[0], /history table gone/);
+});
+
+test('selling an item that has already left the inventory says it is not there', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedSellableItem(sequelize);
+    await sequelize.query("UPDATE storage SET status = 'money' WHERE id = 1");
+    const MESSAGE = require('../src/constant/responseMessages');
+
+    const { result, lines } = await withLogsCaught(() => sell(1));
+
+    assert.deepStrictEqual([result.code, result.payload.message], [422, MESSAGE.ITEM.NOT_IN_INVENTORY]);
+    assert.deepStrictEqual(lines, []);
+    assert.deepStrictEqual(await sellOutcome(sequelize), { balance: 0, status: 'money', history: [] });
 });
 
 const UNSELLABLE = [

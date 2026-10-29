@@ -77,7 +77,7 @@ module.exports.receiveItemByStorageId = async (req, res) => {
             });
 
             if (!locked) {
-                const err = new Error(MESSAGE.ITEM.NOT_EXIST);
+                const err = new Error(MESSAGE.ITEM.NOT_IN_INVENTORY);
                 err.code = 'NOT_RECEIVABLE';
                 throw err;
             }
@@ -93,7 +93,7 @@ module.exports.receiveItemByStorageId = async (req, res) => {
         });
     } catch (e) {
         if (e && e.code === 'NOT_RECEIVABLE') {
-            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
+            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_IN_INVENTORY });
         }
         if (e && e.code === 'NO_RECEIVE_INFO') {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.RECEIVE_INFO_REQUIRED });
@@ -152,7 +152,7 @@ module.exports.sellItemByStorageId = async (req, res) => {
         const storageItem = await StorageService.getStorageInfoById(user_id, id, 'inventory');
 
         if (!storageItem) {
-            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
+            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_IN_INVENTORY });
         }
 
         const getItemInfo = await ItemService.findItemById(storageItem.storage_itemId);
@@ -199,7 +199,7 @@ module.exports.sellItemByStorageId = async (req, res) => {
             });
 
             if (!locked) {
-                const err = new Error(MESSAGE.ITEM.NOT_EXIST);
+                const err = new Error(MESSAGE.ITEM.NOT_IN_INVENTORY);
                 err.code = 'NOT_SELLABLE';
                 throw err;
             }
@@ -216,7 +216,7 @@ module.exports.sellItemByStorageId = async (req, res) => {
         return res.status(200).json({ status: 200, balance: actualBalance });
     } catch (e) {
         if (e && e.code === 'NOT_SELLABLE') {
-            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
+            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_IN_INVENTORY });
         }
         return answerFailure(res, e, { status: 422, where: 'storage.sell' });
     }
