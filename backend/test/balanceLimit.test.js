@@ -95,8 +95,8 @@ test('a credit outside a transaction is refused before it touches the balance', 
     const sequelize = await freshDatabase([['player', '100.00']]);
     const UserService = require('../src/services/user');
 
-    await assert.rejects(UserService.incrementBalance(10, 1));
-    await assert.rejects(UserService.incrementBalance(10, 1, {}));
+    await assert.rejects(UserService.incrementBalance(10, 1), /needs a transaction/);
+    await assert.rejects(UserService.incrementBalance(10, 1, {}), /needs a transaction/);
 
     assert.deepStrictEqual((await ledger(sequelize)).balances, [['player', '100.00']]);
 });
@@ -111,14 +111,38 @@ test('a credit to a player who does not exist is refused', async () => {
     );
 });
 
+const waitingTransactions = async (sequelize, transaction, count) => {
+    let waiting = [];
+    for (let attempt = 0; attempt < 50 && waiting.length < count; attempt += 1) {
+        await new Promise((resolve) => { setTimeout(resolve, 50); });
+        [waiting] = await sequelize.query(
+            "SELECT trx_id FROM information_schema.innodb_trx WHERE trx_state = 'LOCK WAIT' "
+            + 'AND trx_mysql_thread_id IN (SELECT id FROM information_schema.processlist WHERE db = DATABASE())',
+            { transaction },
+        );
+    }
+    return waiting.length;
+};
+
 test('two deposits that would pass the largest balance together: one goes through, the other is refused', async () => {
     const sequelize = await freshDatabase([['player', '9999999849.99']]);
     const { depositBalance } = require('../src/controllers/user');
 
-    const { result: results, lines } = await quietly(() => Promise.all([
-        respond(depositBalance, asPlayer(1, { body: { amount: 100 } })),
-        respond(depositBalance, asPlayer(1, { body: { amount: 100 } })),
-    ]));
+    const { result: results, lines } = await quietly(async () => {
+        const holder = await sequelize.transaction();
+        let deposits;
+        try {
+            await sequelize.query('SELECT id FROM users WHERE id = 1 FOR UPDATE', { transaction: holder });
+            deposits = Promise.all([
+                respond(depositBalance, asPlayer(1, { body: { amount: 100 } })),
+                respond(depositBalance, asPlayer(1, { body: { amount: 100 } })),
+            ]);
+            assert.strictEqual(await waitingTransactions(sequelize, holder, 2), 2, 'the deposits never waited for the player row together');
+        } finally {
+            await holder.commit();
+        }
+        return deposits;
+    });
 
     assert.deepStrictEqual(results.map((r) => r.code).sort(), [200, 422]);
     assert.deepStrictEqual(await ledger(sequelize), { balances: [['player', '9999999949.99']], history: 1 });
@@ -247,11 +271,14 @@ test('an admin correction that would pass the largest balance is refused and lea
 test('an admin can lower a balance that sits at the largest balance', async () => {
     const sequelize = await freshDatabase([['boss', '0.00', 10], ['rich', '9999999999.99']]);
 
-    const { result } = await quietly(() => respond(
+    const { result, lines } = await quietly(() => respond(
         require('../src/controllers/admin/users').adjustBalance,
         asPlayer(1, { params: { id: '2' }, body: { delta: -100, reason: 'correction' } }),
     ));
 
     assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
-    assert.deepStrictEqual((await ledger(sequelize)).balances, [['boss', '0.00'], ['rich', '9999999899.99']]);
+    assert.deepStrictEqual(await ledger(sequelize), { balances: [['boss', '0.00'], ['rich', '9999999899.99']], history: 1 });
+    const [[{ actions }]] = await sequelize.query('SELECT COUNT(*) AS actions FROM admin_actions');
+    assert.strictEqual(Number(actions), 1);
+    assert.deepStrictEqual(lines, []);
 });
