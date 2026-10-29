@@ -14,7 +14,8 @@ import ItemColor from '../components/mini/ItemColor';
 import openNotification from '../components/mini/openNotification';
 import Loader from '../components/mini/Loader';
 import LoadError from '../components/mini/LoadError';
-import { gradeLabelKey, gradeStyle } from '../helpers/grade';
+import { gradeStyle } from '../helpers/grade';
+import { itemCaption } from '../helpers/Case';
 
 const { TabPane } = Tabs;
 
@@ -332,10 +333,11 @@ const Inventory = ({
             </div>
             <div className="inventorypage-card__name">{info(row.storage_itemId, 'item_name')}</div>
             <span className="inventorypage-card__meta">
-                {[
-                    gradeLabelKey(info(row.storage_itemId, 'item_grade')) && t(gradeLabelKey(info(row.storage_itemId, 'item_grade'))),
-                    `${info(row.storage_itemId, 'item_rare')} ${info(row.storage_itemId, 'item_type')}`,
-                ].filter(Boolean).join(' · ')}
+                {itemCaption({
+                    grade: info(row.storage_itemId, 'item_grade'),
+                    wear: info(row.storage_itemId, 'item_rare'),
+                    type: info(row.storage_itemId, 'item_type'),
+                }, t)}
             </span>
             {actions}
         </div>

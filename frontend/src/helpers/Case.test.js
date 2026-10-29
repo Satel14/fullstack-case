@@ -1,4 +1,4 @@
-import { renderItemProp } from './Case';
+import { renderItemProp, itemCaption } from './Case';
 
 const t = (key, options) => (options ? `${key} ${JSON.stringify(options)}` : key);
 
@@ -47,4 +47,14 @@ test('nothing is shown for an item that is not loaded', () => {
 test('an item whose grade is not known yet shows its wear but no rarity', () => {
     expect(renderItemProp({ ...ak, item_grade: null }, null, t))
         .toBe('item.name: AK-47 | Redline, item.type: rifles, item.wear: Field Tested');
+});
+
+test('a caption names the grade, then the wear and the type', () => {
+    expect(itemCaption({ grade: 'covert', wear: 'Field Tested', type: 'rifles' }, t)).toBe('grade.covert · Field Tested rifles');
+});
+
+test('a caption leaves out what is not known', () => {
+    expect(itemCaption({ grade: null, wear: 'Field Tested', type: 'rifles' }, t)).toBe('Field Tested rifles');
+    expect(itemCaption({ grade: 'special', wear: '', type: undefined }, t)).toBe('grade.special');
+    expect(itemCaption({}, t)).toBe('');
 });

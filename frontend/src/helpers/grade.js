@@ -20,3 +20,5 @@ export const gradeColor = (grade) => GRADE_COLORS[grade] || UNKNOWN_COLOR;
 export const gradeStyle = (grade) => ({ '--rarity': gradeColor(grade) });
 
 export const gradeLabelKey = (grade) => (GRADES.includes(grade) ? `grade.${grade}` : null);
+
+export const gradeName = (grade, t) => (gradeLabelKey(grade) ? t(gradeLabelKey(grade)) : null);

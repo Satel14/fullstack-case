@@ -19,7 +19,8 @@ import { itemInfoFetch } from '../../store/actions/itemCache';
 import ItemColor from '../mini/ItemColor';
 import CasePrice from '../mini/CasePrice';
 import { computeItemPriceUAH } from '../../helpers/price';
-import { gradeLabelKey, gradeStyle } from '../../helpers/grade';
+import { gradeStyle } from '../../helpers/grade';
+import { itemCaption } from '../../helpers/Case';
 
 const delayAnimation = 4;
 
@@ -733,10 +734,7 @@ class OpenCase extends Component {
                                                 />
                                                 <div className="opencase-result__name">{w.item.name}</div>
                                                 <span>
-                                                    {[
-                                                        gradeLabelKey(w.item.grade) && t(gradeLabelKey(w.item.grade)),
-                                                        `${w.item.rare} ${w.item.type}`,
-                                                    ].filter(Boolean).join(' · ')}
+                                                    {itemCaption({ grade: w.item.grade, wear: w.item.rare, type: w.item.type }, t)}
                                                 </span>
                                                 {isSold ? (
                                                     <div className="opencase-result__sold-label">{t('inventory.soldLabel')}</div>

@@ -1,5 +1,5 @@
 import { itemColors } from '../data/itemConfig';
-import { gradeLabelKey } from './grade';
+import { gradeName } from './grade';
 
 const itemName = (item, t) => {
     if (item.item_name) {
@@ -16,7 +16,7 @@ const renderItemProp = (item, color, t) => {
     return [
         [t('item.name'), itemName(item, t)],
         [t('item.type'), item.item_type],
-        [t('item.rarity'), gradeLabelKey(item.item_grade) && t(gradeLabelKey(item.item_grade))],
+        [t('item.rarity'), gradeName(item.item_grade, t)],
         [t('item.wear'), item.item_rare],
         [t('item.color'), color],
     ]
@@ -24,6 +24,11 @@ const renderItemProp = (item, color, t) => {
         .map(([label, value]) => `${label}: ${value}`)
         .join(', ');
 };
+
+const itemCaption = ({ grade, wear, type }, t) => [gradeName(grade, t), [wear, type].filter(Boolean).join(' ')]
+    .filter(Boolean)
+    .join(' · ');
+
 const getColor = (paint) => {
     let color;
 
@@ -63,5 +68,5 @@ const itemDropChance = (caseCollection, item) => {
 };
 
 export {
-    renderItemProp, getColor, getItemColor, itemDropChance,
+    renderItemProp, itemCaption, getColor, getItemColor, itemDropChance,
 };
