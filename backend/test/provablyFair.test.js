@@ -286,11 +286,22 @@ test('itemOdds follows the draw at every kind of rarity edge', () => {
         ITEMS: [{ id: 1, rare: 'FN', colors: ['default'] }, { id: 2, rare: 'MW', colors: ['default'] }],
     });
 
-    closeTo(pf.itemOdds(twoRarities(1.6, 0.9)), { 1: 0.4, 2: 0.6 });
-    closeTo(pf.itemOdds(twoRarities(-1.5, -1.5)), { 1: 1 / 3, 2: 2 / 3 });
-    closeTo(pf.itemOdds(twoRarities(5, -3)), { 1: 1, 2: 0 });
-    closeTo(pf.itemOdds(twoRarities(NaN, 1)), { 1: 0, 2: 1 });
-    closeTo(pf.itemOdds(twoRarities(Infinity, 1)), { 1: 1, 2: 0 });
+    const expectOdds = (caseDef, expected) => {
+        const odds = pf.itemOdds(caseDef);
+        closeTo(odds, expected);
+        assert.ok(Math.abs(sumOf(odds) - 1) < 1e-12, `sum ${sumOf(odds)} for ${JSON.stringify(caseDef.CHANCES)}`);
+    };
+
+    expectOdds(twoRarities(1.6, 0.9), { 1: 0.4, 2: 0.6 });
+    expectOdds(twoRarities(-1.5, -1.5), { 1: 1 / 3, 2: 2 / 3 });
+    expectOdds(twoRarities(5, -3), { 1: 1, 2: 0 });
+    expectOdds(twoRarities(-3, 5), { 1: 0, 2: 1 });
+    expectOdds(twoRarities(NaN, 1), { 1: 0, 2: 1 });
+    expectOdds(twoRarities(Infinity, 1), { 1: 1, 2: 0 });
+    expectOdds({
+        CHANCES: { FN: 1e308, MW: 7e307, FT: 0, COLORS: { DEFAULT: 100, PAINTED: 0, LIST: {} } },
+        ITEMS: [{ id: 1, rare: 'FN', colors: ['default'] }, { id: 2, rare: 'MW', colors: ['default'] }, { id: 3, rare: 'FT', colors: ['default'] }],
+    }, { 1: 1e308 / 1.7e308, 2: 7e307 / 1.7e308, 3: 0 });
     for (let n = 0; n < 200; n++) {
         assert.strictEqual(pf.deriveWinner('s', 'c', n, twoRarities(Infinity, 1), ITEM_HASH).itemId, 1);
         assert.strictEqual(pf.deriveWinner('s', 'c', n, twoRarities(NaN, 1), ITEM_HASH).itemId, 2);

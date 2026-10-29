@@ -140,7 +140,7 @@ function rollRuns(caseDef) {
     const points = [...edges].sort((a, b) => a - b);
     return points.slice(1).map((end, i) => ({
         share: (end - points[i]) / (high - low),
-        f0: (points[i] + end) / 2 / maxWeight,
+        f0: (points[i] + (end - points[i]) / 2) / maxWeight,
     }));
 }
 
