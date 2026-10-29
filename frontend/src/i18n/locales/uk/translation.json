@@ -19,6 +19,10 @@
         "wear": "Знос",
         "chance": "Шанс",
         "color": "Колір",
+        "colors": {
+            "default": "Звичайний",
+            "painted": "Пофарбований"
+        },
         "placeholder": "Предмет #{{id}}"
     },
     "grade": {

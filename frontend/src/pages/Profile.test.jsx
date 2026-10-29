@@ -365,11 +365,11 @@ test('pointing at a drop of the history or at the best drop names its grade', as
     await screen.findByText('AWP | Worm God');
     fireEvent.mouseEnter(container.querySelector('.casehistory-itemlist_item'));
     expect(await screen.findByRole('tooltip'))
-        .toHaveTextContent('item.name: Nova | Caged Steel, item.type: shotguns, item.rarity: grade.milspec, item.wear: Well Worn, item.color: default');
+        .toHaveTextContent('item.name: Nova | Caged Steel, item.type: shotguns, item.rarity: grade.milspec, item.wear: Well Worn, item.color: item.colors.default');
 
     fireEvent.mouseEnter(container.querySelector('.profilepage-firstblock__bestdrop__drop'));
     await waitFor(() => expect(screen.getAllByRole('tooltip').map((tip) => tip.textContent)).toContain(
-        'item.name: AWP | Worm God, item.type: sniper rifles, item.rarity: grade.restricted, item.wear: Field Tested, item.color: painted',
+        'item.name: AWP | Worm God, item.type: sniper rifles, item.rarity: grade.restricted, item.wear: Field Tested, item.color: item.colors.painted',
     ));
 });
 

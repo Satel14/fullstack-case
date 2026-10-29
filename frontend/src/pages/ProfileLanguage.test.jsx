@@ -71,7 +71,7 @@ test('the drop tooltips follow a language switch without the profile being reloa
     fireEvent.mouseEnter(container.querySelector('.profilepage-firstblock__bestdrop__drop'));
 
     await waitFor(() => expect(screen.getAllByRole('tooltip').map((tip) => tip.textContent)).toEqual([
-        'Name: AWP | Worm God, Type: sniper rifles, Rarity: Restricted, Wear: Field Tested, Color: default',
-        'Name: AWP | Worm God, Type: sniper rifles, Rarity: Restricted, Wear: Field Tested, Color: default',
+        'Name: AWP | Worm God, Type: sniper rifles, Rarity: Restricted, Wear: Field Tested, Color: Regular',
+        'Name: AWP | Worm God, Type: sniper rifles, Rarity: Restricted, Wear: Field Tested, Color: Regular',
     ]));
 });

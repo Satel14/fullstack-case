@@ -13,9 +13,14 @@ const ak = {
 
 test('the colour shown is the colour that dropped, not the colour stored with the item', () => {
     expect(renderItemProp(ak, 'painted', t))
-        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.rarity: grade.classified, item.wear: Field Tested, item.color: painted');
+        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.rarity: grade.classified, item.wear: Field Tested, item.color: item.colors.painted');
     expect(renderItemProp({ ...ak, item_colors: 'painted' }, 'default', t))
-        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.rarity: grade.classified, item.wear: Field Tested, item.color: default');
+        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.rarity: grade.classified, item.wear: Field Tested, item.color: item.colors.default');
+});
+
+test('a colour the site has no name for is shown as it came', () => {
+    expect(renderItemProp(ak, 'gold', t))
+        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.rarity: grade.classified, item.wear: Field Tested, item.color: gold');
 });
 
 test('without a dropped colour no colour is shown', () => {
@@ -28,7 +33,7 @@ test('an item that has no name yet is named by its id and never shows "undefined
         item_itemId: 31, item_name: '', item_rare: '', item_type: '',
     }, 'default', t);
 
-    expect(tooltip).toBe('item.name: item.placeholder {"id":"31"}, item.color: default');
+    expect(tooltip).toBe('item.name: item.placeholder {"id":"31"}, item.color: item.colors.default');
     expect(tooltip).not.toMatch(/undefined/);
 });
 
@@ -37,7 +42,7 @@ test('a placeholder from the item cache shows only what is known about it', () =
         item_itemId: 31, item_name: 'Предмет #31', item_rare: '', item_type: '', placeholder: 'failed',
     }, 'painted', t);
 
-    expect(tooltip).toBe('item.name: Предмет #31, item.color: painted');
+    expect(tooltip).toBe('item.name: Предмет #31, item.color: item.colors.painted');
 });
 
 test('nothing is shown for an item that is not loaded', () => {

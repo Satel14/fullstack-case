@@ -19,6 +19,10 @@
         "wear": "Wear",
         "chance": "Chance",
         "color": "Color",
+        "colors": {
+            "default": "Regular",
+            "painted": "Painted"
+        },
         "placeholder": "Item #{{id}}"
     },
     "grade": {
