@@ -14,12 +14,14 @@ import { formatChance, gradeOdds } from '../helpers/odds';
 import { computeItemPriceUAH } from '../helpers/price';
 import { marketUrl } from '../helpers/market';
 import { isRefusal } from '../helpers/serverMessage';
+import { isAuthorized } from '../helpers/Player';
 import Loader from '../components/mini/Loader';
 import LoadError from '../components/mini/LoadError';
 import OpenCase from '../components/modules/OpenCase';
 
 const mapStateToProps = (state) => ({
     itemCache: state.itemCache,
+    loggedIn: isAuthorized(state.user),
 });
 
 const mapDispatchToProps = (dispatch) => ({
@@ -39,6 +41,7 @@ class Case extends Component {
             serverSeedHash: null,
         };
         this.mounted = false;
+        this.firstLoadDone = false;
         this.loadGeneration = 0;
     }
 
@@ -46,11 +49,15 @@ class Case extends Component {
         this.mounted = true;
         await this.getData();
         if (this.mounted) {
+            this.firstLoadDone = true;
             await this.getProvablyFairInfo();
         }
     }
 
     componentDidUpdate(prevProps) {
+        if (this.firstLoadDone && this.props.loggedIn && !prevProps.loggedIn) {
+            this.getProvablyFairInfo();
+        }
         if (this.props.match.params.id !== prevProps.match.params.id) {
             this.setState({
                     id: this.props.match.params.id,
@@ -160,6 +167,9 @@ class Case extends Component {
     }
 
     async getProvablyFairInfo() {
+        if (!this.props.loggedIn) {
+            return;
+        }
         const res = await getProvablyFairState().catch(() => null);
         if (this.mounted && res) {
             this.setState({ serverSeedHash: res.data.active.serverSeedHash });

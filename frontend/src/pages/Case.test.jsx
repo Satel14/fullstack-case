@@ -3,8 +3,10 @@ import {
     act, render, screen, fireEvent, waitFor,
 } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { createStore } from 'redux';
+import { createStore, combineReducers } from 'redux';
 import { MemoryRouter } from 'react-router-dom';
+import usersReducer from '../store/reducers/user';
+import { LOGIN_USER } from '../store/types';
 import Case from './Case';
 
 jest.mock('react-i18next', () => {
@@ -38,10 +40,18 @@ const caseResponse = (openedCount) => ({
     caseCollection: { ITEMS: [] },
 });
 
+const GUEST = { id: null, login: '' };
+const PLAYER = { id: 6, login: 'player' };
+
+const pageStore = (itemCache = {}, user = GUEST) => createStore(() => ({ itemCache, user }));
+
+const sessionStore = () => createStore(combineReducers({ itemCache: (state = {}) => state, user: usersReducer }));
+
+const signedIn = { type: LOGIN_USER, payloadUser: { user_id: 6, user_login: 'player' } };
+
 test('the opened count is refreshed after an open', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockResolvedValueOnce(caseResponse(7)).mockResolvedValueOnce(caseResponse(8));
-    const store = createStore(() => ({ itemCache: {} }));
+    const store = pageStore();
 
     const { container } = render(
         <Provider store={store}>
@@ -82,13 +92,12 @@ const casePage = (store, id, history) => (
 );
 
 test('a late answer for the previous case does not replace the case now shown', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     const havoc = deferred();
     getCaseById.mockImplementation((id) => (id === 'havoc' ? havoc.promise : Promise.resolve({
         data: { case_id: 'phoenix', case_title: 'Phoenix', case_openedCount: 3 },
         caseCollection: { ITEMS: [] },
     })));
-    const store = createStore(() => ({ itemCache: {} }));
+    const store = pageStore();
     const history = { push: jest.fn(), replace: jest.fn() };
 
     const { container, rerender } = render(casePage(store, 'havoc', history));
@@ -106,13 +115,12 @@ test('a late answer for the previous case does not replace the case now shown', 
 });
 
 test('a late failure for the previous case does not send the player to not-found', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     const havoc = deferred();
     getCaseById.mockImplementation((id) => (id === 'havoc' ? havoc.promise : Promise.resolve({
         data: { case_id: 'phoenix', case_title: 'Phoenix', case_openedCount: 3 },
         caseCollection: { ITEMS: [] },
     })));
-    const store = createStore(() => ({ itemCache: {} }));
+    const store = pageStore();
     const history = { push: jest.fn(), replace: jest.fn() };
 
     const { container, rerender } = render(casePage(store, 'havoc', history));
@@ -130,10 +138,9 @@ test('a late failure for the previous case does not send the player to not-found
 });
 
 test('a failure that arrives after the player left the case page does not navigate', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     const havoc = deferred();
     getCaseById.mockReturnValue(havoc.promise);
-    const store = createStore(() => ({ itemCache: {} }));
+    const store = pageStore();
     const history = { push: jest.fn(), replace: jest.fn() };
 
     const { unmount } = render(casePage(store, 'havoc', history));
@@ -163,10 +170,10 @@ const updatesAfterClosing = async (unmount, answer) => {
     return result;
 };
 
-test('the provably fair badge shows the active seed hash', async () => {
+test('a player\'s provably fair badge shows their active seed hash', async () => {
     getProvablyFairState.mockResolvedValue({ data: { active: { serverSeedHash: 'hash' } } });
     getCaseById.mockResolvedValue(caseResponse(7));
-    const store = createStore(() => ({ itemCache: {} }));
+    const store = pageStore({}, PLAYER);
 
     render(casePage(store, 'havoc', { push: jest.fn() }));
 
@@ -178,7 +185,7 @@ test('a seed answer that arrives after the page closed updates nothing', async (
     const seed = deferred();
     getProvablyFairState.mockReturnValue(seed.promise);
     getCaseById.mockResolvedValue(caseResponse(7));
-    const store = createStore(() => ({ itemCache: {} }));
+    const store = pageStore({}, PLAYER);
 
     const { unmount } = render(casePage(store, 'havoc', { push: jest.fn() }));
     await waitFor(() => expect(getProvablyFairState).toHaveBeenCalled());
@@ -195,7 +202,7 @@ test('the seed is not asked for once the page closed before the case arrived', a
     const havoc = deferred();
     getCaseById.mockReturnValue(havoc.promise);
     getProvablyFairState.mockResolvedValue({ data: { active: { serverSeedHash: 'hash' } } });
-    const store = createStore(() => ({ itemCache: {} }));
+    const store = pageStore({}, PLAYER);
 
     const { unmount } = render(casePage(store, 'havoc', { push: jest.fn() }));
 
@@ -207,10 +214,9 @@ test('the seed is not asked for once the page closed before the case arrived', a
 });
 
 test('a refresh that answers after the page closed updates nothing', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     const refresh = deferred();
     getCaseById.mockResolvedValueOnce(caseResponse(7)).mockReturnValueOnce(refresh.promise);
-    const store = createStore(() => ({ itemCache: {} }));
+    const store = pageStore();
 
     const { container, unmount } = render(casePage(store, 'havoc', { push: jest.fn() }));
     await waitFor(() => expect(container.querySelector('.casepage-title-second i').textContent).toBe('case.openedCount 7'));
@@ -224,9 +230,8 @@ test('a refresh that answers after the page closed updates nothing', async () =>
 });
 
 test('every item of the case is looked up, cached or not, so a failed lookup is asked for again', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockResolvedValue({ ...caseResponse(7), caseCollection: { ITEMS: [{ id: 1 }, { id: 2 }] } });
-    const store = createStore(() => ({ itemCache: { 1: { item_itemId: 1, item_name: 'Item 1', placeholder: 'failed' } } }));
+    const store = pageStore({ 1: { item_itemId: 1, item_name: 'Item 1', placeholder: 'failed' } });
 
     render(
         <Provider store={store}>
@@ -241,11 +246,10 @@ test('every item of the case is looked up, cached or not, so a failed lookup is 
 });
 
 test('a case the server does not know sends the player to not-found', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockRejectedValue({ error: 400, message: 'Кейс не існує' });
     const history = { push: jest.fn(), replace: jest.fn() };
 
-    render(casePage(createStore(() => ({ itemCache: {} })), 'nope', history));
+    render(casePage(pageStore(), 'nope', history));
 
     await waitFor(() => expect(history.replace).toHaveBeenCalledWith('/404'));
     expect(history.push).not.toHaveBeenCalled();
@@ -256,12 +260,11 @@ test.each([
     ['network', new TypeError('Failed to fetch')],
     ['server', { error: 500 }],
 ])('a %s failure says the case could not be loaded instead of not-found, and a retry loads it', async (_, failure) => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockReset();
     getCaseById.mockRejectedValueOnce(failure).mockResolvedValueOnce(caseResponse(7));
     const history = { push: jest.fn(), replace: jest.fn() };
 
-    const { container } = render(casePage(createStore(() => ({ itemCache: {} })), 'havoc', history));
+    const { container } = render(casePage(pageStore(), 'havoc', history));
 
     expect(await screen.findByText('common.loadFailed')).toBeInTheDocument();
     expect(history.push).not.toHaveBeenCalled();
@@ -274,16 +277,13 @@ test.each([
 });
 
 test('the contents run from the rarest grade down, the dearer item first within a grade, each tile in its grade colour', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     const item = (id, grade, price) => ({
         item_itemId: id, item_name: `Item ${id}`, item_type: 'rifles', item_rare: 'Field Tested', item_grade: grade, pricesInCredits: { default: price },
     });
     getCaseById.mockResolvedValue({ ...caseResponse(0), caseCollection: { ITEMS: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }] } });
-    const store = createStore(() => ({
-        itemCache: {
-            1: item(1, 'milspec', 900), 2: item(2, 'special', 3000), 3: item(3, 'covert', 400), 4: item(4, 'covert', 700),
-        },
-    }));
+    const store = pageStore({
+        1: item(1, 'milspec', 900), 2: item(2, 'special', 3000), 3: item(3, 'covert', 400), 4: item(4, 'covert', 700),
+    });
 
     render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
 
@@ -296,15 +296,12 @@ test('the contents run from the rarest grade down, the dearer item first within 
 });
 
 test('pointing at an item of the contents names its grade and wear', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockResolvedValue({ ...caseResponse(0), caseCollection: { ITEMS: [{ id: 1 }] } });
-    const store = createStore(() => ({
-        itemCache: {
-            1: {
-                item_itemId: 1, item_name: 'AK-47 | Redline', item_type: 'rifles', item_rare: 'Field Tested', item_grade: 'classified', pricesInCredits: { default: 900 },
-            },
+    const store = pageStore({
+        1: {
+            item_itemId: 1, item_name: 'AK-47 | Redline', item_type: 'rifles', item_rare: 'Field Tested', item_grade: 'classified', pricesInCredits: { default: 900 },
         },
-    }));
+    });
 
     render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
 
@@ -315,15 +312,12 @@ test('pointing at an item of the contents names its grade and wear', async () =>
 });
 
 test('the grade of an item of the contents reaches keyboard and screen-reader users too', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockResolvedValue({ ...caseResponse(0), caseCollection: { ITEMS: [{ id: 1 }] } });
-    const store = createStore(() => ({
-        itemCache: {
-            1: {
-                item_itemId: 1, item_name: 'AK-47 | Redline', item_type: 'rifles', item_rare: 'Field Tested', item_grade: 'classified', pricesInCredits: { default: 900 },
-            },
+    const store = pageStore({
+        1: {
+            item_itemId: 1, item_name: 'AK-47 | Redline', item_type: 'rifles', item_rare: 'Field Tested', item_grade: 'classified', pricesInCredits: { default: 900 },
         },
-    }));
+    });
 
     render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
 
@@ -334,15 +328,12 @@ test('the grade of an item of the contents reaches keyboard and screen-reader us
 });
 
 test('each item of the contents shows its chance, also in its tooltip and its accessible name', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockResolvedValue({ ...caseResponse(0), caseCollection: { ITEMS: [{ id: 1 }] }, odds: { 1: 0.0917 } });
-    const store = createStore(() => ({
-        itemCache: {
-            1: {
-                item_itemId: 1, item_name: 'AK-47 | Redline', item_type: 'rifles', item_rare: 'Field Tested', item_grade: 'classified', pricesInCredits: { default: 900 },
-            },
+    const store = pageStore({
+        1: {
+            item_itemId: 1, item_name: 'AK-47 | Redline', item_type: 'rifles', item_rare: 'Field Tested', item_grade: 'classified', pricesInCredits: { default: 900 },
         },
-    }));
+    });
 
     render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
 
@@ -353,7 +344,6 @@ test('each item of the contents shows its chance, also in its tooltip and its ac
 });
 
 test('above the contents the chances add up by grade, the rarest grade first', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     const item = (id, grade) => ({
         item_itemId: id, item_name: `Item ${id}`, item_type: 'rifles', item_rare: 'Field Tested', item_grade: grade, pricesInCredits: { default: 10 },
     });
@@ -362,7 +352,7 @@ test('above the contents the chances add up by grade, the rarest grade first', a
         caseCollection: { ITEMS: [{ id: 1 }, { id: 2 }, { id: 3 }] },
         odds: { 1: 0.5, 2: 0.3, 3: 0.2 },
     });
-    const store = createStore(() => ({ itemCache: { 1: item(1, 'milspec'), 2: item(2, 'milspec'), 3: item(3, 'covert') } }));
+    const store = pageStore({ 1: item(1, 'milspec'), 2: item(2, 'milspec'), 3: item(3, 'covert') });
 
     render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
 
@@ -372,15 +362,12 @@ test('above the contents the chances add up by grade, the rarest grade first', a
 });
 
 test('without odds there is no summary by grade', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockResolvedValue({ ...caseResponse(0), caseCollection: { ITEMS: [{ id: 1 }] } });
-    const store = createStore(() => ({
-        itemCache: {
-            1: {
-                item_itemId: 1, item_name: 'Item 1', item_grade: 'covert', pricesInCredits: { default: 10 },
-            },
+    const store = pageStore({
+        1: {
+            item_itemId: 1, item_name: 'Item 1', item_grade: 'covert', pricesInCredits: { default: 10 },
         },
-    }));
+    });
 
     render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
 
@@ -390,15 +377,12 @@ test('without odds there is no summary by grade', async () => {
 });
 
 test('on the English site the chances are written the English way', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockResolvedValue({ ...caseResponse(0), caseCollection: { ITEMS: [{ id: 1 }] }, odds: { 1: 0.0917 } });
-    const store = createStore(() => ({
-        itemCache: {
-            1: {
-                item_itemId: 1, item_name: 'AK-47 | Redline', item_grade: 'classified', pricesInCredits: { default: 900 },
-            },
+    const store = pageStore({
+        1: {
+            item_itemId: 1, item_name: 'AK-47 | Redline', item_grade: 'classified', pricesInCredits: { default: 900 },
         },
-    }));
+    });
 
     render(
         <Provider store={store}>
@@ -412,10 +396,9 @@ test('on the English site the chances are written the English way', async () => 
     expect(screen.getByRole('list', { name: 'case.oddsByGrade' })).toHaveTextContent('grade.classified 9.17%');
 });
 
-test('a guest sees the provably fair badge too, as a link to the checking page without a seed hash', async () => {
-    getProvablyFairState.mockRejectedValue({ error: 401 });
+test('a guest sees the provably fair badge too, as a link to the checking page, and no seed is asked for', async () => {
     getCaseById.mockResolvedValue(caseResponse(7));
-    const store = createStore(() => ({ itemCache: {} }));
+    const store = pageStore();
 
     render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
 
@@ -424,4 +407,36 @@ test('a guest sees the provably fair badge too, as a link to the checking page w
     fireEvent.mouseEnter(badge);
     await act(async () => { await new Promise((resolve) => { setTimeout(resolve, 200); }); });
     expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(getProvablyFairState).not.toHaveBeenCalled();
+});
+
+test('a player who opens the case page before the session check ends gets the seed hash once it ends', async () => {
+    getProvablyFairState.mockResolvedValue({ data: { active: { serverSeedHash: 'hash' } } });
+    getCaseById.mockResolvedValue(caseResponse(7));
+    const store = sessionStore();
+
+    render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
+    const badge = await screen.findByRole('link', { name: 'provablyFair.badge' });
+    await settle();
+    expect(getProvablyFairState).not.toHaveBeenCalled();
+
+    act(() => { store.dispatch(signedIn); });
+
+    fireEvent.mouseEnter(badge);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('hash');
+    expect(getProvablyFairState).toHaveBeenCalledTimes(1);
+});
+
+test('a session check that ends while the case loads asks for the seed once', async () => {
+    getProvablyFairState.mockResolvedValue({ data: { active: { serverSeedHash: 'hash' } } });
+    const havoc = deferred();
+    getCaseById.mockReturnValue(havoc.promise);
+    const store = sessionStore();
+
+    render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
+    act(() => { store.dispatch(signedIn); });
+    havoc.resolve(caseResponse(7));
+    await settle();
+
+    expect(getProvablyFairState).toHaveBeenCalledTimes(1);
 });

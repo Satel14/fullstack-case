@@ -20,17 +20,16 @@ jest.mock('../store/actions/itemCache', () => ({ itemInfoFetch: jest.fn() }));
 jest.mock('../components/modules/OpenCase', () => () => null);
 
 const { getCaseById } = require('../api/all/cases');
-const { getProvablyFairState } = require('../api/all/provablyFair');
 const { itemInfoFetch } = require('../store/actions/itemCache');
 
 test('with the real reveal animation, pointing at an item of the contents still shows its details', async () => {
     itemInfoFetch.mockImplementation(() => ({ type: 'noop' }));
-    getProvablyFairState.mockRejectedValue({ error: 401 });
     getCaseById.mockResolvedValue({
         data: { case_id: 'havoc', case_title: 'Havoc', case_openedCount: 0 },
         caseCollection: { ITEMS: [{ id: 1 }] },
     });
     const store = createStore(() => ({
+        user: { id: null, login: '' },
         itemCache: {
             1: {
                 item_itemId: 1, item_name: 'AK-47 | Redline', item_type: 'rifles', item_rare: 'Field Tested', item_grade: 'classified', pricesInCredits: { default: 900 },
