@@ -1,4 +1,11 @@
-import { clientErrorMessage, isRefusal } from './serverMessage';
+import { clientErrorMessage, isRefusal, joinSentences } from './serverMessage';
+
+test('one text is shown as it is, several read as sentences', () => {
+    expect(joinSentences(['Баланс повний'])).toBe('Баланс повний');
+    expect(joinSentences(['Продано: 2.', 'Баланс повний', 'Зачекайте!', 'Що далі?', 'Отже…']))
+        .toBe('Продано: 2. Баланс повний. Зачекайте! Що далі? Отже…');
+    expect(joinSentences([])).toBe('');
+});
 
 test('only a 4xx answer counts as a refusal', () => {
     expect(isRefusal({ error: 400 })).toBe(true);

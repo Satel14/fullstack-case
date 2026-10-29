@@ -9,3 +9,9 @@ export const clientErrorMessage = (failure) => {
     }
     return typeof failure.message === 'string' && failure.message ? failure.message : null;
 };
+
+const SENTENCE_END = /[.!?…]$/;
+
+export const joinSentences = (texts) => (texts.length === 1
+    ? texts[0]
+    : texts.map((text) => (SENTENCE_END.test(text) ? text : `${text}.`)).join(' '));

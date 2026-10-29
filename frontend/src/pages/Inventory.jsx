@@ -16,7 +16,7 @@ import Loader from '../components/mini/Loader';
 import LoadError from '../components/mini/LoadError';
 import { gradeStyle } from '../helpers/grade';
 import { itemCaption } from '../helpers/Case';
-import { clientErrorMessage } from '../helpers/serverMessage';
+import { clientErrorMessage, joinSentences } from '../helpers/serverMessage';
 
 const { TabPane } = Tabs;
 
@@ -212,6 +212,7 @@ const Inventory = ({
         let total = 0;
         let offset = 0;
         let left = new Map();
+        const reasonsFor = (ids) => [...new Set(ids.map((id) => refused.get(id)).filter(Boolean))];
         for (;;) {
             let rows;
             try {
@@ -219,7 +220,7 @@ const Inventory = ({
                 const page = await getProfileStorage({ status: 'inventory', limit: PAGE_LIMIT, offset });
                 rows = page.data || [];
             } catch (e) {
-                return { failure: true, total };
+                return { failure: true, total, reasons: reasonsFor([...refused.keys()]) };
             }
             const fresh = rows.filter((r) => !attempted.has(r.storage_id));
             if (fresh.length) {
@@ -227,7 +228,7 @@ const Inventory = ({
                 const { failure, soldCount } = await sellRows(fresh, attempted, refused);
                 total += soldCount;
                 if (failure) {
-                    return { failure, total };
+                    return { failure, total, reasons: reasonsFor([...refused.keys()]) };
                 }
                 offset = 0;
                 left = new Map();
@@ -240,9 +241,8 @@ const Inventory = ({
                 } else {
                     const ids = [...left.keys()];
                     const stuck = ids.some((id) => !refused.has(id));
-                    const reasons = [...new Set(ids.map((id) => refused.get(id)).filter(Boolean))];
                     return {
-                        failure: stuck || null, total, refused: left.size, reasons,
+                        failure: stuck || null, total, refused: left.size, reasons: reasonsFor(ids),
                     };
                 }
             }
@@ -258,12 +258,13 @@ const Inventory = ({
             failure, total, refused, reasons,
         } = await sellEverything();
         setSelling(false);
+        const withReasons = (summary) => joinSentences([summary, ...reasons]);
         if (failure === TOO_MANY_REQUESTS) {
-            openNotification('error', t('openCase.sellErrorTitle'), t('inventory.sellAllRateLimited', { sold: total }));
+            openNotification('error', t('openCase.sellErrorTitle'), withReasons(t('inventory.sellAllRateLimited', { sold: total })));
         } else if (failure) {
-            openNotification('error', t('openCase.sellErrorTitle'), t('inventory.sellAllStopped', { sold: total }));
+            openNotification('error', t('openCase.sellErrorTitle'), withReasons(t('inventory.sellAllStopped', { sold: total })));
         } else if (refused) {
-            openNotification('error', t('openCase.sellErrorTitle'), [t('inventory.sellAllSkipped', { sold: total, skipped: refused }), ...reasons].join(' '));
+            openNotification('error', t('openCase.sellErrorTitle'), withReasons(t('inventory.sellAllSkipped', { sold: total, skipped: refused })));
         } else {
             openNotification('success', t('openCase.allSold'));
         }

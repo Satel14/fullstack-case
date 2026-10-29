@@ -21,7 +21,7 @@ import CasePrice from '../mini/CasePrice';
 import { computeItemPriceUAH } from '../../helpers/price';
 import { gradeStyle } from '../../helpers/grade';
 import { itemCaption } from '../../helpers/Case';
-import { clientErrorMessage } from '../../helpers/serverMessage';
+import { clientErrorMessage, joinSentences } from '../../helpers/serverMessage';
 
 const delayAnimation = 4;
 
@@ -539,7 +539,7 @@ class OpenCase extends Component {
         this.sellingAll = true;
         this.setState({ sellingAll: true });
 
-        let failed = 0;
+        let unexplained = false;
         const reasons = new Set();
         for (let index = 0; index < winner.length; index++) {
             if (sold.includes(index)) {
@@ -548,11 +548,10 @@ class OpenCase extends Component {
             }
             // eslint-disable-next-line no-await-in-loop
             const outcome = await this.sellItem(winner[index].storageId, index, false, generation);
-            if (!outcome.sold) {
-                failed += 1;
-                if (outcome.reason) {
-                    reasons.add(outcome.reason);
-                }
+            if (outcome.reason) {
+                reasons.add(outcome.reason);
+            } else if (!outcome.sold) {
+                unexplained = true;
             }
         }
 
@@ -560,8 +559,9 @@ class OpenCase extends Component {
             this.sellingAll = false;
             this.safeSetState({ sellingAll: false });
         }
-        if (failed) {
-            openNotification('error', this.props.t('openCase.sellErrorTitle'), [...reasons].join(' ') || this.props.t('openCase.sellErrorText'));
+        const failures = unexplained ? [...reasons, this.props.t('openCase.sellErrorText')] : [...reasons];
+        if (failures.length) {
+            openNotification('error', this.props.t('openCase.sellErrorTitle'), joinSentences(failures));
         } else {
             openNotification('success', this.props.t('openCase.allSold'));
         }
