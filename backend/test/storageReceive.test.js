@@ -186,7 +186,29 @@ test('a pending withdrawal cannot be sold', async () => {
     });
 
     assert.strictEqual(sold.code, 422, JSON.stringify(sold.payload));
+    assert.strictEqual(sold.payload.message, MESSAGE.ITEM.NOT_IN_INVENTORY);
     assert.strictEqual((await storageRow(sequelize)).status, 'waitingtrade');
+});
+
+test('another player can neither withdraw nor sell an item that is not theirs', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize, 'steam:abc');
+    await sequelize.query(
+        'INSERT INTO users (login, password, email, balance, `rank`, role, receiveInfo) VALUES '
+        + "('stranger', 'x', 'stranger@e.ua', 0, 0, 1, 'steam:stranger')",
+    );
+    const StorageController = require('../src/controllers/storage');
+    const asStranger = { params: { id: '1' }, user: { profile: { user_id: 2 } } };
+
+    const withdrawn = await respond(StorageController.receiveItemByStorageId, asStranger);
+    const sold = await respond(StorageController.sellItemByStorageId, asStranger);
+
+    assert.deepStrictEqual([withdrawn.code, withdrawn.payload.message], [422, MESSAGE.ITEM.NOT_IN_INVENTORY]);
+    assert.deepStrictEqual([sold.code, sold.payload.message], [422, MESSAGE.ITEM.NOT_IN_INVENTORY]);
+    assert.deepStrictEqual(await storageRow(sequelize), { status: 'inventory', extraData: null });
+    const [balances] = await sequelize.query('SELECT login, balance FROM users ORDER BY id');
+    assert.deepStrictEqual(balances.map((row) => [row.login, Number(row.balance)]), [['trader', 0], ['stranger', 0]]);
 });
 
 test('a cancel racing the sweep always ends in exactly one state', async () => {
