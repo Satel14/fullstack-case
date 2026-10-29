@@ -112,3 +112,55 @@ test('a missing casePrices.json refuses every case instead of pricing them at a 
     const [[cases]] = await sequelize.query('SELECT COUNT(*) AS n FROM cases');
     assert.strictEqual(Number(cases.n), 0);
 });
+
+test('re-pricing only changes the price of the cases already in the database', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const { repriceCases } = require('../scripts/seedCases');
+    const prices = committedPrices();
+    const rows = [
+        ['bomj', 'Custom bomj', 500, prices.bomj + 1, 0, 42, 77, '/img/case/custom.png'],
+        ['havoc', 'Havoc', 99999, 1, 1, 7, 1000, '/img/case/12havoc.png'],
+        ['nocode', 'No code', 10, null, 1, 3, 1000, '/img/case/nocode.png'],
+    ];
+    for (const [id, title, price, discount, published, openedCount, openLimit, img] of rows) {
+        await sequelize.query(
+            'INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit, img) '
+            + "VALUES (?, ?, ?, ?, 1, ?, ?, 'weapon', ?, ?)",
+            { replacements: [id, title, price, discount, published, openedCount, openLimit, img] },
+        );
+    }
+
+    const result = await repriceCases({ log: quietLog });
+
+    const [stored] = await sequelize.query('SELECT id, title, price, discount, published, openedCount, openLimit, img FROM cases ORDER BY id');
+    assert.deepStrictEqual(stored.map((row) => ({
+        ...row, price: Number(row.price), discount: row.discount === null ? null : Number(row.discount),
+    })), [
+        {
+            id: 'bomj', title: 'Custom bomj', price: prices.bomj, discount: null, published: 0, openedCount: 42, openLimit: 77, img: '/img/case/custom.png',
+        },
+        {
+            id: 'havoc', title: 'Havoc', price: prices.havoc, discount: 1, published: 1, openedCount: 7, openLimit: 1000, img: '/img/case/12havoc.png',
+        },
+        {
+            id: 'nocode', title: 'No code', price: 10, discount: null, published: 1, openedCount: 3, openLimit: 1000, img: '/img/case/nocode.png',
+        },
+    ]);
+    assert.deepStrictEqual(result, { repriced: 2 });
+});
+
+test('re-pricing refuses a case without a price before changing anything', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const { repriceCases } = require('../scripts/seedCases');
+    await sequelize.query(
+        "INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) VALUES ('havoc', 'Havoc', 99999, null, 1, 1, 0, 'weapon', 1000)",
+    );
+    const casePrices = committedPrices();
+    delete casePrices.bomj;
+
+    await assert.rejects(repriceCases({ casePrices, log: quietLog }), /bomj/);
+    const [[row]] = await sequelize.query("SELECT price FROM cases WHERE id = 'havoc'");
+    assert.strictEqual(Number(row.price), 99999);
+});

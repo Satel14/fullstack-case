@@ -118,9 +118,32 @@ const seedCases = async ({ casePrices = readCasePrices(), log = console } = {}) 
     log.log('✅ Cases seeded successfully!');
 };
 
+const repriceCases = async ({ casePrices = readCasePrices(), log = console } = {}) => {
+    requireCasePrices(Object.keys(allCases), casePrices);
+    await assertMigrationsApplied(sequelize);
+
+    let repriced = 0;
+    for (const caseId of Object.keys(allCases)) {
+        const stale = await sequelize.transaction(async (transaction) => {
+            const [changed] = await Case.update(
+                { case_price: casePrices[caseId] },
+                { where: { case_id: caseId, case_price: { [Op.ne]: casePrices[caseId] } }, transaction },
+            );
+            repriced += changed;
+            return clearStaleSale(caseId, transaction);
+        });
+        if (stale) {
+            log.warn(`⚠ ${caseId}: sale price ${stale.case_discount} is not below the new price ${stale.case_price}; the sale is cleared`);
+        }
+    }
+
+    log.log(`✓ Re-priced ${repriced} cases`);
+    return { repriced };
+};
+
 const main = async () => {
     try {
-        await seedCases();
+        await (process.argv.includes('--prices-only') ? repriceCases() : seedCases());
     } catch (error) {
         console.error('❌ Error seeding cases:', error.message);
         process.exitCode = 1;
@@ -133,4 +156,4 @@ if (require.main === module) {
     main();
 }
 
-module.exports = { seedCases };
+module.exports = { seedCases, repriceCases };
