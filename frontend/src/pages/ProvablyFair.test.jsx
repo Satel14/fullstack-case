@@ -8,6 +8,8 @@ import { createStore, combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import { MemoryRouter, Route } from 'react-router-dom';
 import itemCacheReducer from '../store/reducers/itemCache';
+import usersReducer from '../store/reducers/user';
+import { LOGIN_USER } from '../store/types';
 import ProvablyFair from './ProvablyFair';
 
 jest.mock('react-i18next', () => ({
@@ -41,19 +43,22 @@ const ITEMS = {
 
 const PLAYER = { login: 'player', id: 1 };
 
-const renderPage = (user = PLAYER) => {
+const renderPage = (user = PLAYER, userReducer = (state = user) => state) => {
     const store = createStore(
-        combineReducers({ user: (state = user) => state, itemCache: itemCacheReducer }),
+        combineReducers({ user: userReducer, itemCache: itemCacheReducer }),
         applyMiddleware(thunk),
     );
-    return render(
-        <Provider store={store}>
-            <MemoryRouter initialEntries={['/provably-fair']}>
-                <Route path="/provably-fair"><ProvablyFair /></Route>
-                <Route path="/login" render={({ location }) => <div>{`login page ${JSON.stringify(location.state)}`}</div>} />
-            </MemoryRouter>
-        </Provider>,
-    );
+    return {
+        store,
+        ...render(
+            <Provider store={store}>
+                <MemoryRouter initialEntries={['/provably-fair']}>
+                    <Route path="/provably-fair"><ProvablyFair /></Route>
+                    <Route path="/login" render={({ location }) => <div>{`login page ${JSON.stringify(location.state)}`}</div>} />
+                </MemoryRouter>
+            </Provider>,
+        ),
+    };
 };
 const openNotification = require('../components/mini/openNotification').default;
 
@@ -617,6 +622,20 @@ test('a guest who signs in from the page comes back to it', async () => {
     fireEvent.click(screen.getByRole('button', { name: 'menu.login' }));
 
     expect(await screen.findByText('login page {"goBack":true}')).toBeInTheDocument();
+});
+
+test('a player who opens the page before the session check ends gets their seeds and opens once it ends', async () => {
+    const { store } = renderPage(undefined, usersReducer);
+    expect(screen.getByText('provablyFair.loginCta')).toBeInTheDocument();
+    expect(api.getProvablyFairState).not.toHaveBeenCalled();
+
+    act(() => { store.dispatch({ type: LOGIN_USER, payloadUser: { user_id: 1, user_login: 'player' } }); });
+
+    expect(await screen.findByText('hash')).toBeInTheDocument();
+    expect(await screen.findAllByText('dust2')).toHaveLength(2);
+    expect(screen.queryByText('provablyFair.loginCta')).toBeNull();
+    expect(api.getProvablyFairState).toHaveBeenCalledTimes(1);
+    expect(api.getOpenHistory).toHaveBeenCalledTimes(1);
 });
 
 test('while a player\'s seeds load, the algorithm and the calculator are already there', async () => {
