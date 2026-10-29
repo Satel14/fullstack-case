@@ -144,3 +144,48 @@ test('login and registration refuse credentials that are not plain strings', asy
     const [[count]] = await sequelize.query("SELECT COUNT(*) AS n FROM users WHERE login = 'newbie1'");
     assert.strictEqual(Number(count.n), 0);
 });
+
+const withLogsCaught = async (fn) => {
+    const lines = [];
+    const originalLog = console.log;
+    const originalError = console.error;
+    console.log = (...args) => { lines.push(args.map(String).join(' ')); };
+    console.error = (...args) => { lines.push(args.map(String).join(' ')); };
+    try {
+        return { result: await fn(), lines };
+    } finally {
+        console.log = originalLog;
+        console.error = originalError;
+    }
+};
+
+test('a signed-in request leaves no line in the log, and neither does a refused token', async () => {
+    await setup();
+    const { payload } = await login('secret123');
+
+    const { result, lines } = await withLogsCaught(async () => [
+        await authenticateWith(payload.jwt),
+        await authenticateWith('not-a-token'),
+    ]);
+
+    assert.deepStrictEqual(result.map(({ accepted }) => accepted), [true, false]);
+    assert.deepStrictEqual(lines, []);
+});
+
+test('a session check that cannot reach the database is answered 503 and logged once', async () => {
+    await setup();
+    const { payload } = await login('secret123');
+    const User = require('../src/models/user');
+    const original = User.findByPk;
+    User.findByPk = async () => { throw new Error('connect ECONNREFUSED 10.20.30.40:3306'); };
+    let outcome;
+    try {
+        outcome = await withLogsCaught(() => authenticateWith(payload.jwt));
+    } finally {
+        User.findByPk = original;
+    }
+
+    assert.strictEqual(outcome.result.code, 503);
+    assert.strictEqual(outcome.lines.length, 1);
+    assert.match(outcome.lines[0], /^\[auth\] session check failed:.*ECONNREFUSED/s);
+});
