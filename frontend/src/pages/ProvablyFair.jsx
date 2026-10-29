@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import Loader from '../components/mini/Loader';
 import openNotification from '../components/mini/openNotification';
 import { clientErrorMessage, isRefusal } from '../helpers/serverMessage';
+import { gradeName } from '../helpers/grade';
 import {
     getProvablyFairState,
     setClientSeed as apiSetClientSeed,
@@ -282,7 +283,7 @@ const ProvablyFair = () => {
             <Input placeholder={t('provablyFair.caseIdPlaceholder')} value={calc.caseId} onChange={(e) => setCalc({ ...calc, caseId: e.target.value, openId: null })} />
             <Button onClick={onCompute}>{t('provablyFair.compute')}</Button>
             {calcResult && (
-                <div>{t('provablyFair.computed')}: {calcResult.itemId} / {calcResult.color} ({calcResult.rarity})</div>
+                <div>{t('provablyFair.computed')}: {calcResult.itemId} / {calcResult.color} ({gradeName(calcResult.rarity, t) || calcResult.rarity})</div>
             )}
             {calcResult && calcResult.source === 'snapshot' && (
                 <>

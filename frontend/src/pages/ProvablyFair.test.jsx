@@ -499,3 +499,33 @@ test('a verification that finishes after the page closed sets no state', async (
 
     expect(updatesAfterUnmount).toBe(0);
 });
+
+test('the computed result names the grade a new open was drawn from', async () => {
+    api.verifyOpen.mockResolvedValue({
+        data: {
+            itemId: 10, color: 'default', rarity: 'covert', source: 'current',
+        },
+    });
+    render(<ProvablyFair />);
+
+    fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.caseIdPlaceholder'), { target: { value: 'train' } });
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+
+    expect(await screen.findByText(/provablyFair\.computed.*\(grade\.covert\)/)).toBeInTheDocument();
+});
+
+test('the computed result keeps the wear an old open was drawn from', async () => {
+    api.verifyOpen.mockResolvedValue({
+        data: {
+            itemId: 10, color: 'default', rarity: 'Factory New', source: 'current',
+        },
+    });
+    render(<ProvablyFair />);
+
+    fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.caseIdPlaceholder'), { target: { value: 'train' } });
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+
+    expect(await screen.findByText(/provablyFair\.computed.*\(Factory New\)/)).toBeInTheDocument();
+});
