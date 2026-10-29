@@ -55,7 +55,8 @@ const describeDrop = (storageItem, itemInfoById, t) => {
         name: itemName(item, storageItem, t),
         imagePath: item.item_imagePath || '',
         grade: item.item_grade || null,
-        details: renderItemProp(item, storageItem.storage_color, t),
+        item,
+        color: storageItem.storage_color,
     };
 };
 
@@ -254,7 +255,7 @@ class Profile extends Component {
 
                             <div className="profilepage-firstblock__bestdrop">
                                 <div className="profiletitle">{t('profile.bestDrop')}</div>
-                                <Tooltip placement="bottom" title={bestDrop?.details}>
+                                <Tooltip placement="bottom" title={bestDrop && renderItemProp(bestDrop.item, bestDrop.color, t)}>
                                     <div
                                         className="profilepage-firstblock__bestdrop__drop"
                                         style={{
@@ -286,7 +287,7 @@ class Profile extends Component {
                                             <div className="casehistory-itemlist">
                                                 {historyItems.length ? historyItems.map((item, i) => (
                                                     <Fade delay={i * 30} key={`profile-history-${item.key}`}>
-                                                        <Tooltip placement="bottom" title={item.details}>
+                                                        <Tooltip placement="bottom" title={renderItemProp(item.item, item.color, t)}>
                                                             <div
                                                                 className="casehistory-itemlist_item"
                                                                 style={{
