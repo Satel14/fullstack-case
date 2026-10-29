@@ -255,6 +255,7 @@ class Profile extends Component {
                                 <div
                                     className="profilepage-firstblock__bestdrop__drop"
                                     style={{
+                                        ...(bestDrop && gradeStyle(bestDrop.grade)),
                                         backgroundImage: bestDropImg ? `url(${bestDropImg})` : 'none',
                                         backgroundSize: 'contain',
                                         backgroundPosition: 'center',

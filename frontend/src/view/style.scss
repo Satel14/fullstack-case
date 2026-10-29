@@ -993,7 +993,7 @@ p {
             background-repeat: no-repeat;
             background-size: cover;
             border: 1px #404250 solid;
-            box-shadow: rgba(91, 36, 33, 1) 0px -30px 60px -30px inset;
+            box-shadow: var(--rarity, transparent) 0px -30px 60px -30px inset;
         }
 
         @container (max-width: 700px) {

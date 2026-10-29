@@ -303,3 +303,35 @@ test.each([
     expect(await screen.findByText('testopen')).toBeInTheDocument();
     expect(screen.queryByText('common.loadFailed')).toBeNull();
 });
+
+test('the best drop glows in its grade colour', async () => {
+    getUserById.mockResolvedValue({
+        data: {
+            user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
+        },
+    });
+    getStorageItemsCountByUserId.mockResolvedValue({
+        data: 1, uniqueCases: 1, bestDrop: { storage_id: 1, storage_itemId: 88, storage_color: 'default' },
+    });
+    getItemsInfo.mockResolvedValue({
+        data: { 88: { item_name: 'AWP | Worm God', item_grade: 'restricted', pricesInCredits: { default: 300 } } },
+    });
+
+    const { container } = renderProfile('5');
+
+    await screen.findByText('AWP | Worm God');
+    expect(container.querySelector('.profilepage-firstblock__bestdrop__drop').style.getPropertyValue('--rarity')).toBe('#8847ff');
+});
+
+test('a player without a best drop gets no grade colour on it', async () => {
+    getUserById.mockResolvedValue({
+        data: {
+            user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
+        },
+    });
+
+    const { container } = renderProfile('5');
+
+    await screen.findByText('profile.noDrop');
+    expect(container.querySelector('.profilepage-firstblock__bestdrop__drop').style.getPropertyValue('--rarity')).toBe('');
+});
