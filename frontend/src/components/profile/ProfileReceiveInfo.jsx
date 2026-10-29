@@ -7,6 +7,8 @@ import { withTranslation } from 'react-i18next';
 import { updateProfileField } from '../../store/actions/user';
 import openNotification from '../mini/openNotification';
 
+const RECEIVE_INFO_MAX = 1000;
+
 const mapDispatchToProps = (dispatch) => ({
   updateProfileField: (fieldName, fieldData) => dispatch(updateProfileField(fieldName, fieldData)),
 });
@@ -60,6 +62,7 @@ class ProfileReceiveInfo extends Component {
               <Input.TextArea
                 placeholder={t('receiveInfo.placeholder')}
                 defaultValue={receiveInfo}
+                maxLength={RECEIVE_INFO_MAX}
                 style={{ minHeight: '117px' }}
               />
             </Form.Item>

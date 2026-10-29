@@ -74,3 +74,12 @@ test.each([
     expect(successShown()).toBe(false);
     expect(store.getState().user.receiveInfo).toBe('old link');
 });
+
+test('the receive info field keeps at most the 1000 characters the server takes', async () => {
+    editProfile.mockResolvedValue({ status: 200 });
+    renderForm();
+
+    save('z'.repeat(1001));
+
+    await waitFor(() => expect(editProfile).toHaveBeenCalledWith({ user_receiveInfo: 'z'.repeat(1000) }));
+});

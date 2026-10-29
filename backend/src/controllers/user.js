@@ -8,6 +8,8 @@ const sequelize = require('../config/db');
 const { answerFailure } = require('../helpers/failure');
 const { isAcceptableAvatar } = require('../helpers/avatar');
 
+const RECEIVE_INFO_MAX = 1000;
+
 module.exports.getUserById = async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -189,7 +191,9 @@ module.exports.validate = (method) => {
             ];
         }
         case 'editUser': {
-            return [];
+            return [
+                body('user_receiveInfo').optional({ nullable: true }).isString().bail().isLength({ max: RECEIVE_INFO_MAX }),
+            ];
         }
         case 'sendMoneyForUserByUserId': {
             return [

@@ -15,6 +15,8 @@ const MESSAGE = require('../src/constant/responseMessages');
 const sequelize = require('../src/config/db');
 const StorageService = require('../src/services/storage');
 const StorageController = require('../src/controllers/storage');
+const UserService = require('../src/services/user');
+const UserController = require('../src/controllers/user');
 
 test.before(() => {
     assertSafeTestDatabase();
@@ -61,6 +63,7 @@ const untouched = {
     log: console.log,
     error: console.error,
     getStorageById: StorageService.getStorageById,
+    editUser: UserService.editUser,
 };
 
 const storageAnswers = [[StorageService, 'getStorageById', async (userId, status) => [{ storage_status: status }]]];
@@ -246,8 +249,50 @@ test('every route that checks its input with rules reads their verdict in its ha
     assert.deepStrictEqual(unread, []);
 });
 
-test('the rule tests leave the console and the stubbed service as they found them', () => {
+
+const editProfile = async (body) => respond(
+    UserController.editUser,
+    await checkedBy(UserController.validate('editUser'), { body, user: player }),
+);
+
+test('a profile edit takes the receive info only as text of at most 1000 characters', async () => {
+    const crafted = [{ user_receiveInfo: [] }, { user_receiveInfo: {} }, { user_receiveInfo: 42 }, { user_receiveInfo: 'x'.repeat(1001) }];
+    const saved = [];
+
+    const { result: answers, logged } = await quietly(
+        [[UserService, 'editUser', async (fields) => { saved.push(fields); }]],
+        () => Promise.all(crafted.map(editProfile)),
+    );
+
+    assert.deepStrictEqual(
+        answers.map(({ code, payload }) => [code, payload.message]),
+        crafted.map(() => [422, MESSAGE.VALIDATOR.ERROR]),
+    );
+    assert.deepStrictEqual(saved, []);
+    assert.deepStrictEqual(logged, []);
+});
+
+test('a profile edit still saves a trade link, a long note up to the limit and an avatar', async () => {
+    const sent = [
+        { user_receiveInfo: 'https://steamcommunity.com/tradeoffer/new/?partner=1&token=abcd' },
+        { user_receiveInfo: 'y'.repeat(1000) },
+        { user_avatar: 3 },
+    ];
+    const saved = [];
+
+    const { result: answers } = await quietly(
+        [[UserService, 'editUser', async (fields) => { saved.push(fields); }]],
+        () => Promise.all(sent.map(editProfile)),
+    );
+
+    assert.deepStrictEqual(answers.map(({ code }) => code), [200, 200, 200]);
+    const inOrder = (list) => list.map((fields) => JSON.stringify(fields)).sort();
+    assert.deepStrictEqual(inOrder(saved), inOrder(sent));
+});
+
+test('the rule tests leave the console and the stubbed services as they found them', () => {
     assert.strictEqual(console.log, untouched.log);
     assert.strictEqual(console.error, untouched.error);
     assert.strictEqual(StorageService.getStorageById, untouched.getStorageById);
+    assert.strictEqual(UserService.editUser, untouched.editUser);
 });
