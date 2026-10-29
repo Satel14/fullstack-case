@@ -109,9 +109,9 @@ async function initialRedisState() {
         transaction.exec((err, replies) => (err ? reject(err) : resolve(replies)));
     });
     console.log("[Redis] Items Loaded");
-    const ungraded = countUngraded(items);
+    const ungraded = countUngraded(hash);
     if (ungraded > 0) {
-        console.warn(`[Redis] ${ungraded} items have no grade and show without grade colours: run npm run seed`);
+        console.warn(`[Redis] ${ungraded} items have no grade and show without grade colours: run npm run seed, then restart the backend`);
     }
 }
 

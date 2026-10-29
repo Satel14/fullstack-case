@@ -42,9 +42,12 @@ test('when a name has several price rows the first one wins, as before', () => {
     assert.strictEqual(JSON.parse(hash[1]).pricesInCredits, 'first');
 });
 
-test('countUngraded counts the named items that have no grade yet', () => {
-    assert.strictEqual(countUngraded([
-        item(1, 'Graded', { item_grade: 'covert' }), item(2, 'Ungraded'), item(3, 'Null grade', { item_grade: null }), item(4, null),
-    ]), 2);
-    assert.strictEqual(countUngraded([]), 0);
+test('countUngraded counts the cached items that have no grade, leaving out items the cache skips', () => {
+    const hash = buildItemHash(
+        [item(1, 'Graded', { item_grade: 'covert' }), item(2, 'Ungraded'), item(3, 'Null grade', { item_grade: null }), item(4, 'Unpriced')],
+        [{ name: 'Graded', pricesInCredits: '{}' }, { name: 'Ungraded', pricesInCredits: '{}' }, { name: 'Null grade', pricesInCredits: '{}' }],
+    );
+
+    assert.strictEqual(countUngraded(hash), 2);
+    assert.strictEqual(countUngraded({}), 0);
 });
