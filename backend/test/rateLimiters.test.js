@@ -25,7 +25,6 @@ const isLimiter = (guard) => Object.prototype.hasOwnProperty.call(limiters, guar
 const WRITE_ROUTES_WITHOUT_MONEY = [
     'PUT /api/profile/edit',
     'PUT /api/profile/provably-fair/client-seed',
-    'POST /api/provably-fair/verify',
     'POST /api/profile/storage',
 ];
 

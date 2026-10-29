@@ -56,6 +56,14 @@ const seedRotateLimiter = rateLimit({
     message: { status: 429, message: 'Забагато оновлень сіда. Зачекайте трохи.' },
 });
 
+const verifyLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: 429, message: 'Забагато перевірок. Зачекайте трохи.' },
+});
+
 const adminLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 120,
@@ -113,5 +121,5 @@ const withdrawCancelLimiter = rateLimit({
 
 module.exports = {
     authLimiter, caseOpenLimiter, onlineLimiter, depositLimiter, resetLimiter, bonusLimiter, adminLimiter,
-    seedRotateLimiter, promocodeLimiter, transferLimiter, sellLimiter, receiveLimiter, withdrawCancelLimiter,
+    seedRotateLimiter, verifyLimiter, promocodeLimiter, transferLimiter, sellLimiter, receiveLimiter, withdrawCancelLimiter,
 };

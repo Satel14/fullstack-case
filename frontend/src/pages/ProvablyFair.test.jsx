@@ -628,3 +628,17 @@ test('while a player\'s seeds load, the algorithm and the calculator are already
     expect(screen.queryByText('provablyFair.currentSeeds')).toBeNull();
     expect(screen.queryByText('provablyFair.loginCta')).toBeNull();
 });
+
+test('a check stopped by the limiter says so instead of blaming the inputs', async () => {
+    api.verifyOpen.mockRejectedValue({ error: 429, message: 'Забагато перевірок. Зачекайте трохи.' });
+    renderPage({});
+
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.serverSeedPlaceholder'), { target: { value: 'server' } });
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.clientSeedPlaceholder'), { target: { value: 'client' } });
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.noncePlaceholder'), { target: { value: '3' } });
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.caseIdPlaceholder'), { target: { value: 'dust2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+
+    expect(await screen.findByText('Забагато перевірок. Зачекайте трохи.')).toBeInTheDocument();
+    expect(screen.queryByText('provablyFair.verifyFailed')).toBeNull();
+});

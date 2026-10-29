@@ -206,7 +206,8 @@ const ProvablyFair = () => {
             }
         } catch (e) {
             if (mounted.current) {
-                setCalcError(isRefusal(e) ? t('provablyFair.verifyFailed') : t('common.serverError'));
+                const refusal = e.error === 429 ? clientErrorMessage(e) : t('provablyFair.verifyFailed');
+                setCalcError(isRefusal(e) ? refusal : t('common.serverError'));
             }
         }
     };
