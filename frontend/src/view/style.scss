@@ -1293,7 +1293,6 @@ p {
     border-radius: 8px;
     border: 1px solid #2a3350;
     border-top-color: #3c5680;
-    border-bottom: 3px solid var(--rarity, #2a3350);
     background-color: #161a29;
     background-repeat: no-repeat;
     background-position: center;
@@ -1323,7 +1322,6 @@ p {
     &:hover {
         border-color: #4a6ea8;
         border-top-color: #5f8bc9;
-        border-bottom-color: var(--rarity, #4a6ea8);
         box-shadow:
             inset 0 -64px 46px -34px color-mix(in srgb, var(--rarity, transparent) 65%, transparent),
             inset 0 34px 34px -28px rgba(127, 199, 243, 0.2),
@@ -1578,7 +1576,6 @@ blockquote {
         background-position: center;
         background-size: 50px;
         border: 1px #92929270 solid;
-        border-bottom: 3px solid var(--rarity, #92929270);
         cursor: pointer;
         transition: border-color 0.2s;
 
