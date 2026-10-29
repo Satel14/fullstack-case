@@ -52,7 +52,7 @@ function pickRarity(caseDef, f0) {
     return keys[keys.length - 1];
 }
 
-function pickItem(caseDef, rarity, f1) {
+function collectionFor(caseDef, rarity) {
     let collection = caseDef.ITEMS.filter((i) => i.rare === rarity);
     let resolvedRare = rarity;
     if (collection.length === 0) {
@@ -60,6 +60,11 @@ function pickItem(caseDef, rarity, f1) {
         collection = caseDef.ITEMS.filter((i) => i.rare === resolvedRare);
         if (collection.length === 0) collection = caseDef.ITEMS;
     }
+    return { collection, resolvedRare };
+}
+
+function pickItem(caseDef, rarity, f1) {
+    const { collection, resolvedRare } = collectionFor(caseDef, rarity);
     const idx = Math.floor(f1 * collection.length);
     const item = collection[Math.min(idx, collection.length - 1)];
     return { item, resolvedRare };
