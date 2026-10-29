@@ -202,3 +202,7 @@ test('neither nginx writes query strings or referers into its access log, so tok
         assert.ok(server.indexOf('access_log') !== -1 && server.indexOf('access_log') < server.indexOf('location '), `${file}: access_log is not set for the whole server`);
     });
 });
+
+test('nginx passes the site\'s files through without spooling them to a temporary file, so loading a page writes no warning', () => {
+    assert.match(location('/'), /proxy_max_temp_file_size\s+0;/);
+});
