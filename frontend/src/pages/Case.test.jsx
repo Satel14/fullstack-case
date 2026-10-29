@@ -410,3 +410,17 @@ test('on the English site the chances are written the English way', async () => 
     expect(await screen.findByText('9.17%', { selector: '.casepage-itemlist_item__chance' })).toBeInTheDocument();
     expect(screen.getByRole('list', { name: 'case.oddsByGrade' })).toHaveTextContent('grade.classified 9.17%');
 });
+
+test('a guest sees the provably fair badge too, as a link to the checking page without a seed hash', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    getCaseById.mockResolvedValue(caseResponse(7));
+    const store = createStore(() => ({ itemCache: {} }));
+
+    render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
+
+    const badge = await screen.findByRole('link', { name: 'provablyFair.badge' });
+    expect(badge).toHaveAttribute('href', '/provably-fair');
+    fireEvent.mouseEnter(badge);
+    await act(async () => { await new Promise((resolve) => { setTimeout(resolve, 200); }); });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+});

@@ -214,13 +214,11 @@ class Case extends Component {
                             <OpenCase data={caseData} onCaseChanged={() => this.refreshCase()} />
                         </div>
 
-                        {serverSeedHash && (
-                            <div className="casepage-provablyfair">
-                                <Tooltip title={serverSeedHash}>
-                                    <Link to="/provably-fair">{t('provablyFair.badge')}</Link>
-                                </Tooltip>
-                            </div>
-                        )}
+                        <div className="casepage-provablyfair">
+                            <Tooltip title={serverSeedHash}>
+                                <Link to="/provably-fair">{t('provablyFair.badge')}</Link>
+                            </Tooltip>
+                        </div>
 
                         <span className="casepage-title-second">
                             {t('case.contents')}
