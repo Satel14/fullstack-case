@@ -56,6 +56,7 @@ module.exports = {
     USER: {
         NOT_EXIST: 'Такого користувача не існує',
         MONEY_NOT_ENOUGH: 'Недостатньо кредитів на балансі',
+        BALANCE_LIMIT: 'Досягнуто максимального балансу',
         CANT_UPDATE_FIELD: 'Це поле не можна змінювати',
         AVATAR_INVALID: 'Оберіть аватар зі списку'
     },

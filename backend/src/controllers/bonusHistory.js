@@ -67,7 +67,7 @@ module.exports.activateBonus = async (req, res) => {
         if (isDuplicateClaim(e)) {
             return refuse(res, MESSAGE.BONUS.ALREADY_USED);
         }
-        return answerFailure(res, e, { status: 500, where: 'bonus.activate' });
+        return answerFailure(res, e, { status: 422, where: 'bonus.activate' });
     }
 };
 

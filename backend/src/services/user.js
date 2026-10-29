@@ -1,7 +1,8 @@
-const { Op } = require("sequelize");
+const { Op, QueryTypes } = require("sequelize");
 const { pageOffset } = require("../helpers/paging");
 const User = require("../models/user");
 const MESSAGE = require("../constant/responseMessages");
+const { BALANCE_MAX } = require("../constant/mysql");
 
 const PUBLIC_FIELDS = [
     "user_id",
@@ -99,16 +100,17 @@ module.exports.getBalanceByUserId = async (id, options = {}) => {
 };
 
 module.exports.incrementBalance = async (value, id, options = {}) => {
-    try {
-        await User.increment("user_balance", {
-            by: value,
-            where: { user_id: id },
-            ...options,
-        }).then((result) => result);
-        return true;
-    } catch (e) {
-        throw Error(e.message);
+    const { transaction } = options;
+    const found = await User.sequelize.query(
+        "UPDATE users SET balance = balance + :value WHERE id = :id AND balance + :value <= :max",
+        { replacements: { value: Number(value), id, max: BALANCE_MAX }, type: QueryTypes.BULKUPDATE, transaction },
+    );
+    if (found === 0 && await User.count({ where: { user_id: id }, transaction })) {
+        const refusal = new Error(MESSAGE.USER.BALANCE_LIMIT);
+        refusal.code = "BALANCE_LIMIT";
+        throw refusal;
     }
+    return true;
 };
 
 module.exports.resetBalance = async (id, options = {}) => {

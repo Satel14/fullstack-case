@@ -1,3 +1,4 @@
 module.exports = {
     MYSQL_INT_MAX: 2147483647,
+    BALANCE_MAX: 9999999999.99,
 };

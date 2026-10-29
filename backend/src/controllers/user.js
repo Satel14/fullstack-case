@@ -86,7 +86,7 @@ module.exports.sendMoneyForUserByUserId = async (req, res) => {
         if (e && e.code === 'MONEY_NOT_ENOUGH') {
             return res.status(200).json({ status: 200, sended: false, message: MESSAGE.USER.MONEY_NOT_ENOUGH });
         }
-        return answerFailure(res, e, { status: 400, where: 'user.send-money' });
+        return answerFailure(res, e, { status: 422, where: 'user.send-money' });
     }
 };
 
@@ -115,7 +115,7 @@ module.exports.depositBalance = async (req, res) => {
         const balance = await UserService.getBalanceByUserId(user_id);
         return res.status(200).json({ status: 200, balance });
     } catch (e) {
-        return answerFailure(res, e, { status: 500, where: 'user.deposit' });
+        return answerFailure(res, e, { status: 422, where: 'user.deposit' });
     }
 };
 

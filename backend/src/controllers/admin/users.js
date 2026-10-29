@@ -147,6 +147,9 @@ module.exports.adjustBalance = async (req, res) => {
         if (e && e.code === 'NEGATIVE_BALANCE') {
             return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.NEGATIVE_BALANCE });
         }
+        if (e && e.code === 'BALANCE_LIMIT') {
+            return res.status(422).json({ status: 422, message: MESSAGE.USER.BALANCE_LIMIT });
+        }
         console.error('[admin] users.adjustBalance failed:', loggable(e));
         return res.status(400).json({ status: 400, message: MESSAGE.ADMIN.ERROR });
     }
