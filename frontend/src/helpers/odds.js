@@ -10,12 +10,14 @@ export const gradeOdds = (items, odds, gradeOf) => {
     if (!odds) {
         return [];
     }
+    const droppable = [...new Set(items.map((item) => item.id))].filter((id) => odds[id] > 0);
+    if (droppable.some((id) => gradeRank(gradeOf(id)) === 0)) {
+        return [];
+    }
     const byGrade = new Map();
-    new Set(items.map((item) => item.id)).forEach((id) => {
+    droppable.forEach((id) => {
         const grade = gradeOf(id);
-        if (gradeRank(grade) > 0 && odds[id] !== undefined) {
-            byGrade.set(grade, (byGrade.get(grade) || 0) + odds[id]);
-        }
+        byGrade.set(grade, (byGrade.get(grade) || 0) + odds[id]);
     });
     return [...byGrade]
         .map(([grade, chance]) => ({ grade, chance }))

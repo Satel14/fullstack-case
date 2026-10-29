@@ -23,11 +23,14 @@ test('the chances add up by grade, the rarest grade first, each item counted onc
     ]);
 });
 
-test('items without a known grade or without odds are left out of the sums', () => {
+test('the sums by grade wait until every item that can drop has a known grade', () => {
     const items = [{ id: 1 }, { id: 2 }, { id: 3 }];
-    const odds = { 1: 0.6, 2: 0.4 };
-    const grades = { 1: 'restricted', 2: null, 3: 'covert' };
+    const odds = { 1: 0.6, 2: 0.4, 3: 0 };
 
-    expect(gradeOdds(items, odds, (id) => grades[id])).toEqual([{ grade: 'restricted', chance: 0.6 }]);
-    expect(gradeOdds(items, undefined, (id) => grades[id])).toEqual([]);
+    expect(gradeOdds(items, odds, (id) => ({ 1: 'restricted', 2: null, 3: 'covert' })[id])).toEqual([]);
+    expect(gradeOdds(items, odds, (id) => ({ 1: 'restricted', 2: 'covert', 3: null })[id])).toEqual([
+        { grade: 'covert', chance: 0.4 },
+        { grade: 'restricted', chance: 0.6 },
+    ]);
+    expect(gradeOdds(items, undefined, (id) => ({ 1: 'restricted', 2: 'covert' })[id])).toEqual([]);
 });
