@@ -70,11 +70,23 @@ test('within every grade a dearer tier picks dearer items', () => {
 });
 
 test('a tier band of a grade holds the quantiles of that grade, not of the whole pool', () => {
-  const pool = makePool();
-  const c = generateCase({ archetype: 'budget', pool, rng: makeRng('band') });
+  const pool = [];
+  let id = 1;
+  GRADES.forEach((grade) => {
+    for (let i = 1; i <= 60; i++) {
+      pool.push({ itemId: id++, grade, evValue: grade === 'covert' ? i : 1000000 + i });
+    }
+  });
   const covertValues = pool.filter((p) => p.grade === 'covert').map((p) => p.evValue).sort((a, b) => a - b);
   const budgetTop = covertValues[Math.round(0.3 * (covertValues.length - 1))];
-  bucketOf(c, 'covert').forEach((it) => assert.ok(pool.find((p) => p.itemId === it.id).evValue <= budgetTop));
+  const eliteBottom = covertValues[Math.round(0.75 * (covertValues.length - 1))];
+
+  for (let seed = 0; seed < 20; seed++) {
+    const budget = generateCase({ archetype: 'budget', pool, rng: makeRng(`band-${seed}`) });
+    bucketOf(budget, 'covert').forEach((it) => assert.ok(pool.find((p) => p.itemId === it.id).evValue <= budgetTop, `budget seed ${seed}`));
+    const elite = generateCase({ archetype: 'elite', pool, rng: makeRng(`band-${seed}`) });
+    bucketOf(elite, 'covert').forEach((it) => assert.ok(pool.find((p) => p.itemId === it.id).evValue >= eliteBottom, `elite seed ${seed}`));
+  }
 });
 
 test('a band too thin for its bucket is filled with the grade items nearest its middle', () => {
