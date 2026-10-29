@@ -148,13 +148,16 @@ const passesAdminCaseRules = async (req) => validationResult(
     await checkedBy(AdminCasesController.validate('update'), req),
 ).isEmpty();
 
-test('the admin case update refuses lists for its numbers and an id that is no case id', async () => {
+test('the admin case update refuses lists, numbers past what the columns hold, and an id that is no case id', async () => {
     const crafted = [
         { params: { id: 'dust2' }, body: { case_price: [100, 'x'] } },
         { params: { id: 'dust2' }, body: { case_discount: ['50', '60'] } },
         { params: { id: 'dust2' }, body: { case_published: [1, 0] } },
         { params: { id: 'dust2' }, body: { case_openLimit: ['-1', '5'] } },
         { params: { id: 'dust2\n[admin] forged' }, body: { case_price: 100 } },
+        { params: { id: 'dust2' }, body: { case_price: 2147483648 } },
+        { params: { id: 'dust2' }, body: { case_discount: 2147483648 } },
+        { params: { id: 'dust2' }, body: { case_openLimit: 3000000000 } },
     ];
 
     assert.deepStrictEqual(await Promise.all(crafted.map(passesAdminCaseRules)), crafted.map(() => false));
@@ -166,6 +169,7 @@ test('the admin case update rules still pass what the admin panel sends', async 
         { params: { id: 'st-marc' }, body: { case_discount: 0 } },
         { params: { id: 'rising-sun' }, body: { case_discount: 99, case_published: 0, case_openLimit: -1 } },
         { params: { id: 'havoc' }, body: { case_title: 'Havoc', case_published: 1, case_openLimit: 500 } },
+        { params: { id: 'dust2' }, body: { case_price: 2147483647, case_openLimit: 2147483647 } },
     ];
 
     assert.deepStrictEqual(await Promise.all(sent.map(passesAdminCaseRules)), sent.map(() => true));
