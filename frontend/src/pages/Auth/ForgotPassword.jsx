@@ -26,10 +26,7 @@ const CollectionCreateForm = ({
                         onCreate(values);
                         return undefined;
                     })
-                    .catch((info) => {
-                        // eslint-disable-next-line no-console
-                        console.log('Validate failed', info);
-                    });
+                    .catch(() => null);
             }}
         >
             <Form

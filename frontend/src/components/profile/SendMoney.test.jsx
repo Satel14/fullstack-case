@@ -61,3 +61,16 @@ test('a player banned mid-session is told why the transfer failed', async () => 
 
     expect(await screen.findByText('Ваш акаунт заблоковано')).toBeInTheDocument();
 });
+
+test('a transfer form sent without an amount says so under the field and keeps it out of the browser console', async () => {
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+    render(<SendMoney userIdTo={9} nickname="friend" />);
+    fireEvent.click(screen.getByRole('button', { name: /sendMoney.trigger/ }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'sendMoney.transfer' }));
+
+    expect(await screen.findByText('sendMoney.amountRequired')).toBeInTheDocument();
+    expect(log).not.toHaveBeenCalled();
+    expect(sendMoneyForUser).not.toHaveBeenCalled();
+    log.mockRestore();
+});

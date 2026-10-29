@@ -69,3 +69,15 @@ test('a mail-unavailable (503) answer shows its message', async () => {
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.forgot.errorTitle', 'Відправлення листів тимчасово недоступне'));
 });
+
+test('a refused address is shown under the field and kept out of the browser console', async () => {
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+    openModal();
+
+    fireEvent.change(screen.getByLabelText('auth.forgot.emailLabel'), { target: { value: 'player@nowhere' } });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.forgot.ok' }));
+
+    await waitFor(() => expect(screen.getByText('auth.forgot.emailInvalid')).toBeInTheDocument());
+    expect(log).not.toHaveBeenCalled();
+    log.mockRestore();
+});
