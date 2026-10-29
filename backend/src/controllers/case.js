@@ -10,7 +10,7 @@ const allCases = require('../constant/cases/_all')
 const { getIo } = require('../socket/chat');
 const sequelize = require('../config/db');
 const PFService = require('../services/provablyFair');
-const { buildDrawTable, deriveFromTable } = require('../modules/provablyFair');
+const { buildDrawTable, deriveFromTable, itemOdds } = require('../modules/provablyFair');
 const RedisManager = require('../redis/manager');
 const { answerFailure } = require('../helpers/failure');
 const ITEM_HASH = 'item_hash';
@@ -261,7 +261,8 @@ module.exports.getCaseById = async (req, res) => {
         return res.status(200).json({
             status: 200,
             data: caseById.dataValues,
-            caseCollection
+            caseCollection,
+            odds: caseCollection && itemOdds(caseCollection),
         });
 
     } catch (e) {
