@@ -155,12 +155,7 @@ module.exports.sellItemByStorageId = async (req, res) => {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
         }
 
-        const getItemInfo = await ItemService.getItemById(storageItem.storage_itemId).catch((e) => {
-            if (e.message === MESSAGE.ITEM.NOT_EXIST) {
-                return null;
-            }
-            throw e;
-        });
+        const getItemInfo = await ItemService.findItemById(storageItem.storage_itemId);
 
         if (!getItemInfo) {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NO_PRICE });

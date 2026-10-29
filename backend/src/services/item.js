@@ -3,15 +3,20 @@ const sequelize = require("../config/db");
 const MESSAGE = require("../constant/responseMessages");
 const InsiderService = require("./insiderPrices");
 
+module.exports.findItemById = async (itemId) => {
+    const data = await Item.findByPk(itemId);
+    return data ? data.dataValues : null;
+};
+
 module.exports.getItemById = async (itemId) => {
     try {
-        const data = await Item.findByPk(itemId);
+        const data = await module.exports.findItemById(itemId);
 
         if (!data) {
             throw new Error(MESSAGE.ITEM.NOT_EXIST);
         }
 
-        return data.dataValues;
+        return data;
     } catch (e) {
         throw Error(e.message);
     }
