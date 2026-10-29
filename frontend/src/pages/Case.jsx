@@ -160,13 +160,9 @@ class Case extends Component {
     }
 
     async getProvablyFairInfo() {
-        try {
-            const res = await getProvablyFairState();
-            if (this.mounted) {
-                this.setState({ serverSeedHash: res.data.active.serverSeedHash });
-            }
-        } catch (e) {
-            // anonymous users get 401/403 here - render no badge
+        const res = await getProvablyFairState().catch(() => null);
+        if (this.mounted && res) {
+            this.setState({ serverSeedHash: res.data.active.serverSeedHash });
         }
     }
 

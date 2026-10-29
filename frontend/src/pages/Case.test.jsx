@@ -170,7 +170,8 @@ test('the provably fair badge shows the active seed hash', async () => {
 
     render(casePage(store, 'havoc', { push: jest.fn() }));
 
-    expect(await screen.findByText('provablyFair.badge')).toBeInTheDocument();
+    fireEvent.mouseEnter(await screen.findByRole('link', { name: 'provablyFair.badge' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('hash');
 });
 
 test('a seed answer that arrives after the page closed updates nothing', async () => {
