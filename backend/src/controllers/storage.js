@@ -343,7 +343,7 @@ module.exports.getFavoriteCaseByUserId = async (req, res) => {
         const { id } = req.params;
 
         const favoriteCaseId = await StorageService.getFavoriteCaseIdByUserId(id);
-        const caseInfo = favoriteCaseId === null ? null : await CaseService.getCaseById(favoriteCaseId);
+        const caseInfo = favoriteCaseId === null ? null : await CaseService.findCaseById(favoriteCaseId);
 
         return res.status(200).json({ status: 200, data: caseInfo });
     } catch (e) {

@@ -164,3 +164,14 @@ test('the Top leaderboard keeps paging the way the site asks for it', async () =
     assert.strictEqual(next.code, 200);
     assert.deepStrictEqual(next.payload.data, []);
 });
+
+test('a favourite case whose case row is gone is answered as no favourite, not as a failure', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seed(sequelize);
+    await sequelize.query('DELETE FROM cases');
+
+    const result = await call('getFavoriteCaseByUserId', { id: '1' });
+
+    assert.deepStrictEqual([result.code, result.payload.data], [200, null], JSON.stringify(result.payload));
+});
