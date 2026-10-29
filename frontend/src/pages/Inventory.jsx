@@ -170,7 +170,11 @@ const Inventory = ({
                 openNotification('error', t('openCase.sellErrorTitle'), res.message || t('openCase.sellErrorText'));
             }
         } catch (e) {
-            openNotification('error', t('common.error'), t('openCase.sellErrorText'));
+            if (e && e.error === UNSELLABLE && e.message) {
+                openNotification('error', t('openCase.sellErrorTitle'), e.message);
+            } else {
+                openNotification('error', t('common.error'), t('openCase.sellErrorText'));
+            }
         }
         setSelling(false);
     };

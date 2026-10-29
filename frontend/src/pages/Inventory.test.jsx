@@ -481,3 +481,18 @@ test('each card wears its item grade colour and names the grade beside the wear'
     expect(card.style.getPropertyValue('--rarity')).toBe('#d32ce6');
     expect(card.querySelector('.inventorypage-card__meta').textContent).toBe('grade.classified · Field Tested rifles');
 });
+
+test('a single sale the server refuses shows its reason, and a failed request still shows the plain sell error', async () => {
+    server.inventory = inventoryRows(2);
+    sellItemByStorageId
+        .mockImplementationOnce(() => Promise.reject({ error: 422, message: 'balance is full' }))
+        .mockImplementationOnce(() => Promise.reject(new TypeError('Failed to fetch')));
+    renderInventory();
+
+    const [first] = await screen.findAllByRole('button', { name: /openCase.sellFor/ });
+    fireEvent.click(first);
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'openCase.sellErrorTitle', 'balance is full'));
+
+    fireEvent.click(first);
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'openCase.sellErrorText'));
+});
