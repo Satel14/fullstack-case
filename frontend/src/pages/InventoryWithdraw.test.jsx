@@ -114,13 +114,13 @@ test('without receive info no request is sent and the player is told what to fil
 
 test('a refused withdrawal shows the server reason and keeps the item', async () => {
     server.rows = [row(1, 'inventory')];
-    receiveItemByStorageId.mockRejectedValue({ error: 422, message: 'Такого предмета не існує' });
+    receiveItemByStorageId.mockRejectedValue({ error: 422, message: 'Цього предмета немає у вашому інвентарі' });
     renderInventory();
 
     fireEvent.click(await screen.findByRole('button', { name: /inventory\.withdraw$/ }));
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
-        'error', 'inventory.withdrawErrorTitle', 'Такого предмета не існує',
+        'error', 'inventory.withdrawErrorTitle', 'Цього предмета немає у вашому інвентарі',
     ));
     expect(screen.getByRole('button', { name: /inventory\.withdraw$/ })).toBeInTheDocument();
 });
