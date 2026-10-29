@@ -331,3 +331,22 @@ test('the grade of an item of the contents reaches keyboard and screen-reader us
 
     expect(await screen.findByRole('tooltip')).toHaveTextContent('item.rarity: grade.classified');
 });
+
+test('each item of the contents shows its chance, also in its tooltip and its accessible name', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    getCaseById.mockResolvedValue({ ...caseResponse(0), caseCollection: { ITEMS: [{ id: 1 }] }, odds: { 1: 0.0917 } });
+    const store = createStore(() => ({
+        itemCache: {
+            1: {
+                item_itemId: 1, item_name: 'AK-47 | Redline', item_type: 'rifles', item_rare: 'Field Tested', item_grade: 'classified', pricesInCredits: { default: 900 },
+            },
+        },
+    }));
+
+    render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
+
+    const tile = await screen.findByRole('link', { name: 'AK-47 | Redline, 900 ₴, grade.classified, item.chance 9,17%' });
+    expect(tile.querySelector('.casepage-itemlist_item__chance').textContent).toBe('9,17%');
+    fireEvent.mouseEnter(tile);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('item.wear: Field Tested, item.chance: 9,17%');
+});

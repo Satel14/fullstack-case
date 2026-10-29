@@ -58,3 +58,8 @@ test('a caption leaves out what is not known', () => {
     expect(itemCaption({ grade: 'special', wear: '', type: undefined }, t)).toBe('grade.special');
     expect(itemCaption({}, t)).toBe('');
 });
+
+test('a chance, when given, closes the item details', () => {
+    expect(renderItemProp(ak, null, t, '9,17%'))
+        .toBe('item.name: AK-47 | Redline, item.type: rifles, item.rarity: grade.classified, item.wear: Field Tested, item.chance: 9,17%');
+});

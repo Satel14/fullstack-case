@@ -17,6 +17,7 @@
         "type": "Type",
         "rarity": "Rarity",
         "wear": "Wear",
+        "chance": "Chance",
         "color": "Color",
         "placeholder": "Item #{{id}}"
     },

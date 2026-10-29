@@ -8,7 +8,7 @@ const itemName = (item, t) => {
     return item.item_itemId ? t('item.placeholder', { id: String(item.item_itemId) }) : '';
 };
 
-const renderItemProp = (item, color, t) => {
+const renderItemProp = (item, color, t, chance) => {
     if (!item) {
         return '';
     }
@@ -19,6 +19,7 @@ const renderItemProp = (item, color, t) => {
         [t('item.rarity'), gradeName(item.item_grade, t)],
         [t('item.wear'), item.item_rare],
         [t('item.color'), color],
+        [t('item.chance'), chance],
     ]
         .filter(([, value]) => value)
         .map(([label, value]) => `${label}: ${value}`)

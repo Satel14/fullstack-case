@@ -10,6 +10,7 @@ import { getCaseById } from '../api/all/cases';
 import { getProvablyFairState } from '../api/all/provablyFair';
 import { renderItemProp } from '../helpers/Case';
 import { gradeName, gradeRank, gradeStyle } from '../helpers/grade';
+import { formatChance } from '../helpers/odds';
 import { computeItemPriceUAH } from '../helpers/price';
 import { marketUrl } from '../helpers/market';
 import { isRefusal } from '../helpers/serverMessage';
@@ -32,6 +33,7 @@ class Case extends Component {
             id: props.match.params.id,
             caseData: [],
             caseCollection: [],
+            odds: null,
             fetching: false,
             failed: false,
             serverSeedHash: null,
@@ -146,6 +148,7 @@ class Case extends Component {
         this.setState({
             caseCollection: caseData.caseCollection,
             caseData: caseData.data,
+            odds: caseData.odds || null,
             fetching: false,
         });
     }
@@ -184,9 +187,9 @@ class Case extends Component {
 
     render() {
         const {
-            caseData, fetching, failed, serverSeedHash,
+            caseData, fetching, failed, serverSeedHash, odds,
         } = this.state;
-        const { t } = this.props;
+        const { t, i18n } = this.props;
         if (failed) {
             return (
                 <div className="casepage">
@@ -226,19 +229,25 @@ class Case extends Component {
                                 const type = this.getShortInfoItem(item, 'item_type');
                                 const price = this.getItemPrice(item);
                                 const grade = this.getShortInfoItem(item, 'item_grade');
+                                const chance = odds && odds[item.id] !== undefined ? formatChance(odds[item.id], i18n?.language) : null;
                                 return (
                                     <Fade delay={i * 50} key={`itemlist${item.id}`}>
                                         <Tooltip
                                             placement="bottom"
                                             trigger={['hover', 'focus']}
-                                            title={renderItemProp(this.getShortInfoItem(item), null, t)}
+                                            title={renderItemProp(this.getShortInfoItem(item), null, t, chance)}
                                         >
                                             <a
                                                 className="casepage-itemlist_item"
                                                 href={marketUrl(name, type === 'knife')}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                aria-label={[name, price > 0 && `${price} ₴`, gradeName(grade, t)].filter(Boolean).join(', ')}
+                                                aria-label={[
+                                                    name,
+                                                    price > 0 && `${price} ₴`,
+                                                    gradeName(grade, t),
+                                                    chance && `${t('item.chance')} ${chance}`,
+                                                ].filter(Boolean).join(', ')}
                                                 style={gradeStyle(grade)}
                                             >
                                                 <div
@@ -254,6 +263,7 @@ class Case extends Component {
                                                         </b>
                                                     )}
                                                 </div>
+                                                {chance && <div className="casepage-itemlist_item__chance">{chance}</div>}
                                             </a>
                                         </Tooltip>
                                     </Fade>
