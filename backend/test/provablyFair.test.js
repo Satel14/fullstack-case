@@ -187,49 +187,61 @@ test('itemOdds splits each rarity\'s share evenly among its items and adds up to
 
 test('itemOdds gives an empty rarity\'s share to the most common rarity with items, as the draw does', () => {
     const odds = pf.itemOdds({
-        CHANCES: { FN: 30, MW: 50, FT: 20, COLORS: { DEFAULT: 100, PAINTED: 0, LIST: {} } },
+        CHANCES: { FN: 30, MW: 20, FT: 50, COLORS: { DEFAULT: 100, PAINTED: 0, LIST: {} } },
         ITEMS: [{ id: 2, rare: 'MW', colors: ['default'] }, { id: 3, rare: 'FT', colors: ['default'] }],
     });
 
-    closeTo(odds, { 2: 0.8, 3: 0.2 });
+    closeTo(odds, { 2: 0.2, 3: 0.8 });
 });
 
-test('itemOdds adds up the chances of an item listed under two rarities', () => {
+test('itemOdds adds up the chances of an item listed more than once, within a rarity or across two', () => {
     const odds = pf.itemOdds({
         CHANCES: { FN: 50, MW: 50, COLORS: { DEFAULT: 100, PAINTED: 0, LIST: {} } },
-        ITEMS: [{ id: 1, rare: 'FN', colors: ['default'] }, { id: 1, rare: 'MW', colors: ['default'] }, { id: 2, rare: 'MW', colors: ['default'] }],
+        ITEMS: [
+            { id: 1, rare: 'FN', colors: ['default'] },
+            { id: 1, rare: 'MW', colors: ['default'] },
+            { id: 1, rare: 'MW', colors: ['default'] },
+            { id: 2, rare: 'MW', colors: ['default'] },
+        ],
     });
 
-    closeTo(odds, { 1: 0.75, 2: 0.25 });
+    closeTo(odds, { 1: 0.5 + 0.5 * (2 / 3), 2: 0.5 / 3 });
 });
+
+const drawFrequencies = (caseDef, itemHash, opens) => {
+    const counts = {};
+    for (let n = 0; n < opens; n++) {
+        const { itemId } = pf.deriveWinner('odds-server', 'odds-client', n, caseDef, itemHash);
+        counts[itemId] = (counts[itemId] || 0) + 1;
+    }
+    return counts;
+};
+
+const assertDrawnLikeOdds = (odds, counts, opens) => {
+    for (const [id, chance] of Object.entries(odds)) {
+        const freq = (counts[id] || 0) / opens;
+        const allowed = 5 * Math.sqrt((chance * (1 - chance)) / opens) + 1e-12;
+        assert.ok(Math.abs(freq - chance) <= allowed, `item ${id}: drew ${freq}, odds ${chance}, allowed ${allowed}`);
+    }
+};
 
 test('itemOdds follows the whole-number roll of the draw when weights are not whole numbers', () => {
     const fractional = {
-        CHANCES: { FN: 0.6, MW: 0.9, COLORS: { DEFAULT: 100, PAINTED: 0, LIST: {} } },
+        CHANCES: { FN: 1.2, MW: 0.9, COLORS: { DEFAULT: 100, PAINTED: 0, LIST: {} } },
         ITEMS: [{ id: 1, rare: 'FN', colors: ['default'] }, { id: 2, rare: 'MW', colors: ['default'] }],
     };
+    const odds = pf.itemOdds(fractional);
 
-    closeTo(pf.itemOdds(fractional), { 1: 0, 2: 1 });
-    for (let n = 0; n < 500; n++) {
-        assert.strictEqual(pf.deriveWinner('s', 'c', n, fractional, ITEM_HASH).itemId, 2);
-    }
+    closeTo(odds, { 1: 1 / 2.1, 2: 1.1 / 2.1 });
+    assertDrawnLikeOdds(odds, drawFrequencies(fractional, ITEM_HASH, 20000), 20000);
 });
 
 test('itemOdds matches how often the real draw picks each item of a real case over 100k opens', () => {
     const caseDef = GOLDEN.cases.dust2;
     const odds = pf.itemOdds(caseDef);
-    const counts = {};
-    const N = 100000;
-    for (let n = 0; n < N; n++) {
-        const { itemId } = pf.deriveWinner('odds-server', 'odds-client', n, caseDef, GOLDEN.itemHash);
-        counts[itemId] = (counts[itemId] || 0) + 1;
-    }
 
     assert.ok(Math.abs(sumOf(odds) - 1) < 1e-9);
-    for (const [id, chance] of Object.entries(odds)) {
-        const freq = (counts[id] || 0) / N;
-        assert.ok(Math.abs(freq - chance) < 0.006, `item ${id}: drew ${freq}, odds ${chance}`);
-    }
+    assertDrawnLikeOdds(odds, drawFrequencies(caseDef, GOLDEN.itemHash, 100000), 100000);
 });
 
 test('itemOdds of a case whose weights are all zero follows the draw to the last rarity', () => {
