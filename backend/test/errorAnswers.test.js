@@ -109,6 +109,11 @@ const OUTAGES = [
         call: () => respond(require('../src/controllers/storage').getStorageTop, { params: { limit: '10', offset: '0' } }),
     },
     {
+        name: 'the favourite case of a profile',
+        stubs: [[sequelize, 'query', async () => [[{ caseId: 'dust2', drops: 1, newestDrop: 1 }]]], [Case, 'findOne', outage]],
+        call: () => respond(require('../src/controllers/storage').getFavoriteCaseByUserId, { params: { id: '1' } }),
+    },
+    {
         name: 'the item lookup of a sale',
         stubs: [
             [Storage, 'findOne', async () => ({ dataValues: { storage_itemId: 707, storage_color: 'default' } })],

@@ -198,6 +198,13 @@ test('another player can neither withdraw nor sell an item that is not theirs', 
         'INSERT INTO users (login, password, email, balance, `rank`, role, receiveInfo) VALUES '
         + "('stranger', 'x', 'stranger@e.ua', 0, 0, 1, 'steam:stranger')",
     );
+    await sequelize.query(
+        "INSERT INTO items (itemId, name, rare, colors, type, imagePath) VALUES "
+        + "(707, 'AK-47 | Redline', 'Field Tested', '[]', 'rifles', '/img/items/ak.png')",
+    );
+    await sequelize.query(
+        "INSERT INTO insider_prices (name, pricesInCredits) VALUES ('AK-47 | Redline', JSON_QUOTE('{\"default\":120,\"painted\":150}'))",
+    );
     const StorageController = require('../src/controllers/storage');
     const asStranger = { params: { id: '1' }, user: { profile: { user_id: 2 } } };
 
