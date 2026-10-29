@@ -241,10 +241,11 @@ const routesOf = (stack) => stack.flatMap((layer) => {
     return [];
 });
 
-const LIST_HEADS = ['1', '100', '0', '-1', 'abc', '2147483647'];
+const LIST_HEADS = ['1', '100', '0', '-1', 'abc', '2147483647', 'inventory'];
 
-test('no rule set lets a list through for a body field it checks, whatever the list starts with', async () => {
+test('no rule set lets a list through for a body field it checks, headed by any value the field takes alone', async () => {
     const leaks = [];
+    const untried = [];
     await Promise.all(definedRuleSets().map(async (ruleSet) => {
         const [file, key] = ruleSet.split('#');
         const rules = require(path.join(BACKEND, file)).validate(key);
@@ -252,16 +253,25 @@ test('no rule set lets a list through for a body field it checks, whatever the l
             .map((rule) => rule.builder.build())
             .filter(({ locations }) => locations.length === 1 && locations[0] === 'body')
             .flatMap(({ fields }) => fields);
-        await Promise.all(bodyFields.flatMap((field) => LIST_HEADS.map(async (head) => {
-            const req = await checkedBy(rules, { body: { [field]: [head, 'x'] }, params: {}, query: {} });
-            const refused = validationResult(req).array()
-                .some((error) => error.param === field && error.location === 'body');
-            if (!refused) {
-                leaks.push(`${ruleSet} ${field} [${head}, …]`);
+        const refuses = async (field, value) => {
+            const req = await checkedBy(rules, { body: { [field]: value }, params: {}, query: {} });
+            return validationResult(req).array().some((error) => error.param === field && error.location === 'body');
+        };
+        await Promise.all(bodyFields.map(async (field) => {
+            const takenAlone = (await Promise.all(LIST_HEADS.map(async (head) => ((await refuses(field, head)) ? null : head))))
+                .filter((head) => head !== null);
+            if (takenAlone.length === 0) {
+                untried.push(`${ruleSet} ${field}`);
             }
-        })));
+            await Promise.all(takenAlone.map(async (head) => {
+                if (!(await refuses(field, [head, 'x']))) {
+                    leaks.push(`${ruleSet} ${field} [${head}, …]`);
+                }
+            }));
+        }));
     }));
 
+    assert.deepStrictEqual(untried.sort(), [], 'add a value these fields take alone to LIST_HEADS');
     assert.deepStrictEqual(leaks.sort(), []);
 });
 
