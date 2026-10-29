@@ -226,12 +226,11 @@ class Case extends Component {
                                 const type = this.getShortInfoItem(item, 'item_type');
                                 const price = this.getItemPrice(item);
                                 return (
-                                    <Tooltip
-                                        placement="bottom"
-                                        title={renderItemProp(this.getShortInfoItem(item), null, t)}
-                                        key={`itemlist${item.id}`}
-                                    >
-                                        <Fade delay={i * 50}>
+                                    <Fade delay={i * 50} key={`itemlist${item.id}`}>
+                                        <Tooltip
+                                            placement="bottom"
+                                            title={renderItemProp(this.getShortInfoItem(item), null, t)}
+                                        >
                                             <a
                                                 className="casepage-itemlist_item"
                                                 href={marketUrl(name, type === 'knife')}
@@ -253,8 +252,8 @@ class Case extends Component {
                                                     )}
                                                 </div>
                                             </a>
-                                        </Fade>
-                                    </Tooltip>
+                                        </Tooltip>
+                                    </Fade>
                                 );
                             })}
                         </div>

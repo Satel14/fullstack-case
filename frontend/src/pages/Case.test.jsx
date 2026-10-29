@@ -293,3 +293,22 @@ test('the contents run from the rarest grade down, the dearer item first within 
     expect(tiles.map((tile) => tile.style.getPropertyValue('--rarity')))
         .toEqual(['#f7c948', '#eb4b4b', '#eb4b4b', '#4b69ff']);
 });
+
+test('pointing at an item of the contents names its grade and wear', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    getCaseById.mockResolvedValue({ ...caseResponse(0), caseCollection: { ITEMS: [{ id: 1 }] } });
+    const store = createStore(() => ({
+        itemCache: {
+            1: {
+                item_itemId: 1, item_name: 'AK-47 | Redline', item_type: 'rifles', item_rare: 'Field Tested', item_grade: 'classified', pricesInCredits: { default: 900 },
+            },
+        },
+    }));
+
+    render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
+
+    fireEvent.mouseEnter((await screen.findByText('AK-47 | Redline')).closest('a'));
+
+    expect(await screen.findByRole('tooltip'))
+        .toHaveTextContent('item.name: AK-47 | Redline, item.type: rifles, item.rarity: grade.classified, item.wear: Field Tested');
+});
