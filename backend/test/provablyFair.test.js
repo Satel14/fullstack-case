@@ -253,3 +253,24 @@ test('itemOdds of a case whose weights are all zero follows the draw to the last
     closeTo(pf.itemOdds(unweighted), { 1: 0, 2: 1 });
     assert.strictEqual(pf.deriveWinner('s', 'c', 0, unweighted, ITEM_HASH).itemId, 2);
 });
+
+test('itemOdds steps over whole runs of rolls, so a weight total in the billions costs nothing', { timeout: 2000 }, () => {
+    const caseDef = GOLDEN.cases.dust2;
+    const scaled = {
+        ...caseDef,
+        CHANCES: Object.fromEntries(Object.entries(caseDef.CHANCES).map(([key, weight]) => [key, key === 'COLORS' ? weight : weight * 1e7])),
+    };
+
+    closeTo(pf.itemOdds(scaled), pf.itemOdds(caseDef));
+});
+
+test('itemOdds follows the draw even through negative weights', () => {
+    const negative = {
+        CHANCES: { FN: -1, MW: 1, WW: -2, COLORS: { DEFAULT: 100, PAINTED: 0, LIST: {} } },
+        ITEMS: [{ id: 1, rare: 'FN', colors: ['default'] }, { id: 2, rare: 'MW', colors: ['default'] }, { id: 3, rare: 'WW', colors: ['default'] }],
+    };
+    const odds = pf.itemOdds(negative);
+
+    closeTo(odds, { 1: 0.5, 2: 0.5, 3: 0 });
+    assertDrawnLikeOdds(odds, drawFrequencies(negative, ITEM_HASH, 20000), 20000);
+});

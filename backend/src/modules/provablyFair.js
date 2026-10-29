@@ -124,20 +124,29 @@ function buildDrawTable(caseDef, itemHash) {
     };
 }
 
-function rollSegments(maxWeight) {
-    if (!(maxWeight > 0)) return [{ share: 1, f0: 0 }];
-    const segments = [];
-    for (let start = 0; start < maxWeight; start += 1) {
-        const end = Math.min(start + 1, maxWeight);
-        segments.push({ share: (end - start) / maxWeight, f0: (start + end) / 2 / maxWeight });
+function rollRuns(caseDef) {
+    const keys = rarityKeys(caseDef);
+    const maxWeight = keys.reduce((a, k) => a + caseDef.CHANCES[k], 0);
+    if (maxWeight === 0 || !Number.isFinite(maxWeight)) return [{ share: 1, f0: 0 }];
+    const low = Math.min(0, maxWeight);
+    const high = Math.max(0, maxWeight);
+    const edges = new Set([low, high]);
+    let cumulative = 0;
+    for (const key of keys) {
+        cumulative += caseDef.CHANCES[key];
+        const edge = Math.floor(cumulative);
+        if (edge > low && edge < high) edges.add(edge);
     }
-    return segments;
+    const points = [...edges].sort((a, b) => a - b);
+    return points.slice(1).map((end, i) => ({
+        share: (end - points[i]) / (high - low),
+        f0: (points[i] + end) / 2 / maxWeight,
+    }));
 }
 
 function itemOdds(caseDef) {
     const odds = Object.fromEntries(caseDef.ITEMS.map((item) => [item.id, 0]));
-    const maxWeight = rarityKeys(caseDef).reduce((a, k) => a + caseDef.CHANCES[k], 0);
-    for (const { share, f0 } of rollSegments(maxWeight)) {
+    for (const { share, f0 } of rollRuns(caseDef)) {
         const { collection } = collectionFor(caseDef, pickRarity(caseDef, f0));
         for (const item of collection) {
             odds[item.id] += share / collection.length;
