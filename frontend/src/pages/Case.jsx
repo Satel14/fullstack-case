@@ -238,7 +238,7 @@ class Case extends Component {
                                                 href={marketUrl(name, type === 'knife')}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                aria-label={[name, gradeName(grade, t), price > 0 && `${price} ₴`].filter(Boolean).join(', ')}
+                                                aria-label={[name, price > 0 && `${price} ₴`, gradeName(grade, t)].filter(Boolean).join(', ')}
                                                 style={gradeStyle(grade)}
                                             >
                                                 <div

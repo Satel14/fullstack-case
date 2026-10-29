@@ -326,7 +326,7 @@ test('the grade of an item of the contents reaches keyboard and screen-reader us
 
     render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
 
-    const tile = await screen.findByRole('link', { name: 'AK-47 | Redline, grade.classified, 900 ₴' });
+    const tile = await screen.findByRole('link', { name: 'AK-47 | Redline, 900 ₴, grade.classified' });
     fireEvent.focus(tile);
 
     expect(await screen.findByRole('tooltip')).toHaveTextContent('item.rarity: grade.classified');
