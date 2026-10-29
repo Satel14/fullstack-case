@@ -9,10 +9,9 @@ import { acceptablePassword } from '../../helpers/credentials';
 import { clientErrorMessage } from '../../helpers/serverMessage';
 import { useLinkToken } from '../../helpers/linkToken';
 
-const ResetPassword = () => {
+const ResetPasswordForm = ({ token }) => {
     const { t } = useTranslation();
     const history = useHistory();
-    const token = useLinkToken();
     const [loading, setLoading] = useState(false);
 
     if (!token) {
@@ -78,6 +77,11 @@ const ResetPassword = () => {
             </Form>
         </div>
     );
+};
+
+const ResetPassword = () => {
+    const token = useLinkToken();
+    return <ResetPasswordForm key={token || ''} token={token} />;
 };
 
 export default ResetPassword;

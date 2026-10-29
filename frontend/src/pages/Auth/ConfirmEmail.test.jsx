@@ -1,6 +1,6 @@
 import React from 'react';
 import {
- render, screen, fireEvent, waitFor,
+ act, render, screen, fireEvent, waitFor,
 } from '@testing-library/react';
 import { MemoryRouter, Route, Switch } from 'react-router-dom';
 import { Provider } from 'react-redux';
@@ -113,4 +113,43 @@ test('a link mailed with ?token= still confirms, and its token leaves the addres
     fireEvent.click(screen.getByRole('button', { name: 'auth.confirm.submit' }));
 
     await waitFor(() => expect(confirmEmailFetch).toHaveBeenCalledWith('c'.repeat(64)));
+});
+
+const renderWithHistory = (path) => {
+    const router = {};
+    render(
+        <Provider store={createStore(() => ({}), applyMiddleware(thunk))}>
+            <MemoryRouter initialEntries={[path]}>
+                <Switch>
+                    <Route path="/confirm-email" component={ConfirmEmail} />
+                    <Route path="/" render={() => <div>home page</div>} />
+                </Switch>
+                <Route render={({ history }) => { router.history = history; return null; }} />
+            </MemoryRouter>
+        </Provider>,
+    );
+    return router;
+};
+
+test('a fresh link opened in the same tab takes over from the incomplete one', async () => {
+    const router = renderWithHistory('/confirm-email');
+    expect(screen.getByText('auth.confirm.missingToken')).toBeInTheDocument();
+
+    act(() => { router.history.push(`/confirm-email#token=${'d'.repeat(64)}`); });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.confirm.submit' }));
+
+    await waitFor(() => expect(confirmEmailFetch).toHaveBeenCalledWith('d'.repeat(64)));
+    expect(router.history.location.hash).toBe('');
+});
+
+test('a refused link followed by a fresh one in the same tab offers to confirm the fresh one', async () => {
+    confirmEmailFetch.mockImplementationOnce(() => () => Promise.reject({ error: 422, message: 'link expired' }));
+    const router = renderWithHistory(`/confirm-email#token=${'e'.repeat(64)}`);
+    fireEvent.click(screen.getByRole('button', { name: 'auth.confirm.submit' }));
+    expect(await screen.findByText('link expired')).toBeInTheDocument();
+
+    act(() => { router.history.push(`/confirm-email#token=${'f'.repeat(64)}`); });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.confirm.submit' }));
+
+    await waitFor(() => expect(confirmEmailFetch).toHaveBeenLastCalledWith('f'.repeat(64)));
 });

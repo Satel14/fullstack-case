@@ -7,10 +7,12 @@ const tokenIn = (location) => new URLSearchParams(location.hash.replace(/^#/, ''
 export const useLinkToken = () => {
     const location = useLocation();
     const history = useHistory();
-    const [token] = useState(() => tokenIn(location));
+    const [token, setToken] = useState(() => tokenIn(location));
 
     useEffect(() => {
-        if (tokenIn(location)) {
+        const linked = tokenIn(location);
+        if (linked) {
+            setToken(linked);
             history.replace({ pathname: location.pathname, state: location.state });
         }
     }, [history, location]);

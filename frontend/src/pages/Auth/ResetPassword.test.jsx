@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    render, screen, fireEvent, waitFor,
+    act, render, screen, fireEvent, waitFor,
 } from '@testing-library/react';
 import { MemoryRouter, Route, Switch } from 'react-router-dom';
 import ResetPassword from './ResetPassword';
@@ -143,4 +143,23 @@ test('a link mailed with ?token= still resets, and its token leaves the address 
     fill('newpass1', 'newpass1');
 
     await waitFor(() => expect(resetPassword).toHaveBeenCalledWith(TOKEN, 'newpass1'));
+});
+
+test('a fresh link opened in the same tab resets with its own token, not the old one', async () => {
+    resetPassword.mockResolvedValue({ message: 'ok' });
+    const router = {};
+    render(
+        <MemoryRouter initialEntries={[`/reset-password#token=${'a'.repeat(64)}`]}>
+            <Switch>
+                <Route path="/reset-password" component={ResetPassword} />
+                <Route path="/login" render={() => <div>login page</div>} />
+            </Switch>
+            <Route render={({ history }) => { router.history = history; return null; }} />
+        </MemoryRouter>,
+    );
+
+    act(() => { router.history.push(`/reset-password#token=${'b'.repeat(64)}`); });
+    fill('newpass1', 'newpass1');
+
+    await waitFor(() => expect(resetPassword).toHaveBeenCalledWith('b'.repeat(64), 'newpass1'));
 });

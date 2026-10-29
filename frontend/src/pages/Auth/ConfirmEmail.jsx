@@ -8,11 +8,10 @@ import { TOKEN_NOT_SAVED } from '../../api/token';
 import openNotification from '../../components/mini/openNotification';
 import { useLinkToken } from '../../helpers/linkToken';
 
-const ConfirmEmail = () => {
+const ConfirmEmailForm = ({ token }) => {
     const { t } = useTranslation();
     const history = useHistory();
     const dispatch = useDispatch();
-    const token = useLinkToken();
     const [loading, setLoading] = useState(false);
     const [failure, setFailure] = useState(null);
 
@@ -68,6 +67,11 @@ const ConfirmEmail = () => {
             )}
         </div>
     );
+};
+
+const ConfirmEmail = () => {
+    const token = useLinkToken();
+    return <ConfirmEmailForm key={token || ''} token={token} />;
 };
 
 export default ConfirmEmail;
