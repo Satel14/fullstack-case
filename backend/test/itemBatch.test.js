@@ -153,3 +153,16 @@ test('the batch route is mounted next to the single-item route', () => {
     assert.strictEqual(route.handlers[route.handlers.length - 1], ItemController.getItemsByIds);
     assert.ok(mounted.some((r) => r.path === '/api/item/:id'));
 });
+
+test('every item answer carries the item grade, null where it is not known', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedItems(sequelize);
+    await sequelize.query("UPDATE items SET grade = 'classified' WHERE itemId = 707");
+
+    const result = await batch('707,708');
+
+    assert.strictEqual(result.payload.data[707].item_grade, 'classified');
+    assert.strictEqual(result.payload.data[708].item_grade, null);
+    assert.strictEqual((await single(707)).payload.data.item_grade, 'classified');
+});

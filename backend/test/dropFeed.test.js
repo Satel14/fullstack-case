@@ -148,3 +148,27 @@ test('the number of database queries of the drop feed does not grow with the num
     assert.ok(many.queries <= 5, `${many.queries} queries for 40 drops`);
     assert.strictEqual(many.queries, few.queries);
 });
+
+test('the drop feed carries the grade of each dropped item', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await sequelize.query(
+        "INSERT INTO users (login, password, email, balance, `rank`, role) VALUES ('player', 'x', 'player@e.ua', 0, 0, 1)",
+    );
+    await sequelize.query(
+        "INSERT INTO items (itemId, name, rare, colors, type, imagePath, grade) VALUES "
+        + "(707, 'AK-47 | Redline', 'Field Tested', '[]', 'rifles', '/img/items/ak.png', 'classified'), "
+        + "(708, 'P250 | Sand Dune', 'Battle Scarred', '[]', 'pistols', '/img/items/p250.png', NULL)",
+    );
+    await sequelize.query(
+        "INSERT INTO storage (userId, itemId, color, caseId, status) VALUES "
+        + "(1, 707, 'default', 'dust2', 'inventory'), (1, 708, 'default', 'dust2', 'inventory')",
+    );
+
+    const StorageController = require('../src/controllers/storage');
+    const feed = await respond(StorageController.getStorageLastItemsWithUserInfo, { params: { limit: 40 } });
+
+    assert.strictEqual(feed.code, 200);
+    assert.strictEqual(feed.payload.itemList[707].item_grade, 'classified');
+    assert.strictEqual(feed.payload.itemList[708].item_grade, null);
+});
