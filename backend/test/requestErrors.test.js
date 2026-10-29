@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
+const { assertSafeTestDatabase } = require('./helpers/db');
 
 const managerPath = require.resolve('../src/redis/manager');
 require.cache[managerPath] = {
@@ -15,6 +16,10 @@ const sequelize = require('../src/config/db');
 const PFController = require('../src/controllers/provablyFair');
 const { jsonBody, withoutPrototypeKeys } = require('../src/middleware/jsonBody');
 const answerUnhandled = require('../src/middleware/answerUnhandled');
+
+test.before(() => {
+    assertSafeTestDatabase();
+});
 
 test.after(async () => {
     await sequelize.close();

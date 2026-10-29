@@ -13,6 +13,7 @@ const PFService = require('../services/provablyFair');
 const { buildDrawTable, deriveFromTable, itemOdds } = require('../modules/provablyFair');
 const RedisManager = require('../redis/manager');
 const { answerFailure } = require('../helpers/failure');
+const { CASE_ID_PATTERN } = require('../constant/caseId');
 const ITEM_HASH = 'item_hash';
 
 const refusal = (code, message) => {
@@ -280,9 +281,10 @@ module.exports.validate = (method) => {
         case 'openCaseById': {
             return [
                 body('id')
-                    .exists().isString(),
+                    .exists().isString().bail().matches(CASE_ID_PATTERN),
                 body('count')
                     .exists()
+                    .not().isArray()
                     .isInt({ min: 1, max: 100 }),
             ];
         }
