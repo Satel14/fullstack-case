@@ -220,7 +220,10 @@ test('a transfer that would pass the recipient\'s largest balance is refused and
         asPlayer(1, { body: { userIdTo: 2, money_count: 100 } }),
     ));
 
-    assert.deepStrictEqual([result.code, result.payload.message], [422, MESSAGE.USER.BALANCE_LIMIT]);
+    assert.deepStrictEqual(
+        [result.code, result.payload.sended, result.payload.message],
+        [422, false, MESSAGE.USER.RECIPIENT_BALANCE_LIMIT],
+    );
     assert.deepStrictEqual(await ledger(sequelize), before);
     assert.deepStrictEqual(lines, []);
 });

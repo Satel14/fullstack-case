@@ -86,6 +86,9 @@ module.exports.sendMoneyForUserByUserId = async (req, res) => {
         if (e && e.code === 'MONEY_NOT_ENOUGH') {
             return res.status(200).json({ status: 200, sended: false, message: MESSAGE.USER.MONEY_NOT_ENOUGH });
         }
+        if (e && e.code === 'BALANCE_LIMIT') {
+            return res.status(422).json({ status: 422, sended: false, message: MESSAGE.USER.RECIPIENT_BALANCE_LIMIT });
+        }
         return answerFailure(res, e, { status: 422, where: 'user.send-money' });
     }
 };
