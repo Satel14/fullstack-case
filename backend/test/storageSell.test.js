@@ -168,3 +168,45 @@ test('a sale locks the player before the item, so it cannot deadlock with a prof
     const result = await sale;
     assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
 });
+
+const withErrorsCaught = async (fn) => {
+    const lines = [];
+    const originalError = console.error;
+    console.error = (...args) => { lines.push(args.map(String).join(' ')); };
+    try {
+        return { result: await fn(), lines };
+    } finally {
+        console.error = originalError;
+    }
+};
+
+test('selling an item twice at once sells it once and logs no error for the refused sale', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedSellableItem(sequelize);
+
+    const { result, lines } = await withErrorsCaught(() => Promise.all([sell(1), sell(1), sell(1)]));
+
+    assert.deepStrictEqual(result.map(({ code }) => code).sort(), [200, 422, 422]);
+    assert.deepStrictEqual(lines, []);
+    assert.deepStrictEqual((await sellOutcome(sequelize)).history, [['sellitem', 120]]);
+});
+
+test('a sale that fails for an unexpected reason is logged once', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedSellableItem(sequelize);
+    const BalanceHistoryService = require('../src/services/balanceHistory');
+    const original = BalanceHistoryService.addBalanceChange;
+    BalanceHistoryService.addBalanceChange = async () => { throw new Error('history table gone'); };
+    let outcome;
+    try {
+        outcome = await withErrorsCaught(() => sell(1));
+    } finally {
+        BalanceHistoryService.addBalanceChange = original;
+    }
+
+    assert.strictEqual(outcome.result.code, 500);
+    assert.strictEqual(outcome.lines.length, 1);
+    assert.match(outcome.lines[0], /history table gone/);
+});

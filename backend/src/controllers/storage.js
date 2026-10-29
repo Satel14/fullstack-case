@@ -239,7 +239,6 @@ module.exports.sellItemByStorageId = async (req, res) => {
 
         return res.status(200).json({ status: 200, balance: actualBalance });
     } catch (e) {
-        console.error('[SELL] ERROR:', e.message, e.stack);
         if (e && e.code === 'NOT_SELLABLE') {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
         }
