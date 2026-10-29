@@ -312,3 +312,22 @@ test('pointing at an item of the contents names its grade and wear', async () =>
     expect(await screen.findByRole('tooltip'))
         .toHaveTextContent('item.name: AK-47 | Redline, item.type: rifles, item.rarity: grade.classified, item.wear: Field Tested');
 });
+
+test('the grade of an item of the contents reaches keyboard and screen-reader users too', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    getCaseById.mockResolvedValue({ ...caseResponse(0), caseCollection: { ITEMS: [{ id: 1 }] } });
+    const store = createStore(() => ({
+        itemCache: {
+            1: {
+                item_itemId: 1, item_name: 'AK-47 | Redline', item_type: 'rifles', item_rare: 'Field Tested', item_grade: 'classified', pricesInCredits: { default: 900 },
+            },
+        },
+    }));
+
+    render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
+
+    const tile = await screen.findByRole('link', { name: 'AK-47 | Redline, grade.classified, 900 ₴' });
+    fireEvent.focus(tile);
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('item.rarity: grade.classified');
+});

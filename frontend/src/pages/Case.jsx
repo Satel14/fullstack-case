@@ -9,7 +9,7 @@ import { itemInfoFetch } from '../store/actions/itemCache';
 import { getCaseById } from '../api/all/cases';
 import { getProvablyFairState } from '../api/all/provablyFair';
 import { renderItemProp } from '../helpers/Case';
-import { gradeRank, gradeStyle } from '../helpers/grade';
+import { gradeName, gradeRank, gradeStyle } from '../helpers/grade';
 import { computeItemPriceUAH } from '../helpers/price';
 import { marketUrl } from '../helpers/market';
 import { isRefusal } from '../helpers/serverMessage';
@@ -225,10 +225,12 @@ class Case extends Component {
                                 const name = this.getShortInfoItem(item, 'item_name');
                                 const type = this.getShortInfoItem(item, 'item_type');
                                 const price = this.getItemPrice(item);
+                                const grade = this.getShortInfoItem(item, 'item_grade');
                                 return (
                                     <Fade delay={i * 50} key={`itemlist${item.id}`}>
                                         <Tooltip
                                             placement="bottom"
+                                            trigger={['hover', 'focus']}
                                             title={renderItemProp(this.getShortInfoItem(item), null, t)}
                                         >
                                             <a
@@ -236,7 +238,8 @@ class Case extends Component {
                                                 href={marketUrl(name, type === 'knife')}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                style={gradeStyle(this.getShortInfoItem(item, 'item_grade'))}
+                                                aria-label={[name, gradeName(grade, t), price > 0 && `${price} ₴`].filter(Boolean).join(', ')}
+                                                style={gradeStyle(grade)}
                                             >
                                                 <div
                                                     className="casepage-itemlist_item__img"
