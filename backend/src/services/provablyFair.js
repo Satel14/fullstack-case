@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { pageOffset } = require('../helpers/paging');
 const ProvablyFairSeed = require('../models/provablyFairSeed');
 const CaseOpenRecord = require('../models/caseOpenRecord');
 const User = require('../models/user');
@@ -163,7 +164,7 @@ const replaysAgainstCurrentCase = (row, serverSeed, itemHash) => {
 
 module.exports.getHistory = async (userId, limit, offset, itemHash = null) => {
     const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 50, HISTORY_MAX_LIMIT));
-    const safeOffset = Math.max(0, parseInt(offset, 10) || 0);
+    const safeOffset = pageOffset(offset);
 
     const rows = await CaseOpenRecord.findAll({
         attributes: {

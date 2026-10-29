@@ -1,4 +1,5 @@
 const AdminAction = require('../models/adminAction');
+const { pageOffset } = require('../helpers/paging');
 
 const MAX_LIMIT = 200;
 
@@ -30,7 +31,7 @@ const parsePayload = (raw) => {
 
 module.exports.list = async ({ limit, offset } = {}) => {
     const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 50, MAX_LIMIT));
-    const safeOffset = Math.max(0, parseInt(offset, 10) || 0);
+    const safeOffset = pageOffset(offset);
 
     const rows = await AdminAction.findAll({
         order: [['admin_id', 'DESC']],

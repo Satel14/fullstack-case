@@ -1,4 +1,5 @@
 const { Op } = require("sequelize");
+const { pageOffset } = require("../helpers/paging");
 const User = require("../models/user");
 const MESSAGE = require("../constant/responseMessages");
 
@@ -175,7 +176,7 @@ const ADMIN_LIST_ATTRIBUTES = ["user_id", "user_login", "user_email", "user_bala
 
 module.exports.getUsersPaged = async ({ search, limit, offset } = {}) => {
     const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 50, 200));
-    const safeOffset = Math.max(0, parseInt(offset, 10) || 0);
+    const safeOffset = pageOffset(offset);
 
     const where = search
         ? { [Op.or]: [{ user_login: { [Op.like]: `%${search}%` } }, { user_email: { [Op.like]: `%${search}%` } }] }

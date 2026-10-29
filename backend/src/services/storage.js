@@ -1,4 +1,5 @@
 const Storage = require('../models/storage');
+const { pageOffset } = require('../helpers/paging');
 const ItemService = require('./item');
 const MESSAGE = require('../constant/responseMessages');
 const { Op } = require('sequelize');
@@ -130,7 +131,7 @@ module.exports.getStorageById = async (userId, status, options = {}) => {
     try {
         const MAX_LIMIT = 200;
         const limit = Math.min(Math.max(parseInt(options.limit, 10) || 100, 1), MAX_LIMIT);
-        const offset = Math.max(parseInt(options.offset, 10) || 0, 0);
+        const offset = pageOffset(options.offset);
 
         const storageItems = await Storage.findAll({
             order: [['storage_id', 'DESC']],

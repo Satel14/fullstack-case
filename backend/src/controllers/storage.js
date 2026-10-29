@@ -14,6 +14,7 @@ const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
 const { STORAGE_STATUSES } = require('../constant/enums/storageStatus');
 const { salePayout } = require('../helpers/salePayout');
 const { answerFailure } = require('../helpers/failure');
+const { MAX_OFFSET } = require('../helpers/paging');
 
 const MESSAGE = require('../constant/responseMessages');
 const sequelize = require('../config/db');
@@ -21,7 +22,6 @@ const sequelize = require('../config/db');
 const UAH_CREDIT_RATE_MODULE = 'uah-credit-rate';
 const DEFAULT_UAH_CREDIT_RATE = 1;
 const USER_HISTORY_MAX_LIMIT = 1000;
-const MAX_OFFSET = 2147483647;
 
 function jsonParser(blob) {
     let parsed = JSON.parse(blob);
