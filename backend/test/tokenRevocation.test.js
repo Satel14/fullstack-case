@@ -147,15 +147,12 @@ test('login and registration refuse credentials that are not plain strings', asy
 
 const withLogsCaught = async (fn) => {
     const lines = [];
-    const originalLog = console.log;
-    const originalError = console.error;
-    console.log = (...args) => { lines.push(args.map(String).join(' ')); };
-    console.error = (...args) => { lines.push(args.map(String).join(' ')); };
+    const originals = ['log', 'info', 'warn', 'error'].map((level) => [level, console[level]]);
+    originals.forEach(([level]) => { console[level] = (...args) => { lines.push(args.map(String).join(' ')); }; });
     try {
         return { result: await fn(), lines };
     } finally {
-        console.log = originalLog;
-        console.error = originalError;
+        originals.forEach(([level, original]) => { console[level] = original; });
     }
 };
 
