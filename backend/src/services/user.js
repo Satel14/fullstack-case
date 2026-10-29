@@ -101,11 +101,19 @@ module.exports.getBalanceByUserId = async (id, options = {}) => {
 
 module.exports.incrementBalance = async (value, id, options = {}) => {
     const { transaction } = options;
-    const found = await User.sequelize.query(
+    const replacements = { value: Number(value), id, max: BALANCE_MAX };
+    const changed = await User.sequelize.query(
         "UPDATE users SET balance = balance + :value WHERE id = :id AND balance + :value <= :max",
-        { replacements: { value: Number(value), id, max: BALANCE_MAX }, type: QueryTypes.BULKUPDATE, transaction },
+        { replacements, type: QueryTypes.BULKUPDATE, transaction },
     );
-    if (found === 0 && await User.count({ where: { user_id: id }, transaction })) {
+    if (changed > 0) {
+        return true;
+    }
+    const [row] = await User.sequelize.query(
+        "SELECT balance + :value <= :max AS fits FROM users WHERE id = :id FOR UPDATE",
+        { replacements, type: QueryTypes.SELECT, transaction },
+    );
+    if (row && !Number(row.fits)) {
         const refusal = new Error(MESSAGE.USER.BALANCE_LIMIT);
         refusal.code = "BALANCE_LIMIT";
         throw refusal;

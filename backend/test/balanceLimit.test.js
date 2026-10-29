@@ -61,8 +61,25 @@ const ledger = async (sequelize) => {
 
 const asPlayer = (id, extra = {}) => ({ user: { profile: { user_id: id } }, ...extra });
 
-test('the largest balance is the most the users.balance column holds', () => {
-    assert.strictEqual(BALANCE_MAX, 9999999999.99);
+test('the largest balance is the most the users.balance column holds', async () => {
+    const sequelize = await freshDatabase([]);
+    const [[column]] = await sequelize.query(
+        "SELECT NUMERIC_PRECISION AS digits, NUMERIC_SCALE AS decimals FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'balance'",
+    );
+    const decimals = Number(column.decimals);
+
+    assert.strictEqual(BALANCE_MAX.toFixed(decimals), `${'9'.repeat(Number(column.digits) - decimals)}.${'9'.repeat(decimals)}`);
+});
+
+test('a credit too small to change the stored balance is not taken for a full balance', async () => {
+    const sequelize = await freshDatabase([['player', '100.29']]);
+    const UserService = require('../src/services/user');
+
+    for (const value of [0, 0.004, 5e-7]) {
+        await sequelize.transaction((transaction) => UserService.incrementBalance(value, 1, { transaction }));
+    }
+
+    assert.deepStrictEqual((await ledger(sequelize)).balances, [['player', '100.29']]);
 });
 
 test('a deposit that would pass the largest balance is refused and credits nothing', async () => {
