@@ -483,6 +483,11 @@ test('setRole rejects malformed input through its validator chain', async () => 
     });
     assert.strictEqual(badResult.code, 422);
 
+    for (const id of ['9'.repeat(400), '2147483648', '0', '-1', '02']) {
+        const outOfRange = await runChain({ id }, { role: 1 });
+        assert.ok(!validationResult(outOfRange).isEmpty(), id);
+    }
+
     const good = await runChain({ id: '2' }, { role: 1 });
     assert.ok(validationResult(good).isEmpty());
 });
@@ -614,6 +619,11 @@ test('adjustBalance rejects malformed input through its validator chain', async 
         UsersController.adjustBalance(badId, res);
     });
     assert.strictEqual(badResult.code, 422);
+
+    for (const id of ['9'.repeat(400), '2147483648', '0', '-1', '02']) {
+        const outOfRange = await runChain({ id }, { delta: 25, reason: 'ok' });
+        assert.ok(!validationResult(outOfRange).isEmpty(), id);
+    }
 
     const good = await runChain({ id: '2' }, { delta: 25, reason: 'ok' });
     assert.ok(validationResult(good).isEmpty());

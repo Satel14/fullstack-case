@@ -8,6 +8,7 @@ const BalanceHistoryService = require('../../services/balanceHistory');
 const BalanceHistoryEnum = require('../../constant/enums/balance').BalanceHistory;
 const { withinChars } = require('../../helpers/charLength');
 const { loggable } = require('../../helpers/failure');
+const { MYSQL_INT_MAX } = require('../../constant/mysql');
 
 const ASSIGNABLE_ROLES = [ROLES.BANNED, ROLES.BANNED_CHAT, ROLES.NORMAL, ROLES.YOUTUBER, ROLES.STREAMER, ROLES.FAMOUS];
 const BALANCE_DELTA_LIMIT = 1000000;
@@ -159,14 +160,14 @@ module.exports.validate = (method) => {
     switch (method) {
         case 'setRole': {
             return [
-                param('id').exists().isInt(),
+                param('id').exists().isInt({ min: 1, max: MYSQL_INT_MAX, allow_leading_zeroes: false }),
                 body('role').exists().not().isArray().isInt(),
                 body('reason').optional().isString().custom(withinChars(0, 255)),
             ];
         }
         case 'adjustBalance': {
             return [
-                param('id').exists().isInt(),
+                param('id').exists().isInt({ min: 1, max: MYSQL_INT_MAX, allow_leading_zeroes: false }),
                 body('delta').exists().not().isArray().isFloat({ min: -BALANCE_DELTA_LIMIT, max: BALANCE_DELTA_LIMIT }),
                 body('reason').exists().isString().custom(withinChars(1, 255)),
             ];
