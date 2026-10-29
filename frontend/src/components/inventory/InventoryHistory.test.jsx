@@ -135,3 +135,23 @@ test('each history row shows the item picture from the item cache', async () => 
     expect(cached.style.getPropertyValue('--rarity')).toBe('#d32ce6');
     expect(uncached.style.getPropertyValue('--rarity')).toBe('#6d81b0');
 });
+
+test('each history row names the grade beside the wear and the type', async () => {
+    const store = createStore(combineReducers({ itemCache: itemCacheReducer }), applyMiddleware(thunk));
+    store.dispatch({
+        type: ADD_ITEM_LIST_CACHE,
+        payloadItems: {
+            5: {
+                item_name: 'AK-47 | Redline', item_rare: 'Field Tested', item_type: 'Rifle', item_imagePath: imagePath, item_grade: 'classified',
+            },
+        },
+    });
+
+    render(
+        <Provider store={store}>
+            <InventoryHistory id={7} />
+        </Provider>,
+    );
+
+    expect(await screen.findByText('grade.classified · Field Tested Rifle')).toBeInTheDocument();
+});

@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import Loader from '../mini/Loader';
 import { itemInfoFetch } from '../../store/actions/itemCache';
-import { renderItemProp } from '../../helpers/Case';
+import { renderItemProp, itemCaption } from '../../helpers/Case';
 import { timeLeft } from '../../helpers/Time';
 import ItemColor from '../mini/ItemColor';
 import { getStorageLastItemsByUserId } from '../../api/all/storage';
@@ -199,15 +199,11 @@ class InventoryHistory extends React.Component {
                           )}
 
                           <div>
-                            {this.getShortInfoItem(
-                              item.storage_itemId,
-                              'item_rare',
-                            )}
-                            -
-                            {this.getShortInfoItem(
-                              item.storage_itemId,
-                              'item_type',
-                            )}
+                            {itemCaption({
+                              grade: this.getShortInfoItem(item.storage_itemId, 'item_grade'),
+                              wear: this.getShortInfoItem(item.storage_itemId, 'item_rare'),
+                              type: this.getShortInfoItem(item.storage_itemId, 'item_type'),
+                            }, t)}
                           </div>
                         </td>
 
