@@ -57,12 +57,17 @@ const quietly = async (stubs, fn) => {
 
 const player = { profile: { user_id: 1 } };
 
-const listStorage = (body) => quietly(
-    [[StorageService, 'getStorageById', async (userId, status) => [{ storage_status: status }]]],
-    async () => respond(
-        StorageController.getProfileStorage,
-        await checkedBy(StorageController.validate('getProfileStorage'), { body, user: player }),
-    ),
+const untouched = {
+    log: console.log,
+    error: console.error,
+    getStorageById: StorageService.getStorageById,
+};
+
+const storageAnswers = [[StorageService, 'getStorageById', async (userId, status) => [{ storage_status: status }]]];
+
+const listStorage = async (body) => respond(
+    StorageController.getProfileStorage,
+    await checkedBy(StorageController.validate('getProfileStorage'), { body, user: player }),
 );
 
 test('the item list is asked for by one of the four statuses and nothing else reaches the query', async () => {
@@ -73,22 +78,25 @@ test('the item list is asked for by one of the four statuses and nothing else re
         { status: 42 },
     ];
 
-    const answers = await Promise.all(crafted.map(listStorage));
+    const { result: answers, logged } = await quietly(storageAnswers, () => Promise.all(crafted.map(listStorage)));
 
     assert.deepStrictEqual(
-        answers.map(({ result }) => [result.code, result.payload.message]),
+        answers.map(({ code, payload }) => [code, payload.message]),
         crafted.map(() => [422, MESSAGE.VALIDATOR.ERROR]),
     );
-    assert.deepStrictEqual(answers.flatMap(({ logged }) => logged), []);
+    assert.deepStrictEqual(logged, []);
 });
 
 test('the item list still answers each status the inventory page asks for, and nothing for no status', async () => {
     const statuses = ['inventory', 'received', 'waitingtrade', 'money'];
 
-    const answers = await Promise.all([...statuses.map((status) => listStorage({ status, limit: 50, offset: 0 })), listStorage({})]);
+    const { result: answers } = await quietly(storageAnswers, () => Promise.all([
+        ...statuses.map((status) => listStorage({ status, limit: 50, offset: 0 })),
+        listStorage({}),
+    ]));
 
     assert.deepStrictEqual(
-        answers.map(({ result }) => [result.code, result.payload.data]),
+        answers.map(({ code, payload }) => [code, payload.data]),
         [...statuses.map((status) => [200, [{ storage_status: status }]]), [200, []]],
     );
 });
@@ -96,10 +104,10 @@ test('the item list still answers each status the inventory page asks for, and n
 const CaseController = require('../src/controllers/case');
 const allCases = require('../src/constant/cases/_all');
 
-const openCase = (body) => quietly([], async () => respond(
+const openCase = async (body) => respond(
     CaseController.openCaseById,
     await checkedBy(CaseController.validate('openCaseById'), { body, user: player }),
-));
+);
 
 test('a case open names its case by a case id and its count by a plain number, or is refused before either is logged', async () => {
     const crafted = [
@@ -111,13 +119,13 @@ test('a case open names its case by a case id and its count by a plain number, o
         { id: 'dust2', count: '1e2' },
     ];
 
-    const answers = await Promise.all(crafted.map(openCase));
+    const { result: answers, logged } = await quietly([], () => Promise.all(crafted.map(openCase)));
 
     assert.deepStrictEqual(
-        answers.map(({ result }) => [result.code, result.payload.message]),
+        answers.map(({ code, payload }) => [code, payload.message]),
         crafted.map(() => [422, MESSAGE.VALIDATOR.ERROR]),
     );
-    assert.deepStrictEqual([...new Set(answers.flatMap(({ logged }) => logged))], ['[DEBUG] openCaseById called']);
+    assert.deepStrictEqual([...new Set(logged)], ['[DEBUG] openCaseById called']);
 });
 
 test('the case open rules pass every case there is, one at a time or a hundred', async () => {
@@ -219,4 +227,10 @@ test('every route that checks its input with rules reads their verdict in its ha
 
     assert.ok(ruled.length >= 20, `only ${ruled.length} routes with rules found`);
     assert.deepStrictEqual(unread, []);
+});
+
+test('the rule tests leave the console and the stubbed service as they found them', () => {
+    assert.strictEqual(console.log, untouched.log);
+    assert.strictEqual(console.error, untouched.error);
+    assert.strictEqual(StorageService.getStorageById, untouched.getStorageById);
 });
