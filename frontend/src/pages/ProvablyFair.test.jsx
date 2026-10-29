@@ -12,6 +12,7 @@ import ProvablyFair from './ProvablyFair';
 
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key) => key }),
+    initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
 jest.mock('../api/all/provablyFair', () => ({
@@ -27,7 +28,16 @@ jest.mock('../components/mini/openNotification', () => ({
     default: jest.fn(),
 }));
 
+jest.mock('../api/all/item', () => ({ getItemsInfo: jest.fn() }));
+
 const api = require('../api/all/provablyFair');
+const { getItemsInfo } = require('../api/all/item');
+
+const ITEMS = {
+    10: { item_itemId: 10, item_name: 'Nova | Rising Sun', item_grade: 'restricted' },
+    11: { item_itemId: 11, item_name: 'AWP | Worm God', item_grade: 'restricted' },
+    12: { item_itemId: 12, item_name: 'Butterfly Knife | Fade', item_grade: 'special' },
+};
 
 const PLAYER = { login: 'player', id: 1 };
 
@@ -89,6 +99,9 @@ beforeEach(() => {
     });
     api.getOpenHistory.mockResolvedValue({ data: ROWS });
     api.verifyOpen.mockReset();
+    getItemsInfo.mockImplementation((ids) => Promise.resolve({
+        data: Object.fromEntries(ids.filter((id) => ITEMS[id]).map((id) => [id, ITEMS[id]])),
+    }));
 });
 
 afterEach(() => {
@@ -522,34 +535,51 @@ test('a verification that finishes after the page closed sets no state', async (
     expect(updatesAfterUnmount).toBe(0);
 });
 
-test('the computed result names the grade a new open was drawn from', async () => {
+const computeFromFirstRow = async () => {
+    fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.caseIdPlaceholder'), { target: { value: 'train' } });
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+};
+
+test('the computed result names its item and, while the item is unknown, the grade it was drawn from', async () => {
     api.verifyOpen.mockResolvedValue({
         data: {
-            itemId: 10, color: 'default', rarity: 'covert', source: 'current',
+            itemId: 99, color: 'default', rarity: 'covert', source: 'current',
         },
     });
     renderPage();
 
-    fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
-    fireEvent.change(screen.getByPlaceholderText('provablyFair.caseIdPlaceholder'), { target: { value: 'train' } });
-    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+    await computeFromFirstRow();
 
-    expect(await screen.findByText(/provablyFair\.computed.*\(grade\.covert\)/)).toBeInTheDocument();
+    expect(await screen.findByText(/provablyFair\.computed: .*99.* — grade\.covert$/)).toBeInTheDocument();
 });
 
-test('the computed result keeps the wear an old open was drawn from', async () => {
+test('an old open shows the grade of its item, not the wear bucket it was drawn from', async () => {
     api.verifyOpen.mockResolvedValue({
         data: {
-            itemId: 10, color: 'default', rarity: 'Factory New', source: 'current',
+            itemId: 12, color: 'painted', rarity: 'Factory New', source: 'current',
         },
     });
     renderPage();
 
-    fireEvent.click(within(await rowOf(1)).getByRole('button', { name: 'provablyFair.verify' }));
-    fireEvent.change(screen.getByPlaceholderText('provablyFair.caseIdPlaceholder'), { target: { value: 'train' } });
-    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+    await computeFromFirstRow();
 
-    expect(await screen.findByText(/provablyFair\.computed.*\(Factory New\)/)).toBeInTheDocument();
+    const result = await screen.findByText('provablyFair.computed: Butterfly Knife | Fade — grade.special');
+    expect(result.querySelector('.item-color')).not.toBeNull();
+    expect(screen.queryByText(/Factory New/)).toBeNull();
+});
+
+test('the opens history names each dropped item and marks a painted one', async () => {
+    api.getOpenHistory.mockResolvedValue({ data: [{ ...ROWS[0], resultColor: 'painted' }, ROWS[1], ROWS[2]] });
+    renderPage();
+
+    const painted = await rowOf(1);
+    expect(await within(painted).findByText('Nova | Rising Sun')).toBeInTheDocument();
+    expect(painted.querySelector('.item-color')).not.toBeNull();
+    const plain = await rowOf(0);
+    expect(within(plain).getByText('AWP | Worm God')).toBeInTheDocument();
+    expect(plain.querySelector('.item-color')).toBeNull();
+    expect(getItemsInfo).toHaveBeenCalledTimes(1);
 });
 
 test('a guest gets the algorithm and the calculator without asking for seeds or history', async () => {

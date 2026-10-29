@@ -6,13 +6,15 @@ import {
 } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import Loader from '../components/mini/Loader';
+import ItemColor from '../components/mini/ItemColor';
 import openNotification from '../components/mini/openNotification';
 import { clientErrorMessage, isRefusal } from '../helpers/serverMessage';
 import { gradeName } from '../helpers/grade';
 import { isAuthorized } from '../helpers/Player';
+import { itemInfoFetch } from '../store/actions/itemCache';
 import {
     getProvablyFairState,
     setClientSeed as apiSetClientSeed,
@@ -49,6 +51,8 @@ const ProvablyFair = () => {
     const { t } = useTranslation();
     const routerHistory = useHistory();
     const loggedIn = isAuthorized(useSelector((store) => store.user));
+    const itemCache = useSelector((store) => store.itemCache);
+    const dispatch = useDispatch();
     const [state, setState] = useState(null);
     const [loadFailed, setLoadFailed] = useState(false);
     const [clientSeedInput, setClientSeedInput] = useState('');
@@ -112,6 +116,19 @@ const ProvablyFair = () => {
         }
         await loadHistory(mine);
     }, [loadHistory, loggedIn]);
+
+    useEffect(() => {
+        history.forEach((open) => dispatch(itemInfoFetch(open.resultItemId)));
+    }, [history, dispatch]);
+
+    const resultItemId = calcResult && calcResult.itemId;
+    useEffect(() => {
+        if (resultItemId) {
+            dispatch(itemInfoFetch(resultItemId));
+        }
+    }, [resultItemId, dispatch]);
+
+    const itemName = (id) => (itemCache[id] && itemCache[id].item_name) || t('item.placeholder', { id: String(id) });
 
     const reloadHistory = () => loadHistory(generation.current);
 
@@ -219,10 +236,21 @@ const ProvablyFair = () => {
         return <Loader />;
     }
 
+    const computedGrade = calcResult
+        && (gradeName(itemCache[calcResult.itemId] && itemCache[calcResult.itemId].item_grade, t) || gradeName(calcResult.rarity, t));
+
     const columns = [
         { title: t('provablyFair.case'), dataIndex: 'caseId' },
         { title: t('provablyFair.nonce'), dataIndex: 'nonce' },
-        { title: t('provablyFair.result'), render: (_, r) => `${r.resultItemId} / ${r.resultColor}` },
+        {
+            title: t('provablyFair.result'),
+            render: (_, r) => (
+                <span className="provablyfair-item">
+                    {itemName(r.resultItemId)}
+                    <ItemColor color={r.resultColor} />
+                </span>
+            ),
+        },
         {
             title: t('provablyFair.status'),
             render: (_, r) => {
@@ -299,7 +327,11 @@ const ProvablyFair = () => {
             <Input placeholder={t('provablyFair.caseIdPlaceholder')} value={calc.caseId} onChange={(e) => setCalc({ ...calc, caseId: e.target.value, openId: null })} />
             <Button onClick={onCompute}>{t('provablyFair.compute')}</Button>
             {calcResult && (
-                <div>{t('provablyFair.computed')}: {calcResult.itemId} / {calcResult.color} ({gradeName(calcResult.rarity, t) || calcResult.rarity})</div>
+                <div className="provablyfair-item">
+                    {t('provablyFair.computed')}: {itemName(calcResult.itemId)}
+                    {computedGrade && ` — ${computedGrade}`}
+                    <ItemColor color={calcResult.color} />
+                </div>
             )}
             {calcResult && calcResult.source === 'snapshot' && (
                 <>

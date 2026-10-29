@@ -3321,6 +3321,17 @@ footer.ant-layout-footer {
         margin-top: 8px;
     }
 
+    .provablyfair-item .item-color {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        margin-left: 6px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 6px 1px rgba(0, 160, 255, 0.3);
+        vertical-align: middle;
+    }
+
     .ant-input {
         max-width: 420px;
         margin: 0 8px 8px 0;
