@@ -10,7 +10,7 @@ import { getCaseById } from '../api/all/cases';
 import { getProvablyFairState } from '../api/all/provablyFair';
 import { renderItemProp } from '../helpers/Case';
 import { gradeName, gradeRank, gradeStyle } from '../helpers/grade';
-import { formatChance } from '../helpers/odds';
+import { formatChance, gradeOdds } from '../helpers/odds';
 import { computeItemPriceUAH } from '../helpers/price';
 import { marketUrl } from '../helpers/market';
 import { isRefusal } from '../helpers/serverMessage';
@@ -106,6 +106,12 @@ class Case extends Component {
         });
     }
 
+    getGradeOdds() {
+        const { caseCollection, odds } = this.state;
+        const items = (caseCollection && caseCollection.ITEMS) ? caseCollection.ITEMS : [];
+        return gradeOdds(items, odds, (id) => this.getShortInfoItem({ id }, 'item_grade'));
+    }
+
     async getData() {
         this.loadGeneration += 1;
         const generation = this.loadGeneration;
@@ -190,6 +196,7 @@ class Case extends Component {
             caseData, fetching, failed, serverSeedHash, odds,
         } = this.state;
         const { t, i18n } = this.props;
+        const oddsByGrade = this.getGradeOdds();
         if (failed) {
             return (
                 <div className="casepage">
@@ -223,6 +230,20 @@ class Case extends Component {
                                 {caseData.case_openedCount}
                             </i>
                         </span>
+                        {oddsByGrade.length > 0 && (
+                            <div className="casepage-odds">
+                                <span id="case-odds-title">{t('case.oddsByGrade')}</span>
+                                <ul aria-labelledby="case-odds-title">
+                                    {oddsByGrade.map(({ grade, chance }) => (
+                                        <li key={grade} style={gradeStyle(grade)}>
+                                            {gradeName(grade, t)}
+                                            {' '}
+                                            <b>{formatChance(chance, i18n?.language)}</b>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                         <div className="casepage-itemlist more">
                             {map(this.getSortedItems(), (item, i) => {
                                 const name = this.getShortInfoItem(item, 'item_name');

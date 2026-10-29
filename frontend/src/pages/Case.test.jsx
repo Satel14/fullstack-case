@@ -350,3 +350,40 @@ test('each item of the contents shows its chance, also in its tooltip and its ac
     fireEvent.mouseEnter(tile);
     expect(await screen.findByRole('tooltip')).toHaveTextContent('item.wear: Field Tested, item.chance: 9,17%');
 });
+
+test('above the contents the chances add up by grade, the rarest grade first', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    const item = (id, grade) => ({
+        item_itemId: id, item_name: `Item ${id}`, item_type: 'rifles', item_rare: 'Field Tested', item_grade: grade, pricesInCredits: { default: 10 },
+    });
+    getCaseById.mockResolvedValue({
+        ...caseResponse(0),
+        caseCollection: { ITEMS: [{ id: 1 }, { id: 2 }, { id: 3 }] },
+        odds: { 1: 0.5, 2: 0.3, 3: 0.2 },
+    });
+    const store = createStore(() => ({ itemCache: { 1: item(1, 'milspec'), 2: item(2, 'milspec'), 3: item(3, 'covert') } }));
+
+    render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
+
+    const summary = await screen.findByRole('list', { name: 'case.oddsByGrade' });
+    expect([...summary.querySelectorAll('li')].map((li) => [li.textContent, li.style.getPropertyValue('--rarity')]))
+        .toEqual([['grade.covert 20%', '#eb4b4b'], ['grade.milspec 80%', '#4b69ff']]);
+});
+
+test('without odds there is no summary by grade', async () => {
+    getProvablyFairState.mockRejectedValue({ error: 401 });
+    getCaseById.mockResolvedValue({ ...caseResponse(0), caseCollection: { ITEMS: [{ id: 1 }] } });
+    const store = createStore(() => ({
+        itemCache: {
+            1: {
+                item_itemId: 1, item_name: 'Item 1', item_grade: 'covert', pricesInCredits: { default: 10 },
+            },
+        },
+    }));
+
+    render(casePage(store, 'havoc', { push: jest.fn(), replace: jest.fn() }));
+
+    await screen.findByText('Item 1');
+    expect(screen.queryByRole('list', { name: 'case.oddsByGrade' })).toBeNull();
+    expect(document.querySelector('.casepage-itemlist_item__chance')).toBeNull();
+});

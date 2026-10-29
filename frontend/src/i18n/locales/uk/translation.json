@@ -321,7 +321,8 @@
     },
     "case": {
         "contents": "Вміст кейсу",
-        "openedCount": "Кількість відкритих:"
+        "openedCount": "Кількість відкритих:",
+        "oddsByGrade": "Шанси за рідкістю"
     },
     "inventory": {
         "item": "Предмет",

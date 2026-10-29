@@ -1733,6 +1733,38 @@ blockquote {
         }
     }
 
+    &-odds {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+        margin-bottom: 14px;
+        font-size: 12px;
+        color: #adb0b9;
+
+        ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        li {
+            padding: 2px 10px;
+            border-radius: 12px;
+            border: 1px solid #262e43;
+            border-left: 3px solid var(--rarity, #262e43);
+            background: #161a29;
+            color: #fff;
+
+            b {
+                color: var(--rarity, #fff);
+            }
+        }
+    }
+
     &-more {
         display: flex;
         flex-direction: column;

@@ -321,7 +321,8 @@
     },
     "case": {
         "contents": "Case contents",
-        "openedCount": "Times opened:"
+        "openedCount": "Times opened:",
+        "oddsByGrade": "Odds by rarity"
     },
     "inventory": {
         "item": "Item",
