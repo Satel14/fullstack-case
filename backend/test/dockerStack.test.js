@@ -186,16 +186,19 @@ test('the backend Dockerfile exposes the real port, not the unused default of 80
     assert.match(backendDockerfile, /^EXPOSE 3003 9229 9230$/m);
 });
 
-const QUERY_OR_REFERER = /\$(request|request_uri|args|query_string|is_args|http_referer|arg_\w+)\b/;
+const QUERY_OR_REFERER = /\$\{?(request|request_uri|request_body|args|query_string|is_args|http_referer|arg_\w+)\b/;
 
 test('neither nginx writes query strings or referers into its access log, so tokens in links stay out of it', () => {
     [['nginx/default.conf', nginx], ['frontend/nginx/nginx.conf', read('frontend/nginx/nginx.conf')]].forEach(([file, conf]) => {
         const format = conf.match(/log_format\s+(\w+)\s+([\s\S]*?);/);
         assert.ok(format, `${file} has no log_format`);
-        assert.match(format[2], /\$uri\b/, `${file} does not log the path`);
+        assert.match(format[2], /\$request_path\b/, `${file} does not log the requested path`);
+        assert.match(conf, /map\s+\$request_uri\s+\$request_path\s*\{\s*~\^\(\?<(\w+)>\[\^\?\]\*\)\s+\$\1;\s*\}/, `${file} does not cut the query off the path`);
         assert.doesNotMatch(format[2], QUERY_OR_REFERER, `${file} logs a query string or a referer`);
         const accessLogs = [...conf.matchAll(/access_log\s+([^;]+);/g)].map(([, value]) => value.trim());
         assert.ok(accessLogs.length > 0, `${file} sets no access_log`);
         accessLogs.forEach((value) => assert.ok(value === 'off' || value.endsWith(` ${format[1]}`), `${file}: access_log ${value} skips the format`));
+        const server = conf.slice(conf.indexOf('server {'));
+        assert.ok(server.indexOf('access_log') !== -1 && server.indexOf('access_log') < server.indexOf('location '), `${file}: access_log is not set for the whole server`);
     });
 });
