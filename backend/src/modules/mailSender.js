@@ -60,13 +60,16 @@ const registrationAttemptEmail = (data) => ({
            <p>Якщо ні — нічого робити не треба, ваш акаунт не змінився.</p>`,
 });
 
-const send = (mailTo, message, sentLog, failedLog) => {
+const send = (mailTo, message, failedLog) => {
     if (!isEnabled()) {
-        console.warn(`[mail] "${message.subject}" not sent: RESEND_API_KEY is not set`);
         return;
     }
     getClient().emails.send({ from: FROM, to: mailTo, ...message })
-        .then((res) => console.log(sentLog, res))
+        .then(({ error }) => {
+            if (error) {
+                console.error(failedLog, error.message);
+            }
+        })
         .catch((err) => console.error(failedLog, err.message));
 };
 
@@ -88,15 +91,15 @@ module.exports = {
     emailConfirmationEmail,
     registrationAttemptEmail,
     userRegistered(mailTo, data) {
-        send(mailTo, welcomeEmail(data), 'Welcome email sent via Resend:', 'Failed to send Resend welcome email:');
+        send(mailTo, welcomeEmail(data), '[mail] welcome email not sent:');
     },
     passwordResetLink(mailTo, data) {
-        send(mailTo, passwordResetEmail(data), 'Recovery email sent via Resend:', 'Error sending recovery email:');
+        send(mailTo, passwordResetEmail(data), '[mail] recovery email not sent:');
     },
     emailConfirmationLink(mailTo, data) {
-        send(mailTo, emailConfirmationEmail(data), 'Confirmation email sent via Resend:', 'Error sending confirmation email:');
+        send(mailTo, emailConfirmationEmail(data), '[mail] confirmation email not sent:');
     },
     registrationAttemptNotice(mailTo, data) {
-        send(mailTo, registrationAttemptEmail(data), 'Registration attempt notice sent via Resend:', 'Error sending registration attempt notice:');
+        send(mailTo, registrationAttemptEmail(data), '[mail] registration attempt notice not sent:');
     },
 };

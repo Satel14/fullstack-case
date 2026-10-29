@@ -23,7 +23,6 @@ module.exports.getItemPrice = async (name) => {
     try {
         const itemData = await InsiderPrices.findByPk(name);
         if (!itemData) {
-            console.log(`Item ${name} doesn't have on database.`);
             return null;
         }
 

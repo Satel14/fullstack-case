@@ -80,7 +80,6 @@ module.exports = function (server) {
 
         socket.on('new-user', () => {
             if (presence.joinChat(socket.id)) {
-                console.log('connection' + socket.userInfo.login);
                 broadcastRoster();
             }
         });
