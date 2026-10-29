@@ -1,4 +1,5 @@
 const MESSAGE = require('../constant/responseMessages');
+const { loggable } = require('../helpers/failure');
 
 const requestFaultStatus = (err) => {
     const status = err && (err.status || err.statusCode);
@@ -13,7 +14,7 @@ const answerUnhandled = (err, req, res, next) => {
     if (status) {
         return res.status(status).json({ status, message: MESSAGE.SERVER.BAD_REQUEST });
     }
-    console.error('[http] unexpected error:', err);
+    console.error('[http] unexpected error:', loggable(err));
     return res.status(500).json({ status: 500, message: MESSAGE.SERVER.ERROR });
 };
 

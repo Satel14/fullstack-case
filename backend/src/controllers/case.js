@@ -12,7 +12,7 @@ const sequelize = require('../config/db');
 const PFService = require('../services/provablyFair');
 const { buildDrawTable, deriveFromTable, itemOdds } = require('../modules/provablyFair');
 const RedisManager = require('../redis/manager');
-const { answerFailure } = require('../helpers/failure');
+const { answerFailure, loggable } = require('../helpers/failure');
 const { CASE_ID_PATTERN } = require('../constant/caseId');
 const ITEM_HASH = 'item_hash';
 
@@ -202,7 +202,7 @@ module.exports.openCaseById = async (req, res) => {
             balance: actualBalance,
         });
     } catch (e) {
-        console.error('[DEBUG] openCaseById error:', e);
+        console.error('[DEBUG] openCaseById error:', loggable(e));
         if (e && e.code === 'NOT_HAVE_MONEY') {
             return res.status(200).json({
                 status: 200, message: MESSAGE.CASE.NOT_HAVE_MONEY,

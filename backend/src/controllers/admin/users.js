@@ -7,6 +7,7 @@ const sequelize = require('../../config/db');
 const BalanceHistoryService = require('../../services/balanceHistory');
 const BalanceHistoryEnum = require('../../constant/enums/balance').BalanceHistory;
 const { withinChars } = require('../../helpers/charLength');
+const { loggable } = require('../../helpers/failure');
 
 const ASSIGNABLE_ROLES = [ROLES.BANNED, ROLES.BANNED_CHAT, ROLES.NORMAL, ROLES.YOUTUBER, ROLES.STREAMER, ROLES.FAMOUS];
 const BALANCE_DELTA_LIMIT = 1000000;
@@ -20,7 +21,7 @@ module.exports.list = async (req, res) => {
         });
         return res.status(200).json({ status: 200, data: data.rows, count: data.count });
     } catch (e) {
-        console.error('[admin] users.list failed:', e);
+        console.error('[admin] users.list failed:', loggable(e));
         return res.status(400).json({ status: 400, message: MESSAGE.ADMIN.ERROR });
     }
 };
@@ -72,7 +73,7 @@ module.exports.setRole = async (req, res) => {
 
         return res.status(200).json({ status: 200 });
     } catch (e) {
-        console.error('[admin] users.setRole failed:', e);
+        console.error('[admin] users.setRole failed:', loggable(e));
         return res.status(400).json({ status: 400, message: MESSAGE.ADMIN.ERROR });
     }
 };
@@ -146,7 +147,7 @@ module.exports.adjustBalance = async (req, res) => {
         if (e && e.code === 'NEGATIVE_BALANCE') {
             return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.NEGATIVE_BALANCE });
         }
-        console.error('[admin] users.adjustBalance failed:', e);
+        console.error('[admin] users.adjustBalance failed:', loggable(e));
         return res.status(400).json({ status: 400, message: MESSAGE.ADMIN.ERROR });
     }
 };

@@ -4,6 +4,7 @@ const { signToken, withoutVersion, SESSION_FIELDS } = require('./token');
 const mailSender = require('../modules/mailSender');
 const EmailVerificationService = require('../services/emailVerification');
 const { authLimiter } = require('../middleware/rateLimiters');
+const { loggable } = require('../helpers/failure');
 
 const REFUSALS = {
     invalid: message.AUTH.CONFIRM_LINK_INVALID,
@@ -27,7 +28,7 @@ module.exports = (app) => {
                 user: withoutVersion(profile.dataValues),
             });
         } catch (e) {
-            console.error('[EmailVerification] confirm failed:', e);
+            console.error('[EmailVerification] confirm failed:', loggable(e));
             return res.status(500).json({ message: message.AUTH.CONFIRM_FAILED });
         }
     });

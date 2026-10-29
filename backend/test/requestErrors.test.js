@@ -220,3 +220,35 @@ test('server.js builds its app only through buildApp', () => {
     assert.match(source, /const app = buildApp\(\);/);
     assert.doesNotMatch(source, /express\(\)|bodyParser|app\.use\(/);
 });
+
+const leakyDatabaseError = () => {
+    const error = new Error('Lock wait timeout exceeded; try restarting transaction');
+    error.name = 'SequelizeDatabaseError';
+    error.sql = "UPDATE `users` SET `password`='$2b$10$SECRETHASH' WHERE `email` = 'player@e.ua'";
+    error.parameters = ['$2b$10$SECRETHASH', 'player@e.ua'];
+    error.original = { code: 'ER_LOCK_WAIT_TIMEOUT', sql: error.sql, parameters: error.parameters };
+    error.parent = error.original;
+    return error;
+};
+
+const printedBy = async (fn) => {
+    const printed = [];
+    const originalError = console.error;
+    console.error = (...args) => { printed.push(require('util').format(...args)); };
+    try {
+        await fn();
+        return printed;
+    } finally {
+        console.error = originalError;
+    }
+};
+
+test('an unhandled database error is logged with its message but without the values the query carried', async () => {
+    const res = { headersSent: false, status() { return this; }, json() { return this; } };
+
+    const printed = await printedBy(() => answerUnhandled(leakyDatabaseError(), {}, res, () => {}));
+
+    assert.strictEqual(printed.length, 1);
+    assert.match(printed[0], /Lock wait timeout exceeded/);
+    assert.doesNotMatch(printed[0], /SECRETHASH|player@e\.ua/);
+});

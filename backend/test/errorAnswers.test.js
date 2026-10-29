@@ -253,3 +253,58 @@ test('no response is built from the message of a caught error', () => {
 
     assert.deepStrictEqual(offenders, []);
 });
+
+const leakyDatabaseError = () => {
+    const error = new Error('Lock wait timeout exceeded; try restarting transaction');
+    error.name = 'SequelizeDatabaseError';
+    error.sql = "UPDATE `users` SET `password`='$2b$10$SECRETHASH' WHERE `email` = 'player@e.ua'";
+    error.parameters = ['$2b$10$SECRETHASH', 'player@e.ua'];
+    error.original = { code: 'ER_LOCK_WAIT_TIMEOUT', sql: error.sql, parameters: error.parameters };
+    error.parent = error.original;
+    return error;
+};
+
+const printedBy = async (fn) => {
+    const printed = [];
+    const originalError = console.error;
+    console.error = (...args) => { printed.push(require('util').format(...args)); };
+    try {
+        await fn();
+        return printed;
+    } finally {
+        console.error = originalError;
+    }
+};
+
+test('an unexpected database error is logged with its message but without the values the query carried', async () => {
+    const { answerFailure } = require('../src/helpers/failure');
+    const res = { status() { return this; }, json() { return this; } };
+
+    const printed = await printedBy(() => answerFailure(res, leakyDatabaseError(), { status: 400, where: 'probe' }));
+
+    assert.strictEqual(printed.length, 1);
+    assert.match(printed[0], /^\[probe\] unexpected error: SequelizeDatabaseError: Lock wait timeout exceeded/);
+    assert.doesNotMatch(printed[0], /SECRETHASH|player@e\.ua/);
+});
+
+test('a confirmation that fails on the database logs its message but not the hash or the address it was storing', async () => {
+    const EmailVerificationService = require('../src/services/emailVerification');
+    const handlers = {};
+    require('../src/auth/confirmEmail')({ post: (route, ...chain) => { handlers[route] = chain[chain.length - 1]; } });
+    const original = EmailVerificationService.confirm;
+    EmailVerificationService.confirm = async () => { throw leakyDatabaseError(); };
+    let result;
+    let printed;
+    try {
+        printed = await printedBy(async () => {
+            result = await respond(handlers['/api/profile/confirm-email'], { body: { token: 'a'.repeat(64) } });
+        });
+    } finally {
+        EmailVerificationService.confirm = original;
+    }
+
+    assert.strictEqual(result.code, 500);
+    assert.strictEqual(printed.length, 1);
+    assert.match(printed[0], /Lock wait timeout exceeded/);
+    assert.doesNotMatch(printed[0], /SECRETHASH|player@e\.ua/);
+});

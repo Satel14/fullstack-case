@@ -6,6 +6,7 @@ const sequelize = require('../../config/db');
 const { CASE_ID_PATTERN } = require('../../constant/caseId');
 const { MYSQL_INT_MAX } = require('../../constant/mysql');
 const { withinChars } = require('../../helpers/charLength');
+const { loggable } = require('../../helpers/failure');
 
 const snapshot = (row) => ({
     price: row.case_price,
@@ -29,7 +30,7 @@ module.exports.list = async (req, res) => {
         const cases = await CaseService.getAllCases(true);
         return res.status(200).json({ status: 200, data: cases });
     } catch (e) {
-        console.error('[admin] cases.list failed:', e);
+        console.error('[admin] cases.list failed:', loggable(e));
         return res.status(400).json({ status: 400, message: MESSAGE.ADMIN.ERROR });
     }
 };
@@ -79,7 +80,7 @@ module.exports.update = async (req, res) => {
         if (e && e.code === 'DISCOUNT_INVALID') {
             return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.DISCOUNT_INVALID });
         }
-        console.error('[admin] cases.update failed:', e);
+        console.error('[admin] cases.update failed:', loggable(e));
         return res.status(400).json({ status: 400, message: MESSAGE.ADMIN.ERROR });
     }
 };
