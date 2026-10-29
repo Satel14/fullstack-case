@@ -164,3 +164,43 @@ test('re-pricing refuses a case without a price before changing anything', async
     const [[row]] = await sequelize.query("SELECT price FROM cases WHERE id = 'havoc'");
     assert.strictEqual(Number(row.price), 99999);
 });
+
+test('re-pricing again changes nothing, and a case without a price gets one', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const { repriceCases } = require('../scripts/seedCases');
+    const prices = committedPrices();
+    await sequelize.query(
+        'INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) '
+        + "VALUES ('bomj', 'T', NULL, NULL, 1, 1, 0, 'weapon', 1000), ('havoc', 'T', 5, NULL, 1, 1, 0, 'weapon', 1000)",
+    );
+
+    assert.deepStrictEqual(await repriceCases({ log: quietLog }), { repriced: 2 });
+    assert.deepStrictEqual(await storedPrices(sequelize), { bomj: prices.bomj, havoc: prices.havoc });
+    assert.deepStrictEqual(await repriceCases({ log: quietLog }), { repriced: 0 });
+});
+
+test('the seed script refuses an argument it does not know instead of running the full seed', async () => {
+    const { spawnSync } = require('child_process');
+    const path = require('path');
+    const { TEST_DB } = require('./helpers/db');
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await sequelize.query(
+        'INSERT INTO cases (id, title, price, discount, categoryId, published, openedCount, type, openLimit) '
+        + "VALUES ('bomj', 'Kept', 500, NULL, 1, 0, 42, 'weapon', 77)",
+    );
+
+    const run = spawnSync(process.execPath, [path.join('scripts', 'seedCases.js'), '--price-only'], {
+        cwd: path.join(__dirname, '..'),
+        encoding: 'utf8',
+        env: { ...process.env, NODE_ENV: 'development', DB_NAME: TEST_DB },
+    });
+
+    assert.strictEqual(run.status, 1, `${run.stdout}${run.stderr}`);
+    assert.match(`${run.stdout}${run.stderr}`, /--price-only/);
+    const [rows] = await sequelize.query('SELECT id, title, price, published, openedCount, openLimit FROM cases');
+    assert.deepStrictEqual(rows.map((row) => ({ ...row, price: Number(row.price) })), [{
+        id: 'bomj', title: 'Kept', price: 500, published: 0, openedCount: 42, openLimit: 77,
+    }]);
+});

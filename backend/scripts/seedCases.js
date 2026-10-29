@@ -127,7 +127,13 @@ const repriceCases = async ({ casePrices = readCasePrices(), log = console } = {
         const stale = await sequelize.transaction(async (transaction) => {
             const [changed] = await Case.update(
                 { case_price: casePrices[caseId] },
-                { where: { case_id: caseId, case_price: { [Op.ne]: casePrices[caseId] } }, transaction },
+                {
+                    where: {
+                        case_id: caseId,
+                        [Op.or]: [{ case_price: { [Op.ne]: casePrices[caseId] } }, { case_price: null }],
+                    },
+                    transaction,
+                },
             );
             repriced += changed;
             return clearStaleSale(caseId, transaction);
@@ -141,9 +147,16 @@ const repriceCases = async ({ casePrices = readCasePrices(), log = console } = {
     return { repriced };
 };
 
+const PRICES_ONLY = '--prices-only';
+
 const main = async () => {
+    const args = process.argv.slice(2);
+    const unknown = args.filter((arg) => arg !== PRICES_ONLY);
     try {
-        await (process.argv.includes('--prices-only') ? repriceCases() : seedCases());
+        if (unknown.length > 0) {
+            throw new Error(`unknown argument ${unknown.join(' ')}; run it without arguments to seed, or with ${PRICES_ONLY} to re-price the cases already in the database`);
+        }
+        await (args.includes(PRICES_ONLY) ? repriceCases() : seedCases());
     } catch (error) {
         console.error('❌ Error seeding cases:', error.message);
         process.exitCode = 1;
