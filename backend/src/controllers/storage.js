@@ -1,7 +1,7 @@
 // @ts-nocheck
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable guard-for-in */
-const { check, validationResult } = require('express-validator');
+const { body, check, validationResult } = require('express-validator');
 const StorageService = require('../services/storage');
 const CaseService = require('../services/case');
 const ItemService = require('../services/item');
@@ -11,6 +11,7 @@ const UserService = require('../services/user');
 const BalanceHistoryService = require('../services/balanceHistory');
 const WithdrawalService = require('../services/withdrawal');
 const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
+const { STORAGE_STATUSES } = require('../constant/enums/storageStatus');
 const { salePayout } = require('../helpers/salePayout');
 const { answerFailure } = require('../helpers/failure');
 
@@ -30,6 +31,10 @@ function jsonParser(blob) {
 
 module.exports.getProfileStorage = async (req, res) => {
     try {
+        if (!validationResult(req).isEmpty()) {
+            return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
+        }
+
         const { user_id } = req.user.profile;
         const { status, limit, offset } = req.body;
 
@@ -373,6 +378,11 @@ module.exports.getFavoriteCaseByUserId = async (req, res) => {
 
 module.exports.validate = (method) => {
     switch (method) {
+        case 'getProfileStorage': {
+            return [
+                body('status').optional({ checkFalsy: true }).isString().bail().isIn(STORAGE_STATUSES),
+            ];
+        }
         case 'getStorageLastItemsByUserId': {
             return [
                 check('id').exists().isInt({ min: 1 }),

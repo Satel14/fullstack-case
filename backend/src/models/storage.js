@@ -1,6 +1,7 @@
 const Sequelize = require("sequelize")
 const sequelize = require("../config/db")
 const Users = require("./user")
+const { STORAGE_STATUSES } = require("../constant/enums/storageStatus")
 
 module.exports = sequelize.define(
     'storage',
@@ -33,7 +34,7 @@ module.exports = sequelize.define(
         },
         storage_status: {
             field: 'status',
-            type: Sequelize.ENUM('inventory', 'received', 'waitingtrade', 'money'),
+            type: Sequelize.ENUM(...STORAGE_STATUSES),
             defaultValue: 'inventory',
         },
         created_at: {

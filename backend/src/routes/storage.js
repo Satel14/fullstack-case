@@ -17,5 +17,5 @@ module.exports = (app) => {
     
     app.get('/api/storage/top/:limit/:offset', StorageController.validate('getStorageTop'), StorageController.getStorageTop);
 
-    app.post('/api/profile/storage', authenticate, StorageController.getProfileStorage);
+    app.post('/api/profile/storage', authenticate, StorageController.validate('getProfileStorage'), StorageController.getProfileStorage);
 };
