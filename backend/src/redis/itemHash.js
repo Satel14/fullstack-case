@@ -27,4 +27,6 @@ function buildItemHash(items, prices) {
     return hash;
 }
 
-module.exports = { buildItemHash };
+const countUngraded = (items) => items.filter((element) => element.item_name && !element.item_grade).length;
+
+module.exports = { buildItemHash, countUngraded };

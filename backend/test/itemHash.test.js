@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { buildItemHash } = require('../src/redis/itemHash');
+const { buildItemHash, countUngraded } = require('../src/redis/itemHash');
 
 const item = (id, name, extra = {}) => ({
     item_itemId: id, item_name: name, item_rare: 'Factory New', item_type: 'rifles', item_imagePath: `/img/${id}.png`, ...extra,
@@ -40,4 +40,11 @@ test('when a name has several price rows the first one wins, as before', () => {
     );
 
     assert.strictEqual(JSON.parse(hash[1]).pricesInCredits, 'first');
+});
+
+test('countUngraded counts the named items that have no grade yet', () => {
+    assert.strictEqual(countUngraded([
+        item(1, 'Graded', { item_grade: 'covert' }), item(2, 'Ungraded'), item(3, 'Null grade', { item_grade: null }), item(4, null),
+    ]), 2);
+    assert.strictEqual(countUngraded([]), 0);
 });

@@ -23,7 +23,7 @@ const client = redis.createClient(redisPort, redisHost, clientOptions);
 
 const InsiderPricesService = require("./../services/insiderPrices");
 const ItemService = require("./../services/item");
-const { buildItemHash } = require("./itemHash");
+const { buildItemHash, countUngraded } = require("./itemHash");
 const ITEM_HASH = "item_hash";
 
 
@@ -109,6 +109,10 @@ async function initialRedisState() {
         transaction.exec((err, replies) => (err ? reject(err) : resolve(replies)));
     });
     console.log("[Redis] Items Loaded");
+    const ungraded = countUngraded(items);
+    if (ungraded > 0) {
+        console.warn(`[Redis] ${ungraded} items have no grade and show without grade colours: run npm run seed`);
+    }
 }
 
 client.on("connect", async function () {
