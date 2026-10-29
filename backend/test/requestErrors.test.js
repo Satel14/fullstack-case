@@ -120,17 +120,19 @@ test('a body that is not valid JSON is answered 400 as JSON with a fixed text, a
     }
 });
 
-test('a body over the size limit or nested too deep is refused as JSON without a log line', async () => {
+test('a JSON body is read up to 16 KB; one over that, or nested too deep, is refused as JSON without a log line', async () => {
     const stand = await serve((app) => {
         app.post('/echo', (req, res) => res.json({ ok: true }));
     });
     try {
         const { result, logged } = await withLogsCaught(() => Promise.all([
-            send(`${stand.url}/echo`, JSON.stringify({ text: 'x'.repeat(200 * 1024) })),
-            send(`${stand.url}/echo`, `${'['.repeat(20000)}${']'.repeat(20000)}`),
+            send(`${stand.url}/echo`, JSON.stringify({ text: 'x'.repeat(15 * 1024) })),
+            send(`${stand.url}/echo`, JSON.stringify({ text: 'x'.repeat(17 * 1024) })),
+            send(`${stand.url}/echo`, `${'['.repeat(8000)}${']'.repeat(8000)}`),
         ]));
 
-        assert.deepStrictEqual(result.map(({ status, payload }) => [status, payload.message]), [
+        assert.deepStrictEqual(result.map(({ status, payload }) => [status, payload.message || payload.ok]), [
+            [200, true],
             [413, MESSAGE.SERVER.BAD_REQUEST],
             [400, MESSAGE.SERVER.BAD_REQUEST],
         ]);
