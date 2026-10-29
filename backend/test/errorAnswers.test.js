@@ -17,6 +17,7 @@ const Case = require('../src/models/case');
 const Article = require('../src/models/article');
 const Module = require('../src/models/module');
 const Storage = require('../src/models/storage');
+const Item = require('../src/models/item');
 const ProvablyFairSeed = require('../src/models/provablyFairSeed');
 const CaseOpenRecord = require('../src/models/caseOpenRecord');
 const RedisManager = require('../src/redis/manager');
@@ -88,6 +89,14 @@ const OUTAGES = [
     {
         name: 'a sale',
         stubs: [[Storage, 'findOne', outage]],
+        call: () => respond(require('../src/controllers/storage').sellItemByStorageId, { params: { id: '1' }, user: player }),
+    },
+    {
+        name: 'the item lookup of a sale',
+        stubs: [
+            [Storage, 'findOne', async () => ({ dataValues: { storage_itemId: 707, storage_color: 'default' } })],
+            [Item, 'findByPk', outage],
+        ],
         call: () => respond(require('../src/controllers/storage').sellItemByStorageId, { params: { id: '1' }, user: player }),
     },
     {

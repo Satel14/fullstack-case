@@ -516,6 +516,17 @@ test('a won item the server refuses to sell says why, on its own and in "sell al
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'openCase.sellErrorTitle', 'balance is full'));
 });
 
+test('sell all whose sales all failed without a reason says so and never that everything sold', async () => {
+    sellItemByStorageId.mockReset();
+    sellItemByStorageId.mockRejectedValue({ error: 502 });
+    await openTwoAndShowResult();
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.sellAllFor/ }));
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'openCase.sellErrorTitle', 'openCase.sellErrorText'));
+    expect(openNotification).not.toHaveBeenCalledWith('success', 'openCase.allSold');
+});
+
 test('sell all names a refusal and still reports a sale that failed without a reason', async () => {
     sellItemByStorageId.mockReset();
     sellItemByStorageId
