@@ -48,7 +48,7 @@ module.exports.setRole = async (req, res) => {
             return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.SELF_FORBIDDEN });
         }
 
-        const target = await UserService.getUserById(targetId).catch(() => null);
+        const target = await UserService.findUserById(targetId);
         if (!target) {
             return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.USER_NOT_EXIST });
         }
@@ -104,7 +104,7 @@ module.exports.adjustBalance = async (req, res) => {
             return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.SELF_FORBIDDEN });
         }
 
-        const target = await UserService.getUserById(targetId).catch(() => null);
+        const target = await UserService.findUserById(targetId);
         if (!target) {
             return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.USER_NOT_EXIST });
         }

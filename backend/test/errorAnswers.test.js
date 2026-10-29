@@ -92,6 +92,14 @@ const OUTAGES = [
         call: () => respond(require('../src/controllers/storage').sellItemByStorageId, { params: { id: '1' }, user: player }),
     },
     {
+        name: 'the recipient lookup of a transfer',
+        stubs: [[User, 'findByPk', outage]],
+        call: () => respond(
+            require('../src/controllers/user').sendMoneyForUserByUserId,
+            { body: { userIdTo: 2, money_count: 10 }, user: player },
+        ),
+    },
+    {
         name: 'the item lookup of a sale',
         stubs: [
             [Storage, 'findOne', async () => ({ dataValues: { storage_itemId: 707, storage_color: 'default' } })],
@@ -130,6 +138,25 @@ OUTAGES.forEach(({ name, stubs, call }) => {
         assert.doesNotMatch(JSON.stringify(result.payload), /ECONNREFUSED|10\.20\.30\.40/);
         const loggedText = logged.map((args) => args.map((a) => (a instanceof Error ? a.message : String(a))).join(' '));
         assert.ok(loggedText.some((line) => line.includes(OUTAGE)), `the real error was not logged: ${JSON.stringify(loggedText)}`);
+    });
+});
+
+const loggedLines = (logged) => logged.map((args) => args.map((a) => (a instanceof Error ? a.message : String(a))).join(' '));
+
+const ADMIN_LOOKUPS = [
+    ['a role change', 'setRole', { params: { id: '2' }, body: { role: 1 } }],
+    ['a balance correction', 'adjustBalance', { params: { id: '2' }, body: { delta: 10, reason: 'gift' } }],
+];
+
+ADMIN_LOOKUPS.forEach(([name, handler, req]) => {
+    test(`a database outage while ${name} looks the player up is logged, not answered as a missing player`, async () => {
+        const { result, logged } = await withStubs([[User, 'findByPk', outage]], () => respond(
+            require('../src/controllers/admin/users')[handler],
+            { ...req, user: player },
+        ));
+
+        assert.deepStrictEqual([result.code, result.payload.message], [400, MESSAGE.ADMIN.ERROR]);
+        assert.ok(loggedLines(logged).some((line) => line.includes(OUTAGE)), JSON.stringify(loggedLines(logged)));
     });
 });
 

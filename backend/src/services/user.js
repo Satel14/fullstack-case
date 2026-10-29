@@ -17,11 +17,13 @@ const EDITABLE_FOR_USER_FIELDS = [
     "user_receiveInfo",
 ];
 
+module.exports.findUserById = (id) => User.findByPk(id, {
+    attributes: [...PUBLIC_FIELDS, "updated_at", "created_at"],
+});
+
 module.exports.getUserById = async (id) => {
     try {
-        const user = await User.findByPk(id, {
-            attributes: [...PUBLIC_FIELDS, "updated_at", "created_at"],
-        });
+        const user = await module.exports.findUserById(id);
 
         if (!user) throw new Error(MESSAGE.USER.NOT_EXIST);
 

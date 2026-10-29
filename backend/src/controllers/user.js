@@ -50,7 +50,7 @@ module.exports.sendMoneyForUserByUserId = async (req, res) => {
             return res.status(422).json({ status: 422, sended: false, message: MESSAGE.VALIDATOR.ERROR });
         }
 
-        const recipient = await UserService.getUserById(userIdTo).catch(() => null);
+        const recipient = await UserService.findUserById(userIdTo);
         if (!recipient) {
             return res.status(422).json({ status: 422, sended: false, message: MESSAGE.USER.NOT_EXIST });
         }
