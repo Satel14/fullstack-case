@@ -488,3 +488,18 @@ test('every tile of the roulette wears its grade colour', async () => {
     const tiles = [...document.querySelectorAll('.opencase-block .casepage-itemlist_item')];
     expect(tiles.map((tile) => tile.style.getPropertyValue('--rarity'))).toEqual(['#4b69ff', '#d32ce6']);
 });
+
+test('the banner over the roulette names the winner\'s grade beside the wear', async () => {
+    const strip = [{ ...wonItem(101, 'default'), grade: 'milspec' }, { ...wonItem(102, 'default'), grade: 'classified' }];
+    openCaseById.mockResolvedValue({
+        status: 200,
+        balance: 900,
+        data: [{ winner: { item: strip[1], winIndex: 2, storageId: 60 }, resultWithItem: strip }],
+    });
+    renderOpenCase(baseCase, {}, cachedGuns);
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.open$/ }));
+
+    await waitFor(() => expect(document.querySelector('.opencase-titleitem span')).not.toBeNull());
+    expect(document.querySelector('.opencase-titleitem span').textContent).toBe('grade.classified · Field-Tested rifles');
+});

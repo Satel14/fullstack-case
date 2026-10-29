@@ -814,9 +814,11 @@ class OpenCase extends Component {
                                                         <div className="opencase-titleitem">
                                                             {winner[0].item.name}
                                                             <span>
-                                                                {winner[0].item.rare}
-                                                                {' '}
-                                                                {winner[0].item.type}
+                                                                {itemCaption({
+                                                                    grade: winner[0].item.grade,
+                                                                    wear: winner[0].item.rare,
+                                                                    type: winner[0].item.type,
+                                                                }, t)}
                                                             </span>
                                                         </div>
                                                     </Fade>
