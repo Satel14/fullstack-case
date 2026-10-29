@@ -127,7 +127,7 @@ function buildDrawTable(caseDef, itemHash) {
 function rollRuns(caseDef) {
     const keys = rarityKeys(caseDef);
     const maxWeight = keys.reduce((a, k) => a + caseDef.CHANCES[k], 0);
-    if (maxWeight === 0 || !Number.isFinite(maxWeight)) return [{ share: 1, f0: 0 }];
+    if (maxWeight === 0 || !Number.isFinite(maxWeight)) return [{ share: 1, f0: 0.5 }];
     const low = Math.min(0, maxWeight);
     const high = Math.max(0, maxWeight);
     const edges = new Set([low, high]);

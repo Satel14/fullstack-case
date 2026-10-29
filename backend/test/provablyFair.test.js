@@ -254,14 +254,19 @@ test('itemOdds of a case whose weights are all zero follows the draw to the last
     assert.strictEqual(pf.deriveWinner('s', 'c', 0, unweighted, ITEM_HASH).itemId, 2);
 });
 
-test('itemOdds steps over whole runs of rolls, so a weight total in the billions costs nothing', { timeout: 2000 }, () => {
+test('itemOdds steps over whole runs of rolls, so a weight total in the billions costs nothing', () => {
     const caseDef = GOLDEN.cases.dust2;
     const scaled = {
         ...caseDef,
         CHANCES: Object.fromEntries(Object.entries(caseDef.CHANCES).map(([key, weight]) => [key, key === 'COLORS' ? weight : weight * 1e7])),
     };
 
-    closeTo(pf.itemOdds(scaled), pf.itemOdds(caseDef));
+    const started = process.hrtime.bigint();
+    const odds = pf.itemOdds(scaled);
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+    closeTo(odds, pf.itemOdds(caseDef));
+    assert.ok(elapsedMs < 1000, `took ${elapsedMs} ms`);
 });
 
 test('itemOdds follows the draw even through negative weights', () => {
@@ -273,4 +278,21 @@ test('itemOdds follows the draw even through negative weights', () => {
 
     closeTo(odds, { 1: 0.5, 2: 0.5, 3: 0 });
     assertDrawnLikeOdds(odds, drawFrequencies(negative, ITEM_HASH, 20000), 20000);
+});
+
+test('itemOdds follows the draw at every kind of rarity edge', () => {
+    const twoRarities = (fn, mw) => ({
+        CHANCES: { FN: fn, MW: mw, COLORS: { DEFAULT: 100, PAINTED: 0, LIST: {} } },
+        ITEMS: [{ id: 1, rare: 'FN', colors: ['default'] }, { id: 2, rare: 'MW', colors: ['default'] }],
+    });
+
+    closeTo(pf.itemOdds(twoRarities(1.6, 0.9)), { 1: 0.4, 2: 0.6 });
+    closeTo(pf.itemOdds(twoRarities(-1.5, -1.5)), { 1: 1 / 3, 2: 2 / 3 });
+    closeTo(pf.itemOdds(twoRarities(5, -3)), { 1: 1, 2: 0 });
+    closeTo(pf.itemOdds(twoRarities(NaN, 1)), { 1: 0, 2: 1 });
+    closeTo(pf.itemOdds(twoRarities(Infinity, 1)), { 1: 1, 2: 0 });
+    for (let n = 0; n < 200; n++) {
+        assert.strictEqual(pf.deriveWinner('s', 'c', n, twoRarities(Infinity, 1), ITEM_HASH).itemId, 1);
+        assert.strictEqual(pf.deriveWinner('s', 'c', n, twoRarities(NaN, 1), ITEM_HASH).itemId, 2);
+    }
 });
