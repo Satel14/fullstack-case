@@ -2,7 +2,7 @@ const { isKnife } = require('./marketName');
 
 const GRADES = ['consumer', 'industrial', 'milspec', 'restricted', 'classified', 'covert', 'contraband', 'special'];
 
-const GRADE_COLORS = {
+const GRADE_BY_COLOR = {
     b0c3d9: 'consumer',
     '5e98d9': 'industrial',
     '4b69ff': 'milspec',
@@ -18,7 +18,7 @@ const MARKET_NAMES = {
 
 const WEAR_SUFFIX = / \((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)$/;
 
-const gradeOfColor = (color) => GRADE_COLORS[String(color || '').toLowerCase()] || null;
+const gradeOfColor = (color) => GRADE_BY_COLOR[String(color || '').toLowerCase()] || null;
 
 const skinKey = (marketHashName) => marketHashName
     .replace(WEAR_SUFFIX, '')
@@ -83,5 +83,5 @@ const withGrades = (items, gradeMap) => {
 };
 
 module.exports = {
-    GRADES, GRADE_COLORS, gradeOfColor, skinKey, gradesBySkin, gradeItems, serializeGradeMap, withGrades,
+    GRADES, GRADE_BY_COLOR, gradeOfColor, skinKey, gradesBySkin, gradeItems, serializeGradeMap, withGrades,
 };
