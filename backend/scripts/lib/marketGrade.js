@@ -24,6 +24,9 @@ const skinKey = (marketHashName) => marketHashName
     .replace(WEAR_SUFFIX, '')
     .replace(/^(★ )?(StatTrak™ |Souvenir )/, '$1');
 
+const byVotesThenRarity = ([gradeA, votesA], [gradeB, votesB]) => (votesB - votesA)
+    || (GRADES.indexOf(gradeB) - GRADES.indexOf(gradeA));
+
 const gradesBySkin = (marketItems) => {
     const votes = new Map();
     for (const { market_hash_name: name, text_color: color } of marketItems) {
@@ -37,7 +40,7 @@ const gradesBySkin = (marketItems) => {
     }
     const skins = new Map();
     for (const [key, tally] of votes) {
-        skins.set(key, Object.entries(tally).sort((a, b) => b[1] - a[1])[0][0]);
+        skins.set(key, Object.entries(tally).sort(byVotesThenRarity)[0][0]);
     }
     return skins;
 };

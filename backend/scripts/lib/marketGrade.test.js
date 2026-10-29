@@ -84,3 +84,13 @@ test('withGrades refuses, naming them, items the grade map does not know', () =>
         /1 items have no grade in scripts\/data\/gradeMap\.json: 7 New \| Skin\..*fetchMarketGrades/,
     );
 });
+
+test('gradesBySkin settles a tied vote on the rarer grade, whatever the listing order', () => {
+    const listings = [
+        { market_hash_name: 'AK-47 | Redline (Field-Tested)', text_color: '8847ff' },
+        { market_hash_name: 'AK-47 | Redline (Minimal Wear)', text_color: 'd32ce6' },
+    ];
+
+    assert.equal(gradesBySkin(listings).get('AK-47 | Redline'), 'classified');
+    assert.equal(gradesBySkin([...listings].reverse()).get('AK-47 | Redline'), 'classified');
+});
