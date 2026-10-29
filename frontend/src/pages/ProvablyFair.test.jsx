@@ -661,3 +661,17 @@ test('a check stopped by the limiter says so instead of blaming the inputs', asy
     expect(await screen.findByText('Забагато перевірок. Зачекайте трохи.')).toBeInTheDocument();
     expect(screen.queryByText('provablyFair.verifyFailed')).toBeNull();
 });
+
+test('a check refused as too many without a reason still says something went wrong', async () => {
+    api.verifyOpen.mockRejectedValue({ error: 429 });
+    renderPage({});
+
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.serverSeedPlaceholder'), { target: { value: 'server' } });
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.clientSeedPlaceholder'), { target: { value: 'client' } });
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.noncePlaceholder'), { target: { value: '3' } });
+    fireEvent.change(screen.getByPlaceholderText('provablyFair.caseIdPlaceholder'), { target: { value: 'dust2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'provablyFair.compute' }));
+
+    expect(await screen.findByText('common.serverError')).toBeInTheDocument();
+    expect(screen.queryByText('provablyFair.verifyFailed')).toBeNull();
+});
