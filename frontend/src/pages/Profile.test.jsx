@@ -335,3 +335,40 @@ test('a player without a best drop gets no grade colour on it', async () => {
     await screen.findByText('profile.noDrop');
     expect(container.querySelector('.profilepage-firstblock__bestdrop__drop').style.getPropertyValue('--rarity')).toBe('');
 });
+
+test('pointing at a drop of the history or at the best drop names its grade', async () => {
+    getUserById.mockResolvedValue({
+        data: {
+            user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
+        },
+    });
+    getStorageItemsCountByUserId.mockResolvedValue({
+        data: 1, uniqueCases: 1, bestDrop: { storage_id: 1, storage_itemId: 88, storage_color: 'painted' },
+    });
+    getStorageLastItemsByUserId.mockResolvedValue({
+        data: [{
+            storage_id: 2, storage_itemId: 1507, storage_color: 'default', storage_caseId: 1,
+        }],
+    });
+    const items = {
+        88: {
+            item_itemId: 88, item_name: 'AWP | Worm God', item_type: 'sniper rifles', item_rare: 'Field Tested', item_grade: 'restricted', pricesInCredits: { default: 300 },
+        },
+        1507: {
+            item_itemId: 1507, item_name: 'Nova | Caged Steel', item_type: 'shotguns', item_rare: 'Well Worn', item_grade: 'milspec', pricesInCredits: { default: 7 },
+        },
+    };
+    getItemsInfo.mockImplementation((ids) => Promise.resolve({ data: Object.fromEntries(ids.map((id) => [id, items[id]])) }));
+
+    const { container } = renderProfile('5');
+
+    await screen.findByText('AWP | Worm God');
+    fireEvent.mouseEnter(container.querySelector('.casehistory-itemlist_item'));
+    expect(await screen.findByRole('tooltip'))
+        .toHaveTextContent('item.name: Nova | Caged Steel, item.type: shotguns, item.rarity: grade.milspec, item.wear: Well Worn, item.color: default');
+
+    fireEvent.mouseEnter(container.querySelector('.profilepage-firstblock__bestdrop__drop'));
+    await waitFor(() => expect(screen.getAllByRole('tooltip').map((tip) => tip.textContent)).toContain(
+        'item.name: AWP | Worm God, item.type: sniper rifles, item.rarity: grade.restricted, item.wear: Field Tested, item.color: painted',
+    ));
+});

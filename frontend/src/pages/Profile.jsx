@@ -18,6 +18,7 @@ import {
 import { itemInfoFetch } from '../store/actions/itemCache';
 import roles from '../enum/role';
 import { gradeStyle } from '../helpers/grade';
+import { renderItemProp } from '../helpers/Case';
 
 const STORAGE_LOAD_LIMIT = 200;
 
@@ -54,6 +55,7 @@ const describeDrop = (storageItem, itemInfoById, t) => {
         name: itemName(item, storageItem, t),
         imagePath: item.item_imagePath || '',
         grade: item.item_grade || null,
+        details: renderItemProp(item, storageItem.storage_color, t),
     };
 };
 
@@ -252,15 +254,17 @@ class Profile extends Component {
 
                             <div className="profilepage-firstblock__bestdrop">
                                 <div className="profiletitle">{t('profile.bestDrop')}</div>
-                                <div
-                                    className="profilepage-firstblock__bestdrop__drop"
-                                    style={{
-                                        ...(bestDrop && gradeStyle(bestDrop.grade)),
-                                        backgroundImage: bestDropImg ? `url(${bestDropImg})` : 'none',
-                                        backgroundSize: 'contain',
-                                        backgroundPosition: 'center',
-                                    }}
-                                />
+                                <Tooltip placement="bottom" title={bestDrop?.details}>
+                                    <div
+                                        className="profilepage-firstblock__bestdrop__drop"
+                                        style={{
+                                            ...(bestDrop && gradeStyle(bestDrop.grade)),
+                                            backgroundImage: bestDropImg ? `url(${bestDropImg})` : 'none',
+                                            backgroundSize: 'contain',
+                                            backgroundPosition: 'center',
+                                        }}
+                                    />
+                                </Tooltip>
                                 <span>{bestDropName}</span>
                             </div>
                         </div>
@@ -282,7 +286,7 @@ class Profile extends Component {
                                             <div className="casehistory-itemlist">
                                                 {historyItems.length ? historyItems.map((item, i) => (
                                                     <Fade delay={i * 30} key={`profile-history-${item.key}`}>
-                                                        <Tooltip placement="bottom" title={item.name}>
+                                                        <Tooltip placement="bottom" title={item.details}>
                                                             <div
                                                                 className="casehistory-itemlist_item"
                                                                 style={{
