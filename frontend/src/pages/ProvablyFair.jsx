@@ -23,6 +23,8 @@ import {
     verifyOpen,
 } from '../api/all/provablyFair';
 
+const CLIENT_SEED_MAX = 64;
+
 const HISTORY_PAGE = 50;
 
 const olderThanShown = (shown, page) => {
@@ -282,7 +284,7 @@ const ProvablyFair = () => {
                 <div>{t('provablyFair.nonce')}: {state.active.nonce}</div>
                 <div>
                     {t('provablyFair.clientSeed')}:
-                    <Input value={clientSeedInput} onChange={(e) => setClientSeedInput(e.target.value)} style={{ maxWidth: 320 }} />
+                    <Input value={clientSeedInput} onChange={(e) => setClientSeedInput(e.target.value)} maxLength={CLIENT_SEED_MAX} style={{ maxWidth: 320 }} />
                     <Button onClick={onSaveClientSeed}>{t('provablyFair.save')}</Button>
                 </div>
                 <Button danger onClick={onRotate}>{t('provablyFair.rotate')}</Button>

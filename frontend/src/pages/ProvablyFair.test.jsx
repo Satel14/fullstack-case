@@ -675,3 +675,9 @@ test('a check refused as too many without a reason still says something went wro
     expect(await screen.findByText('common.serverError')).toBeInTheDocument();
     expect(screen.queryByText('provablyFair.verifyFailed')).toBeNull();
 });
+
+test('the client seed field stops at the 64 characters the server keeps', async () => {
+    renderPage();
+
+    expect(await screen.findByDisplayValue('client')).toHaveAttribute('maxlength', '64');
+});
