@@ -1,20 +1,20 @@
 const ITEMS = require('../../src/constant/itemConfigs');
 
-const R = ITEMS.RARITY;
+const G = ITEMS.GRADE;
 
 const BUCKETS = [
-    { key: R.FACTORY_NEW, weight: 55, count: 6 },
-    { key: R.MINIMAL_WEAR, weight: 28, count: 4 },
-    { key: R.FIELD_TESTED, weight: 12, count: 3 },
-    { key: R.WELL_WORN, weight: 4, count: 2 },
-    { key: R.BATTLE_SCARRED, weight: 1, count: 1 },
+    { key: G.MILSPEC, weight: 7992, count: 6 },
+    { key: G.RESTRICTED, weight: 1598, count: 4 },
+    { key: G.CLASSIFIED, weight: 320, count: 3 },
+    { key: G.COVERT, weight: 64, count: 2 },
+    { key: G.SPECIAL, weight: 26, count: 1 },
 ];
 
-const ARCHETYPES = {
-    budget: [[1, 30], [20, 80], [60, 300], [200, 1500], [800, 2500]],
-    standard: [[10, 100], [80, 400], [300, 1500], [1000, 6000], [3000, 15000]],
-    premium: [[50, 400], [300, 1200], [1000, 5000], [4000, 20000], [15000, 60000]],
-    elite: [[200, 1500], [1000, 5000], [4000, 20000], [15000, 70000], [60000, 250000]],
+const TIERS = {
+    budget: [0, 0.3],
+    standard: [0.25, 0.75],
+    premium: [0.5, 0.9],
+    elite: [0.75, 1],
 };
 
 const HOUSE_RETURN = 0.85;
@@ -47,8 +47,14 @@ const pickN = (candidates, count, rng, usedIds) => {
 
 const inBand = (v, [lo, hi]) => v >= lo && v <= hi;
 
+const valueBand = (values, [lo, hi]) => {
+    const sorted = [...values].sort((a, b) => a - b);
+    const at = (q) => sorted[Math.round(q * (sorted.length - 1))];
+    return [at(lo), at(hi)];
+};
+
 const generateCase = ({ archetype, pool, rng }) => {
-    const bands = ARCHETYPES[archetype] || ARCHETYPES.standard;
+    const tier = TIERS[archetype] || TIERS.standard;
     const usedIds = new Set();
     const CHANCES = {
         COLORS: {
@@ -59,13 +65,11 @@ const generateCase = ({ archetype, pool, rng }) => {
     };
     const OUT = [];
 
-    BUCKETS.forEach((bucket, bi) => {
+    BUCKETS.forEach((bucket) => {
         CHANCES[bucket.key] = bucket.weight;
-        const band = bands[bi];
-        const wantKnife = bi === BUCKETS.length - 1;
-        const available = pool.filter(
-            (p) => (wantKnife ? p.isKnife : !p.isKnife) && !usedIds.has(p.itemId),
-        );
+        const ofGrade = pool.filter((p) => p.grade === bucket.key);
+        const band = valueBand(ofGrade.map((p) => p.evValue), tier);
+        const available = ofGrade.filter((p) => !usedIds.has(p.itemId));
         let candidates = available.filter((p) => inBand(p.evValue, band));
         if (candidates.length < bucket.count) {
             const center = (band[0] + band[1]) / 2;
@@ -97,5 +101,5 @@ const generateCase = ({ archetype, pool, rng }) => {
 };
 
 module.exports = {
-    generateCase, makeRng, pickN, BUCKETS, ARCHETYPES, HOUSE_RETURN,
+    generateCase, makeRng, pickN, BUCKETS, TIERS, HOUSE_RETURN,
 };

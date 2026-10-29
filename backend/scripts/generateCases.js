@@ -1,11 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const ITEMS = require('../src/constant/itemConfigs');
-const { generateCase, makeRng } = require('./lib/caseGen');
+const { generateCase, makeRng, BUCKETS } = require('./lib/caseGen');
 
 const CASES_DIR = path.join(__dirname, '../src/constant/cases');
 const DATA_DIR = path.join(__dirname, 'data');
 const PRICE_MAP_FILE = path.join(DATA_DIR, 'priceMap.json');
+const GRADE_MAP_FILE = path.join(DATA_DIR, 'gradeMap.json');
 const CASE_PRICES_FILE = path.join(DATA_DIR, 'casePrices.json');
 
 const CASE_IDS = [
@@ -28,17 +29,14 @@ const ARCHETYPE_MAP = {
 };
 const archetypeFor = (id) => ARCHETYPE_MAP[id] || 'standard';
 
-const RARE_CONST = {
-    [ITEMS.RARITY.FACTORY_NEW]: 'FACTORY_NEW',
-    [ITEMS.RARITY.MINIMAL_WEAR]: 'MINIMAL_WEAR',
-    [ITEMS.RARITY.FIELD_TESTED]: 'FIELD_TESTED',
-    [ITEMS.RARITY.WELL_WORN]: 'WELL_WORN',
-    [ITEMS.RARITY.BATTLE_SCARRED]: 'BATTLE_SCARRED',
-};
+const GRADE_CONST = Object.fromEntries(Object.entries(ITEMS.GRADE).map(([name, id]) => [id, name]));
 
 const renderCaseFile = (result) => {
+    const chanceLines = BUCKETS.map(
+        (bucket) => `        [ITEMS_CONFIG.GRADE.${GRADE_CONST[bucket.key]}]: ${bucket.weight},`,
+    ).join('\n');
     const itemLines = result.ITEMS.map(
-        (it) => `    { id: ${it.id}, rare: ITEMS_CONFIG.RARITY.${RARE_CONST[it.rare]}, colors: allColors },`,
+        (it) => `    { id: ${it.id}, rare: ITEMS_CONFIG.GRADE.${GRADE_CONST[it.rare]}, colors: allColors },`,
     ).join('\n');
     return `const ITEMS_CONFIG = require('../../constant/itemConfigs')
 
@@ -49,11 +47,7 @@ const allColors = [
 
 module.exports = {
     CHANCES: {
-        [ITEMS_CONFIG.RARITY.FACTORY_NEW]: 55,
-        [ITEMS_CONFIG.RARITY.MINIMAL_WEAR]: 28,
-        [ITEMS_CONFIG.RARITY.FIELD_TESTED]: 12,
-        [ITEMS_CONFIG.RARITY.WELL_WORN]: 4,
-        [ITEMS_CONFIG.RARITY.BATTLE_SCARRED]: 1,
+${chanceLines}
         COLORS: {
             DEFAULT: 90,
             PAINTED: 10,
@@ -75,12 +69,16 @@ const renderAllJs = () => {
     return `module.exports = {\n${lines}\n};\n`;
 };
 
-const buildCases = (priceMap) => {
-    const pool = Object.entries(priceMap).map(([itemId, p]) => ({
-        itemId: Number(itemId),
-        isKnife: p.type === 'knife',
-        evValue: 0.9 * p.default + 0.1 * p.painted,
-    }));
+const MODEL_GRADES = new Set(BUCKETS.map((bucket) => bucket.key));
+
+const buildCases = (priceMap, gradeMap) => {
+    const pool = Object.entries(priceMap)
+        .filter(([itemId]) => MODEL_GRADES.has(gradeMap[itemId]))
+        .map(([itemId, p]) => ({
+            itemId: Number(itemId),
+            grade: gradeMap[itemId],
+            evValue: 0.9 * p.default + 0.1 * p.painted,
+        }));
 
     const files = {};
     const casePrices = {};
@@ -101,8 +99,13 @@ const main = () => {
         console.error(`❌ ${PRICE_MAP_FILE} missing. Run buildPriceMap.js first.`);
         process.exit(1);
     }
+    if (!fs.existsSync(GRADE_MAP_FILE)) {
+        console.error(`❌ ${GRADE_MAP_FILE} missing. Run fetchMarketGrades.js first.`);
+        process.exit(1);
+    }
     const priceMap = JSON.parse(fs.readFileSync(PRICE_MAP_FILE, 'utf8'));
-    const { files, casePrices, summary } = buildCases(priceMap);
+    const gradeMap = JSON.parse(fs.readFileSync(GRADE_MAP_FILE, 'utf8'));
+    const { files, casePrices, summary } = buildCases(priceMap, gradeMap);
 
     for (const [name, content] of Object.entries(files)) {
         fs.writeFileSync(path.join(CASES_DIR, name), content);

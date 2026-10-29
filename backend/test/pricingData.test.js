@@ -10,7 +10,7 @@ const readCaseFile = (name) => fs.readFileSync(path.join(CASES_DIR, name), 'utf8
 
 const generated = () => {
     const { buildCases } = require('../scripts/generateCases');
-    return buildCases(readJson('priceMap.json'));
+    return buildCases(readJson('priceMap.json'), readJson('gradeMap.json'));
 };
 
 test('the committed priceMap.json regenerates exactly the committed case files', () => {
@@ -48,4 +48,17 @@ test('the committed gradeMap.json gives every item of the image tree a known gra
 
     assert.deepStrictEqual(Object.keys(grades).sort(), enumerateItems().map((item) => String(item.itemId)).sort());
     assert.deepStrictEqual(Object.entries(grades).filter(([, grade]) => !GRADES.includes(grade)), []);
+});
+
+test('every item of every committed case sits in the bucket of its grade, weighted as a CS2 weapon case', () => {
+    const allCases = require('../src/constant/cases/_all');
+    const grades = readJson('gradeMap.json');
+
+    for (const [id, caseDef] of Object.entries(allCases)) {
+        const weights = Object.fromEntries(Object.entries(caseDef.CHANCES).filter(([key]) => key !== 'COLORS'));
+        assert.deepStrictEqual(weights, {
+            milspec: 7992, restricted: 1598, classified: 320, covert: 64, special: 26,
+        }, id);
+        caseDef.ITEMS.forEach((item) => assert.strictEqual(grades[item.id], item.rare, `${id}: item ${item.id}`));
+    }
 });

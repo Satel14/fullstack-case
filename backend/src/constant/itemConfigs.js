@@ -1,14 +1,4 @@
 module.exports = {
-    CHANCES: {
-        'Consumer Grade': 79.92,
-        'Industrial Grade': 15.98,
-        'Mil-Spec': 3.2,
-        'Restricted': 0.64,
-        'Classified': 0.32,
-        'Covert': 0.26,
-        'Contraband': 0.001,
-    },
-    
     TYPE: {
         KNIFE: 'knife',
         PISTOLS: 'pistols',
@@ -28,23 +18,11 @@ module.exports = {
     },
     
     GRADE: {
-        CONSUMER_GRADE: 'Consumer Grade',
-        INDUSTRIAL_GRADE: 'Industrial Grade',
-        MIL_SPEC: 'Mil-Spec',
-        RESTRICTED: 'Restricted',
-        CLASSIFIED: 'Classified',
-        COVERT: 'Covert',
-        CONTRABAND: 'Contraband'
-    },
-    
-    GRADE_COLORS: {
-        'Consumer Grade': '#B0C3D9',
-        'Industrial Grade': '#5E98D9',
-        'Mil-Spec': '#4B69FF',
-        'Restricted': '#8847FF',
-        'Classified': '#D32CE6',
-        'Covert': '#EB4B4B',
-        'Contraband': '#E4AE39'
+        MILSPEC: 'milspec',
+        RESTRICTED: 'restricted',
+        CLASSIFIED: 'classified',
+        COVERT: 'covert',
+        SPECIAL: 'special',
     },
     
     COLORS: {
