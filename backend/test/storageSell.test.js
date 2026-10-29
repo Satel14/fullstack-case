@@ -214,16 +214,24 @@ test('a sale that fails for an unexpected reason is logged once', async () => {
     assert.match(outcome.lines[0], /history table gone/);
 });
 
-test('an item whose catalogue row is gone is refused as missing, not answered as a server error', async () => {
-    const sequelize = await resetTestDatabase();
-    activeSequelize = sequelize;
-    await seedSellableItem(sequelize);
-    await sequelize.query('DELETE FROM items WHERE itemId = 707');
-    const MESSAGE = require('../src/constant/responseMessages');
+const UNSELLABLE = [
+    ['catalogue row is gone', 'DELETE FROM items WHERE itemId = 707'],
+    ['price row is gone', 'DELETE FROM insider_prices'],
+    ['payout is under a kopiyka', "UPDATE insider_prices SET pricesInCredits = JSON_QUOTE('{\"default\":0.004,\"painted\":150}')"],
+];
 
-    const { result, lines } = await withLogsCaught(() => sell(1));
+for (const [what, change] of UNSELLABLE) {
+    test(`an item in the inventory whose ${what} is refused as unsellable, not as missing or a server error`, async () => {
+        const sequelize = await resetTestDatabase();
+        activeSequelize = sequelize;
+        await seedSellableItem(sequelize);
+        await sequelize.query(change);
+        const MESSAGE = require('../src/constant/responseMessages');
 
-    assert.deepStrictEqual([result.code, result.payload.message], [422, MESSAGE.ITEM.NOT_EXIST]);
-    assert.deepStrictEqual(lines, []);
-    assert.strictEqual((await sellOutcome(sequelize)).status, 'inventory');
-});
+        const { result, lines } = await withLogsCaught(() => sell(1));
+
+        assert.deepStrictEqual([result.code, result.payload.message], [422, MESSAGE.ITEM.NO_PRICE]);
+        assert.deepStrictEqual(lines, []);
+        assert.deepStrictEqual(await sellOutcome(sequelize), { balance: 0, status: 'inventory', history: [] });
+    });
+}

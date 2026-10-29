@@ -155,16 +155,21 @@ module.exports.sellItemByStorageId = async (req, res) => {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
         }
 
-        const getItemInfo = await ItemService.getItemById(storageItem.storage_itemId);
+        const getItemInfo = await ItemService.getItemById(storageItem.storage_itemId).catch((e) => {
+            if (e.message === MESSAGE.ITEM.NOT_EXIST) {
+                return null;
+            }
+            throw e;
+        });
 
         if (!getItemInfo) {
-            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
+            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NO_PRICE });
         }
 
         const prices = await InsiderService.getItemPrice(getItemInfo.item_name);
 
         if (!prices || !prices.pricesInCredits) {
-            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
+            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NO_PRICE });
         }
 
         let price = typeof prices.pricesInCredits === 'string'
@@ -188,7 +193,7 @@ module.exports.sellItemByStorageId = async (req, res) => {
         const actualPrice = salePayout(price, parseFloat(rate));
 
         if (!actualPrice) {
-            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
+            return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NO_PRICE });
         }
 
         await sequelize.transaction(async (t) => {
