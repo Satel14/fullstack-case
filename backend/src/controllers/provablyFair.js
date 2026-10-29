@@ -6,6 +6,7 @@ const RedisManager = require('../redis/manager');
 const allCases = require('../constant/cases/_all');
 const MESSAGE = require('../constant/responseMessages');
 const { answerFailure } = require('../helpers/failure');
+const { withinChars } = require('../helpers/charLength');
 
 const ITEM_HASH = 'item_hash';
 
@@ -105,7 +106,7 @@ module.exports.verify = async (req, res) => {
 module.exports.validate = (method) => {
     switch (method) {
         case 'setClientSeed':
-            return [body('clientSeed').exists().isString().trim().isLength({ min: 1, max: 64 })];
+            return [body('clientSeed').exists().isString().trim().custom(withinChars(1, 64))];
         case 'verify':
             return [
                 body('serverSeed').exists().isString().isLength({ min: 1, max: 128 }),

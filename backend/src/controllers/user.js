@@ -8,6 +8,7 @@ const sequelize = require('../config/db');
 const { answerFailure } = require('../helpers/failure');
 const { isAcceptableAvatar } = require('../helpers/avatar');
 const { MYSQL_INT_MAX } = require('../constant/mysql');
+const { withinChars } = require('../helpers/charLength');
 
 const RECEIVE_INFO_MAX = 1000;
 
@@ -194,7 +195,7 @@ module.exports.validate = (method) => {
         }
         case 'editUser': {
             return [
-                body('user_receiveInfo').optional({ nullable: true }).isString().bail().isLength({ max: RECEIVE_INFO_MAX }),
+                body('user_receiveInfo').optional({ nullable: true }).isString().bail().custom(withinChars(0, RECEIVE_INFO_MAX)),
             ];
         }
         case 'sendMoneyForUserByUserId': {

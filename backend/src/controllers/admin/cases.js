@@ -5,6 +5,7 @@ const MESSAGE = require('../../constant/responseMessages');
 const sequelize = require('../../config/db');
 const { CASE_ID_PATTERN } = require('../../constant/caseId');
 const { MYSQL_INT_MAX } = require('../../constant/mysql');
+const { withinChars } = require('../../helpers/charLength');
 
 const snapshot = (row) => ({
     price: row.case_price,
@@ -92,8 +93,8 @@ module.exports.validate = (method) => {
                 body('case_discount').optional({ nullable: true }).not().isArray().isInt({ min: 0, max: MYSQL_INT_MAX }),
                 body('case_published').optional().not().isArray().isInt({ min: 0, max: 1 }),
                 body('case_openLimit').optional().not().isArray().isInt({ min: -1, max: MYSQL_INT_MAX }),
-                body('case_title').optional().isString().isLength({ max: 255 }),
-                body('reason').optional().isString().isLength({ max: 255 }),
+                body('case_title').optional().isString().custom(withinChars(0, 255)),
+                body('reason').optional().isString().custom(withinChars(0, 255)),
             ];
         }
         default:

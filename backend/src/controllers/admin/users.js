@@ -6,6 +6,7 @@ const MESSAGE = require('../../constant/responseMessages');
 const sequelize = require('../../config/db');
 const BalanceHistoryService = require('../../services/balanceHistory');
 const BalanceHistoryEnum = require('../../constant/enums/balance').BalanceHistory;
+const { withinChars } = require('../../helpers/charLength');
 
 const ASSIGNABLE_ROLES = [ROLES.BANNED, ROLES.BANNED_CHAT, ROLES.NORMAL, ROLES.YOUTUBER, ROLES.STREAMER, ROLES.FAMOUS];
 const BALANCE_DELTA_LIMIT = 1000000;
@@ -156,14 +157,14 @@ module.exports.validate = (method) => {
             return [
                 param('id').exists().isInt(),
                 body('role').exists().not().isArray().isInt(),
-                body('reason').optional().isString().isLength({ max: 255 }),
+                body('reason').optional().isString().custom(withinChars(0, 255)),
             ];
         }
         case 'adjustBalance': {
             return [
                 param('id').exists().isInt(),
                 body('delta').exists().not().isArray().isFloat({ min: -BALANCE_DELTA_LIMIT, max: BALANCE_DELTA_LIMIT }),
-                body('reason').exists().isString().isLength({ min: 1, max: 255 }),
+                body('reason').exists().isString().custom(withinChars(1, 255)),
             ];
         }
         default:

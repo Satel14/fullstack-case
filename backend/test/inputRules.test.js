@@ -326,3 +326,45 @@ test('the rule tests leave the console and the stubbed services as they found th
     assert.strictEqual(StorageService.getStorageById, untouched.getStorageById);
     assert.strictEqual(UserService.editUser, untouched.editUser);
 });
+
+const PFService = require('../src/services/provablyFair');
+const PFController = require('../src/controllers/provablyFair');
+
+const VS16 = '\uFE0F';
+
+const setClientSeed = async (clientSeed) => respond(
+    PFController.setClientSeed,
+    await checkedBy(PFController.validate('setClientSeed'), { body: { clientSeed }, user: player }),
+);
+
+test('a client seed is measured in characters the way MySQL counts them, so padding cannot slip past its limit', async () => {
+    const stored = [];
+    const crafted = [`a${VS16.repeat(300)}`, `c${VS16.repeat(64)}`, `x\n[auth] administrator signed in${VS16.repeat(300)}`];
+    const fitting = [`b${VS16.repeat(63)}`, '😀'.repeat(64), 'lucky'];
+
+    const { result: answers, logged } = await quietly(
+        [[PFService, 'setClientSeed', async (userId, seed) => { stored.push(seed); return { clientSeed: seed }; }]],
+        () => Promise.all([...crafted, ...fitting].map(setClientSeed)),
+    );
+
+    assert.deepStrictEqual(answers.map(({ code }) => code), [422, 422, 422, 200, 200, 200]);
+    assert.deepStrictEqual(stored.sort(), [...fitting].sort());
+    assert.deepStrictEqual(logged, []);
+});
+
+test('admin reasons and case titles are measured in characters the way MySQL counts them', async () => {
+    const AdminUsersController = require('../src/controllers/admin/users');
+    const padded = `r${VS16.repeat(300)}`;
+    const passes = async (rules, req) => validationResult(await checkedBy(rules, req)).isEmpty();
+
+    assert.deepStrictEqual(await Promise.all([
+        passes(AdminUsersController.validate('setRole'), { params: { id: '2' }, body: { role: 1, reason: padded } }),
+        passes(AdminUsersController.validate('adjustBalance'), { params: { id: '2' }, body: { delta: 5, reason: padded } }),
+        passes(AdminCasesController.validate('update'), { params: { id: 'dust2' }, body: { case_title: padded } }),
+        passes(AdminCasesController.validate('update'), { params: { id: 'dust2' }, body: { case_price: 1, reason: padded } }),
+    ]), [false, false, false, false]);
+    assert.deepStrictEqual(await Promise.all([
+        passes(AdminUsersController.validate('adjustBalance'), { params: { id: '2' }, body: { delta: 5, reason: `r${VS16.repeat(254)}` } }),
+        passes(AdminCasesController.validate('update'), { params: { id: 'dust2' }, body: { case_title: 'Dust 2' } }),
+    ]), [true, true]);
+});
