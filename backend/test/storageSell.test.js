@@ -169,23 +169,26 @@ test('a sale locks the player before the item, so it cannot deadlock with a prof
     assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
 });
 
-const withErrorsCaught = async (fn) => {
+const withLogsCaught = async (fn) => {
     const lines = [];
+    const originalLog = console.log;
     const originalError = console.error;
+    console.log = (...args) => { lines.push(args.map(String).join(' ')); };
     console.error = (...args) => { lines.push(args.map(String).join(' ')); };
     try {
         return { result: await fn(), lines };
     } finally {
+        console.log = originalLog;
         console.error = originalError;
     }
 };
 
-test('selling an item twice at once sells it once and logs no error for the refused sale', async () => {
+test('selling an item twice at once sells it once and leaves nothing in the log', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
     await seedSellableItem(sequelize);
 
-    const { result, lines } = await withErrorsCaught(() => Promise.all([sell(1), sell(1), sell(1)]));
+    const { result, lines } = await withLogsCaught(() => Promise.all([sell(1), sell(1), sell(1)]));
 
     assert.deepStrictEqual(result.map(({ code }) => code).sort(), [200, 422, 422]);
     assert.deepStrictEqual(lines, []);
@@ -201,7 +204,7 @@ test('a sale that fails for an unexpected reason is logged once', async () => {
     BalanceHistoryService.addBalanceChange = async () => { throw new Error('history table gone'); };
     let outcome;
     try {
-        outcome = await withErrorsCaught(() => sell(1));
+        outcome = await withLogsCaught(() => sell(1));
     } finally {
         BalanceHistoryService.addBalanceChange = original;
     }
@@ -209,4 +212,18 @@ test('a sale that fails for an unexpected reason is logged once', async () => {
     assert.strictEqual(outcome.result.code, 500);
     assert.strictEqual(outcome.lines.length, 1);
     assert.match(outcome.lines[0], /history table gone/);
+});
+
+test('an item whose catalogue row is gone is refused as missing, not answered as a server error', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedSellableItem(sequelize);
+    await sequelize.query('DELETE FROM items WHERE itemId = 707');
+    const MESSAGE = require('../src/constant/responseMessages');
+
+    const { result, lines } = await withLogsCaught(() => sell(1));
+
+    assert.deepStrictEqual([result.code, result.payload.message], [422, MESSAGE.ITEM.NOT_EXIST]);
+    assert.deepStrictEqual(lines, []);
+    assert.strictEqual((await sellOutcome(sequelize)).status, 'inventory');
 });

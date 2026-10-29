@@ -149,34 +149,23 @@ module.exports.sellItemByStorageId = async (req, res) => {
         const { user_id } = req.user.profile;
         const { id } = req.params;
 
-        console.log('[SELL] Attempting to sell storageId:', id, 'for userId:', user_id);
-
         const storageItem = await StorageService.getStorageInfoById(user_id, id, 'inventory');
 
         if (!storageItem) {
-            console.log('[SELL] Storage item not found');
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
         }
-
-        console.log('[SELL] storageItem found, itemId:', storageItem.storage_itemId, 'color:', storageItem.storage_color);
 
         const getItemInfo = await ItemService.getItemById(storageItem.storage_itemId);
 
         if (!getItemInfo) {
-            console.log('[SELL] Item info not found for itemId:', storageItem.storage_itemId);
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
         }
-
-        console.log('[SELL] Item name:', getItemInfo.item_name);
 
         const prices = await InsiderService.getItemPrice(getItemInfo.item_name);
 
         if (!prices || !prices.pricesInCredits) {
-            console.log('[SELL] No prices found for item:', getItemInfo.item_name, 'prices:', prices);
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
         }
-
-        console.log('[SELL] Raw pricesInCredits:', prices.pricesInCredits);
 
         let price = typeof prices.pricesInCredits === 'string'
             ? jsonParser(prices.pricesInCredits)
@@ -186,28 +175,17 @@ module.exports.sellItemByStorageId = async (req, res) => {
         color = color.toLowerCase();
         color = color.replace(' ', '');
 
-        console.log('[SELL] Parsed prices:', price, 'color key:', color, 'price for color:', price[color]);
-
         price = price[color];
 
         if (!price) {
-            console.log('[SELL] No price for color:', color);
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NO_PRICE });
         }
 
         const rateModule = await ModuleService.findModuleById(UAH_CREDIT_RATE_MODULE);
 
-        if (!rateModule) {
-            console.log('[SELL] uah-credit-rate module not found, using rate', DEFAULT_UAH_CREDIT_RATE);
-        }
-
         const rate = rateModule ? rateModule.extraData : DEFAULT_UAH_CREDIT_RATE;
 
-        console.log('[SELL] Rate extraData:', rate);
-
         const actualPrice = salePayout(price, parseFloat(rate));
-
-        console.log('[SELL] actualPrice:', actualPrice);
 
         if (!actualPrice) {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
@@ -235,14 +213,12 @@ module.exports.sellItemByStorageId = async (req, res) => {
 
         const actualBalance = await UserService.getBalanceByUserId(user_id);
 
-        console.log('[SELL] Success! New balance:', actualBalance);
-
         return res.status(200).json({ status: 200, balance: actualBalance });
     } catch (e) {
         if (e && e.code === 'NOT_SELLABLE') {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_EXIST });
         }
-        return answerFailure(res, e, { status: 500, where: 'storage.sell' });
+        return answerFailure(res, e, { status: 422, where: 'storage.sell' });
     }
 };
 
