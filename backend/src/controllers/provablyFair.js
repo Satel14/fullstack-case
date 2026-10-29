@@ -110,9 +110,9 @@ module.exports.validate = (method) => {
             return [
                 body('serverSeed').exists().isString().isLength({ min: 1, max: 128 }),
                 body('clientSeed').exists().isString().isLength({ min: 1, max: 64 }),
-                body('nonce').exists().isInt({ min: 0 }),
-                body('openId').optional({ nullable: true }).isInt({ min: 1 }),
-                body('caseId').if(body('openId').not().exists()).exists().isString(),
+                body('nonce').exists().not().isArray().isInt({ min: 0 }),
+                body('openId').optional({ nullable: true }).not().isArray().isInt({ min: 1 }),
+                body('caseId').if(body('openId').not().exists({ checkNull: true })).exists().isString(),
             ];
         default:
             return [];

@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
+const { validationResult } = require('express-validator');
 const fs = require('fs');
 const path = require('path');
 require('./helpers/db');
@@ -177,6 +178,39 @@ REFUSALS.forEach(({
         assert.strictEqual(result.code, code, JSON.stringify(result.payload));
         assert.strictEqual(result.payload.message, message);
     });
+});
+
+const checkedByTheRules = async (fields) => {
+    const req = drawCheck(fields);
+    await Promise.all(require('../src/controllers/provablyFair').validate('verify').map((rule) => rule.run(req)));
+    return req;
+};
+
+const CRAFTED_DRAW_CHECKS = [
+    ['an empty stored-open id and a case id that is not text', { openId: null, caseId: { toString: 1 } }],
+    ['a stored-open id given as a list', { openId: ['5', '\n[auth] administrator signed in\n'] }],
+    ['a nonce given as a list', { nonce: ['1', { toString: 1 }], caseId: 'dust2' }],
+];
+
+CRAFTED_DRAW_CHECKS.forEach(([name, fields]) => {
+    test(`a draw check with ${name} is refused as bad input and logs nothing`, async () => {
+        const { result, logged } = await withStubs([], async () => respond(
+            require('../src/controllers/provablyFair').verify,
+            await checkedByTheRules(fields),
+        ));
+
+        assert.strictEqual(result.code, 422, JSON.stringify(result.payload));
+        assert.strictEqual(result.payload.message, MESSAGE.VALIDATOR.ERROR);
+        assert.deepStrictEqual(logged, []);
+    });
+});
+
+test('the draw check rules still pass a current-case check, a stored-open check and an empty stored-open id beside a case', async () => {
+    const passing = [{ caseId: 'dust2' }, { openId: 5 }, { openId: '5' }, { openId: null, caseId: 'dust2' }, { nonce: 3, caseId: 'dust2' }];
+
+    const verdicts = await Promise.all(passing.map(async (fields) => validationResult(await checkedByTheRules(fields)).isEmpty()));
+
+    assert.deepStrictEqual(verdicts, passing.map(() => true));
 });
 
 const SOURCE_ROOT = path.join(__dirname, '..', 'src');
