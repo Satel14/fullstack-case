@@ -72,6 +72,11 @@ module.exports.openCaseById = async (req, res) => {
             }
         }
 
+        if (!Object.hasOwn(allCases, id)) {
+            console.log('[DEBUG] Case has no definition in code');
+            return res.status(422).json({ status: 422, message: MESSAGE.CASE.NOT_EXIST });
+        }
+
         const priceCase = caseById.case_discount || caseById.case_price;
         const balance = await UserService.getBalanceByUserId(user_id);
         console.log('[DEBUG] price:', priceCase, 'balance:', balance);

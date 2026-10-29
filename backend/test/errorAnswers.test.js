@@ -147,6 +147,15 @@ const REFUSALS = [
         message: MESSAGE.CASE.NOT_EXIST,
     },
     {
+        name: 'opening a case that is in the database but not in the code',
+        stubs: [[Case, 'findOne', async () => ({
+            case_id: 'ghost-case', case_published: 1, case_openLimit: -1, case_openedCount: 0, case_price: 10, case_discount: 0,
+        })]],
+        call: () => respond(require('../src/controllers/case').openCaseById, { body: { id: 'ghost-case', count: 1 }, user: player }),
+        code: 422,
+        message: MESSAGE.CASE.NOT_EXIST,
+    },
+    {
         name: 'an unknown case page',
         stubs: [[Case, 'findOne', nothing]],
         call: () => respond(require('../src/controllers/case').getCaseById, { params: { id: 'nope' } }),
