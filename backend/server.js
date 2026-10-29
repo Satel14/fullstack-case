@@ -1,23 +1,8 @@
-const express = require('express')
-const bodyParser = require('body-parser')
-const cors = require('cors')
-const compression = require('compression')
-const routes = require('./routes')
+const { buildApp } = require('./app')
 const config = require('./src/config/serverConfig')
-const { parseTrustProxy } = require('./src/config/trustProxy')
-const { jsonBody } = require('./src/middleware/jsonBody')
-const answerUnhandled = require('./src/middleware/answerUnhandled')
 
 require("dotenv").config();
-const app = express();
-app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
-app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(jsonBody);
-
-app.use(compression());
-routes(app);
-app.use(answerUnhandled);
+const app = buildApp();
 require('./src/models/article');
 require('./src/models/balanceHistory');
 require('./src/models/bonusHistory');

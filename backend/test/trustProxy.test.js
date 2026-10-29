@@ -83,8 +83,8 @@ test('TRUST_PROXY as an address list trusts only that proxy', () => {
     assert.strictEqual(clientIp(setting, '172.18.0.6', '203.0.113.7'), '172.18.0.6');
 });
 
-test('server.js takes trust proxy from TRUST_PROXY', () => {
-    const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+test('the app takes trust proxy from TRUST_PROXY', () => {
+    const source = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
     assert.match(source, /require\(['"]\.\/src\/config\/trustProxy['"]\)/);
     assert.match(source, /app\.set\(\s*['"]trust proxy['"]\s*,\s*parseTrustProxy\(\s*process\.env\.TRUST_PROXY\s*\)\s*\)/);
     assert.doesNotMatch(source, /app\.set\(\s*['"]trust proxy['"]\s*,\s*(\d+|true)\s*\)/);

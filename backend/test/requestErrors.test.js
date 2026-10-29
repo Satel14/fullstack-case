@@ -16,6 +16,7 @@ const sequelize = require('../src/config/db');
 const PFController = require('../src/controllers/provablyFair');
 const { jsonBody, withoutPrototypeKeys } = require('../src/middleware/jsonBody');
 const answerUnhandled = require('../src/middleware/answerUnhandled');
+const { buildApp } = require('../app');
 
 test.before(() => {
     assertSafeTestDatabase();
@@ -33,6 +34,16 @@ const serve = async (mount) => {
     app.use(answerUnhandled);
     const server = await new Promise((resolve) => {
         const s = app.listen(0, '127.0.0.1', () => resolve(s));
+    });
+    return {
+        url: `http://127.0.0.1:${server.address().port}`,
+        close: () => new Promise((resolve) => { server.close(resolve); }),
+    };
+};
+
+const serveTheApp = async () => {
+    const server = await new Promise((resolve) => {
+        const s = buildApp().listen(0, '127.0.0.1', () => resolve(s));
     });
     return {
         url: `http://127.0.0.1:${server.address().port}`,
@@ -154,15 +165,58 @@ test('an error that comes after the answer has started is left to Express', () =
     assert.deepStrictEqual(passedOn, [failure]);
 });
 
-test('server.js parses JSON through jsonBody before the routes and answers what they leave through answerUnhandled after them', () => {
-    const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
-    const at = (snippet) => {
-        const index = source.indexOf(snippet);
-        assert.notStrictEqual(index, -1, `server.js has no ${snippet}`);
-        return index;
-    };
+test('the app reads query strings flat, so no object reaches the rules through them', async () => {
+    const stand = await serveTheApp();
+    try {
+        const { result, logged } = await withLogsCaught(() => Promise.all([
+            send(`${stand.url}/api/user/abc?id[toString]=`, undefined, 'GET'),
+            send(`${stand.url}/api/storage/count/abc?id[valueOf]=&id[toString]=`, undefined, 'GET'),
+        ]));
 
-    assert.doesNotMatch(source, /bodyParser\.json\(/);
-    assert.ok(at('app.use(jsonBody)') < at('routes(app)'));
-    assert.ok(at('routes(app)') < at('app.use(answerUnhandled)'));
+        assert.deepStrictEqual(result.map(({ status, payload }) => [status, payload.message]), [
+            [422, MESSAGE.VALIDATOR.ERROR],
+            [422, MESSAGE.VALIDATOR.ERROR],
+        ]);
+        assert.deepStrictEqual(logged, []);
+    } finally {
+        await stand.close();
+    }
+});
+
+test('the app reads no form-encoded bodies, so the draw check refuses one as missing fields', async () => {
+    const stand = await serveTheApp();
+    try {
+        const { result, logged } = await withLogsCaught(async () => {
+            const response = await fetch(`${stand.url}/api/provably-fair/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'serverSeed=a&clientSeed=b&nonce[toString]=&caseId=dust2',
+            });
+            return { status: response.status, payload: await response.json() };
+        });
+
+        assert.deepStrictEqual([result.status, result.payload.message], [422, MESSAGE.VALIDATOR.ERROR]);
+        assert.deepStrictEqual(logged, []);
+    } finally {
+        await stand.close();
+    }
+});
+
+test('the app answers a malformed JSON body as JSON and keeps it out of the log', async () => {
+    const stand = await serveTheApp();
+    try {
+        const { result, logged } = await withLogsCaught(() => send(`${stand.url}/api/provably-fair/verify`, '{"a":\n[auth] administrator signed in}'));
+
+        assert.deepStrictEqual([result.status, result.payload], [400, { status: 400, message: MESSAGE.SERVER.BAD_REQUEST }]);
+        assert.deepStrictEqual(logged, []);
+    } finally {
+        await stand.close();
+    }
+});
+
+test('server.js builds its app only through buildApp', () => {
+    const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+
+    assert.match(source, /const app = buildApp\(\);/);
+    assert.doesNotMatch(source, /express\(\)|bodyParser|app\.use\(/);
 });
