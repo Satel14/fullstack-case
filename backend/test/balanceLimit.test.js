@@ -140,11 +140,13 @@ test('two deposits that would pass the largest balance together: one goes throug
             assert.strictEqual(await waitingTransactions(sequelize, holder, 2), 2, 'the deposits never waited for the player row together');
         } finally {
             await holder.commit();
+            await deposits;
         }
         return deposits;
     });
 
     assert.deepStrictEqual(results.map((r) => r.code).sort(), [200, 422]);
+    assert.strictEqual(results.find((r) => r.code === 422).payload.message, MESSAGE.USER.BALANCE_LIMIT);
     assert.deepStrictEqual(await ledger(sequelize), { balances: [['player', '9999999949.99']], history: 1 });
     assert.deepStrictEqual(lines, []);
 });
