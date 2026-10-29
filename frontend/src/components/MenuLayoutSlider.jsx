@@ -63,6 +63,11 @@ class MenuLayoutSlider extends React.Component {
                 icon: <BarChartOutlined />,
             },
             {
+                key: 'provablyfair',
+                label: <Link to="/provably-fair">{t('provablyFair.title')}</Link>,
+                icon: <SafetyCertificateOutlined />,
+            },
+            {
                 key: 'bonus',
                 label: <Link to="/bonus">{t('menu.bonus')}</Link>,
                 icon: <GiftOutlined />,
@@ -78,12 +83,6 @@ class MenuLayoutSlider extends React.Component {
                 icon: <TagsOutlined />,
             },
         ];
-
-        defaultMenu.splice(2, 0, {
-            key: 'provablyfair',
-            label: <Link to="/provably-fair">{t('provablyFair.title')}</Link>,
-            icon: <SafetyCertificateOutlined />,
-        });
 
         if (isAuthorized(user)) {
             defaultMenu.splice(3, 0, {
