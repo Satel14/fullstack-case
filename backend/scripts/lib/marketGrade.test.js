@@ -1,7 +1,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('fs');
+const path = require('path');
 const {
-    GRADES, gradeOfColor, skinKey, gradesBySkin, gradeItems, serializeGradeMap, withGrades,
+    GRADES, GRADE_BY_COLOR, gradeOfColor, skinKey, gradesBySkin, gradeItems, serializeGradeMap, withGrades,
 } = require('./marketGrade');
 const ITEMS = require('../../src/constant/itemConfigs');
 
@@ -93,4 +95,15 @@ test('gradesBySkin settles a tied vote on the rarer grade, whatever the listing 
 
     assert.equal(gradesBySkin(listings).get('AK-47 | Redline'), 'classified');
     assert.equal(gradesBySkin([...listings].reverse()).get('AK-47 | Redline'), 'classified');
+});
+
+test('the frontend ranks the same grades in the same order and gives them the market colours', () => {
+    const source = fs.readFileSync(path.join(__dirname, '../../../frontend/src/helpers/grade.js'), 'utf8');
+    const frontendGrades = JSON.parse(source.match(/export const GRADES = (\[[^\]]*\]);/)[1].replace(/'/g, '"'));
+    const frontendColors = Object.fromEntries([...source.matchAll(/(\w+): '#([0-9a-f]{6})'/g)].map(([, grade, color]) => [grade, color]));
+
+    assert.deepEqual(frontendGrades, GRADES);
+    for (const [color, grade] of Object.entries(GRADE_BY_COLOR)) {
+        assert.equal(frontendColors[grade], color, grade);
+    }
 });
