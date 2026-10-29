@@ -194,7 +194,7 @@ const REFUSALS = [
         name: 'opening an unknown case',
         stubs: [[Case, 'findOne', nothing]],
         call: () => respond(require('../src/controllers/case').openCaseById, { body: { id: 'nope', count: 1 }, user: player }),
-        code: 400,
+        code: 422,
         message: MESSAGE.CASE.NOT_EXIST,
     },
     {
@@ -273,7 +273,7 @@ REFUSALS.forEach(({
         assert.strictEqual(result.code, code, JSON.stringify(result.payload));
         assert.strictEqual(result.payload.message, message);
         Object.entries(fields).forEach(([field, value]) => assert.deepStrictEqual(result.payload[field], value, field));
-        assert.deepStrictEqual(loggedLines(logged).filter((line) => !line.startsWith('[DEBUG]')), []);
+        assert.deepStrictEqual(loggedLines(logged), []);
     });
 });
 

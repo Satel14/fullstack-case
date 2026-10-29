@@ -34,7 +34,7 @@ module.exports.openCaseById = async (req, res) => {
         const { id } = req.body;
         const count = parseInt(req.body.count, 10);
         console.log('[DEBUG] user_id:', user_id, 'case_id:', id, 'count:', count);
-        const caseById = await CaseService.getCaseById(id);
+        const caseById = await CaseService.findCaseById(id);
 
         if (!caseById) {
             console.log('[DEBUG] Case not found');
