@@ -52,22 +52,6 @@ function getItemColor(color) {
     return itemColors[color];
 }
 
-const itemDropChance = (caseCollection, item) => {
-    if (!caseCollection || !caseCollection.CHANCES || !caseCollection.ITEMS || !item) {
-        return null;
-    }
-    const { CHANCES, ITEMS } = caseCollection;
-    const total = Object.keys(CHANCES)
-        .filter((k) => k !== 'COLORS')
-        .reduce((a, k) => a + CHANCES[k], 0);
-    const bucketWeight = CHANCES[item.rare];
-    if (!bucketWeight || !total) {
-        return null;
-    }
-    const inBucket = ITEMS.filter((i) => i.rare === item.rare).length || 1;
-    return (bucketWeight / total / inBucket) * 100;
-};
-
 export {
-    renderItemProp, itemCaption, getColor, getItemColor, itemDropChance,
+    renderItemProp, itemCaption, getColor, getItemColor,
 };
