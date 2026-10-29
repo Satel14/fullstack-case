@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, act } from '@testing-library/react';
+import { render, act, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { createStore, combineReducers } from 'redux';
@@ -138,4 +138,26 @@ test('each drop in the feed wears its item grade colour', async () => {
 
     expect([...document.querySelectorAll('.headersecond.third .casepage-itemlist_item')].map((tile) => tile.style.getPropertyValue('--rarity')))
         .toEqual(['#f7c948', '#8847ff']);
+});
+
+test('each drop in the feed is a link named by its item, its grade and, when painted, its colour', async () => {
+    getStorageLastItemsWithUserInfo.mockResolvedValue({
+        status: 200,
+        data: [{ ...drop(1), storage_color: 'painted' }, { ...drop(2), storage_color: 'default' }, { ...drop(3), storage_color: 'default' }],
+        itemList: {},
+    });
+    render(
+        <Provider store={createStore(combineReducers({
+            itemCache: (state = { 10: { item_name: 'Knife', item_grade: 'special' }, 20: { item_name: 'Rifle', item_grade: 'restricted' } }) => state,
+        }))}
+        >
+            <MemoryRouter>
+                <HeaderThird />
+            </MemoryRouter>
+        </Provider>,
+    );
+
+    expect(await screen.findByRole('link', { name: 'Knife, grade.special, item.colors.painted' })).toHaveAttribute('href', '/profile/1');
+    expect(screen.getByRole('link', { name: 'Rifle, grade.restricted' })).toHaveAttribute('href', '/profile/2');
+    expect(screen.getByRole('link', { name: 'item.placeholder' })).toHaveAttribute('href', '/profile/3');
 });

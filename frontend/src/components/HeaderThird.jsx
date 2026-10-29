@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import map from 'lodash/map';
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
-import { renderItemProp } from '../helpers/Case';
-import { gradeStyle } from '../helpers/grade';
+import { colorName, renderItemProp } from '../helpers/Case';
+import { gradeName, gradeStyle } from '../helpers/grade';
 import ItemColor from './mini/ItemColor';
 import { getStorageLastItemsWithUserInfo } from '../api/all/storage';
 import { itemInfoFetch, addItemsToCache } from '../store/actions/itemCache';
@@ -87,6 +87,16 @@ class HeaderThird extends React.Component {
         return '';
     }
 
+    dropLabel(item) {
+        const { t } = this.props;
+        const info = this.getShortInfoItem(item.storage_itemId);
+        return [
+            (info && info.item_name) || t('item.placeholder', { id: String(item.storage_itemId) }),
+            gradeName(info && info.item_grade, t),
+            item.storage_color !== 'default' && colorName(item.storage_color, t),
+        ].filter(Boolean).join(', ');
+    }
+
     render() {
         const { storageLast } = this.state;
 
@@ -107,7 +117,7 @@ class HeaderThird extends React.Component {
                                     this.props.t,
                                 )}
                             >
-                                <Link to={`/profile/${item.storage_userId}`}>
+                                <Link to={`/profile/${item.storage_userId}`} aria-label={this.dropLabel(item)}>
                                     <div
                                         className="casepage-itemlist_item"
                                         style={{
