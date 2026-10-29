@@ -1,5 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert');
+const fs = require('fs');
+const path = require('path');
+const express = require('express');
 const { validationResult } = require('express-validator');
 const { assertSafeTestDatabase } = require('./helpers/db');
 
@@ -155,4 +158,65 @@ test('the admin case update rules still pass what the admin panel sends', async 
     ];
 
     assert.deepStrictEqual(await Promise.all(sent.map(passesAdminCaseRules)), sent.map(() => true));
+});
+
+const BACKEND = path.join(__dirname, '..');
+
+const jsFiles = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+        return jsFiles(full);
+    }
+    return entry.name.endsWith('.js') ? [full] : [];
+});
+
+const definedRuleSets = () => jsFiles(path.join(BACKEND, 'src', 'controllers')).flatMap((file) => {
+    const source = fs.readFileSync(file, 'utf8');
+    const start = source.indexOf('module.exports.validate');
+    if (start === -1) {
+        return [];
+    }
+    return [...source.slice(start).matchAll(/case\s+['"]([^'"]+)['"]\s*:/g)]
+        .map(([, key]) => `${path.relative(BACKEND, file)}#${key}`);
+});
+
+const mountedRuleSets = () => [...jsFiles(path.join(BACKEND, 'src', 'routes')), path.join(BACKEND, 'routes.js')].flatMap((file) => {
+    const source = fs.readFileSync(file, 'utf8');
+    const controllers = new Map([...source.matchAll(/const\s+(\w+)\s*=\s*require\(['"]([^'"]*controllers[^'"]*)['"]\)/g)]
+        .map(([, name, request]) => [name, path.relative(BACKEND, require.resolve(path.resolve(path.dirname(file), request)))]));
+    return [...source.matchAll(/(\w+)\.validate\(['"]([^'"]+)['"]\)/g)]
+        .filter(([, name]) => controllers.has(name))
+        .map(([, name, key]) => `${controllers.get(name)}#${key}`);
+});
+
+test('every rule set a controller defines is mounted on a route', () => {
+    const mounted = new Set(mountedRuleSets());
+    const defined = definedRuleSets();
+
+    assert.ok(defined.length >= 25, `only ${defined.length} rule sets found`);
+    assert.deepStrictEqual(defined.filter((ruleSet) => !mounted.has(ruleSet)), []);
+});
+
+const routesOf = (stack) => stack.flatMap((layer) => {
+    if (layer.route) {
+        return [layer.route];
+    }
+    if (layer.handle && layer.handle.stack) {
+        return routesOf(layer.handle.stack);
+    }
+    return [];
+});
+
+test('every route that checks its input with rules reads their verdict in its handler', () => {
+    const app = express();
+    require('../routes')(app);
+    const ruled = routesOf(app._router.stack)
+        .filter((route) => route.stack.some(({ handle }) => typeof handle.run === 'function' && handle.builder));
+
+    const unread = ruled
+        .filter((route) => !String(route.stack[route.stack.length - 1].handle).includes('validationResult(req)'))
+        .map((route) => `${Object.keys(route.methods).join(',').toUpperCase()} ${route.path}`);
+
+    assert.ok(ruled.length >= 20, `only ${ruled.length} routes with rules found`);
+    assert.deepStrictEqual(unread, []);
 });
