@@ -263,9 +263,9 @@ test('no rule set lets a list through for a body field it checks, headed by any 
             if (takenAlone.length === 0) {
                 untried.push(`${ruleSet} ${field}`);
             }
-            await Promise.all(takenAlone.map(async (head) => {
-                if (!(await refuses(field, [head, 'x']))) {
-                    leaks.push(`${ruleSet} ${field} [${head}, …]`);
+            await Promise.all(takenAlone.flatMap((head) => [[head, 'x'], [head, head]]).map(async (list) => {
+                if (!(await refuses(field, list))) {
+                    leaks.push(`${ruleSet} ${field} ${JSON.stringify(list)}`);
                 }
             }));
         }));
