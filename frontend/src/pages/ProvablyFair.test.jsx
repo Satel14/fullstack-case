@@ -114,6 +114,8 @@ test('seeds that cannot be loaded leave an error with a retry instead of a blank
 
     expect(await screen.findByText('provablyFair.loadFailed')).toBeInTheDocument();
     expect(api.getOpenHistory).not.toHaveBeenCalled();
+    expect(screen.getByText('provablyFair.algorithm')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'provablyFair.compute' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /provablyFair\.retry/ }));
 
@@ -615,4 +617,14 @@ test('a guest who signs in from the page comes back to it', async () => {
     fireEvent.click(screen.getByRole('button', { name: 'menu.login' }));
 
     expect(await screen.findByText('login page {"goBack":true}')).toBeInTheDocument();
+});
+
+test('while a player\'s seeds load, the algorithm and the calculator are already there', async () => {
+    api.getProvablyFairState.mockReturnValue(new Promise(() => {}));
+    renderPage();
+
+    expect(screen.getByText('provablyFair.algorithm')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'provablyFair.compute' })).toBeInTheDocument();
+    expect(screen.queryByText('provablyFair.currentSeeds')).toBeNull();
+    expect(screen.queryByText('provablyFair.loginCta')).toBeNull();
 });
