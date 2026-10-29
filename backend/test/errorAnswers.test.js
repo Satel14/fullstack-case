@@ -3,7 +3,7 @@ const assert = require('node:assert');
 const { validationResult } = require('express-validator');
 const fs = require('fs');
 const path = require('path');
-require('./helpers/db');
+const { assertSafeTestDatabase } = require('./helpers/db');
 
 const managerPath = require.resolve('../src/redis/manager');
 require.cache[managerPath] = {
@@ -23,6 +23,10 @@ const CaseOpenRecord = require('../src/models/caseOpenRecord');
 const RedisManager = require('../src/redis/manager');
 
 const OUTAGE = 'connect ECONNREFUSED 10.20.30.40:3306';
+
+test.before(() => {
+    assertSafeTestDatabase();
+});
 
 test.after(async () => {
     await sequelize.close();
@@ -212,6 +216,41 @@ const REFUSALS = [
         message: MESSAGE.CASE.NOT_EXIST,
     },
     {
+        name: 'a transfer to a player who does not exist',
+        stubs: [[User, 'findByPk', nothing]],
+        call: () => respond(
+            require('../src/controllers/user').sendMoneyForUserByUserId,
+            { body: { userIdTo: 2, money_count: 10 }, user: player },
+        ),
+        code: 422,
+        message: MESSAGE.USER.NOT_EXIST,
+        fields: { sended: false },
+    },
+    {
+        name: 'an admin role change of a player who does not exist',
+        stubs: [[User, 'findByPk', nothing]],
+        call: () => respond(require('../src/controllers/admin/users').setRole, { params: { id: '2' }, body: { role: 1 }, user: player }),
+        code: 422,
+        message: MESSAGE.ADMIN.USER_NOT_EXIST,
+    },
+    {
+        name: 'an admin balance correction of a player who does not exist',
+        stubs: [[User, 'findByPk', nothing]],
+        call: () => respond(
+            require('../src/controllers/admin/users').adjustBalance,
+            { params: { id: '2' }, body: { delta: 10, reason: 'gift' }, user: player },
+        ),
+        code: 422,
+        message: MESSAGE.ADMIN.USER_NOT_EXIST,
+    },
+    {
+        name: 'an admin update of a case that does not exist',
+        stubs: [[Case, 'findOne', nothing]],
+        call: () => respond(require('../src/controllers/admin/cases').update, { params: { id: 'nope' }, body: { case_price: 10 }, user: player }),
+        code: 422,
+        message: MESSAGE.CASE.NOT_EXIST,
+    },
+    {
         name: 'a profile edit of a field players may not change',
         stubs: [],
         call: () => respond(require('../src/controllers/user').editUser, { body: { user_balance: 1000 }, user: player }),
@@ -221,14 +260,27 @@ const REFUSALS = [
 ];
 
 REFUSALS.forEach(({
-    name, stubs, call, code, message,
+    name, stubs, call, code, message, fields = {},
 }) => {
     test(`a deliberate refusal for ${name} keeps its status and its text`, async () => {
-        const { result } = await withStubs(stubs, call);
+        const { result, logged } = await withStubs(stubs, call);
 
         assert.strictEqual(result.code, code, JSON.stringify(result.payload));
         assert.strictEqual(result.payload.message, message);
+        Object.entries(fields).forEach(([field, value]) => assert.deepStrictEqual(result.payload[field], value, field));
+        assert.deepStrictEqual(loggedLines(logged).filter((line) => !line.startsWith('[DEBUG]')), []);
     });
+});
+
+test('a Top leaderboard player whose row is gone is listed without a profile, not as a failure', async () => {
+    const { result, logged } = await withStubs(
+        [[Storage, 'findAll', async () => [{ storage_userId: 1, count: 2 }]], [User, 'findAll', async () => []]],
+        () => respond(require('../src/controllers/storage').getStorageTop, { params: { limit: '10', offset: '0' } }),
+    );
+
+    assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
+    assert.deepStrictEqual(result.payload.data, [{ userId: 1, count: 2, info: null }]);
+    assert.deepStrictEqual(loggedLines(logged), []);
 });
 
 const checkedByTheRules = async (fields) => {
