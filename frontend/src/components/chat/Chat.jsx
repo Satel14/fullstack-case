@@ -35,7 +35,7 @@ function TextFilter(raw) {
         value = value.replace(
             /https:\/\/(?:youtu\.be\/|(?:[a-z]{2,3}\.)?youtube\.com\/watch(?:\?|#)v=)([\w-]{11}).*/gi,
 
-            '<iframe width="500" height="282"  frameborder="0" src="http://www.youtube.com/embed/$1"/>',
+            '<iframe width="500" height="282" frameborder="0" referrerpolicy="origin" src="https://www.youtube.com/embed/$1"/>',
         );
 
         smiles.forEach((smile) => {

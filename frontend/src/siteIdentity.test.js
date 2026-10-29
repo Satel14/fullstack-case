@@ -73,8 +73,8 @@ test('no component writes Ukrainian text itself, so every text has an English ve
     expect(ukrainian).toEqual([]);
 });
 
-test('the page sends no referrer, and says so before it loads anything, so a link token never travels in a Referer', () => {
-    const policy = indexHtml.search(/<meta name="referrer" content="no-referrer"\s*\/?>/);
+test('the page sends only its origin as referrer, and says so before it loads anything, so no path or token travels in a Referer', () => {
+    const policy = indexHtml.search(/<meta name="referrer" content="strict-origin"\s*\/?>/);
 
     expect(policy).toBeGreaterThan(-1);
     const firstLoad = indexHtml.search(/<(link|script)\b/);

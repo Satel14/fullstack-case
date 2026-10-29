@@ -295,3 +295,13 @@ test('hiding the chat closes the popups it opened, so they do not stay over the 
     rerender(chatAt(false));
     expect(openModal()).toBeNull();
 });
+
+test('a YouTube link in a message plays over https and tells YouTube the site it is embedded on', () => {
+    serverReplies({ ok: true });
+
+    send('look https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+
+    const video = document.querySelector('.chat-messages iframe');
+    expect(video).toHaveAttribute('src', 'https://www.youtube.com/embed/dQw4w9WgXcQ');
+    expect(video).toHaveAttribute('referrerpolicy', 'origin');
+});
