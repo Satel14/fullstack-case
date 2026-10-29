@@ -155,14 +155,14 @@ module.exports.validate = (method) => {
         case 'setRole': {
             return [
                 param('id').exists().isInt(),
-                body('role').exists().isInt(),
+                body('role').exists().not().isArray().isInt(),
                 body('reason').optional().isString().isLength({ max: 255 }),
             ];
         }
         case 'adjustBalance': {
             return [
                 param('id').exists().isInt(),
-                body('delta').exists().isFloat({ min: -BALANCE_DELTA_LIMIT, max: BALANCE_DELTA_LIMIT }),
+                body('delta').exists().not().isArray().isFloat({ min: -BALANCE_DELTA_LIMIT, max: BALANCE_DELTA_LIMIT }),
                 body('reason').exists().isString().isLength({ min: 1, max: 255 }),
             ];
         }

@@ -197,13 +197,13 @@ module.exports.validate = (method) => {
         }
         case 'sendMoneyForUserByUserId': {
             return [
-                body('userIdTo').exists().isNumeric(),
-                body('money_count').exists().isInt({ gt: 0 }),
+                body('userIdTo').exists().not().isArray().isNumeric(),
+                body('money_count').exists().not().isArray().isInt({ gt: 0 }),
             ];
         }
         case 'depositBalance': {
             return [
-                body('amount').exists().isInt({ gt: 0, lt: 100001 }),
+                body('amount').exists().not().isArray().isInt({ gt: 0, lt: 100001 }),
             ];
         }
         default:

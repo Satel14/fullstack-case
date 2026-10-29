@@ -235,6 +235,26 @@ const routesOf = (stack) => stack.flatMap((layer) => {
     return [];
 });
 
+test('no rule set lets a list through for a body field it checks', async () => {
+    const leaks = [];
+    await Promise.all(definedRuleSets().map(async (ruleSet) => {
+        const [file, key] = ruleSet.split('#');
+        const rules = require(path.join(BACKEND, file)).validate(key);
+        const bodyFields = rules
+            .map((rule) => rule.builder.build())
+            .filter(({ locations }) => locations.length === 1 && locations[0] === 'body')
+            .flatMap(({ fields }) => fields);
+        await Promise.all(bodyFields.map(async (field) => {
+            const req = await checkedBy(rules, { body: { [field]: ['1', '2'] }, params: {}, query: {} });
+            if (!validationResult(req).array().some((error) => error.param === field)) {
+                leaks.push(`${ruleSet} ${field}`);
+            }
+        }));
+    }));
+
+    assert.deepStrictEqual(leaks.sort(), []);
+});
+
 test('every route that checks its input with rules reads their verdict in its handler', () => {
     const app = express();
     require('../routes')(app);
