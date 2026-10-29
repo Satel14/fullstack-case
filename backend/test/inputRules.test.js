@@ -188,21 +188,38 @@ const definedRuleSets = () => jsFiles(path.join(BACKEND, 'src', 'controllers')).
         .map(([, key]) => `${path.relative(BACKEND, file)}#${key}`);
 });
 
-const mountedRuleSets = () => [...jsFiles(path.join(BACKEND, 'src', 'routes')), path.join(BACKEND, 'routes.js')].flatMap((file) => {
-    const source = fs.readFileSync(file, 'utf8');
+const withoutComments = (source) => source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+
+const routeFiles = () => [...jsFiles(path.join(BACKEND, 'src', 'routes')), path.join(BACKEND, 'routes.js')];
+
+const ruleSetMounts = () => routeFiles().map((file) => {
+    const source = withoutComments(fs.readFileSync(file, 'utf8'));
     const controllers = new Map([...source.matchAll(/const\s+(\w+)\s*=\s*require\(['"]([^'"]*controllers[^'"]*)['"]\)/g)]
         .map(([, name, request]) => [name, path.relative(BACKEND, require.resolve(path.resolve(path.dirname(file), request)))]));
-    return [...source.matchAll(/(\w+)\.validate\(['"]([^'"]+)['"]\)/g)]
-        .filter(([, name]) => controllers.has(name))
-        .map(([, name, key]) => `${controllers.get(name)}#${key}`);
+    const mounts = [...source.matchAll(/(\w+)\.validate\(['"]([^'"]+)['"]\)\s*,\s*(\w+)\.(\w+)\s*\)/g)]
+        .map(([, owner, key, handlerOwner, handler]) => ({
+            ruleSet: `${controllers.get(owner)}#${key}`,
+            handler: `${controllers.get(handlerOwner)}#${handler}`,
+        }));
+    return { file: path.relative(BACKEND, file), calls: (source.match(/\.validate\(/g) || []).length, mounts };
 });
 
 test('every rule set a controller defines is mounted on a route', () => {
-    const mounted = new Set(mountedRuleSets());
+    const mounted = new Set(ruleSetMounts().flatMap(({ mounts }) => mounts.map(({ ruleSet }) => ruleSet)));
     const defined = definedRuleSets();
 
     assert.ok(defined.length >= 25, `only ${defined.length} rule sets found`);
     assert.deepStrictEqual(defined.filter((ruleSet) => !mounted.has(ruleSet)), []);
+});
+
+test('every rule set sits right before the handler it is named after', () => {
+    const files = ruleSetMounts();
+
+    assert.deepStrictEqual(files.filter(({ calls, mounts }) => calls !== mounts.length).map(({ file }) => file), []);
+    assert.deepStrictEqual(
+        files.flatMap(({ mounts }) => mounts).filter(({ ruleSet, handler }) => ruleSet !== handler),
+        [],
+    );
 });
 
 const routesOf = (stack) => stack.flatMap((layer) => {
