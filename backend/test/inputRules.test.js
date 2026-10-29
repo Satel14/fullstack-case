@@ -241,7 +241,9 @@ const routesOf = (stack) => stack.flatMap((layer) => {
     return [];
 });
 
-test('no rule set lets a list through for a body field it checks', async () => {
+const LIST_HEADS = ['1', '100', '0', '-1', 'abc', '2147483647'];
+
+test('no rule set lets a list through for a body field it checks, whatever the list starts with', async () => {
     const leaks = [];
     await Promise.all(definedRuleSets().map(async (ruleSet) => {
         const [file, key] = ruleSet.split('#');
@@ -250,12 +252,14 @@ test('no rule set lets a list through for a body field it checks', async () => {
             .map((rule) => rule.builder.build())
             .filter(({ locations }) => locations.length === 1 && locations[0] === 'body')
             .flatMap(({ fields }) => fields);
-        await Promise.all(bodyFields.map(async (field) => {
-            const req = await checkedBy(rules, { body: { [field]: ['1', '2'] }, params: {}, query: {} });
-            if (!validationResult(req).array().some((error) => error.param === field)) {
-                leaks.push(`${ruleSet} ${field}`);
+        await Promise.all(bodyFields.flatMap((field) => LIST_HEADS.map(async (head) => {
+            const req = await checkedBy(rules, { body: { [field]: [head, 'x'] }, params: {}, query: {} });
+            const refused = validationResult(req).array()
+                .some((error) => error.param === field && error.location === 'body');
+            if (!refused) {
+                leaks.push(`${ruleSet} ${field} [${head}, …]`);
             }
-        }));
+        })));
     }));
 
     assert.deepStrictEqual(leaks.sort(), []);
