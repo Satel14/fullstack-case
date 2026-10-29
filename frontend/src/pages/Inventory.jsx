@@ -16,6 +16,7 @@ import Loader from '../components/mini/Loader';
 import LoadError from '../components/mini/LoadError';
 import { gradeStyle } from '../helpers/grade';
 import { itemCaption } from '../helpers/Case';
+import { clientErrorMessage } from '../helpers/serverMessage';
 
 const { TabPane } = Tabs;
 
@@ -170,8 +171,9 @@ const Inventory = ({
                 openNotification('error', t('openCase.sellErrorTitle'), res.message || t('openCase.sellErrorText'));
             }
         } catch (e) {
-            if (e && e.error === UNSELLABLE && e.message) {
-                openNotification('error', t('openCase.sellErrorTitle'), e.message);
+            const reason = clientErrorMessage(e);
+            if (reason) {
+                openNotification('error', t('openCase.sellErrorTitle'), reason);
             } else {
                 openNotification('error', t('common.error'), t('openCase.sellErrorText'));
             }
@@ -187,7 +189,7 @@ const Inventory = ({
                 // eslint-disable-next-line no-await-in-loop
                 const res = await sellItemByStorageId(rows[i].storage_id);
                 if (res.status === UNSELLABLE) {
-                    refused.add(rows[i].storage_id);
+                    refused.set(rows[i].storage_id, res.message || null);
                 } else if (res.status !== 200) {
                     return { failure: res.status || true, soldCount };
                 } else {
@@ -198,7 +200,7 @@ const Inventory = ({
                 if (!e || e.error !== UNSELLABLE) {
                     return { failure: (e && e.error) || true, soldCount };
                 }
-                refused.add(rows[i].storage_id);
+                refused.set(rows[i].storage_id, e.message || null);
             }
         }
         return { failure: null, soldCount };
@@ -206,7 +208,7 @@ const Inventory = ({
 
     const sellEverything = async () => {
         const attempted = new Set();
-        const refused = new Set();
+        const refused = new Map();
         let total = 0;
         let offset = 0;
         let left = new Map();
@@ -236,8 +238,12 @@ const Inventory = ({
                 if (rows.length === PAGE_LIMIT) {
                     offset += PAGE_LIMIT;
                 } else {
-                    const stuck = [...left.keys()].some((id) => !refused.has(id));
-                    return { failure: stuck || null, total, refused: left.size };
+                    const ids = [...left.keys()];
+                    const stuck = ids.some((id) => !refused.has(id));
+                    const reasons = [...new Set(ids.map((id) => refused.get(id)).filter(Boolean))];
+                    return {
+                        failure: stuck || null, total, refused: left.size, reasons,
+                    };
                 }
             }
         }
@@ -248,14 +254,16 @@ const Inventory = ({
             return;
         }
         setSelling(true);
-        const { failure, total, refused } = await sellEverything();
+        const {
+            failure, total, refused, reasons,
+        } = await sellEverything();
         setSelling(false);
         if (failure === TOO_MANY_REQUESTS) {
             openNotification('error', t('openCase.sellErrorTitle'), t('inventory.sellAllRateLimited', { sold: total }));
         } else if (failure) {
             openNotification('error', t('openCase.sellErrorTitle'), t('inventory.sellAllStopped', { sold: total }));
         } else if (refused) {
-            openNotification('error', t('openCase.sellErrorTitle'), t('inventory.sellAllSkipped', { sold: total, skipped: refused }));
+            openNotification('error', t('openCase.sellErrorTitle'), [t('inventory.sellAllSkipped', { sold: total, skipped: refused }), ...reasons].join(' '));
         } else {
             openNotification('success', t('openCase.allSold'));
         }

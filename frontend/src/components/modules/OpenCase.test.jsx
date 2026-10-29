@@ -503,3 +503,15 @@ test('the banner over the roulette names the winner\'s grade beside the wear', a
     await waitFor(() => expect(document.querySelector('.opencase-titleitem span')).not.toBeNull());
     expect(document.querySelector('.opencase-titleitem span').textContent).toBe('grade.classified · Field-Tested rifles');
 });
+
+test('a won item the server refuses to sell says why, on its own and in "sell all"', async () => {
+    sellItemByStorageId.mockRejectedValue({ error: 422, message: 'balance is full' });
+    await openTwoAndShowResult();
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.sellFor \{"price":25\}/ }));
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'openCase.sellErrorTitle', 'balance is full'));
+
+    openNotification.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.sellAllFor/ }));
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'openCase.sellErrorTitle', 'balance is full'));
+});

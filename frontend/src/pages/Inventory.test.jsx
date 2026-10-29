@@ -268,7 +268,7 @@ test('sell all skips an item the server refuses to sell and sells everything els
     await clickSellAll();
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
-        'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped {"sold":4,"skipped":1}',
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped {"sold":4,"skipped":1} no price',
     ));
     expect(server.inventory.map((r) => r.storage_id)).toEqual([3]);
     expect(sellItemByStorageId).toHaveBeenCalledTimes(5);
@@ -294,6 +294,29 @@ test('an item that left the inventory during sell all is not reported as skipped
     expect(server.inventory).toHaveLength(0);
 });
 
+test('sell all names the reasons of the items still in the inventory, each once', async () => {
+    server.inventory = inventoryRows(6);
+    const sell = sellItemByStorageId.getMockImplementation();
+    const reasons = { 2: 'no price', 4: 'balance is full', 5: 'no price' };
+    sellItemByStorageId.mockImplementation((storageId) => {
+        if (storageId === 3) {
+            server.inventory = server.inventory.filter((r) => r.storage_id !== 3);
+            return Promise.reject({ error: 422, message: 'gone' });
+        }
+        if (reasons[storageId]) {
+            return Promise.reject({ error: 422, message: reasons[storageId] });
+        }
+        return sell(storageId);
+    });
+    renderInventory();
+
+    await clickSellAll();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped {"sold":2,"skipped":3} no price balance is full',
+    ));
+});
+
 test('sell all reaches sellable items behind a full page of items the server refuses', async () => {
     server.inventory = inventoryRows(205);
     const sell = sellItemByStorageId.getMockImplementation();
@@ -305,7 +328,7 @@ test('sell all reaches sellable items behind a full page of items the server ref
     await clickSellAll();
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
-        'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped {"sold":5,"skipped":200}',
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped {"sold":5,"skipped":200} no price',
     ));
     expect(server.inventory).toHaveLength(200);
 });
@@ -331,7 +354,7 @@ test('a row that shifts onto the next page during sell all is not counted twice'
     await clickSellAll();
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
-        'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped {"sold":0,"skipped":205}',
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllSkipped {"sold":0,"skipped":205} no price',
     ));
 });
 
@@ -495,4 +518,15 @@ test('a single sale the server refuses shows its reason, and a failed request st
 
     fireEvent.click(first);
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'openCase.sellErrorText'));
+});
+
+test('a single sale stopped by the limiter shows its reason too', async () => {
+    server.inventory = inventoryRows(2);
+    sellItemByStorageId.mockImplementationOnce(() => Promise.reject({ error: 429, message: 'too many sales' }));
+    renderInventory();
+
+    const [first] = await screen.findAllByRole('button', { name: /openCase.sellFor/ });
+    fireEvent.click(first);
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'openCase.sellErrorTitle', 'too many sales'));
 });

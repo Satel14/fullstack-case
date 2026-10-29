@@ -21,6 +21,7 @@ import CasePrice from '../mini/CasePrice';
 import { computeItemPriceUAH } from '../../helpers/price';
 import { gradeStyle } from '../../helpers/grade';
 import { itemCaption } from '../../helpers/Case';
+import { clientErrorMessage } from '../../helpers/serverMessage';
 
 const delayAnimation = 4;
 
@@ -307,7 +308,7 @@ class OpenCase extends Component {
 
     async sellItem(storageId, i, notify = true, generation = this.resultGeneration) {
         if (this.pendingSells.has(storageId)) {
-            return false;
+            return { sold: false, reason: null };
         }
         const isCurrent = () => generation === this.resultGeneration;
         if (isCurrent()) {
@@ -316,6 +317,7 @@ class OpenCase extends Component {
         }
 
         let sold = false;
+        let reason = null;
         try {
             const result = await sellItemByStorageId(storageId);
             if (result.status === 200) {
@@ -326,11 +328,17 @@ class OpenCase extends Component {
                     openNotification('success', this.props.t('openCase.sold'));
                 }
                 sold = true;
-            } else if (notify) {
-                openNotification('error', this.props.t('openCase.sellErrorTitle'), result.message || this.props.t('openCase.sellErrorText'));
+            } else {
+                reason = result.message || null;
+                if (notify) {
+                    openNotification('error', this.props.t('openCase.sellErrorTitle'), reason || this.props.t('openCase.sellErrorText'));
+                }
             }
         } catch (e) {
-            if (notify) {
+            reason = clientErrorMessage(e);
+            if (notify && reason) {
+                openNotification('error', this.props.t('openCase.sellErrorTitle'), reason);
+            } else if (notify) {
                 openNotification('error', this.props.t('common.error'), this.props.t('openCase.sellErrorText'));
             }
         }
@@ -345,7 +353,7 @@ class OpenCase extends Component {
                 }),
             }));
         }
-        return sold;
+        return { sold, reason };
     }
 
     async open() {
@@ -532,15 +540,19 @@ class OpenCase extends Component {
         this.setState({ sellingAll: true });
 
         let failed = 0;
+        const reasons = new Set();
         for (let index = 0; index < winner.length; index++) {
             if (sold.includes(index)) {
                 // eslint-disable-next-line no-continue
                 continue;
             }
             // eslint-disable-next-line no-await-in-loop
-            const ok = await this.sellItem(winner[index].storageId, index, false, generation);
-            if (!ok) {
+            const outcome = await this.sellItem(winner[index].storageId, index, false, generation);
+            if (!outcome.sold) {
                 failed += 1;
+                if (outcome.reason) {
+                    reasons.add(outcome.reason);
+                }
             }
         }
 
@@ -549,7 +561,7 @@ class OpenCase extends Component {
             this.safeSetState({ sellingAll: false });
         }
         if (failed) {
-            openNotification('error', this.props.t('openCase.sellErrorTitle'), this.props.t('openCase.sellErrorText'));
+            openNotification('error', this.props.t('openCase.sellErrorTitle'), [...reasons].join(' ') || this.props.t('openCase.sellErrorText'));
         } else {
             openNotification('success', this.props.t('openCase.allSold'));
         }
