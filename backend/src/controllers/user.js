@@ -7,6 +7,7 @@ const BalanceHistoryEnum = require('../constant/enums/balance').BalanceHistory;
 const sequelize = require('../config/db');
 const { answerFailure } = require('../helpers/failure');
 const { isAcceptableAvatar } = require('../helpers/avatar');
+const { MYSQL_INT_MAX } = require('../constant/mysql');
 
 const RECEIVE_INFO_MAX = 1000;
 
@@ -52,9 +53,10 @@ module.exports.sendMoneyForUserByUserId = async (req, res) => {
         if (!recipient) {
             return res.status(422).json({ status: 422, sended: false, message: MESSAGE.USER.NOT_EXIST });
         }
+        const recipientId = recipient.user_id;
 
         await sequelize.transaction(async (t) => {
-            await UserService.lockUsersInIdOrder([user_id, userIdTo], t);
+            await UserService.lockUsersInIdOrder([user_id, recipientId], t);
             const lockedBalance = await UserService.getBalanceByUserId(user_id, {
                 transaction: t,
                 lock: t.LOCK.UPDATE,
@@ -66,14 +68,14 @@ module.exports.sendMoneyForUserByUserId = async (req, res) => {
                 throw err;
             }
 
-            await UserService.incrementBalance(amount, userIdTo, { transaction: t });
+            await UserService.incrementBalance(amount, recipientId, { transaction: t });
             await UserService.decrementBalance(amount, user_id, { transaction: t });
 
             await BalanceHistoryService.addBalanceChange(
-                user_id, BalanceHistoryEnum.SEND_MONEY, -amount, 'Sended to userid ' + userIdTo, { transaction: t }
+                user_id, BalanceHistoryEnum.SEND_MONEY, -amount, 'Sended to userid ' + recipientId, { transaction: t }
             );
             await BalanceHistoryService.addBalanceChange(
-                userIdTo, BalanceHistoryEnum.SEND_MONEY, +amount, 'Sended from userid ' + user_id, { transaction: t }
+                recipientId, BalanceHistoryEnum.SEND_MONEY, +amount, 'Sended from userid ' + user_id, { transaction: t }
             );
         });
 
@@ -197,7 +199,7 @@ module.exports.validate = (method) => {
         }
         case 'sendMoneyForUserByUserId': {
             return [
-                body('userIdTo').exists().not().isArray().isNumeric(),
+                body('userIdTo').exists().not().isArray().isInt({ min: 1, max: MYSQL_INT_MAX, allow_leading_zeroes: false }),
                 body('money_count').exists().not().isArray().isInt({ gt: 0 }),
             ];
         }
