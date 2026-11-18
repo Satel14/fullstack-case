@@ -8,6 +8,7 @@ import {
 } from 'antd';
 import { connect } from 'react-redux';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { redeemPromocodeFetch } from '../store/actions/user';
 import openNotification from '../components/mini/openNotification';
 
@@ -60,8 +61,7 @@ const Promocode = (props) => {
                         placement="top"
                         title={t('promocode.tooltip')}
                     >
-                        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                        <a href="#" onClick={(e) => e.preventDefault()}>{t('promocode.whereToGet')}</a>
+                        <Link to="/article/8">{t('promocode.whereToGet')}</Link>
                     </Tooltip>
                 )}
             >

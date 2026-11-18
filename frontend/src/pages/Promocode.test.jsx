@@ -5,6 +5,7 @@ import {
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
+import { MemoryRouter, Route } from 'react-router-dom';
 import Promocode from './Promocode';
 
 jest.mock('react-i18next', () => ({
@@ -20,8 +21,6 @@ afterEach(() => {
     window.history.replaceState(null, '', '/');
 });
 
-const pendingNavigation = () => new Promise((resolve) => { setTimeout(resolve, 20); });
-
 const { redeemPromocodeFetch } = require('../store/actions/user');
 
 test('a promocode cannot be sent again while the first request is in flight', async () => {
@@ -30,7 +29,7 @@ test('a promocode cannot be sent again while the first request is in flight', as
     const store = createStore(() => ({}), applyMiddleware(thunk));
     render(
         <Provider store={store}>
-            <Promocode />
+            <MemoryRouter><Promocode /></MemoryRouter>
         </Provider>,
     );
     const input = screen.getByPlaceholderText('promocode.placeholder');
@@ -50,20 +49,20 @@ test('a promocode cannot be sent again while the first request is in flight', as
     await waitFor(() => expect(redeemPromocodeFetch).toHaveBeenCalledTimes(2));
 });
 
-test('the "where to get" hint does not navigate or jump to the top when clicked', async () => {
-    window.history.replaceState(null, '', '/promocode#form');
+test('the "where to get" hint opens the credits article through the router', () => {
     const store = createStore(() => ({}), applyMiddleware(thunk));
     render(
         <Provider store={store}>
-            <Promocode />
+            <MemoryRouter initialEntries={['/promocode#form']}>
+                <Promocode />
+                <Route render={({ location }) => <output data-testid="destination">{location.pathname}{location.hash}</output>} />
+            </MemoryRouter>
         </Provider>,
     );
     const hint = screen.getByText('promocode.whereToGet');
 
     expect(hint.tagName).toBe('A');
-    expect(hint).toHaveAttribute('href', '#');
-    expect(fireEvent.click(hint)).toBe(false);
-    await pendingNavigation();
-    expect(window.location.hash).toBe('#form');
-    expect(window.location.pathname).toBe('/promocode');
+    expect(hint).toHaveAttribute('href', '/article/8');
+    fireEvent.click(hint);
+    expect(screen.getByTestId('destination')).toHaveTextContent(/^\/article\/8$/);
 });
