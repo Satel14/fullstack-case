@@ -225,3 +225,25 @@ test('nginx passes the site\'s files through without spooling them to a temporar
 test('the backend comes back after a clean stop of the Docker daemon, which now exits 0', () => {
     assert.match(composeService('backend'), /^ {4}restart: unless-stopped$/m);
 });
+
+test('Redis keeps the chat history on a volume across restarts', () => {
+    const redis = composeService('redis');
+    assert.match(redis, /--appendonly yes/);
+    assert.match(redis, /^ {6}- redis-data:\/data$/m);
+    assert.match(redis, /^ {4}restart: unless-stopped$/m);
+    assert.match(compose, /^volumes:\n(?: {2}\S+:\n)*? {2}redis-data:$/m);
+});
+
+test('a backup service dumps the database every day into ./backups and keeps the newest ones', () => {
+    const backup = composeService('mysql-backup');
+    assert.match(backup, /^ {4}image: mysql:8\.0$/m);
+    assert.match(backup, /^ {4}entrypoint: \["sh", "\/ops\/mysql-backup\.sh"\]$/m);
+    assert.match(backup, /^ {6}- \.\/ops\/mysql-backup\.sh:\/ops\/mysql-backup\.sh:ro$/m);
+    assert.match(backup, /^ {6}- \.\/backups:\/backups$/m);
+    assert.match(backup, /^ {6}MYSQL_ROOT_PASSWORD: \$\{MYSQL_ROOT_PASSWORD:-root\}$/m);
+    assert.match(backup, /^ {6}BACKUP_KEEP: \$\{BACKUP_KEEP:-14\}$/m);
+    assert.match(backup, /condition: service_healthy/);
+    assert.doesNotMatch(backup, /ports:/);
+    assert.match(read('.gitignore'), /^\/backups\/$/m);
+    assert.match(read('.env.example'), /^BACKUP_KEEP=14$/m);
+});
