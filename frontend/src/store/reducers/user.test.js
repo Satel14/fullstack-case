@@ -10,6 +10,7 @@ const profile = {
     user_avatar: 4,
     user_receiveInfo: 'https://steamcommunity.com/id/player',
     user_role: 10,
+    user_mutedUntil: '2099-01-01T00:00:00.000Z',
 };
 
 test('signing in maps every API field without changing the previous state or converting values', () => {
@@ -24,6 +25,7 @@ test('signing in maps every API field without changing the previous state or con
         avatar: 4,
         receiveInfo: 'https://steamcommunity.com/id/player',
         role: 10,
+        mutedUntil: '2099-01-01T00:00:00.000Z',
         sessionChecked: true,
     });
     expect(previous.id).toBeNull();

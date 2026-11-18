@@ -27,6 +27,7 @@ const usersReducer = (prevState = initialState, action) => {
                 [userFields.user_avatar]: action.payloadUser.user_avatar,
                 [userFields.user_receiveInfo]: action.payloadUser.user_receiveInfo,
                 [userFields.user_role]: action.payloadUser.user_role,
+                [userFields.user_mutedUntil]: action.payloadUser.user_mutedUntil,
             };
         case LOGOUT_USER:
             return {

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { message, Button, Popover } from 'antd';
+import {
+ message, Button, Popover, Modal,
+} from 'antd';
 import { useTranslation } from 'react-i18next';
 import { CommentOutlined, SendOutlined, SmileOutlined } from '@ant-design/icons';
 import UserOnline from './UserOnline';
@@ -10,6 +12,7 @@ import socket, { connectSocket } from '../../api/all/ws';
 import smiles from '../../data/smiles';
 import { Rules } from './Rules';
 import { getProfileFetch } from '../../store/actions/user';
+import { removeChatMessage } from '../../api/all/admin';
 
 const MAX_MESSAGE_LENGTH = 500;
 const ACK_TIMEOUT_MS = 8000;
@@ -73,7 +76,7 @@ const CHAT_REJECTIONS = {
 };
 
 export const Chat = ({ user, enabled, refreshProfile }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const {
  id, avatar, role, login,
 } = user;
@@ -82,7 +85,24 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
     const [msg, setMsg] = useState('');
     const [visible, setVisible] = useState(false);
     const [rosterOpen, setRosterOpen] = useState(false);
+    const [removeTarget, setRemoveTarget] = useState(null);
+    const [removing, setRemoving] = useState(false);
+    const [muteState, setMuteState] = useState({ mutedUntil: user.mutedUntil, offset: 0 });
+    const [now, setNow] = useState(Date.now());
     const pendingAck = useRef(null);
+    const removedIds = useRef(new Set());
+    const muted = new Date(muteState.mutedUntil).getTime() > now + muteState.offset;
+
+    useEffect(() => {
+        setMuteState({ mutedUntil: user.mutedUntil, offset: 0 });
+        setNow(Date.now());
+    }, [user.id, user.mutedUntil]);
+
+    useEffect(() => {
+        if (!muted) return undefined;
+        const timer = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(timer);
+    }, [muted]);
 
     useEffect(() => () => clearTimeout(pendingAck.current), []);
 
@@ -90,8 +110,9 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
         if (!enabled) {
             setVisible(false);
             setRosterOpen(false);
+            if (!removing) setRemoveTarget(null);
         }
-    }, [enabled]);
+    }, [enabled, removing]);
 
     useEffect(() => {
         if (!enabled) {
@@ -105,16 +126,27 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             }
         };
         const onChatMessages = (chatOld) => {
-            setChat(chatOld);
+            setChat(chatOld.filter((el) => !removedIds.current.has(el.messageId)));
         };
         const onUsersOn = (list) => {
             setUsersOnline(list);
+        };
+        const onRemoved = ({ messageId }) => {
+            removedIds.current.add(messageId);
+            setChat((current) => current.filter((el) => el.messageId !== messageId));
+            setRemoveTarget((current) => (current && current.messageId === messageId ? null : current));
+        };
+        const onMute = ({ mutedUntil, serverNow }) => {
+            setMuteState({ mutedUntil, offset: serverNow ? new Date(serverNow).getTime() - Date.now() : 0 });
+            setNow(Date.now());
         };
 
         connectSocket();
         socket.on('connect', onConnect);
         socket.on('chat messages', onChatMessages);
         socket.on('user-on', onUsersOn);
+        socket.on('chat message removed', onRemoved);
+        socket.on('chat mute', onMute);
         if (socket.connected) {
             socket.emit('user connected');
         }
@@ -125,6 +157,8 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             socket.off('connect', onConnect);
             socket.off('chat messages', onChatMessages);
             socket.off('user-on', onUsersOn);
+            socket.off('chat message removed', onRemoved);
+            socket.off('chat mute', onMute);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [enabled]);
@@ -152,8 +186,9 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             return undefined;
         }
         const handler = ({
-            login: author, msg: text, id: authorId, avatar: authorAvatar, time,
+            login: author, msg: text, id: authorId, avatar: authorAvatar, time, messageId,
         }) => {
+            if (removedIds.current.has(messageId)) return;
             setChat((prev) => {
                 const base = prev.length > 150 ? prev.slice(prev.length - 150) : prev;
                 return [
@@ -164,6 +199,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                         id: authorId,
                         avatar: authorAvatar,
                         time,
+                        messageId,
                     },
                 ];
             });
@@ -183,6 +219,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
 
     const submitMsg = (e) => {
         e.preventDefault();
+        if (muted) return;
 
         if (!id || !login) {
             message.error(t('chat.notAuthorized'));
@@ -229,20 +266,44 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             pendingAck.current = null;
 
             if (response && response.ok) {
-                setChat((current) => [
-                    ...(current.length > 150 ? current.slice(current.length - 150) : current),
-                    outgoing,
-                ]);
+                const accepted = response.message || outgoing;
+                if (!removedIds.current.has(accepted.messageId)) {
+                    setChat((current) => [
+                        ...(current.length > 150 ? current.slice(current.length - 150) : current),
+                        accepted,
+                    ]);
+                }
                 setMsg('');
                 return;
             }
 
             const reason = response && response.reason;
+            if (reason === 'muted') {
+                const until = new Date(response.mutedUntil).getTime();
+                setMuteState({ mutedUntil: response.mutedUntil, offset: until - response.remainingSeconds * 1000 - Date.now() });
+                setNow(Date.now());
+                return;
+            }
             message.error(t(CHAT_REJECTIONS[reason] || 'common.serverError'));
             if (reason === 'banned') {
                 refreshProfile();
             }
         });
+    };
+
+    const removeMessage = async () => {
+        setRemoving(true);
+        const target = removeTarget;
+        try {
+            await removeChatMessage(target.messageId);
+            removedIds.current.add(target.messageId);
+            setChat((current) => current.filter((el) => el.messageId !== target.messageId));
+            setRemoveTarget(null);
+        } catch (e) {
+            message.error(e && e.error && e.message ? e.message : t('common.serverError'));
+        } finally {
+            setRemoving(false);
+        }
     };
 
     return (
@@ -300,6 +361,9 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                         // eslint-disable-next-line react/no-array-index-key
                         <li key={`chat${index}`} className="chat-messages-list_item">
                             <MessageBlock nickname={el.login} id={el.id} message={el.msg} />
+                            {Number(role) === roles.ADMINISTRATOR && el.messageId && (
+                                <Button size="small" danger onClick={() => setRemoveTarget(el)}>{t('chat.remove')}</Button>
+                            )}
                         </li>
                     ))}
                 </ul>{' '}
@@ -307,13 +371,20 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             <div className="chat-form">
                 {role && (
                     <>
-                        {roles.BANNED_CHAT !== role ? (
+                        {![roles.BANNED_CHAT, roles.BANNED].includes(Number(role)) ? (
                             <form onSubmit={(e) => submitMsg(e)}>
+                                {muted && (
+                                    <div role="status">
+                                        {t('chat.mutedUntil', { until: new Date(muteState.mutedUntil).toLocaleString(i18n && i18n.language) })}
+                                    </div>
+                                )}
                                 <input
                                     type="text"
                                     name="message"
                                     maxLength={MAX_MESSAGE_LENGTH}
                                     value={msg}
+                                    disabled={muted}
+                                    aria-label={t('chat.writeMessage')}
                                     onChange={(e) => {
                                         setMsg(e.target.value);
                                     }}
@@ -344,6 +415,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                                     trigger="click"
                                 >
                                     <Button
+                                        disabled={muted}
                                         style={{ marginRight: '4%', width: '16%' }}
                                         className="color-black"
                                     >
@@ -355,7 +427,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                                     style={{ width: '80%' }}
                                     className="color-skyblue"
                                     onClick={(e) => submitMsg(e)}
-                                    disabled={!login}
+                                    disabled={!login || muted}
                                 >
                                     <SendOutlined />
                                 </Button>
@@ -375,6 +447,21 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
                     </>
                 )}
             </div>
+            <Modal
+                open={removeTarget !== null}
+                title={t('chat.removeTitle')}
+                okText={t('chat.removeConfirm')}
+                cancelText={t('chat.removeCancel')}
+                onOk={removeMessage}
+                onCancel={() => { if (!removing) setRemoveTarget(null); }}
+                confirmLoading={removing}
+                closable={!removing}
+                keyboard={!removing}
+                maskClosable={false}
+                cancelButtonProps={{ disabled: removing }}
+            >
+                {t('chat.removePrompt', { author: removeTarget && removeTarget.login })}
+            </Modal>
         </div>
     );
 };

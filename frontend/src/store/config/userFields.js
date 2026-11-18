@@ -6,6 +6,7 @@ const userFields = {
     user_avatar: 'avatar',
     user_receiveInfo: 'receiveInfo',
     user_role: 'role',
+    user_mutedUntil: 'mutedUntil',
 };
 
 export default userFields;

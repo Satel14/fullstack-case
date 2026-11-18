@@ -370,6 +370,12 @@
         "withdrawErrorTitle": "Withdrawal failed"
     },
     "chat": {
+        "mutedUntil": "A moderator has temporarily muted you. You can write again after {{until}}.",
+        "remove": "Remove message",
+        "removeTitle": "Remove this message?",
+        "removePrompt": "Remove the message by {{author}} for everyone?",
+        "removeConfirm": "Remove",
+        "removeCancel": "Cancel",
         "title": "Online chat",
         "whoIsHere": "Who's here",
         "noUsers": "No users",
@@ -476,6 +482,20 @@
         "rotated": "Server seed rotated, the previous one is revealed"
     },
     "admin": {
+        "mute": {
+            "permanent": "Permanent chat mute (role)",
+            "title": "Chat moderation",
+            "action": "Mute temporarily",
+            "lift": "Lift temporary mute",
+            "current": "Muted until {{until}}",
+            "duration": "Duration in minutes (1–43200)",
+            "reason": "Reason (required)",
+            "review": "Review",
+            "confirmTitle": "Confirm the chat restriction change",
+            "confirm": "Confirm",
+            "done": "Chat restriction updated",
+            "failed": "Chat restriction not updated"
+        },
         "title": "Admin panel",
         "tabs": {
             "cases": "Cases",

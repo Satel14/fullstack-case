@@ -33,3 +33,9 @@ export const getAdminActions = ({ limit = 50, offset = 0 } = {}) => get(`/admin/
 export const getSaleRate = () => get('/admin/sale-rate');
 
 export const updateSaleRate = (rate, reason) => put('/admin/sale-rate', { rate, reason });
+
+export const muteUser = (id, durationMinutes, reason) => put(`/admin/user/${id}/mute`, { durationMinutes, reason });
+
+export const unmuteUser = (id, reason) => put(`/admin/user/${id}/unmute`, { reason });
+
+export const removeChatMessage = (id) => post(`/admin/chat/message/${encodeURIComponent(id)}/remove`, {});

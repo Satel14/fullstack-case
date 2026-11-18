@@ -16,6 +16,8 @@ jest.mock('../../store/actions/user', () => ({
     getProfileFetch: jest.fn(),
 }));
 
+jest.mock('../../api/all/admin', () => ({ removeChatMessage: jest.fn() }));
+
 jest.mock('../../api/all/ws', () => ({
     __esModule: true,
     default: {
@@ -99,12 +101,12 @@ test('any other refusal reports a server error without refreshing the profile', 
     expect(refreshProfile).not.toHaveBeenCalled();
 });
 
-const renderLive = () => {
+const renderLive = (viewer = user) => {
     const handlers = {};
     socket.on.mockImplementation((event, handler) => { handlers[event] = handler; });
     render(
         <MemoryRouter>
-            <Chat user={user} enabled refreshProfile={jest.fn()} />
+            <Chat user={viewer} enabled refreshProfile={jest.fn()} />
         </MemoryRouter>,
     );
     return handlers;
@@ -304,4 +306,109 @@ test('a YouTube link in a message plays over https and tells YouTube the site it
     const video = document.querySelector('.chat-messages iframe');
     expect(video).toHaveAttribute('src', 'https://www.youtube.com/embed/dQw4w9WgXcQ');
     expect(video).toHaveAttribute('referrerpolicy', 'origin');
+});
+
+test('all viewers drop the exact message on removal and keep legacy messages', () => {
+    const handlers = renderLive();
+    act(() => handlers['chat messages']([
+        {
+ id: 7, messageId: 'first', login: 'player', msg: 'removed',
+},
+        {
+ id: 7, messageId: 'second', login: 'player', msg: 'kept',
+},
+        { id: 7, login: 'player', msg: 'legacy' },
+    ]));
+    act(() => handlers['chat message removed']({ messageId: 'first' }));
+    expect(screen.queryByText('removed')).toBeNull();
+    expect(screen.getByText('kept')).toBeInTheDocument();
+    expect(screen.getByText('legacy')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'chat.remove' })).toBeNull();
+});
+
+test('only an administrator can confirm removing a message with an id', async () => {
+    const { removeChatMessage } = require('../../api/all/admin');
+    removeChatMessage.mockResolvedValue({ status: 200 });
+    const handlers = renderLive({ ...user, role: roles.ADMINISTRATOR });
+    act(() => handlers['chat messages']([
+        {
+ id: 7, messageId: 'first', login: 'player', msg: 'remove this',
+},
+        { id: 7, login: 'player', msg: 'legacy' },
+    ]));
+    expect(screen.getAllByRole('button', { name: 'chat.remove' })).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'chat.remove' }));
+    expect(removeChatMessage).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'chat.removeConfirm' }));
+    await act(async () => {});
+    expect(removeChatMessage).toHaveBeenCalledWith('first');
+    expect(screen.queryByText('remove this')).toBeNull();
+    expect(screen.getByText('legacy')).toBeInTheDocument();
+});
+
+test('a temporary mute disables writing, shows its deadline and expires without a reload', () => {
+    jest.useFakeTimers();
+    try {
+        const until = new Date(Date.now() + 60000).toISOString();
+        renderLive({ ...user, mutedUntil: until });
+        expect(screen.getByRole('textbox')).toBeDisabled();
+        expect(screen.getByText('chat.mutedUntil')).toBeInTheDocument();
+        act(() => { jest.advanceTimersByTime(61000); });
+        expect(screen.getByRole('textbox')).not.toBeDisabled();
+    } finally {
+        jest.useRealTimers();
+    }
+});
+
+test('a fresh mute refusal keeps the draft and disables the input until the server lifts it', () => {
+    serverReplies({
+ ok: false, reason: 'muted', mutedUntil: new Date(Date.now() + 60000).toISOString(), remainingSeconds: 60,
+});
+    const { input } = send('draft');
+    expect(input).toBeDisabled();
+    expect(input.value).toBe('draft');
+    expect(screen.queryByText('draft')).toBeNull();
+    expect(screen.getByText('chat.mutedUntil')).toBeInTheDocument();
+});
+
+test('live moderation updates the input, and listeners are removed on cleanup', () => {
+    const handlers = renderLive();
+    act(() => handlers['chat mute']({ mutedUntil: new Date(Date.now() + 60000).toISOString(), serverNow: new Date().toISOString() }));
+    expect(screen.getByRole('textbox')).toBeDisabled();
+    act(() => handlers['chat mute']({ mutedUntil: null, serverNow: new Date().toISOString() }));
+    expect(screen.getByRole('textbox')).not.toBeDisabled();
+});
+
+test('the sender keeps the server message id from the acknowledgement', () => {
+    serverReplies({
+ ok: true,
+message: {
+ messageId: 'server-id', id: 7, login: 'player', msg: 'accepted',
+},
+});
+    send('draft');
+    expect(screen.getByText('accepted')).toBeInTheDocument();
+    expect(screen.queryByText('draft')).toBeNull();
+});
+
+test('a late history reply or message does not resurrect a removed message', () => {
+    const handlers = renderLive();
+    act(() => handlers['chat message removed']({ messageId: 'removed' }));
+    const deleted = {
+ messageId: 'removed', id: 7, login: 'player', msg: 'gone',
+};
+    act(() => handlers['chat messages']([deleted]));
+    act(() => handlers['chat message'](deleted));
+    expect(screen.queryByText('gone')).toBeNull();
+});
+
+test('hiding the chat removes only its moderation listeners', () => {
+    const handlers = {};
+    socket.on.mockImplementation((event, handler) => { handlers[event] = handler; });
+    const view = (enabled) => <MemoryRouter><Chat user={user} enabled={enabled} refreshProfile={jest.fn()} /></MemoryRouter>;
+    const { rerender } = render(view(true));
+    rerender(view(false));
+    expect(socket.off).toHaveBeenCalledWith('chat mute', handlers['chat mute']);
+    expect(socket.off).toHaveBeenCalledWith('chat message removed', handlers['chat message removed']);
+    expect(socket.off).not.toHaveBeenCalledWith();
 });
