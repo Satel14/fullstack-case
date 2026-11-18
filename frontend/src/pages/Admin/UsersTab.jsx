@@ -9,6 +9,7 @@ import openNotification from '../../components/mini/openNotification';
 import roles from '../../enum/role';
 import BalanceModal from './BalanceModal';
 import PlayerCard from './PlayerCard';
+import MuteModal from './MuteModal';
 
 const { Option } = Select;
 const PAGE_SIZE = 20;
@@ -26,7 +27,7 @@ const ROLE_KEYS = {
 };
 
 const UsersTab = ({ user }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [users, setUsers] = useState([]);
     const [count, setCount] = useState(0);
     const [page, setPage] = useState(1);
@@ -35,6 +36,7 @@ const UsersTab = ({ user }) => {
     const [failed, setFailed] = useState(false);
     const [balanceTarget, setBalanceTarget] = useState(null);
     const [cardTarget, setCardTarget] = useState(null);
+    const [muteTarget, setMuteTarget] = useState(null);
 
     const fetchUsers = useCallback(async (nextPage, nextSearch) => {
         setLoading(true);
@@ -125,6 +127,26 @@ const UsersTab = ({ user }) => {
             },
         },
         {
+            title: t('admin.mute.title'),
+            key: 'muteAction',
+            render: (row) => {
+                const muted = new Date(row.user_mutedUntil).getTime() > Date.now();
+                return (
+                    <Space direction="vertical">
+                        {Number(row.user_role) === roles.BANNED_CHAT && <span>{t('admin.mute.permanent')}</span>}
+                        {muted && <span>{t('admin.mute.current', { until: new Date(row.user_mutedUntil).toLocaleString(i18n && i18n.language) })}</span>}
+                        <Button
+                            size="small"
+                            disabled={Number(row.user_id) === Number(user && user.id) || Number(row.user_role) === roles.ADMINISTRATOR}
+                            onClick={() => setMuteTarget(row)}
+                        >
+                            {t(muted ? 'admin.mute.lift' : 'admin.mute.action')}
+                        </Button>
+                    </Space>
+                );
+            },
+        },
+        {
             title: '',
             key: 'balanceAction',
             render: (row) => (
@@ -180,6 +202,14 @@ const UsersTab = ({ user }) => {
                     userId={cardTarget.user_id}
                     login={cardTarget.user_login}
                     onClose={() => setCardTarget(null)}
+                />
+            )}
+            {muteTarget && (
+                <MuteModal
+                    key={muteTarget.user_id}
+                    user={muteTarget}
+                    onClose={() => setMuteTarget(null)}
+                    onDone={() => { setMuteTarget(null); load(); }}
                 />
             )}
         </Space>

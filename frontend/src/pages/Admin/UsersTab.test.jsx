@@ -70,3 +70,23 @@ test('the list is fetched once on mount, and a search carries over to the next p
     await waitFor(() => expect(getAdminUsers).toHaveBeenCalledTimes(3));
     expect(getAdminUsers).toHaveBeenLastCalledWith({ search: 'pe', limit: 20, offset: 20 });
 });
+
+test('mute controls show the deadline for players and are disabled for administrators and yourself', async () => {
+    getAdminUsers.mockResolvedValue({
+        data: [
+            { ...player, user_mutedUntil: '2099-01-01T00:00:00Z' },
+            {
+ ...player, user_id: 1, user_login: 'self', user_role: 10,
+},
+            {
+ ...player, user_id: 2, user_login: 'admin', user_role: 10,
+},
+        ],
+        count: 3,
+    });
+    render(<Provider store={createStore(() => ({ user: { id: 1 } }))}><UsersTab /></Provider>);
+    await screen.findByText('peer');
+    expect(screen.getByText('admin.mute.current')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'admin.mute.lift' })).not.toBeDisabled();
+    screen.getAllByRole('button', { name: 'admin.mute.action' }).forEach((button) => expect(button).toBeDisabled());
+});
