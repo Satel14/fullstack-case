@@ -68,3 +68,17 @@ test('re-rendering does not refetch, and turning a page fetches only that page',
     expect(getAdminActions).toHaveBeenCalledTimes(2);
     expect(getAdminActions).toHaveBeenLastCalledWith({ limit: 20, offset: 20 });
 });
+
+test('the time of an action is shown in the reader\'s locale', async () => {
+    const iso = '2026-11-06T12:00:00Z';
+    getAdminActions.mockResolvedValue({
+        data: [{
+            id: 1, created_at: iso, adminId: 1, action: 'user.balance', targetType: 'user', targetId: 7, reason: 'r', payload: null,
+        }],
+    });
+
+    render(<JournalTab />);
+
+    const time = await screen.findByText(new Date(iso).toLocaleString());
+    expect(time.closest('time')).toHaveAttribute('dateTime', iso);
+});

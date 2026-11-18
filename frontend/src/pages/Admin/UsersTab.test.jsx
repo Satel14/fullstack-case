@@ -121,3 +121,10 @@ test('your own active mute cannot be lifted through the users list', async () =>
     render(<Provider store={createStore(() => ({ user: { id: 1 } }))}><UsersTab /></Provider>);
     expect(await screen.findByRole('button', { name: 'admin.mute.lift' })).toBeDisabled();
 });
+
+test('email and balance cells keep each value on one line', async () => {
+    getAdminUsers.mockResolvedValue({ data: [{ ...player, user_balance: '17774.00' }], count: 1 });
+    render(<Provider store={createStore(() => ({ user: { id: 1 } }))}><UsersTab /></Provider>);
+    expect((await screen.findByText('peer@e.ua')).closest('td')).toHaveClass('admin-nowrap');
+    expect(screen.getByText('17774.00').closest('td')).toHaveClass('admin-nowrap');
+});

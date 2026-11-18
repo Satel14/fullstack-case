@@ -95,10 +95,13 @@ const UsersTab = ({ user }) => {
                 </Button>
             ),
         },
-        { title: t('admin.users.email'), dataIndex: 'user_email', key: 'user_email' },
+        {
+            title: t('admin.users.email'), dataIndex: 'user_email', key: 'user_email', className: 'admin-nowrap',
+        },
         {
             title: t('admin.users.balance'),
             key: 'user_balance',
+            className: 'admin-nowrap',
             render: (row) => Number(row.user_balance).toFixed(2),
         },
         {

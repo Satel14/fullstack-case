@@ -4,6 +4,7 @@ import {
 } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { getAdminActions } from '../../api/all/admin';
+import LocalTime from '../../components/mini/LocalTime';
 
 const PAGE_SIZE = 20;
 
@@ -49,7 +50,9 @@ const JournalTab = ({ active = true }) => {
     const total = (page - 1) * PAGE_SIZE + rows.length + (rows.length === PAGE_SIZE ? 1 : 0);
 
     const columns = [
-        { title: t('admin.journal.when'), dataIndex: 'created_at', key: 'created_at' },
+        {
+            title: t('admin.journal.when'), dataIndex: 'created_at', key: 'created_at', className: 'admin-nowrap', render: (value) => <LocalTime value={value} />,
+        },
         { title: t('admin.journal.admin'), dataIndex: 'adminId', key: 'adminId' },
         {
             title: t('admin.journal.action'),

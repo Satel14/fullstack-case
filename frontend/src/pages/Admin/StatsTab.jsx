@@ -65,7 +65,9 @@ const StatsTab = ({ active = true }) => {
         return left < right ? -1 : 1;
     };
     const columns = [
-        { title: t('admin.stats.case'), key: 'caseId', render: (row) => row.title || row.caseId },
+        {
+            title: t('admin.stats.case'), key: 'caseId', className: 'admin-nowrap', render: (row) => row.title || row.caseId,
+        },
         { title: t('admin.stats.opens'), dataIndex: 'opens', key: 'opens' },
         {
             title: t('admin.stats.spent'), dataIndex: 'spent', key: 'spent', render: amount, sorter: numericSort('spent'),

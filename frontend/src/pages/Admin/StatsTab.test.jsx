@@ -78,6 +78,7 @@ test('the default request shows turnover, signed credit flows, completed withdra
 test('per-case rows show value, observed and expected edge and sort numerically by spend and edge', async () => {
     render(<StatsTab />);
     const caseRow = (await screen.findByText('Dust II')).closest('tr');
+    expect(screen.getByText('Dust II').closest('td')).toHaveClass('admin-nowrap');
     expect(within(caseRow).getByText(/100.00/)).toBeInTheDocument();
     expect(within(caseRow).getByText(/75.25/)).toBeInTheDocument();
     expect(within(caseRow).getByText('24.75%')).toBeInTheDocument();

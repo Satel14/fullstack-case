@@ -3627,7 +3627,8 @@ footer.ant-layout-footer {
         }
     }
 
-    .ant-table-tbody > tr > td.admin-actions {
+    .ant-table-tbody > tr > td.admin-actions,
+    .ant-table-tbody > tr > td.admin-nowrap {
         white-space: nowrap;
         word-break: normal;
     }
@@ -3635,6 +3636,10 @@ footer.ant-layout-footer {
     .ant-table-tbody > tr.ant-table-row:hover > td,
     .ant-table-tbody > tr > td.ant-table-cell-row-hover {
         background: #131725;
+    }
+
+    .ant-table-tbody .ant-btn-link {
+        text-transform: none;
     }
 
     .ant-table-tbody > tr.ant-table-placeholder > td,
@@ -3980,6 +3985,10 @@ footer.ant-layout-footer {
         flex-wrap: wrap;
         gap: 12px;
         margin-bottom: 16px;
+    }
+
+    &__counts {
+        color: #adb0b9;
     }
 
     &__count {

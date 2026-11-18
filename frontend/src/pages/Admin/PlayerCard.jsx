@@ -8,6 +8,7 @@ import { getAdminUser } from '../../api/all/admin';
 import { itemInfoFetch } from '../../store/actions/itemCache';
 import { colorName } from '../../helpers/Case';
 import roles from '../../enum/role';
+import LocalTime from '../../components/mini/LocalTime';
 
 const { TabPane } = Tabs;
 const STATUSES = ['inventory', 'received', 'waitingtrade', 'money'];
@@ -20,6 +21,8 @@ const ROLE_KEYS = {
     [roles.BANNED]: 'banned',
     [roles.ADMINISTRATOR]: 'admin',
 };
+
+const at = (value) => <LocalTime value={value} />;
 
 const details = (value) => (typeof value === 'object' && value !== null ? JSON.stringify(value) : value);
 
@@ -67,7 +70,9 @@ const PlayerCard = ({ userId, login, onClose }) => {
     const itemName = (id) => (itemCache[id] && !itemCache[id].placeholder && itemCache[id].item_name) || t('item.placeholder', { id: String(id) });
     const empty = t('admin.journal.empty');
     const notSet = t('admin.playerCard.notSet');
-    const when = { title: t('admin.journal.when'), dataIndex: 'created_at', key: 'created_at' };
+    const when = {
+        title: t('admin.journal.when'), dataIndex: 'created_at', key: 'created_at', className: 'admin-nowrap', render: at,
+    };
     const caseColumn = {
         title: t('common.case'), key: 'case', render: (row) => row.caseTitle || row.caseId || notSet,
     };
@@ -92,7 +97,9 @@ const PlayerCard = ({ userId, login, onClose }) => {
     const inventoryColumns = [
         when, itemColumn, colorColumn, caseColumn,
         { title: t('inventory.statusCol'), key: 'status', render: (row) => t(`inventory.status.${row.status}`) },
-        { title: t('admin.playerCard.updatedAt'), dataIndex: 'updated_at', key: 'updated_at' },
+        {
+            title: t('admin.playerCard.updatedAt'), dataIndex: 'updated_at', key: 'updated_at', className: 'admin-nowrap', render: at,
+        },
     ];
     const bonusColumns = [when, { title: t('admin.playerCard.claim'), dataIndex: 'bonusId', key: 'bonusId' }];
     const actionColumns = [
@@ -125,7 +132,7 @@ const PlayerCard = ({ userId, login, onClose }) => {
             width={1040}
             contentWrapperStyle={{ maxWidth: '100vw' }}
             closable={false}
-            extra={<Button onClick={onClose}>{t('admin.cancel')}</Button>}
+            extra={<Button onClick={onClose}>{t('admin.playerCard.close')}</Button>}
             onClose={onClose}
         >
             <div className="adminpage admin-player-card__body">
@@ -150,7 +157,7 @@ const PlayerCard = ({ userId, login, onClose }) => {
                             <Descriptions.Item label={t('admin.playerCard.avatar')}>
                                 {profile.avatar ? <img src={`/img/avatars/${profile.avatar}.png`} alt={t('admin.playerCard.avatar')} width="40" height="40" /> : notSet}
                             </Descriptions.Item>
-                            <Descriptions.Item label={t('admin.playerCard.createdAt')}>{profile.created_at || notSet}</Descriptions.Item>
+                            <Descriptions.Item label={t('admin.playerCard.createdAt')}>{profile.created_at ? at(profile.created_at) : notSet}</Descriptions.Item>
                             <Descriptions.Item label={t('admin.playerCard.receiveInfo')}>{profile.receiveInfo || notSet}</Descriptions.Item>
                         </Descriptions>
                         <p>{t('admin.playerCard.limitHint')}</p>

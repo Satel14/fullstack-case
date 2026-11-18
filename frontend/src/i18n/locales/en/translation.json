@@ -547,6 +547,7 @@
             "loading": "Loading player card",
             "loadFailed": "Could not load the player card",
             "retry": "Try again",
+            "close": "Close",
             "notSet": "Not specified",
             "rank": "Rank",
             "avatar": "Avatar",

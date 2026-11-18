@@ -70,6 +70,12 @@ const renderUsers = () => {
     return render(<Provider store={store}><UsersTab /></Provider>);
 };
 
+const shown = (iso) => new Date(iso).toLocaleString();
+
+const expectTime = (container, iso) => {
+    expect(within(container).getByText(shown(iso)).closest('time')).toHaveAttribute('dateTime', iso);
+};
+
 const openCard = async (login = 'peer') => {
     fireEvent.click(await screen.findByRole('button', { name: `admin.playerCard.open:${login}` }));
     return screen.findByRole('dialog');
@@ -105,7 +111,7 @@ test('a login opens a player card on demand with the private admin profile and t
     expect(within(drawer).getByText('123.45')).toBeInTheDocument();
     expect(within(drawer).getByText('12.5')).toBeInTheDocument();
     expect(within(drawer).getByText('profile.roles.user')).toBeInTheDocument();
-    expect(within(drawer).getByText('2026-11-01T12:00:00Z')).toBeInTheDocument();
+    expectTime(drawer, '2026-11-01T12:00:00Z');
     expect(getAdminUser).toHaveBeenCalledTimes(1);
     expect(getAdminUser).toHaveBeenCalledWith(7);
 });
@@ -116,7 +122,7 @@ test('balance history shows the translated type, signed change, details and time
     expect(await within(drawer).findByText('correction reason')).toBeInTheDocument();
     expect(within(drawer).getByText('admin.playerCard.balanceTypes.admin_adjust')).toBeInTheDocument();
     expect(within(drawer).getByText('-17.50')).toBeInTheDocument();
-    expect(within(drawer).getByText('2026-11-02T12:00:00Z')).toBeInTheDocument();
+    expectTime(drawer, '2026-11-02T12:00:00Z');
 });
 
 test('opens and inventory get names through one batched item-cache request and show the case title and colour', async () => {
@@ -128,11 +134,13 @@ test('opens and inventory get names through one batched item-cache request and s
     expect(within(opens).getByText('Dust II')).toBeInTheDocument();
     expect(within(opens).getByText('item.colors.painted')).toBeInTheDocument();
     expect(within(opens).getByText('37.00')).toBeInTheDocument();
+    expectTime(opens, '2026-11-03T12:00:00Z');
 
     const inventory = await tab('inventory');
     expect(await within(inventory).findByText('Butterfly Knife | Fade')).toBeInTheDocument();
     expect(within(inventory).getAllByText('inventory.status.waitingtrade').length).toBeGreaterThan(0);
-    expect(within(inventory).getByText('2026-11-05T12:00:00Z')).toBeInTheDocument();
+    expectTime(inventory, '2026-11-04T12:00:00Z');
+    expectTime(inventory, '2026-11-05T12:00:00Z');
     ['81', '12', '3', '5'].forEach((count) => {
         expect(within(inventory).getByText(count, { selector: '.admin-player-card__count' })).toBeInTheDocument();
     });
@@ -146,10 +154,12 @@ test('bonus claims and the player-specific journal show the stored details', asy
     await screen.findByText('withdrawal contact');
     const bonuses = await tab('bonuses');
     expect(within(bonuses).getByText('daily:2026-11-05')).toBeInTheDocument();
+    expectTime(bonuses, '2026-11-05T12:00:00Z');
     const journal = await tab('adminActions');
     expect(within(journal).getByText('journal reason')).toBeInTheDocument();
     expect(within(journal).getByText('user.balance')).toBeInTheDocument();
     expect(within(journal).getByText(JSON.stringify(data.adminActions[0].payload))).toBeInTheDocument();
+    expectTime(journal, '2026-11-06T12:00:00Z');
 });
 
 test('a legacy open without a recorded price says unknown instead of showing zero or the current price', async () => {
@@ -197,7 +207,7 @@ profile: {
 });
     renderUsers();
     const first = await openCard();
-    fireEvent.click(within(first).getByRole('button', { name: 'admin.cancel' }));
+    fireEvent.click(within(first).getByRole('button', { name: 'admin.playerCard.close' }));
     const second = await openCard('another');
     expect(await within(second).findByText('other contact')).toBeInTheDocument();
 
