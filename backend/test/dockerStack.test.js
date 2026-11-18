@@ -221,3 +221,7 @@ test('neither nginx writes query strings or referers into its access log, so tok
 test('nginx passes the site\'s files through without spooling them to a temporary file, so loading a page writes no warning', () => {
     assert.match(location('/'), /proxy_max_temp_file_size\s+0;/);
 });
+
+test('the backend comes back after a clean stop of the Docker daemon, which now exits 0', () => {
+    assert.match(composeService('backend'), /^ {4}restart: unless-stopped$/m);
+});

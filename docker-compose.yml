@@ -55,7 +55,7 @@ services:
     build:
       context: backend
     command: sh -c "npm run migrate && exec node server.js"
-    restart: on-failure
+    restart: unless-stopped
     stop_grace_period: 15s
     container_name: fullstack_case_backend
     environment:
