@@ -63,6 +63,7 @@ const SettingsTab = () => {
                 min={MIN_RATE}
                 max={MAX_RATE}
                 step={0.01}
+                precision={4}
                 value={rate}
                 onChange={setRate}
                 disabled={!loaded || saving}
