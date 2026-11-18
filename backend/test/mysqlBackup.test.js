@@ -74,7 +74,11 @@ test('a dump that fails leaves no backup file behind and the run reports it', ne
 test('only the newest backups are kept', needsShell, (t) => {
     const { backups, run } = stand(t);
     ['case-20260101-000000.sql', 'case-20260102-000000.sql', 'case-20260103-000000.sql', 'case-20260104-000000.sql', 'notes.txt']
-        .forEach((name) => fs.writeFileSync(path.join(backups, name), 'old'));
+        .forEach((name) => {
+            fs.writeFileSync(path.join(backups, name), 'old');
+            const longAgo = new Date(Date.now() - 30 * 24 * 3600 * 1000);
+            fs.utimesSync(path.join(backups, name), longAgo, longAgo);
+        });
 
     const result = run();
 
@@ -105,7 +109,7 @@ test('a failed dump is retried after a short pause instead of waiting a whole in
 
     const started = Date.now();
     const result = run({
-        BACKUP_ONCE: '', FAIL_FIRST: '1', BACKUP_RETRY_SECONDS: '0', BACKUP_INTERVAL_SECONDS: '3600',
+        BACKUP_ONCE: '', FAIL_FIRST: '1', BACKUP_RETRY_SECONDS: '0', BACKUP_INTERVAL_SECONDS: '20',
     }, [], 4000);
 
     assert.ok(Date.now() - started < 6000, 'the loop ignored the stop signal while it slept');
@@ -126,4 +130,15 @@ test('the health check passes only while the newest dump is younger than an inte
     assert.notStrictEqual(health(), 0);
     fs.writeFileSync(path.join(backups, 'case-20260102-000000.sql'), 'fresh');
     assert.strictEqual(health(), 0);
+});
+
+test('a restart within an interval of the newest dump takes no new dump, so restarts do not push older dumps out', needsShell, (t) => {
+    const { dir, backups, run } = stand(t);
+    fs.writeFileSync(path.join(backups, 'case-20260101-000000.sql'), 'recent');
+
+    const result = run({ BACKUP_INTERVAL_SECONDS: '3600' });
+
+    assert.strictEqual(result.status, 0, result.stderr || String(result.error));
+    assert.deepStrictEqual(fs.readdirSync(backups), ['case-20260101-000000.sql']);
+    assert.strictEqual(fs.existsSync(path.join(dir, 'calls')), false);
 });

@@ -7,10 +7,14 @@ keep="${BACKUP_KEEP:-14}"
 interval="${BACKUP_INTERVAL_SECONDS:-86400}"
 retry="${BACKUP_RETRY_SECONDS:-60}"
 
-if [ "${1:-}" = "--healthy" ]; then
+age_of_newest() {
     newest="$(ls -1 "$dir" | grep -E '^case-[0-9]{8}-[0-9]{6}\.sql$' | sort -r | head -n 1)"
-    [ -n "$newest" ] || exit 1
-    age=$(( $(date +%s) - $(stat -c %Y "$dir/$newest") ))
+    [ -n "$newest" ] || return 1
+    echo $(( $(date +%s) - $(stat -c %Y "$dir/$newest") ))
+}
+
+if [ "${1:-}" = "--healthy" ]; then
+    age="$(age_of_newest)" || exit 1
     [ "$age" -le $(( interval + 3600 )) ]
     exit $?
 fi
@@ -44,6 +48,20 @@ backup_once() {
     return 1
 }
 
+pause_for() {
+    sleep "$1" > /dev/null 2>&1 &
+    sleeper=$!
+    wait "$sleeper"
+    sleeper=""
+}
+
+if age="$(age_of_newest)" && [ "$age" -lt "$interval" ]; then
+    if [ "${BACKUP_ONCE:-}" = "1" ]; then
+        exit 0
+    fi
+    pause_for $(( interval - age ))
+fi
+
 while :; do
     if backup_once; then
         status=0
@@ -55,8 +73,5 @@ while :; do
     if [ "${BACKUP_ONCE:-}" = "1" ]; then
         exit "$status"
     fi
-    sleep "$pause" > /dev/null 2>&1 &
-    sleeper=$!
-    wait "$sleeper"
-    sleeper=""
+    pause_for "$pause"
 done

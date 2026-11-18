@@ -45,7 +45,7 @@ so no one else can confirm a registration or receive a password-reset link.
   the backend restarts on its own after a Docker or host restart (`restart: unless-stopped`).
 - **Updates:** <code>git pull</code>, then <code>docker compose up -d --build</code> and
   <code>docker compose restart nginx mysql-backup</code> (nginx resolves the recreated containers again, and the backup
-  service picks up a changed script). New migrations apply when the backend starts; it refuses to start while the
+  service picks up a changed script; it takes no new dump while the newest is younger than an interval). New migrations apply when the backend starts; it refuses to start while the
   database is ahead of or behind its code.
 - **Redis** keeps its data (chat history) on the `redis-data` volume.
 - **Backups:** the `mysql-backup` service writes a full dump of `case` to `./backups` when it starts and then every
@@ -57,6 +57,6 @@ so no one else can confirm a registration or receive a password-reset link.
   fresh seed on the next request), then start the backend:
   <code>docker compose stop backend</code>,
   <code>sudo cat backups/case-YYYYMMDD-HHMMSS.sql | docker exec -i fullstack-case sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" case'</code>,
-  <code>docker exec fullstack-case sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" case -e "UPDATE provably_fair_seeds SET status=\"revealed\", revealed_at=UTC_TIMESTAMP() WHERE status=\"active\""'</code>,
+  <code>echo "UPDATE provably_fair_seeds SET status='revealed', revealed_at=UTC_TIMESTAMP() WHERE status='active'" | docker exec -i fullstack-case sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" case'</code>,
   <code>docker compose start backend</code>.
 
