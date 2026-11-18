@@ -78,3 +78,15 @@ test('only the publication dates are styled as article metadata, never the not-f
 
     expect(missing.container.querySelectorAll('.articlepage-meta')).toHaveLength(0);
 });
+
+test('markup an article may not use never reaches the page', async () => {
+    mockLanguage = 'uk';
+    getArticleById.mockResolvedValue({
+        data: { ...bilingual, article_text: '<p onclick="steal()">Текст<img src="x" onerror="steal()"><script>steal()</script></p><a href="javascript:steal()">лінк</a>' },
+    });
+
+    const { container } = renderArticle();
+
+    expect(await screen.findByText('Текст')).toBeInTheDocument();
+    expect(container.querySelector('img, script, [onclick], [href^="javascript"]')).toBeNull();
+});

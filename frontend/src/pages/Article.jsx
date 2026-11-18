@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Loader from '../components/mini/Loader';
 import { getArticleById } from '../api/all/article';
 import { SITE_NAME } from '../config/publicInfo';
+import ArticleText from '../components/mini/ArticleText';
 
 const formatDate = (value) => {
     if (!value) {
@@ -102,10 +103,7 @@ const Article = ({ match }) => {
                 <div className="articlepage-content">
                     {publishedAt && <p className="articlepage-meta">{`${t('article.published')}: ${publishedAt}`}</p>}
                     {updatedAt && <p className="articlepage-meta">{`${t('article.updated')}: ${updatedAt}`}</p>}
-                    <div
-                        // eslint-disable-next-line react/no-danger
-                        dangerouslySetInnerHTML={{ __html: text }}
-                    />
+                    <ArticleText html={text} />
                 </div>
             </Fade>
         </div>
