@@ -39,8 +39,3 @@ assertMigrationsApplied(sequelize).then(() => {
     console.error(err.message);
     process.exit(1);
 });
-
-if (process.env.CI) {
-    console.log(`Tested success`);
-    process.exit(0);
-}
