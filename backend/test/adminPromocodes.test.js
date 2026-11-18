@@ -103,6 +103,39 @@ test('update changes only mutable fields and journals only actual differences', 
     assert.deepEqual(entries[0].payload, { before: {}, after: {} });
 });
 
+for (const [label, code, targetId = code] of [
+    ['short', 'GO'],
+    ['punctuation', 'BONUS.100'],
+    ['Cyrillic', 'ПОДАРУНОК'],
+    ['one-character', 'Я'],
+    ['64-character Unicode', '😀'.repeat(64)],
+    ['65-character Unicode', '😀'.repeat(65), `${'😀'.repeat(63)}…`],
+    ['255-character Unicode', '😀'.repeat(255), `${'😀'.repeat(63)}…`],
+]) {
+    test(`a legacy ${label} code can be switched off and limited by its primary key`, async () => {
+        await resetTestDatabase();
+        await sequelize.query('INSERT INTO promocodes (code, description, bonus, used_ids, `limit`) VALUES (?, ?, ?, ?, ?)', {
+            replacements: [code, 'Legacy gift', '50', '[1,2]', 10],
+        });
+        assert.equal((await request('list')).data[0].code, code);
+        const result = await request('update', { active: false, limit: 2 }, code);
+        assert.equal(result.status, 200);
+        assert.deepEqual(result.data, {
+            code, bonus: 50, used: 2, limit: 2, active: false, expiresAt: null, description: 'Legacy gift', created_at: null,
+        });
+        const [row] = await stored();
+        assert.deepEqual([row.code, row.active, row.limit], [code, 0, 2]);
+        const entries = await journal();
+        assert.equal(entries.length, 1);
+        assert.deepEqual([entries[0].action, entries[0].targetId], ['promocode.update', targetId]);
+        assert.deepEqual(entries[0].payload, {
+            ...(targetId === code ? {} : { code }),
+            before: { active: true, limit: 10 },
+            after: { active: false, limit: 2 },
+        });
+    });
+}
+
 test('a limit may equal uses but cannot be reduced below them, and code and bonus stay fixed', async () => {
     await resetTestDatabase();
     await request('create', input());
@@ -168,7 +201,7 @@ test('real input chains reject malformed values and count stored Unicode charact
         assert.equal(await passes('create', body), true, JSON.stringify(body));
     }
     const invalid = {
-        code: ['AB', 'A'.repeat(33), 'A B', 'ABC\n', 'код', null, ['ABC'], {}],
+        code: ['AB', 'BONUS.100', 'A'.repeat(33), 'A B', 'ABC\n', 'код', null, ['ABC'], {}],
         bonus: [0, -1, 100000.01, '0.001', '1e2', '0x10', '50,00', '', null, true, [50, 60], {}],
         limit: [0, -1, 2147483648, 1.5, '1e2', null, [1, 2], {}],
         active: ['true', 'false', 1, 0, null, [true], {}],
@@ -189,8 +222,11 @@ test('real input chains reject malformed values and count stored Unicode charact
         assert.equal(await passes('create', body), false, `missing ${field}`);
     }
     assert.equal(await passes('update', { expiresAt: null }), true);
-    for (const code of ['AB', 'A B', 'ABC\n', ['ABC']]) {
-        assert.equal(await passes('update', { active: false }, code), false);
+    for (const code of ['A', 'GO', 'BONUS.100', 'A B', 'ABC\n', 'код', 'BONUS/100 ?#%', '😀'.repeat(255)]) {
+        assert.equal(await passes('update', { active: false }, code), true, `legacy code: ${JSON.stringify(code)}`);
+    }
+    for (const code of ['', 'A'.repeat(256), `A${'\uFE0F'.repeat(255)}`, null, 123, true, ['ABC'], {}]) {
+        assert.equal(await passes('update', { active: false }, code), false, `invalid code: ${JSON.stringify(code)}`);
     }
 });
 

@@ -29,13 +29,17 @@ const snapshot = (row) => ({
 
 const publicCode = (row) => ({ ...snapshot(row), used: usedCount(row), created_at: row.created_at });
 
-const record = (req, row, action, payload, transaction) => AdminActionService.record({
-    adminId: req.user.profile.user_id,
-    action: `promocode.${action}`,
-    targetType: 'promocode',
-    targetId: row.promo_code,
-    payload,
-}, { transaction });
+const record = (req, row, action, payload, transaction) => {
+    const code = [...row.promo_code];
+    const truncated = code.length > 64;
+    return AdminActionService.record({
+        adminId: req.user.profile.user_id,
+        action: `promocode.${action}`,
+        targetType: 'promocode',
+        targetId: truncated ? `${code.slice(0, 63).join('')}…` : row.promo_code,
+        payload: truncated ? { code: row.promo_code, ...payload } : payload,
+    }, { transaction });
+};
 
 module.exports.list = async (req, res) => {
     try {
@@ -141,7 +145,7 @@ module.exports.validate = (method) => {
                 body('expiresAt').optional().custom((value) => value !== null),
             ];
         case 'update':
-            return [codeRule(param('code')), ...mutableRules()];
+            return [param('code').not().isArray().bail().custom(withinChars(1, 255)), ...mutableRules()];
         default:
             return [];
     }
