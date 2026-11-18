@@ -54,8 +54,9 @@ services:
   backend:
     build:
       context: backend
-    command: sh -c "npm run migrate && npm start"
+    command: sh -c "npm run migrate && exec node server.js"
     restart: on-failure
+    stop_grace_period: 15s
     container_name: fullstack_case_backend
     environment:
       NODE_ENV: production
@@ -78,6 +79,12 @@ services:
       - ./frontend/public:/frontend/public:ro
     networks:
       - private
+    healthcheck:
+      test: ["CMD", "node", "scripts/healthcheck.js"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
     depends_on:
       redis:
         condition: service_started

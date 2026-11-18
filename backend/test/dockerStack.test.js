@@ -188,6 +188,21 @@ test('the backend Dockerfile exposes the real port, not the unused default of 80
 
 const QUERY_OR_REFERER = /\$\{?(request|request_uri|request_body|args|query_string|is_args|http_referer|arg_\w+)\b/;
 
+test('the backend container execs Node after migrations so it receives stop signals', () => {
+    assert.match(composeService('backend'), /^ {4}command: sh -c "npm run migrate && exec node server\.js"$/m);
+});
+
+test('the backend healthcheck uses Node and gives migrations time to boot', () => {
+    const backend = composeService('backend');
+    assert.match(backend, /^ {4}healthcheck:\n {6}test: \["CMD", "node", "scripts\/healthcheck\.js"\]\n {6}interval: 10s\n {6}timeout: 3s\n {6}retries: 3\n {6}start_period: 40s$/m);
+    assert.doesNotMatch(backend, /curl|wget/);
+    assert.match(composeService('nginx'), /^ {4}depends_on:\n {6}- backend\n {6}- frontend$/m);
+});
+
+test('the container allows the ten-second shutdown deadline to finish before SIGKILL', () => {
+    assert.match(composeService('backend'), /^ {4}stop_grace_period: 15s$/m);
+});
+
 test('neither nginx writes query strings or referers into its access log, so tokens in links stay out of it', () => {
     [['nginx/default.conf', nginx], ['frontend/nginx/nginx.conf', read('frontend/nginx/nginx.conf')]].forEach(([file, conf]) => {
         const format = conf.match(/log_format\s+(\w+)\s+([\s\S]*?);/);
