@@ -35,7 +35,7 @@ test('quitting an offline Redis clears its queued reconnect so the process can e
     const result = await new Promise((resolve, reject) => {
         const child = spawn(process.execPath, ['-e', script], {
             cwd: path.join(__dirname, '..'),
-            env: { ...process.env, TEST_DB_NAME: 'case_test_codex', NODE_ENV: 'development', REDIS_HOST: '127.0.0.1', REDIS_PORT: String(port) },
+            env: { ...process.env, NODE_ENV: 'development', REDIS_HOST: '127.0.0.1', REDIS_PORT: String(port) },
         });
         let stdout = '';
         let stderr = '';

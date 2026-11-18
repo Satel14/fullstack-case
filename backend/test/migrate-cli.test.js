@@ -230,6 +230,10 @@ const indexFingerprint = async (connection, schema) => {
 };
 
 test('a baseline-marked live schema and a chain built from empty converge', async (t) => {
+    if (process.env.SKIP_DUMP_CONVERGENCE === '1') {
+        t.skip('dump convergence requires a second database');
+        return;
+    }
     if (!fs.existsSync(DUMP)) {
         t.skip(`pre-work dump not found at ${DUMP}`);
         return;
