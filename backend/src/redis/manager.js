@@ -78,9 +78,9 @@ const getListRange = (key, start, stop) => new Promise((resolve, reject) => {
 });
 
 const REMOVE_LIST_MESSAGE_SCRIPT = [
+    'local needle = \'"messageId":"\' .. ARGV[1] .. \'"\'',
     'for _, raw in ipairs(redis.call("LRANGE", KEYS[1], 0, -1)) do',
-    '    local ok, message = pcall(cjson.decode, raw)',
-    '    if ok and type(message) == "table" and message.messageId == ARGV[1] then',
+    '    if string.find(raw, needle, 1, true) then',
     '        redis.call("LREM", KEYS[1], 1, raw)',
     '        return raw',
     '    end',

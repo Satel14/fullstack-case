@@ -10,7 +10,7 @@ async function postChatMessage(userInfo, msg, { findUser, saveMessage, now = Dat
     if (!userInfo) {
         return { ok: false, reason: 'unauthorized' };
     }
-    if (typeof msg !== 'string' || !msg.trim()) {
+    if (typeof msg !== 'string' || !msg.trim() || !msg.isWellFormed()) {
         return { ok: false, reason: 'empty' };
     }
     if (msg.length > MAX_MESSAGE_LENGTH) {

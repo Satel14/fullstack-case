@@ -104,3 +104,21 @@ test('temporary mutes refuse with the deadline and seconds remaining, then expir
     deps.now = () => 1700000060000;
     assert.strictEqual((await postChatMessage({ id: 7 }, 'allowed', deps)).ok, true);
 });
+
+test('unpaired UTF-16 surrogates are refused before looking up or storing a message', async () => {
+    for (const msg of ['\ud800', '\udfff', 'before\ud800after', '\ud800\ud800', '\udfff\ud800']) {
+        const { saved, deps } = setup(player(ROLES.NORMAL));
+        deps.findUser = async () => { assert.fail('invalid text must be refused before a session lookup'); };
+        assert.deepStrictEqual(await postChatMessage({ id: 7 }, msg, deps), { ok: false, reason: 'empty' });
+        assert.strictEqual(saved.length, 0);
+    }
+});
+
+test('well-formed surrogate pairs and replacement characters remain valid chat text', async () => {
+    for (const msg of ['hello \ud83d\ude00', '\ud800\udc00', '\ufffd']) {
+        const { saved, deps } = setup(player(ROLES.NORMAL));
+        const result = await postChatMessage({ id: 7 }, msg, deps);
+        assert.strictEqual(result.ok, true);
+        assert.strictEqual(saved[0].msg, msg);
+    }
+});
