@@ -10,7 +10,7 @@ const {
 } = require('./credentials');
 const EmailVerificationService = require('../services/emailVerification');
 const clientOrigin = require('../config/clientOrigin');
-const { answerFailure } = require('../helpers/failure');
+const { answerFailure, loggable } = require('../helpers/failure');
 const { DEFAULT_AVATAR, isAcceptableAvatar } = require('../helpers/avatar');
 
 const mailConfirmationOrNotice = async ({
@@ -44,7 +44,7 @@ const requestConfirmation = async (res, registration) => {
     try {
         await mailConfirmationOrNotice(registration);
     } catch (e) {
-        console.error('[register] confirmation not sent after the answer:', e.message);
+        console.error('[register] confirmation not sent after the answer:', loggable(e));
     }
     return res;
 };

@@ -5,6 +5,7 @@ const { createRateLimiter, createTrailingThrottle } = require('./throttle');
 const { createPresence } = require('./presence');
 const { oncePerConnection } = require('./connectionClaim');
 const clientOrigin = require('../config/clientOrigin');
+const { loggable } = require('../helpers/failure');
 
 let ioInstance = null;
 let presenceInstance = null;
@@ -29,7 +30,7 @@ const authenticateHandshake = async (socket, next) => {
     try {
         user = await userFromToken(token);
     } catch (e) {
-        console.error('[chat] handshake session check failed:', e.message);
+        console.error('[chat] handshake session check failed:', loggable(e));
         return next(new Error(SESSION_CHECK_FAILED));
     }
     socket.userInfo = user ? {
@@ -48,7 +49,7 @@ const onUserConnected = (socket, presence) => async () => {
         const lastMessages = await ChatService.get();
         socket.emit('chat messages', lastMessages);
     } catch (e) {
-        console.error('[chat] user connected error:', e.message);
+        console.error('[chat] user connected error:', loggable(e));
     }
 };
 
@@ -104,7 +105,7 @@ module.exports = function (server) {
                 }
                 reply({ ok: result.ok, reason: result.reason });
             } catch (e) {
-                console.error('[chat] chat message error:', e.message);
+                console.error('[chat] chat message error:', loggable(e));
                 reply({ ok: false, reason: 'error' });
             }
         })

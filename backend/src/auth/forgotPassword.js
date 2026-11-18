@@ -6,7 +6,7 @@ const PasswordResetService = require('../services/passwordReset');
 const { authLimiter } = require('../middleware/rateLimiters');
 const { isAcceptablePassword } = require('./credentials');
 const clientOrigin = require('../config/clientOrigin');
-const { answerFailure } = require('../helpers/failure');
+const { answerFailure, loggable } = require('../helpers/failure');
 
 const mailResetLink = async (email) => {
     const user = await Users.findOne({ where: { user_email: email } });
@@ -37,7 +37,7 @@ module.exports = (app) => {
         try {
             await mailResetLink(email.trim());
         } catch (e) {
-            console.error('[forgot-password] reset link not sent after the answer:', e.message);
+            console.error('[forgot-password] reset link not sent after the answer:', loggable(e));
         }
         return res;
     });

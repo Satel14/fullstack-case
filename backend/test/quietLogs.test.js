@@ -99,3 +99,14 @@ test('no log line anywhere in the backend is handed an error object, whose query
 
     assert.deepStrictEqual(offenders, []);
 });
+
+test('registration, password recovery and every socket catch log retain stack frames through loggable', () => {
+    const files = ['auth/register.js', 'auth/forgotPassword.js', ...jsFiles(path.join(SRC, 'socket'))];
+    const calls = files.flatMap((file) => {
+        const full = path.isAbsolute(file) ? file : path.join(SRC, file);
+        return consoleCalls(fs.readFileSync(full, 'utf8')).map((call) => ({ file, ...call }));
+    });
+
+    assert.ok(calls.length >= 5, 'the auth and socket failures must still be logged');
+    assert.deepStrictEqual(calls.filter(({ args }) => !/\bloggable\(\w+\)/.test(args)), []);
+});
