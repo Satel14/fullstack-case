@@ -2508,6 +2508,22 @@ blockquote {
         }
     }
 
+    @media (max-width: 359px) {
+        .headersecond-chat {
+            margin-right: 4px;
+        }
+
+        .headersecond-profile {
+            margin-left: 4px;
+        }
+
+        .headersecond-profile__avatar {
+            width: 32px;
+            height: 32px;
+            margin-right: 4px;
+        }
+    }
+
     .ant-menu {
         background-color: $backgroundColor2;
     }
