@@ -8,7 +8,7 @@ import { getStorageLastItemsWithUserInfo } from '../api/all/storage';
 import { itemInfoFetch, addItemsToCache } from '../store/actions/itemCache';
 
 jest.mock('react-i18next', () => ({
-    withTranslation: () => (Component) => (props) => <Component {...props} t={(key) => key} />,
+    withTranslation: () => (Component) => (props) => <Component {...props} t={(key, options) => (key === 'header.winnerProfile' ? `${key}: ${options.player}: ${options.drop}` : key)} />,
     useTranslation: () => ({ t: (key) => key }),
     initReactI18next: { type: '3rdParty', init: () => {} },
 }));
@@ -157,7 +157,7 @@ test('each drop in the feed is a link named by its item, its grade and, when pai
         </Provider>,
     );
 
-    expect(await screen.findByRole('link', { name: 'Knife, grade.special, item.colors.painted' })).toHaveAttribute('href', '/profile/1');
-    expect(screen.getByRole('link', { name: 'Rifle, grade.restricted' })).toHaveAttribute('href', '/profile/2');
-    expect(screen.getByRole('link', { name: 'item.placeholder' })).toHaveAttribute('href', '/profile/3');
+    expect(await screen.findByRole('link', { name: 'header.winnerProfile: top.playerFallback: Knife, grade.special, item.colors.painted' })).toHaveAttribute('href', '/profile/1');
+    expect(screen.getByRole('link', { name: 'header.winnerProfile: top.playerFallback: Rifle, grade.restricted' })).toHaveAttribute('href', '/profile/2');
+    expect(screen.getByRole('link', { name: 'header.winnerProfile: top.playerFallback: item.placeholder' })).toHaveAttribute('href', '/profile/3');
 });

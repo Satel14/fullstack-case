@@ -35,6 +35,7 @@ class HeaderThird extends React.Component {
         super(props);
         this.state = {
             storageLast: [],
+            userList: {},
         };
         this.handleNewDrop = this.handleNewDrop.bind(this);
     }
@@ -46,7 +47,10 @@ class HeaderThird extends React.Component {
             const result = await getStorageLastItemsWithUserInfo(FEED_LENGTH);
             if (this.mounted && result && result.status === 200) {
                 const loaded = result.data || [];
-                this.setState((prevState) => ({ storageLast: mergeDrops(prevState.storageLast, loaded) }));
+                this.setState((prevState) => ({
+                    storageLast: mergeDrops(prevState.storageLast, loaded),
+                    userList: result.userList || {},
+                }));
 
                 this.props.cacheItems(result.itemList);
                 loaded.forEach((item) => this.props.fetchItemInfo(item.storage_itemId));
@@ -91,11 +95,14 @@ class HeaderThird extends React.Component {
     dropLabel(item) {
         const { t } = this.props;
         const info = this.getShortInfoItem(item.storage_itemId);
-        return [
+        const description = [
             itemName(info, t, item.storage_itemId),
             gradeName(info && info.item_grade, t),
             item.storage_color !== 'default' && colorName(item.storage_color, t),
         ].filter(Boolean).join(', ');
+        const player = item.user_login || this.state.userList[item.storage_userId]?.user_login
+            || t('top.playerFallback', { n: item.storage_userId });
+        return t('header.winnerProfile', { player, drop: description });
     }
 
     render() {

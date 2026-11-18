@@ -44,6 +44,7 @@
         "login": "Log in"
     },
     "header": {
+        "winnerProfile": "Open {{player}}'s profile: {{drop}}",
         "deposit": "Top up",
         "chat": "Chat",
         "openMenu": "Menu",

@@ -182,6 +182,7 @@ module.exports.openCaseById = async (req, res) => {
         if (io) {
             arrResultCase.forEach((resultCase) => {
                 io.emit('new-drop', {
+                    user_login: req.user.profile.user_login,
                     storage_id: resultCase.winner.storageId,
                     storage_itemId: resultCase.winner.item.id,
                     storage_userId: user_id,
