@@ -7,7 +7,7 @@ function H2Component({ title, subTitle, help }) {
     const { t } = useTranslation();
     return (
         <div className="title-a">
-            <span className="title-a__1" />
+            <span className="title-a__l" />
             <span className="title-a__heading">
                 {title}
                 <span>{subTitle}</span>
