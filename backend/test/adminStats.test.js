@@ -220,7 +220,7 @@ test('legacy spend is unknown per case while the ledger total remains exact, eve
     assert.equal(report.cases[0].expectedEdge, null);
 });
 
-test('the current expected edge follows generator item weights and 90/10 prices at the effective sale price', async () => {
+test('the current expected edge follows generator item weights and 90/10 prices at the effective sale price, read from prices stored the way buildPriceMap stores them', async () => {
     await resetTestDatabase();
     await open();
     await sequelize.query("INSERT INTO cases (id, title, price, discount) VALUES ('dust2', 'Dust II', 200, 100)");
@@ -230,7 +230,7 @@ test('the current expected edge follows generator item weights and 90/10 prices 
         const prices = { default: 10 + index, painted: 100 + index };
         const name = `Stats item ${item.id}`;
         await sequelize.query('INSERT INTO items (itemId, name) VALUES (?, ?)', { replacements: [item.id, name] });
-        await sequelize.query('INSERT INTO insider_prices (id, name, pricesInCredits) VALUES (?, ?, ?)', { replacements: [item.id, name, JSON.stringify(prices)] });
+        await sequelize.query('INSERT INTO insider_prices (id, name, pricesInCredits) VALUES (?, ?, JSON_QUOTE(?))', { replacements: [item.id, name, JSON.stringify(prices)] });
         ev += odds[item.id] * (0.9 * prices.default + 0.1 * prices.painted);
     }
     const row = (await data()).cases[0];
@@ -239,6 +239,18 @@ test('the current expected edge follows generator item weights and 90/10 prices 
     assert.equal(row.valueGiven, '75.25');
     await sequelize.query('DELETE FROM insider_prices LIMIT 1');
     assert.equal((await data()).cases[0].expectedEdge, null);
+});
+
+test('a period whose ledger shows case spending but which has no recorded opens reports no value and no edge, not a 100% edge', async () => {
+    await resetTestDatabase();
+    await ledger('opencase', '-100.00');
+
+    const { totals } = await data();
+
+    assert.equal(totals.opens, 0);
+    assert.equal(totals.spent, '100.00');
+    assert.equal(totals.valueGiven, null);
+    assert.equal(totals.realizedEdge, null);
 });
 
 test('period scans have date-leading indexes and reuse the withdrawal completion index', async () => {

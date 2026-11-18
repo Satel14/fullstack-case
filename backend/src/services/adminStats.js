@@ -60,7 +60,14 @@ const EXPECTED_SQL = `
     )) d
     JOIN cases c ON c.id = CAST(d.caseId AS BINARY)
     LEFT JOIN items i ON i.itemId = d.itemId
-    LEFT JOIN insider_prices p ON p.name = i.name
+    LEFT JOIN (
+        SELECT name, CASE
+            WHEN JSON_TYPE(pricesInCredits) = 'OBJECT' THEN pricesInCredits
+            WHEN JSON_TYPE(pricesInCredits) = 'STRING' AND JSON_VALID(JSON_UNQUOTE(pricesInCredits))
+                THEN CAST(JSON_UNQUOTE(pricesInCredits) AS JSON)
+        END AS pricesInCredits
+        FROM insider_prices
+    ) p ON p.name = i.name
     WHERE d.caseId IN (:caseIds)
     GROUP BY d.caseId, c.price, c.discount`;
 
@@ -83,16 +90,18 @@ module.exports.get = async (period) => sequelize.transaction({ isolationLevel: T
     }) : [];
     const expectedById = new Map(expected.map((row) => [row.caseId, row.expectedEdge]));
     const total = opens.find((row) => row.caseId === null);
+    const unopenedValue = Number(ledger.spent) === 0 ? '0.00' : null;
+    const valueGiven = total ? total.valueGiven : unopenedValue;
     const [[edge]] = await sequelize.query(
         'SELECT CAST(1 - CAST(:value AS DECIMAL(32, 2)) / NULLIF(CAST(:spent AS DECIMAL(32, 2)), 0) AS DECIMAL(20, 6)) AS realizedEdge',
-        { replacements: { value: total?.valueGiven ?? (total ? null : '0.00'), spent: ledger.spent }, transaction },
+        { replacements: { value: valueGiven, spent: ledger.spent }, transaction },
     );
     return {
         period,
         totals: {
             opens: Number(total?.opens || 0),
             ...ledger,
-            valueGiven: total ? total.valueGiven : '0.00',
+            valueGiven,
             knownValueGiven: total?.knownValueGiven || '0.00',
             unvaluedOpens: Number(total?.unvaluedOpens || 0),
             realizedEdge: edge.realizedEdge,
