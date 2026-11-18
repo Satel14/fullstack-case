@@ -241,7 +241,7 @@ const routesOf = (stack) => stack.flatMap((layer) => {
     return [];
 });
 
-const LIST_HEADS = ['1', '100', '0', '-1', 'abc', '2147483647', 'inventory'];
+const LIST_HEADS = ['1', '100', '0', '-1', 'abc', '2147483647', 'inventory', true, new Date(Date.now() + 86400000).toISOString()];
 
 test('no rule set lets a list through for a body field it checks, headed by any value the field takes alone', async () => {
     const leaks = [];

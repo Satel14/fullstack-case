@@ -5,6 +5,7 @@ const { articleBody } = require('../../middleware/jsonBody');
 const ActionsController = require('../../controllers/admin/actions');
 const ArticlesController = require('../../controllers/admin/articles');
 const CasesController = require('../../controllers/admin/cases');
+const PromocodesController = require('../../controllers/admin/promocodes');
 const SaleRateController = require('../../controllers/admin/saleRate');
 const UsersController = require('../../controllers/admin/users');
 
@@ -16,6 +17,9 @@ module.exports = (app) => {
     app.put('/api/admin/case/:id', adminLimiter, authenticate, adminOnly, CasesController.validate('update'), CasesController.update);
     app.get('/api/admin/sale-rate', adminLimiter, authenticate, adminOnly, SaleRateController.get);
     app.put('/api/admin/sale-rate', adminLimiter, authenticate, adminOnly, SaleRateController.validate('update'), SaleRateController.update);
+    app.get('/api/admin/promocodes', adminLimiter, authenticate, adminOnly, PromocodesController.list);
+    app.post('/api/admin/promocode', adminLimiter, authenticate, adminOnly, PromocodesController.validate('create'), PromocodesController.create);
+    app.put('/api/admin/promocode/:code', adminLimiter, authenticate, adminOnly, PromocodesController.validate('update'), PromocodesController.update);
     app.get('/api/admin/users', adminLimiter, authenticate, adminOnly, UsersController.list);
     app.put('/api/admin/user/:id/role', adminLimiter, authenticate, adminOnly, UsersController.validate('setRole'), UsersController.setRole);
     app.post('/api/admin/user/:id/balance', adminLimiter, authenticate, adminOnly, UsersController.validate('adjustBalance'), UsersController.adjustBalance);
