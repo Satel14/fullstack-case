@@ -1,4 +1,5 @@
 const redis = require('redis');
+const { loggable } = require('../helpers/failure');
 const redisHost = process.env.REDIS_HOST || (process.env.NODE_ENV === 'production' ? 'redis' : 'localhost');
 const redisPort = Number(process.env.REDIS_PORT) || 6379;
 const RETRY_MAX_DELAY_MS = 5000;
@@ -20,6 +21,22 @@ const clientOptions = {
 };
 
 const client = redis.createClient(redisPort, redisHost, clientOptions);
+
+const ping = () => new Promise((resolve, reject) => {
+    client.ping((err, reply) => {
+        if (err) return reject(err);
+        if (reply !== 'PONG') return reject(new Error('Unexpected Redis PING response'));
+        return resolve(reply);
+    });
+});
+
+const quit = () => new Promise((resolve, reject) => {
+    client.quit((err) => {
+        client.end(true);
+        if (err) return reject(err);
+        return resolve();
+    });
+});
 
 const InsiderPricesService = require("./../services/insiderPrices");
 const ItemService = require("./../services/item");
@@ -108,37 +125,62 @@ async function initialRedisState() {
     await new Promise((resolve, reject) => {
         transaction.exec((err, replies) => (err ? reject(err) : resolve(replies)));
     });
-    console.log("[Redis] Items Loaded");
     const ungraded = countUngraded(hash);
     if (ungraded > 0) {
         console.warn(`[Redis] ${ungraded} items have no grade and show without grade colours: run npm run seed, then restart the backend`);
     }
 }
 
-client.on("connect", async function () {
-    console.log('[Redis] Redis Connected');
-});
-
 client.on("error", (err) => {
-    console.error('[Redis]', err.message);
+    console.error('[Redis]', loggable(err));
 });
 
 function startItemCacheSync() {
     let retryTimer = null;
+    let stopped = false;
+    let running = null;
+    let reloadRequested = false;
     const load = () => {
+        if (stopped) {
+            return;
+        }
+        if (running) {
+            reloadRequested = true;
+            return;
+        }
         clearTimeout(retryTimer);
-        initialRedisState().catch((e) => {
-            console.error(`[Redis] Items not loaded, retrying in ${CACHE_RELOAD_RETRY_MS / 1000}s:`, e.message);
-            retryTimer = setTimeout(load, CACHE_RELOAD_RETRY_MS);
+        running = initialRedisState().catch((e) => {
+            if (!stopped) {
+                console.error(`[Redis] Items not loaded, retrying in ${CACHE_RELOAD_RETRY_MS / 1000}s:`, loggable(e));
+                retryTimer = setTimeout(load, CACHE_RELOAD_RETRY_MS);
+                retryTimer.unref();
+            }
+        }).finally(() => {
+            running = null;
+            if (reloadRequested && !stopped) {
+                reloadRequested = false;
+                load();
+            }
         });
     };
     client.on("ready", load);
     if (client.ready) {
         load();
     }
+    return {
+        stop: () => {
+            stopped = true;
+            reloadRequested = false;
+            clearTimeout(retryTimer);
+            client.removeListener('ready', load);
+            return running || Promise.resolve();
+        },
+    };
 }
 
 module.exports = {
+    ping,
+    quit,
     addDataHashWithKey,
     getAllDataHashWithKey,
     setDataHashWithKey,
