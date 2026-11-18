@@ -29,7 +29,12 @@ const errorPayload = async (result) => {
     try {
         const body = await result.json();
         const message = body && typeof body.message === 'string' ? body.message : '';
-        return message ? { error: result.status, message } : { error: result.status };
+        const rate = body && typeof body.rate === 'number' ? body.rate : null;
+        return {
+            error: result.status,
+            ...(message && { message }),
+            ...(rate !== null && { rate }),
+        };
     } catch (e) {
         return { error: result.status };
     }

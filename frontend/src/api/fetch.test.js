@@ -1,4 +1,4 @@
-import { get, post } from './fetch';
+import { get, post, put } from './fetch';
 
 const respond = (status, body = {}) => Promise.resolve({
     ok: status >= 200 && status < 300,
@@ -101,4 +101,12 @@ test('a 401 without a token and any other failure leave the page alone', async (
     await expect(post('/case/open', {})).rejects.toEqual({ error: 403, message: 'banned' });
     expect(localStorage.getItem('token')).toBe('valid');
     expect(window.location.href).toBe('/case/dust2');
+});
+
+test('a refusal that names a sale rate hands the rate to the caller with the message', async () => {
+    global.fetch.mockReturnValue(respond(409, { status: 409, message: 'price changed', rate: 0.85 }));
+    await expect(put('/storage/sell/5', { rate: 1 })).rejects.toEqual({ error: 409, message: 'price changed', rate: 0.85 });
+
+    global.fetch.mockReturnValue(respond(409, { status: 409, message: 'price changed', rate: '0.85' }));
+    await expect(put('/storage/sell/5', { rate: 1 })).rejects.toEqual({ error: 409, message: 'price changed' });
 });

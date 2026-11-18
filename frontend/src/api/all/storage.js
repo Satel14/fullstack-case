@@ -1,4 +1,5 @@
 import { post, get, put } from '../fetch';
+import { isSaleRate } from '../../helpers/saleRate';
 
 const getProfileStorage = (fields) => post('/profile/storage', {
     ...fields,
@@ -14,7 +15,7 @@ const getStorageItemsCountByUserId = (id) => get(`/storage/count/${id}`);
 
 const getFavoriteCaseByUserId = (id) => get(`/storage/favorite/${id}`);
 
-const sellItemByStorageId = (storageId) => put(`/storage/sell/${storageId}`, {});
+const sellItemByStorageId = (storageId, rate) => put(`/storage/sell/${storageId}`, isSaleRate(rate) ? { rate } : {});
 
 const receiveItemByStorageId = (storageId) => put(`/storage/receive/${storageId}`, {});
 
