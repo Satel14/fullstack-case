@@ -19,8 +19,7 @@ const { MAX_OFFSET } = require('../helpers/paging');
 const MESSAGE = require('../constant/responseMessages');
 const sequelize = require('../config/db');
 
-const UAH_CREDIT_RATE_MODULE = 'uah-credit-rate';
-const DEFAULT_UAH_CREDIT_RATE = 1;
+const { SALE_RATE_MODULE, DEFAULT_SALE_RATE } = require('../constant/saleRate');
 const USER_HISTORY_MAX_LIMIT = 1000;
 
 function jsonParser(blob) {
@@ -181,9 +180,9 @@ module.exports.sellItemByStorageId = async (req, res) => {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NO_PRICE });
         }
 
-        const rateModule = await ModuleService.findModuleById(UAH_CREDIT_RATE_MODULE);
+        const rateModule = await ModuleService.findModuleById(SALE_RATE_MODULE);
 
-        const rate = rateModule ? rateModule.extraData : DEFAULT_UAH_CREDIT_RATE;
+        const rate = rateModule ? rateModule.extraData : DEFAULT_SALE_RATE;
 
         const actualPrice = salePayout(price, parseFloat(rate));
 

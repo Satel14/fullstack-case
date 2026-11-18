@@ -31,3 +31,16 @@ module.exports.getModuleById = async (moduleId) => {
 
     return data;
 };
+
+module.exports.setModuleValue = async (param, extraData, { transaction }) => {
+    const row = await Module.findByPk(param, { transaction, lock: transaction.LOCK.UPDATE });
+    const before = row ? row.extraData : null;
+
+    if (row) {
+        await row.update({ extraData }, { transaction });
+    } else {
+        await Module.create({ param, status: 1, extraData }, { transaction });
+    }
+
+    return before;
+};
