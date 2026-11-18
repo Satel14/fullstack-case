@@ -161,6 +161,7 @@ class Profile extends Component {
         const itemInfoById = Object.fromEntries(uniqueItemIds
             .map((itemId, index) => [itemId, items[index]])
             .filter(([, item]) => !item.placeholder));
+        const failedItemIds = new Set(uniqueItemIds.filter((itemId, index) => items[index].placeholder === 'failed'));
 
         const { t } = this.props;
         const bestDrop = bestDropRecord ? describeDrop(bestDropRecord, itemInfoById, t) : null;
@@ -181,7 +182,7 @@ class Profile extends Component {
             favoriteFailed: !favoriteResp,
             countsFailed: !countResp,
             bestDropFailed: !countResp || Boolean(bestDropRecord && !bestDrop),
-            historyFailed: !historyResp,
+            historyFailed: !historyResp || storageItems.some((item) => failedItemIds.has(item.storage_itemId)),
         });
     }
 

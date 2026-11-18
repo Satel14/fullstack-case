@@ -188,6 +188,8 @@ test('items that could not be loaded are left out of the history and the best dr
     expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('profile.statsFailed');
     expect(container.querySelectorAll('.casehistory-itemlist_item')).toHaveLength(0);
     expect(screen.queryByText(/4242/)).toBeNull();
+    expect(container.querySelector('.casehistory-itemlist').textContent).toContain('profile.statsFailed');
+    expect(screen.queryByText('profile.noHistory')).toBeNull();
 });
 
 test.each([
