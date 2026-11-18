@@ -84,6 +84,7 @@ test('an edited article is saved with all four fields and the editor then shows 
         article_text: '<p>Нові правила</p><script>x()</script>',
         article_titleEn: 'Service Rules',
         article_textEn: '<p>Old rules</p>',
+        article_updatedAt: '2026-10-28T10:00:00.000Z',
     }));
     await waitFor(() => expect(screen.getByLabelText('admin.articles.text').value).toBe('<p>Нові правила</p>'));
     expect(openNotification).toHaveBeenCalledWith('success', 'admin.articles.saved', 'Правила');
@@ -175,6 +176,32 @@ test('an English title of spaces or an English text with nothing to show counts 
     fireEvent.change(screen.getByLabelText('admin.articles.textEn'), { target: { value: '<p> </p><textarea>English text</textarea>' } });
     expect(screen.getByText('admin.articles.enFallback')).toBeInTheDocument();
     expect(within(english).getByText('Старі правила')).toBeInTheDocument();
+});
+
+test('a save refused because someone changed the article meanwhile says so and reloads the list', async () => {
+    const reason = 'Статтю вже змінили, поки ви її редагували. Відкрийте її знову, щоб не затерти нові правки';
+    updateAdminArticle.mockRejectedValue({ error: 409, message: reason });
+    renderTab();
+    await openEditor('Правила сервісу');
+
+    fireEvent.click(screen.getByRole('button', { name: 'admin.save' }));
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'admin.articles.saveFailed', reason));
+    await waitFor(() => expect(getAdminArticles).toHaveBeenCalledTimes(2));
+});
+
+test('the next save in the same editor is based on the copy the server just stored', async () => {
+    updateAdminArticle.mockResolvedValueOnce({ data: { ...rules, article_titleEn: 'Rules', updated_at: '2026-11-18T20:00:00.000Z' } });
+    updateAdminArticle.mockResolvedValueOnce({ data: { ...rules, article_titleEn: 'Rules 2', updated_at: '2026-11-18T20:01:00.000Z' } });
+    renderTab();
+    await openEditor('Правила сервісу');
+
+    fireEvent.click(screen.getByRole('button', { name: 'admin.save' }));
+    await waitFor(() => expect(screen.getByLabelText('admin.articles.titleEn').value).toBe('Rules'));
+    fireEvent.click(screen.getByRole('button', { name: 'admin.save' }));
+
+    await waitFor(() => expect(updateAdminArticle).toHaveBeenCalledTimes(2));
+    expect(updateAdminArticle.mock.calls[1][1].article_updatedAt).toBe('2026-11-18T20:00:00.000Z');
 });
 
 test('a refused save shows the reason the server gave and keeps the editor open', async () => {

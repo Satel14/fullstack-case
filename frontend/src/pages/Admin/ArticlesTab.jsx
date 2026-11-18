@@ -46,6 +46,7 @@ const ArticlesTab = () => {
     const [failed, setFailed] = useState(false);
     const [editing, setEditing] = useState(null);
     const [draft, setDraft] = useState(null);
+    const [basedOn, setBasedOn] = useState(null);
     const [saving, setSaving] = useState(false);
 
     const load = useCallback(async () => {
@@ -67,6 +68,7 @@ const ArticlesTab = () => {
     const edit = (article) => {
         setEditing(article.article_id);
         setDraft(draftOf(article));
+        setBasedOn(article.updated_at || null);
     };
 
     const close = () => {
@@ -82,14 +84,18 @@ const ArticlesTab = () => {
     const save = async () => {
         setSaving(true);
         try {
-            const res = await updateAdminArticle(editing, draft);
+            const res = await updateAdminArticle(editing, { ...draft, article_updatedAt: basedOn });
             const saved = res.data;
             setArticles((prev) => prev.map((article) => (article.article_id === saved.article_id ? saved : article)));
             setDraft(draftOf(saved));
+            setBasedOn(saved.updated_at || null);
             openNotification('success', t('admin.articles.saved'), saved.article_title);
         } catch (e) {
             const message = e && e.error && e.message ? e.message : t('common.serverError');
             openNotification('error', t('admin.articles.saveFailed'), message);
+            if (e && e.error === 409) {
+                load();
+            }
         } finally {
             setSaving(false);
         }
