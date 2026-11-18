@@ -77,6 +77,21 @@ const getListRange = (key, start, stop) => new Promise((resolve, reject) => {
     client.lrange(key, start, stop, (err, reply) => (err ? reject(err) : resolve(reply)));
 });
 
+const REMOVE_LIST_MESSAGE_SCRIPT = [
+    'for _, raw in ipairs(redis.call("LRANGE", KEYS[1], 0, -1)) do',
+    '    local ok, message = pcall(cjson.decode, raw)',
+    '    if ok and type(message) == "table" and message.messageId == ARGV[1] then',
+    '        redis.call("LREM", KEYS[1], 1, raw)',
+    '        return raw',
+    '    end',
+    'end',
+    'return false',
+].join('\n');
+
+const removeListMessage = (key, messageId) => new Promise((resolve, reject) => {
+    client.eval(REMOVE_LIST_MESSAGE_SCRIPT, 1, key, messageId, (err, raw) => (err ? reject(err) : resolve(raw)));
+});
+
 const ADOPT_LEGACY_HASH_SCRIPT = [
     'local legacy, list, oversized = KEYS[1], KEYS[2], KEYS[3]',
     'local keep, largest = tonumber(ARGV[1]), tonumber(ARGV[2])',
@@ -187,6 +202,7 @@ module.exports = {
     cleanDataHashWithKey,
     appendToCappedList,
     getListRange,
+    removeListMessage,
     adoptLegacyHash,
     ADOPT_LEGACY_HASH_SCRIPT,
     initialRedisState,

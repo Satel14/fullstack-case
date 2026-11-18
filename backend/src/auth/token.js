@@ -10,6 +10,7 @@ const SESSION_FIELDS = [
     'user_email',
     'user_receiveInfo',
     'user_role',
+    'user_mutedUntil',
     'user_tokenVersion',
 ];
 

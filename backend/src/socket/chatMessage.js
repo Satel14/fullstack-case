@@ -1,4 +1,5 @@
 const ROLES = require('../constant/enums/roles');
+const { randomUUID } = require('node:crypto');
 
 const CHAT_MUTED_ROLES = [ROLES.BANNED, ROLES.BANNED_CHAT];
 const MAX_MESSAGE_LENGTH = 500;
@@ -23,8 +24,14 @@ async function postChatMessage(userInfo, msg, { findUser, saveMessage, now = Dat
     if (!canPostInChat(user.user_role)) {
         return { ok: false, reason: 'banned' };
     }
+    const mutedUntil = new Date(user.user_mutedUntil).getTime();
+    const remainingSeconds = Math.ceil((mutedUntil - now()) / 1000);
+    if (remainingSeconds > 0) {
+        return { ok: false, reason: 'muted', mutedUntil: new Date(mutedUntil).toISOString(), remainingSeconds };
+    }
 
     const message = {
+        messageId: randomUUID(),
         login: user.user_login,
         msg,
         id: user.user_id,

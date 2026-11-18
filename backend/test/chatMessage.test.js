@@ -26,7 +26,9 @@ test('a normal player posts and the message is stored', async () => {
     const result = await postChatMessage({ id: 7 }, 'hello', deps);
 
     assert.strictEqual(result.ok, true);
-    assert.deepStrictEqual(result.message, {
+    const { messageId, ...message } = result.message;
+    assert.match(messageId, /^[a-f0-9-]{36}$/);
+    assert.deepStrictEqual(message, {
         login: 'player', msg: 'hello', id: 7, avatar: 'a.png', time: 1700000000,
     });
     assert.deepStrictEqual(saved, [result.message]);
@@ -90,4 +92,15 @@ test('only a string message within the length limit is accepted', async () => {
     const longest = await postChatMessage({ id: 7 }, 'x'.repeat(MAX_MESSAGE_LENGTH), deps);
     assert.strictEqual(longest.ok, true);
     assert.strictEqual(saved.length, 1);
+});
+
+test('temporary mutes refuse with the deadline and seconds remaining, then expire at the deadline', async () => {
+    const { saved, deps } = setup({ ...player(ROLES.NORMAL), user_mutedUntil: new Date(1700000060000) });
+    const result = await postChatMessage({ id: 7 }, 'blocked', deps);
+    assert.deepStrictEqual(result, {
+        ok: false, reason: 'muted', mutedUntil: '2023-11-14T22:14:20.000Z', remainingSeconds: 60,
+    });
+    assert.strictEqual(saved.length, 0);
+    deps.now = () => 1700000060000;
+    assert.strictEqual((await postChatMessage({ id: 7 }, 'allowed', deps)).ok, true);
 });

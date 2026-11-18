@@ -1,5 +1,6 @@
 const RedisManager = require("../redis/manager");
 const { parseChatMessage } = require('../helpers/chat');
+const { randomUUID } = require('node:crypto');
 
 const CHAT_LIST = "chat_messages";
 const LEGACY_CHAT_HASH = "chat_hash";
@@ -34,8 +35,20 @@ const adoptLegacyHistoryOnce = () => {
 
 module.exports.add = async (data) => {
     await adoptLegacyHistoryOnce();
+    if (!data.messageId) data.messageId = randomUUID();
     await RedisManager.appendToCappedList(CHAT_LIST, JSON.stringify(data), MAXIMUM_STORED_MESSAGES);
 }
+
+module.exports.find = async (messageId) => {
+    await adoptLegacyHistoryOnce();
+    const entries = await RedisManager.getListRange(CHAT_LIST, -MAXIMUM_STORED_MESSAGES, -1);
+    return entries.map(parseChatMessage).find((message) => message && message.messageId === messageId) || null;
+};
+
+module.exports.remove = async (messageId) => {
+    await adoptLegacyHistoryOnce();
+    return parseChatMessage(await RedisManager.removeListMessage(CHAT_LIST, messageId));
+};
 
 module.exports.get = async () => {
     await adoptLegacyHistoryOnce();

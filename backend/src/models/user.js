@@ -54,6 +54,11 @@ module.exports = sequelize.define(
             type: Sequelize.INTEGER,
             defaultValue: 1,
         },
+        user_mutedUntil: {
+            field: "mutedUntil",
+            type: Sequelize.DATE,
+            allowNull: true,
+        },
         created_at: {
             field: "created_at",
             type: Sequelize.DATE,

@@ -8,8 +8,12 @@ const CasesController = require('../../controllers/admin/cases');
 const PromocodesController = require('../../controllers/admin/promocodes');
 const SaleRateController = require('../../controllers/admin/saleRate');
 const UsersController = require('../../controllers/admin/users');
+const ChatController = require('../../controllers/admin/chat');
 
 module.exports = (app) => {
+    app.put('/api/admin/user/:id/mute', adminLimiter, authenticate, adminOnly, ChatController.validate('mute'), ChatController.mute);
+    app.put('/api/admin/user/:id/unmute', adminLimiter, authenticate, adminOnly, ChatController.validate('unmute'), ChatController.unmute);
+    app.post('/api/admin/chat/message/:id/remove', adminLimiter, authenticate, adminOnly, ChatController.validate('removeMessage'), ChatController.removeMessage);
     app.get('/api/admin/actions', adminLimiter, authenticate, adminOnly, ActionsController.list);
     app.get('/api/admin/articles', adminLimiter, authenticate, adminOnly, ArticlesController.list);
     app.put('/api/admin/article/:id', adminLimiter, authenticate, adminOnly, articleBody, ArticlesController.validate('update'), ArticlesController.update);

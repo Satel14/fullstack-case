@@ -187,7 +187,7 @@ module.exports.getCountOfAllUsers = async () => {
     }
 };
 
-const ADMIN_LIST_ATTRIBUTES = ["user_id", "user_login", "user_email", "user_balance", "user_rank", "user_role", "user_avatar", "created_at"];
+const ADMIN_LIST_ATTRIBUTES = ["user_id", "user_login", "user_email", "user_balance", "user_rank", "user_role", "user_mutedUntil", "user_avatar", "created_at"];
 
 module.exports.getUsersPaged = async ({ search, limit, offset } = {}) => {
     const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 50, 200));

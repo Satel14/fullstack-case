@@ -48,6 +48,10 @@ const onUserConnected = (socket, presence) => async () => {
         socket.emit('user-on', presence.chatLogins());
         const lastMessages = await ChatService.get();
         socket.emit('chat messages', lastMessages);
+        if (socket.userInfo) {
+            const user = await sessionUser(socket.userInfo.id, socket.userInfo.ver);
+            if (user) socket.emit('chat mute', { mutedUntil: user.user_mutedUntil || null, serverNow: new Date().toISOString() });
+        }
     } catch (e) {
         console.error('[chat] user connected error:', loggable(e));
     }
@@ -76,6 +80,7 @@ module.exports = function (server) {
 
     io.on('connection', (socket) => {
         presence.connect(socket.id, socket.userInfo);
+        if (socket.userInfo) socket.join(`user:${socket.userInfo.id}`);
 
         const sendChatState = createTrailingThrottle(onUserConnected(socket, presence), CHAT_STATE_INTERVAL_MS);
         socket.on('user connected', () => sendChatState());
@@ -103,7 +108,7 @@ module.exports = function (server) {
                 if (result.ok) {
                     socket.broadcast.emit("chat message", result.message);
                 }
-                reply({ ok: result.ok, reason: result.reason });
+                reply(result);
             } catch (e) {
                 console.error('[chat] chat message error:', loggable(e));
                 reply({ ok: false, reason: 'error' });
