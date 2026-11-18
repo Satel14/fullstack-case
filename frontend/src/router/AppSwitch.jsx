@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import {
     Redirect, Route, Switch, useLocation,
 } from 'react-router-dom';
@@ -31,25 +31,27 @@ const AppSwitch = ({
     return (
         <ErrorBoundary resetKey={pathname}>
             <DocumentTitle routes={allRoutes} />
-            <Switch>
-                {routes.public.map((route) => (
-                    <Route
-                        key={`public-${route.path}`}
-                        path={route.path}
-                        exact={route.exact}
-                        component={route.component}
-                    />
-                ))}
-                {['private', 'admin'].flatMap((group) => routes[group].map((route) => (
-                    <Route
-                        key={`${group}-${route.path}`}
-                        path={route.path}
-                        exact={route.exact}
-                        render={gate(group, route.component)}
-                    />
-                )))}
-                <Route key="404-fallback" component={Fallback} />
-            </Switch>
+            <Suspense fallback={<Loader />}>
+                <Switch>
+                    {routes.public.map((route) => (
+                        <Route
+                            key={`public-${route.path}`}
+                            path={route.path}
+                            exact={route.exact}
+                            component={route.component}
+                        />
+                    ))}
+                    {['private', 'admin'].flatMap((group) => routes[group].map((route) => (
+                        <Route
+                            key={`${group}-${route.path}`}
+                            path={route.path}
+                            exact={route.exact}
+                            render={gate(group, route.component)}
+                        />
+                    )))}
+                    <Route key="404-fallback" component={Fallback} />
+                </Switch>
+            </Suspense>
         </ErrorBoundary>
     );
 };

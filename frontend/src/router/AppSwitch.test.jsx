@@ -1,9 +1,12 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import {
+    act, render, screen, fireEvent,
+} from '@testing-library/react';
 import { MemoryRouter, Link } from 'react-router-dom';
 import AppSwitch from './AppSwitch';
 import ErrorPage from '../pages/ErrorPage';
 import roles from '../enum/role';
+import lazyPage from '../helpers/lazyPage';
 
 jest.mock('react-i18next', () => {
     const mockReact = require('react');
@@ -170,4 +173,82 @@ test('a page receives the router props', () => {
     );
 
     expect(screen.getByText('id=3')).toBeInTheDocument();
+});
+
+test.each(['public', 'private', 'admin'])('a pending %s chunk stays behind the loader until it resolves', async (group) => {
+    let resolveChunk;
+    const load = jest.fn(() => new Promise((resolve) => { resolveChunk = resolve; }));
+    const lazyRoutes = {
+        public: [], private: [], admin: [],
+    };
+    lazyRoutes[group] = [{ path: '/deferred/:id', component: lazyPage(load) }];
+    const at = (user) => (
+        <MemoryRouter initialEntries={['/deferred/7']}>
+            <AppSwitch routes={lazyRoutes} user={user} sessionChecked fallback={page('not-found')} />
+        </MemoryRouter>
+    );
+    const { container, rerender } = render(at(admin));
+
+    expect(container.querySelector('.loader')).not.toBeNull();
+    expect(load).toHaveBeenCalledTimes(1);
+    rerender(at({ ...admin, balance: '90.00' }));
+    expect(container.querySelector('.loader')).not.toBeNull();
+    expect(load).toHaveBeenCalledTimes(1);
+
+    await act(async () => resolveChunk({ default: ({ match }) => <div>{`resolved page ${match.params.id}`}</div> }));
+
+    expect(await screen.findByText('resolved page 7')).toBeInTheDocument();
+    expect(container.querySelector('.loader')).toBeNull();
+});
+
+test('retrying a missing webpack chunk reloads the document to get the current deployment manifest', async () => {
+    const { location } = window;
+    const errors = jest.spyOn(console, 'error').mockImplementation(() => {});
+    delete window.location;
+    window.location = { reload: jest.fn() };
+    try {
+        const failure = Object.assign(new Error('Loading chunk 7 failed'), { name: 'ChunkLoadError' });
+        const load = jest.fn(() => Promise.reject(failure));
+        render(
+            <MemoryRouter initialEntries={['/missing']}>
+                <AppSwitch
+                    routes={{ public: [{ path: '/missing', component: lazyPage(load) }], private: [], admin: [] }}
+                    user={guest}
+                    sessionChecked
+                    fallback={page('not-found')}
+                />
+            </MemoryRouter>,
+        );
+
+        expect(await screen.findByRole('alert')).toHaveTextContent('common.loadFailed');
+        fireEvent.click(screen.getByRole('button', { name: /common.retry/ }));
+
+        expect(window.location.reload).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledTimes(1);
+    } finally {
+        window.location = location;
+        errors.mockRestore();
+    }
+});
+
+test('a render error in a resolved lazy page still shows the crash notice', async () => {
+    const errors = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const Broken = () => { throw new Error('render failed'); };
+    try {
+        render(
+            <MemoryRouter initialEntries={['/broken']}>
+                <AppSwitch
+                    routes={{ public: [{ path: '/broken', component: lazyPage(() => Promise.resolve({ default: Broken })) }], private: [], admin: [] }}
+                    user={guest}
+                    sessionChecked
+                    fallback={page('not-found')}
+                />
+            </MemoryRouter>,
+        );
+
+        expect(await screen.findByRole('alert')).toHaveTextContent('crash.title');
+        expect(screen.queryByText('common.loadFailed')).toBeNull();
+    } finally {
+        errors.mockRestore();
+    }
 });
