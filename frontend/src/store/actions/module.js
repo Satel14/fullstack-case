@@ -1,5 +1,6 @@
-import { LOAD_MODULES } from '../types';
+import { LOAD_MODULES, SET_MODULE_VALUE } from '../types';
 import { API_URL } from '../../api/config';
+import { SALE_RATE_MODULE, isSaleRate, saleRateOf } from '../../helpers/saleRate';
 
 const loadModules = (key, data) => ({
     type: LOAD_MODULES,
@@ -7,7 +8,18 @@ const loadModules = (key, data) => ({
     payloadData: data,
 });
 
-// eslint-disable-next-line import/prefer-default-export
+const setModuleValue = (key, value) => ({
+    type: SET_MODULE_VALUE,
+    payloadKey: key,
+    payloadData: value,
+});
+
+export const syncSaleRate = (rate) => (dispatch, getState) => {
+    if (isSaleRate(rate) && rate !== saleRateOf(getState().modules)) {
+        dispatch(setModuleValue(SALE_RATE_MODULE, rate));
+    }
+};
+
 export const getAllModules = () => (dispatch) => fetch(`${API_URL}/module/all`, {
     method: 'GET',
     headers: {
