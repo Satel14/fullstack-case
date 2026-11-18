@@ -21,7 +21,8 @@ rm -f "$dir"/.case-*.sql.partial
 partial=""
 options="$(mktemp)"
 trap 'rm -f "$options" ${partial:+"$partial"}' EXIT
-trap 'exit 143' TERM INT
+sleeper=""
+trap '[ -n "$sleeper" ] && kill "$sleeper" 2>/dev/null; exit 143' TERM INT
 escaped="$(printf '%s' "$MYSQL_ROOT_PASSWORD" | sed 's/\\/\\\\/g; s/"/\\"/g')"
 printf '[client]\nuser=root\npassword="%s"\n' "$escaped" > "$options"
 
@@ -54,5 +55,8 @@ while :; do
     if [ "${BACKUP_ONCE:-}" = "1" ]; then
         exit "$status"
     fi
-    sleep "$pause"
+    sleep "$pause" > /dev/null 2>&1 &
+    sleeper=$!
+    wait "$sleeper"
+    sleeper=""
 done

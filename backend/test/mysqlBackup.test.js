@@ -103,9 +103,13 @@ test('a dump is readable by its owner only, and a dump left half-written by an e
 test('a failed dump is retried after a short pause instead of waiting a whole interval', needsShell, (t) => {
     const { dir, backups, run } = stand(t);
 
-    run({
+    const started = Date.now();
+    const result = run({
         BACKUP_ONCE: '', FAIL_FIRST: '1', BACKUP_RETRY_SECONDS: '0', BACKUP_INTERVAL_SECONDS: '3600',
     }, [], 4000);
+
+    assert.ok(Date.now() - started < 6000, 'the loop ignored the stop signal while it slept');
+    assert.strictEqual(result.signal === 'SIGTERM' || result.status === 143, true, JSON.stringify([result.status, result.signal]));
 
     assert.strictEqual(fs.readFileSync(path.join(dir, 'calls'), 'utf8').trim(), '2');
     assert.strictEqual(fs.readdirSync(backups).filter((name) => name.startsWith('case-')).length, 1);
