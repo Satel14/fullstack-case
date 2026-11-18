@@ -142,3 +142,15 @@ test('a restart within an interval of the newest dump takes no new dump, so rest
     assert.deepStrictEqual(fs.readdirSync(backups), ['case-20260101-000000.sql']);
     assert.strictEqual(fs.existsSync(path.join(dir, 'calls')), false);
 });
+
+test('a dump dated in the future does not postpone the next one, and a forced run always dumps', needsShell, (t) => {
+    const { dir, backups, run } = stand(t);
+    fs.writeFileSync(path.join(backups, 'case-20260101-000000.sql'), 'skewed');
+    const ahead = new Date(Date.now() + 365 * 24 * 3600 * 1000);
+    fs.utimesSync(path.join(backups, 'case-20260101-000000.sql'), ahead, ahead);
+
+    assert.strictEqual(run({ BACKUP_INTERVAL_SECONDS: '3600' }).status, 0);
+    assert.strictEqual(fs.readdirSync(backups).length, 2);
+    assert.strictEqual(run({ BACKUP_INTERVAL_SECONDS: '3600', BACKUP_FORCE: '1' }).status, 0);
+    assert.strictEqual(fs.readFileSync(path.join(dir, 'calls'), 'utf8').trim(), '2');
+});

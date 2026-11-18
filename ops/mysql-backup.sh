@@ -15,7 +15,7 @@ age_of_newest() {
 
 if [ "${1:-}" = "--healthy" ]; then
     age="$(age_of_newest)" || exit 1
-    [ "$age" -le $(( interval + 3600 )) ]
+    [ "$age" -ge -3600 ] && [ "$age" -le $(( interval + 3600 )) ]
     exit $?
 fi
 
@@ -55,7 +55,7 @@ pause_for() {
     sleeper=""
 }
 
-if age="$(age_of_newest)" && [ "$age" -lt "$interval" ]; then
+if [ "${BACKUP_FORCE:-}" != "1" ] && age="$(age_of_newest)" && [ "$age" -ge 0 ] && [ "$age" -lt "$interval" ]; then
     if [ "${BACKUP_ONCE:-}" = "1" ]; then
         exit 0
     fi

@@ -48,10 +48,12 @@ so no one else can confirm a registration or receive a password-reset link.
   service picks up a changed script; it takes no new dump while the newest is younger than an interval). New migrations apply when the backend starts; it refuses to start while the
   database is ahead of or behind its code.
 - **Redis** keeps its data (chat history) on the `redis-data` volume.
-- **Backups:** the `mysql-backup` service writes a full dump of `case` to `./backups` when it starts and then every
-  `BACKUP_INTERVAL_SECONDS` (a day by default), keeps the newest `BACKUP_KEEP` (14) and retries a failed dump after a
+- **Backups:** the `mysql-backup` service writes a full dump of `case` to `./backups` when it starts (unless the newest dump is
+  younger than an interval) and then every `BACKUP_INTERVAL_SECONDS` (a day by default), keeps the newest `BACKUP_KEEP` (14) and retries a failed dump after a
   minute; <code>docker compose ps</code> shows it unhealthy when the newest dump is more than a day and an hour old.
   The dumps hold every player's email and password hash and are readable by root only. Copy them off the server.
+  A dump on demand, e.g. before a restore:
+  <code>docker compose exec -e BACKUP_ONCE=1 -e BACKUP_FORCE=1 mysql-backup sh /ops/mysql-backup.sh</code>.
   To restore one, stop the backend first so no request writes half-way through, load the dump, retire every
   provably-fair seed that came back active (players saw draws on those seeds after the dump was taken; each gets a
   fresh seed on the next request), then start the backend:
