@@ -163,6 +163,24 @@ test('only the fields that differ are named in the journal, and a save that chan
     assert.deepStrictEqual((await journal()).map((entry) => entry.payload.changed), [['titleEn']]);
 });
 
+test('an English text without visible text is stored empty, so English readers get the Ukrainian version', async () => {
+    const { adminId } = await freshSite();
+
+    const { code } = await saveArticle(8, { ...edited, article_textEn: '<p>&#8203;</p><textarea>English text</textarea>' }, adminId);
+
+    assert.strictEqual(code, 200);
+    assert.strictEqual((await stored(8)).textEn, '');
+});
+
+test('a long text whose markup cleans away fits, and only the cleaned bytes are measured', async () => {
+    const { adminId } = await freshSite();
+
+    const { code } = await saveArticle(6, { ...edited, article_text: `<p>ok</p><!--${'x'.repeat(70000)}-->` }, adminId);
+
+    assert.strictEqual(code, 200);
+    assert.strictEqual((await stored(6)).text, '<p>ok</p>');
+});
+
 test('an English text may be left empty, so English readers get the Ukrainian version', async () => {
     const { adminId } = await freshSite();
 

@@ -85,3 +85,20 @@ test('the text of an article is what a reader would see, without markup', () => 
     assert.strictEqual(textOf('<p>Привіт, <strong>світ</strong></p>'), 'Привіт, світ');
     assert.strictEqual(textOf('<p> </p>\n<ul><li></li></ul><br />'), '');
 });
+
+test('control characters are dropped and invisible characters do not count as text', () => {
+    assert.strictEqual(cleanArticleHtml('<p>a\u0000b\u0007c</p>'), '<p>abc</p>');
+    assert.strictEqual(cleanArticleHtml('<p>a\tb\nc</p>'), '<p>a\tb\nc</p>');
+    ['<p>\u0000</p>', '<p>&#8203;</p>', '<p>\u200B\u200C\u200D\u2060\uFEFF\u00AD</p>', '<p>&nbsp;</p>']
+        .forEach((html) => assert.strictEqual(textOf(cleanArticleHtml(html)), '', JSON.stringify(html)));
+    assert.strictEqual(textOf('<p>\u200Bтекст</p>'), 'текст');
+});
+
+test('the content of a tag whose text is never shown is dropped, as the page does', () => {
+    const silent = ['textarea', 'option', 'select', 'noscript', 'title', 'template', 'xmp', 'noembed', 'noframes', 'svg', 'math', 'iframe', 'video', 'audio'];
+
+    assert.deepStrictEqual(
+        silent.map((tag) => cleanArticleHtml(`<p>a</p><${tag}>hidden</${tag}>`)),
+        silent.map(() => '<p>a</p>'),
+    );
+});

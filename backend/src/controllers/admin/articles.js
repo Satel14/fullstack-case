@@ -22,6 +22,10 @@ const titlesOf = (article) => ({ title: article.article_title, titleEn: article.
 
 const fitsColumn = (text) => Buffer.byteLength(text, 'utf8') <= TEXT_COLUMN_BYTES;
 
+const shownOrEmpty = (html) => (textOf(html) ? html : '');
+
+const isText = (value) => typeof value === 'string';
+
 const differs = (current, next) => (field) => (current[field] ?? '') !== next[field];
 
 module.exports.list = async (req, res) => {
@@ -45,7 +49,7 @@ module.exports.update = async (req, res) => {
             article_title: req.body.article_title,
             article_text: cleanArticleHtml(req.body.article_text),
             article_titleEn: req.body.article_titleEn,
-            article_textEn: cleanArticleHtml(req.body.article_textEn),
+            article_textEn: shownOrEmpty(cleanArticleHtml(req.body.article_textEn)),
         };
 
         if (!textOf(next.article_text)) {
@@ -93,9 +97,9 @@ module.exports.validate = (method) => {
             return [
                 param('id').exists().isInt({ min: 1, max: MYSQL_INT_MAX, allow_leading_zeroes: false }),
                 body('article_title').custom(withinChars(1, TITLE_CHARS)).bail().trim().notEmpty(),
-                body('article_text').custom(withinChars(0, TEXT_COLUMN_BYTES)),
+                body('article_text').custom(isText),
                 body('article_titleEn').custom(withinChars(0, TITLE_CHARS)).bail().trim(),
-                body('article_textEn').custom(withinChars(0, TEXT_COLUMN_BYTES)),
+                body('article_textEn').custom(isText),
             ];
         }
         default:
