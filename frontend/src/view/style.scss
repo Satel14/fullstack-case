@@ -3835,6 +3835,26 @@ footer.ant-layout-footer {
     }
 }
 
+.article-editor {
+    .ant-typography.ant-typography-secondary {
+        display: block;
+        margin-top: 12px;
+        color: #7a8194;
+    }
+
+    &__preview {
+        max-height: 60vh;
+        overflow-y: auto;
+
+        h2 {
+            color: #fff;
+            font-family: "Roboto Bold";
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+    }
+}
+
 .bonuspage {
     max-width: 1100px;
     margin: 0 auto;

@@ -4,6 +4,10 @@ export const getAdminCases = () => get('/admin/cases');
 
 export const updateAdminCase = (id, payload) => put(`/admin/case/${id}`, payload);
 
+export const getAdminArticles = () => get('/admin/articles');
+
+export const updateAdminArticle = (id, payload) => put(`/admin/article/${id}`, payload);
+
 export const getAdminUsers = ({ search = '', limit = 50, offset = 0 } = {}) => {
     const query = new URLSearchParams({ limit: String(limit), offset: String(offset) });
     if (search) {

@@ -478,9 +478,11 @@
         "tabs": {
             "cases": "Cases",
             "users": "Users",
+            "articles": "Articles",
             "journal": "Action log"
         },
         "save": "Save",
+        "cancel": "Cancel",
         "cases": {
             "id": "Id",
             "name": "Title",
@@ -529,6 +531,24 @@
             "empty": "No records",
             "loadFailed": "Could not load the action log",
             "loadFailedHint": "The list is empty because loading failed, not because no actions were recorded"
+        },
+        "articles": {
+            "id": "ID",
+            "title": "Title",
+            "titleEn": "English title",
+            "text": "Text (HTML)",
+            "textEn": "English text (HTML)",
+            "updated": "Updated",
+            "edit": "Edit",
+            "open": "Open",
+            "editTitle": "Article {{id}}",
+            "previewUk": "Ukrainian",
+            "previewEn": "English",
+            "enFallback": "While the English title or text is empty, English-speaking players see the Ukrainian version.",
+            "allowed": "Allowed: paragraphs, h2–h4 headings, lists, bold and italic, line breaks, quotes and links (https, mailto or a site address starting with /). The server removes any other HTML when saving.",
+            "saved": "Article saved",
+            "saveFailed": "Article not saved",
+            "loadFailed": "Could not load the articles"
         }
     },
     "bonus": {

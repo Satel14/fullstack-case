@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import CasesTab from './CasesTab';
 import UsersTab from './UsersTab';
 import JournalTab from './JournalTab';
+import ArticlesTab from './ArticlesTab';
 
 const { TabPane } = Tabs;
 
@@ -20,6 +21,9 @@ const Admin = () => {
                 </TabPane>
                 <TabPane tab={t('admin.tabs.users')} key="users">
                     <UsersTab />
+                </TabPane>
+                <TabPane tab={t('admin.tabs.articles')} key="articles">
+                    <ArticlesTab />
                 </TabPane>
                 <TabPane tab={t('admin.tabs.journal')} key="journal">
                     <JournalTab active={activeKey === 'journal'} />
