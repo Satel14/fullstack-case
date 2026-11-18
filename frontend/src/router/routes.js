@@ -1,25 +1,27 @@
 import React from 'react';
 import { Redirect } from 'react-router-dom';
 import Layout from '../Layout.jsx';
-import Article from '../pages/Article';
 import Cases from '../pages/Cases';
 import Case from '../pages/Case';
 import ErrorPage from '../pages/ErrorPage';
-import Login from '../pages/Auth/Login.jsx';
-import Registration from '../pages/Auth/Registration.jsx';
-import ResetPassword from '../pages/Auth/ResetPassword';
-import ConfirmEmail from '../pages/Auth/ConfirmEmail';
-import Promocode from '../pages/Promocode';
-import Profile from '../pages/Profile';
-import Deposit from '../pages/Deposit';
-import PaymentGateway from '../pages/PaymentGateway';
-import Settings from '../pages/Settings.jsx';
-import Top from '../pages/Top';
-import Faq from '../pages/Faq';
-import ProvablyFair from '../pages/ProvablyFair';
-import Inventory from '../pages/Inventory';
-import Admin from '../pages/Admin';
-import Bonus from '../pages/Bonus';
+import lazyPage from '../helpers/lazyPage';
+
+const Article = lazyPage(() => import('../pages/Article'));
+const Login = lazyPage(() => import('../pages/Auth/Login.jsx'));
+const Registration = lazyPage(() => import('../pages/Auth/Registration.jsx'));
+const ResetPassword = lazyPage(() => import('../pages/Auth/ResetPassword'));
+const ConfirmEmail = lazyPage(() => import('../pages/Auth/ConfirmEmail'));
+const Promocode = lazyPage(() => import('../pages/Promocode'));
+const Profile = lazyPage(() => import('../pages/Profile'));
+const Deposit = lazyPage(() => import('../pages/Deposit'));
+const PaymentGateway = lazyPage(() => import('../pages/PaymentGateway'));
+const Settings = lazyPage(() => import('../pages/Settings.jsx'));
+const Top = lazyPage(() => import('../pages/Top'));
+const Faq = lazyPage(() => import('../pages/Faq'));
+const ProvablyFair = lazyPage(() => import('../pages/ProvablyFair'));
+const Inventory = lazyPage(() => import('../pages/Inventory'));
+const Admin = lazyPage(() => import('../pages/Admin'));
+const Bonus = lazyPage(() => import('../pages/Bonus'));
 
 export default {
     private: [
