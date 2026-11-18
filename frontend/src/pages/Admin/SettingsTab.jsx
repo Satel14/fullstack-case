@@ -3,8 +3,10 @@ import {
     Alert, Button, Input, InputNumber, Typography,
 } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
 import { getSaleRate, updateSaleRate } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
+import { syncSaleRate } from '../../store/actions/module';
 
 const MIN_RATE = 0.0001;
 const MAX_RATE = 1;
@@ -17,6 +19,7 @@ const validRate = (value) => typeof value === 'number'
 
 const SettingsTab = () => {
     const { t } = useTranslation();
+    const dispatch = useDispatch();
     const [rate, setRate] = useState(null);
     const [reason, setReason] = useState('');
     const [loaded, setLoaded] = useState(false);
@@ -41,6 +44,7 @@ const SettingsTab = () => {
         try {
             const res = await updateSaleRate(rate, reason.trim());
             setRate(res.data.rate);
+            dispatch(syncSaleRate(res.data.rate));
             setReason('');
             openNotification('success', t('admin.settings.saved'), String(res.data.rate));
         } catch (e) {
