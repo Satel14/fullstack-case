@@ -1656,6 +1656,13 @@ blockquote {
     margin: 0 -8px;
     display: flex;
     flex-flow: wrap;
+    &_notice {
+        width: 100%;
+        margin: 8px;
+        color: #7a8194;
+        text-align: center;
+    }
+
 
     &_item {
         background-position: center;

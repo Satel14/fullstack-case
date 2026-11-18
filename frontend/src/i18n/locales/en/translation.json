@@ -252,6 +252,7 @@
         "player": "Player",
         "noHistory": "This user has no opening history yet.",
         "statsFailed": "Could not load",
+        "historyPartial": "Part of the history could not be loaded",
         "roles": {
             "youtuber": "YouTuber",
             "streamer": "Streamer",

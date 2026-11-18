@@ -8,7 +8,7 @@ import { createStore, combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import usersReducer from '../store/reducers/user';
 import itemCacheReducer from '../store/reducers/itemCache';
-import { LOGIN_USER } from '../store/types';
+import { LOGIN_USER, ADD_ITEM_LIST_CACHE } from '../store/types';
 import roles from '../enum/role';
 import Profile from './Profile';
 
@@ -42,9 +42,10 @@ const viewer = {
     user_id: 7, user_login: 'Satel7', user_avatar: 3, user_role: roles.ADMINISTRATOR,
 };
 
-const renderProfile = (id) => {
+const renderProfile = (id, cachedItems = {}) => {
     const store = createStore(combineReducers({ user: usersReducer, itemCache: itemCacheReducer }), applyMiddleware(thunk));
     store.dispatch({ type: LOGIN_USER, payloadUser: viewer });
+    store.dispatch({ type: ADD_ITEM_LIST_CACHE, payloadItems: cachedItems });
     return render(
         <Provider store={store}>
             <MemoryRouter>
@@ -190,6 +191,33 @@ test('items that could not be loaded are left out of the history and the best dr
     expect(screen.queryByText(/4242/)).toBeNull();
     expect(container.querySelector('.casehistory-itemlist').textContent).toContain('profile.statsFailed');
     expect(screen.queryByText('profile.noHistory')).toBeNull();
+});
+
+test('a history whose items partly could not be named shows what loaded and says the rest could not be loaded', async () => {
+    getUserById.mockResolvedValue({
+        data: {
+            user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
+        },
+    });
+    getStorageLastItemsByUserId.mockResolvedValue({
+        data: [
+            {
+                storage_id: 1, storage_itemId: 1507, storage_color: 'default', storage_caseId: 1,
+            },
+            {
+                storage_id: 2, storage_itemId: 4242, storage_color: 'default', storage_caseId: 1,
+            },
+        ],
+    });
+    getItemsInfo.mockRejectedValue({ error: 500 });
+
+    const { container } = renderProfile('5', {
+        1507: { item_name: 'Nova | Caged Steel', item_grade: 'milspec', pricesInCredits: { default: 7 } },
+    });
+
+    await screen.findByText('testopen');
+    await waitFor(() => expect(container.querySelectorAll('.casehistory-itemlist_item')).toHaveLength(1));
+    expect(container.querySelector('.casehistory-itemlist').textContent).toContain('profile.historyPartial');
 });
 
 test.each([

@@ -302,6 +302,9 @@ class Profile extends Component {
                                         ),
                                         children: (
                                             <div className="casehistory-itemlist">
+                                                {historyFailed && historyItems.length > 0 && (
+                                                    <p className="casehistory-itemlist_notice" role="status">{t('profile.historyPartial')}</p>
+                                                )}
                                                 {historyItems.length ? historyItems.map((item, i) => (
                                                     <Fade delay={i * 30} key={`profile-history-${item.key}`}>
                                                         <Tooltip placement="bottom" title={renderItemProp(item.item, item.color, t)}>
