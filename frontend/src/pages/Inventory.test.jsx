@@ -8,7 +8,7 @@ import thunk from 'redux-thunk';
 import usersReducer from '../store/reducers/user';
 import itemCacheReducer from '../store/reducers/itemCache';
 import moduleReducer from '../store/reducers/module';
-import { LOGIN_USER } from '../store/types';
+import { LOGIN_USER, LOAD_MODULES } from '../store/types';
 import i18n from '../i18n';
 import Inventory from './Inventory';
 
@@ -74,8 +74,15 @@ const makeStore = () => {
     return store;
 };
 
-const renderInventory = () => {
+const renderInventory = (saleRate) => {
     const store = makeStore();
+    if (saleRate !== undefined) {
+        store.dispatch({
+            type: LOAD_MODULES,
+            payloadKey: 'uah-credit-rate',
+            payloadData: { param: 'uah-credit-rate', status: 1, extraData: saleRate },
+        });
+    }
     render(
         <Provider store={store}>
             <Inventory />
@@ -320,6 +327,7 @@ test('sell all names the reasons of the items still in the inventory, each once'
 test.each([
     ['the limiter', { error: 429, message: 'too many sales' }, 'inventory.sellAllRateLimited {"sold":0}. balance is full.'],
     ['a failed request', { error: 500 }, 'inventory.sellAllStopped {"sold":0}. balance is full.'],
+    ['a price change', { error: 409, message: 'price changed', rate: 0.5 }, 'inventory.sellAllStopped {"sold":0}. price changed. balance is full.'],
 ])('a sell all stopped by %s still names why the items before it were refused', async (name, failure, summary) => {
     server.inventory = inventoryRows(3);
     sellItemByStorageId
@@ -544,4 +552,65 @@ test('a single sale stopped by the limiter shows its reason too', async () => {
     fireEvent.click(first);
 
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'openCase.sellErrorTitle', 'too many sales'));
+});
+
+const priceChanged = (rate) => Promise.reject({ error: 409, message: 'price changed', rate });
+
+test('a sale is sent with the rate its price was shown at', async () => {
+    server.inventory = inventoryRows(2);
+    renderInventory(0.5);
+
+    const [first] = await screen.findAllByRole('button', { name: /openCase.sellFor \{"price":5\}/ });
+    fireEvent.click(first);
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('success', 'openCase.sold'));
+    expect(sellItemByStorageId).toHaveBeenCalledWith(2, 0.5);
+});
+
+test('a sale refused because the rate changed says so, and the prices follow the new rate', async () => {
+    server.inventory = inventoryRows(2);
+    sellItemByStorageId.mockImplementationOnce(() => priceChanged(0.5));
+    const store = renderInventory();
+
+    const [first] = await screen.findAllByRole('button', { name: /openCase.sellFor \{"price":10\}/ });
+    fireEvent.click(first);
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'openCase.sellErrorTitle', 'price changed'));
+    expect(await screen.findAllByText('openCase.sellFor {"price":5}')).toHaveLength(2);
+    expect(sellItemByStorageId).toHaveBeenCalledWith(2, 1);
+    expect(server.inventory).toHaveLength(2);
+    expect(store.getState().modules['uah-credit-rate'].extraData).toBe(0.5);
+});
+
+test('sell all stops at the first price change, says so after what it sold, and shows the new prices', async () => {
+    server.inventory = inventoryRows(5);
+    const sell = sellItemByStorageId.getMockImplementation();
+    sellItemByStorageId.mockImplementation((storageId) => (
+        sellItemByStorageId.mock.calls.length === 3 ? priceChanged(0.5) : sell(storageId)
+    ));
+    const store = renderInventory();
+
+    await clickSellAll();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
+        'error', 'openCase.sellErrorTitle', 'inventory.sellAllStopped {"sold":2}. price changed.',
+    ));
+    expect(sellItemByStorageId.mock.calls).toEqual([[5, 1], [4, 1], [3, 1]]);
+    expect(server.inventory).toHaveLength(3);
+    expect(store.getState().user.balance).toBe('20.00');
+    expect(await screen.findAllByText('openCase.sellFor {"price":5}')).toHaveLength(3);
+    expect(openNotification).not.toHaveBeenCalledWith('success', 'openCase.allSold');
+});
+
+test('a sale answered at another rate than the page had moves the prices shown to that rate', async () => {
+    server.inventory = inventoryRows(2);
+    const sell = sellItemByStorageId.getMockImplementation();
+    sellItemByStorageId.mockImplementationOnce((storageId) => sell(storageId).then((answer) => ({ ...answer, rate: 0.5 })));
+    renderInventory();
+
+    const [first] = await screen.findAllByRole('button', { name: /openCase.sellFor \{"price":10\}/ });
+    fireEvent.click(first);
+
+    expect(await screen.findByText('openCase.sellFor {"price":5}')).toBeInTheDocument();
+    expect(screen.queryByText('openCase.sellFor {"price":10}')).toBeNull();
 });

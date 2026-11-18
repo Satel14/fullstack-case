@@ -18,6 +18,8 @@ import { gradeStyle } from '../helpers/grade';
 import { itemCaption } from '../helpers/Case';
 import itemName from '../helpers/itemName';
 import { clientErrorMessage, joinSentences } from '../helpers/serverMessage';
+import { PRICE_CHANGED, saleRateOf } from '../helpers/saleRate';
+import { syncSaleRate } from '../store/actions/module';
 
 const { TabPane } = Tabs;
 
@@ -37,10 +39,11 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = (dispatch) => ({
     itemInfoFetch: (id) => dispatch(itemInfoFetch(id)),
     updateBalance: (balance) => dispatch(updateBalance(balance)),
+    syncSaleRate: (rate) => dispatch(syncSaleRate(rate)),
 });
 
 const Inventory = ({
-    itemCache, modules, receiveInfo, history, itemInfoFetch: fetchItem, updateBalance: setBalance, t,
+    itemCache, modules, receiveInfo, history, itemInfoFetch: fetchItem, updateBalance: setBalance, syncSaleRate: syncRate, t,
 }) => {
     const [active, setActive] = useState([]);
     const [sold, setSold] = useState([]);
@@ -65,7 +68,7 @@ const Inventory = ({
         }
     };
 
-    const rate = (modules && modules['uah-credit-rate']) ? modules['uah-credit-rate'].extraData : 1;
+    const rate = saleRateOf(modules);
 
     const cacheItems = (rows) => Promise.all(rows.map((r) => fetchItem(r.storage_itemId)));
 
@@ -167,8 +170,9 @@ const Inventory = ({
         }
         setSelling(true);
         try {
-            const res = await sellItemByStorageId(row.storage_id);
+            const res = await sellItemByStorageId(row.storage_id, rate);
             if (res.status === 200) {
+                syncRate(res.rate);
                 setBalance(res.balance);
                 openNotification('success', t('openCase.sold'));
                 setActive((prev) => prev.filter((x) => x.storage_id !== row.storage_id));
@@ -177,6 +181,9 @@ const Inventory = ({
                 openNotification('error', t('openCase.sellErrorTitle'), res.message || t('openCase.sellErrorText'));
             }
         } catch (e) {
+            if (e && e.error === PRICE_CHANGED) {
+                syncRate(e.rate);
+            }
             const reason = clientErrorMessage(e);
             if (reason) {
                 openNotification('error', t('openCase.sellErrorTitle'), reason);
@@ -193,16 +200,21 @@ const Inventory = ({
             attempted.add(rows[i].storage_id);
             try {
                 // eslint-disable-next-line no-await-in-loop
-                const res = await sellItemByStorageId(rows[i].storage_id);
+                const res = await sellItemByStorageId(rows[i].storage_id, rate);
                 if (res.status === UNSELLABLE) {
                     refused.set(rows[i].storage_id, res.message || null);
                 } else if (res.status !== 200) {
                     return { failure: res.status || true, soldCount };
                 } else {
+                    syncRate(res.rate);
                     setBalance(res.balance);
                     soldCount += 1;
                 }
             } catch (e) {
+                if (e && e.error === PRICE_CHANGED) {
+                    syncRate(e.rate);
+                    return { failure: PRICE_CHANGED, soldCount, reason: clientErrorMessage(e) };
+                }
                 if (!e || e.error !== UNSELLABLE) {
                     return { failure: (e && e.error) || true, soldCount };
                 }
@@ -231,10 +243,10 @@ const Inventory = ({
             const fresh = rows.filter((r) => !attempted.has(r.storage_id));
             if (fresh.length) {
                 // eslint-disable-next-line no-await-in-loop
-                const { failure, soldCount } = await sellRows(fresh, attempted, refused);
+                const { failure, soldCount, reason } = await sellRows(fresh, attempted, refused);
                 total += soldCount;
                 if (failure) {
-                    return { failure, total, reasons: reasonsFor([...refused.keys()]) };
+                    return { failure, total, reasons: [reason, ...reasonsFor([...refused.keys()])].filter(Boolean) };
                 }
                 offset = 0;
                 left = new Map();
