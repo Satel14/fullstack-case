@@ -143,7 +143,7 @@ test('unique cases and the best drop are the server\'s, over the whole history, 
     expect([...getItemsInfo.mock.calls[0][0]].map(Number).sort((a, b) => a - b)).toEqual([88, 361, 1507]);
 });
 
-test('a player whose statistics did not load shows no unique cases and no best drop', async () => {
+test('failed statistics show an error instead of zero counters or an absent best drop, while history still loads', async () => {
     getUserById.mockResolvedValue({
         data: {
             user_id: 5, user_login: 'testopen', user_avatar: 2, user_role: roles.NORMAL,
@@ -160,8 +160,8 @@ test('a player whose statistics did not load shows no unique cases and no best d
     const { container } = renderProfile('5');
 
     await screen.findByText('testopen');
-    expect(statNumbers(container)).toEqual(['0', '0']);
-    expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('profile.noDrop');
+    expect(statNumbers(container)).toEqual(['profile.statsFailed', 'profile.statsFailed']);
+    expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('profile.statsFailed');
     expect(container.querySelectorAll('.casehistory-itemlist_item')).toHaveLength(1);
     expect(container.querySelector('.casehistory-itemlist_item').style.getPropertyValue('--rarity')).toBe('#4b69ff');
 });
@@ -185,9 +185,38 @@ test('items that could not be loaded are left out of the history and the best dr
     const { container } = renderProfile('5');
 
     await screen.findByText('testopen');
-    expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('profile.noDrop');
+    expect(container.querySelector('.profilepage-firstblock__bestdrop span').textContent).toBe('profile.statsFailed');
     expect(container.querySelectorAll('.casehistory-itemlist_item')).toHaveLength(0);
     expect(screen.queryByText(/4242/)).toBeNull();
+});
+
+test.each([
+    ['favorite', getFavoriteCaseByUserId, '.profilepage-firstblock__favoritecase', 'profile.noCase'],
+    ['history', getStorageLastItemsByUserId, '.casehistory-itemlist', 'profile.noHistory'],
+])('a failed %s request shows an error while successful empty statistics remain zero', async (_, request, selector, emptyText) => {
+    getUserById.mockResolvedValue({ data: viewer });
+    request.mockRejectedValue({ error: 500 });
+
+    const { container } = renderProfile('7');
+
+    await screen.findByText('Satel7');
+    expect(container.querySelector(selector)).toHaveTextContent('profile.statsFailed');
+    expect(container.querySelector(selector)).not.toHaveTextContent(emptyText);
+    expect(statNumbers(container)).toEqual(['0', '0']);
+    expect(container.querySelector('.profilepage-firstblock__bestdrop span')).toHaveTextContent('profile.noDrop');
+});
+
+test('successful empty secondary responses keep their empty states', async () => {
+    getUserById.mockResolvedValue({ data: viewer });
+
+    const { container } = renderProfile('7');
+
+    await screen.findByText('Satel7');
+    expect(statNumbers(container)).toEqual(['0', '0']);
+    expect(screen.getByText('profile.noCase')).toBeInTheDocument();
+    expect(screen.getByText('profile.noDrop')).toBeInTheDocument();
+    expect(screen.getByText('profile.noHistory')).toBeInTheDocument();
+    expect(screen.queryByText('profile.statsFailed')).toBeNull();
 });
 
 test('an answer for a player the page has already left does not replace the player now shown', async () => {

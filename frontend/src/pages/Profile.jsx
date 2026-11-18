@@ -78,6 +78,10 @@ class Profile extends Component {
             uniqueCases: 0,
             bestDrop: null,
             historyItems: [],
+            favoriteFailed: false,
+            countsFailed: false,
+            bestDropFailed: false,
+            historyFailed: false,
         };
         this.mounted = false;
         this.loadGeneration = 0;
@@ -174,6 +178,10 @@ class Profile extends Component {
             uniqueCases,
             bestDrop,
             historyItems,
+            favoriteFailed: !favoriteResp,
+            countsFailed: !countResp,
+            bestDropFailed: !countResp || Boolean(bestDropRecord && !bestDrop),
+            historyFailed: !historyResp,
         });
     }
 
@@ -187,12 +195,16 @@ class Profile extends Component {
             uniqueCases,
             bestDrop,
             historyItems,
+            favoriteFailed,
+            countsFailed,
+            bestDropFailed,
+            historyFailed,
         } = this.state;
         const { t } = this.props;
 
         const favoriteCaseId = favoriteCase?.case_id || null;
         const favoriteCaseImg = favoriteCase?.case_img || '';
-        const favoriteCaseName = favoriteCase?.case_title || t('profile.noCase');
+        const favoriteCaseName = favoriteFailed ? t('profile.statsFailed') : favoriteCase?.case_title || t('profile.noCase');
 
         if (failed) {
             return (
@@ -211,7 +223,7 @@ class Profile extends Component {
         const userAvatar = profileUser?.user_avatar || 1;
         const userRole = t(`profile.roles.${roleKey(profileUser?.user_role)}`);
 
-        const bestDropName = bestDrop?.name || t('profile.noDrop');
+        const bestDropName = bestDropFailed ? t('profile.statsFailed') : bestDrop?.name || t('profile.noDrop');
         const bestDropImg = bestDrop?.imagePath ? encodeURI(bestDrop.imagePath) : '';
 
         return (
@@ -245,11 +257,11 @@ class Profile extends Component {
                                 <div className="profilepage-firstblock__stats__info">
                                     <div>
                                         {t('profile.openedCases')}
-                                        <span>{openedCases}</span>
+                                        <span>{countsFailed ? t('profile.statsFailed') : openedCases}</span>
                                     </div>
                                     <div>
                                         {t('profile.uniqueCases')}
-                                        <span>{uniqueCases}</span>
+                                        <span>{countsFailed ? t('profile.statsFailed') : uniqueCases}</span>
                                     </div>
                                 </div>
                                 <div style={{ fontSize: 13, opacity: 0.75, marginTop: 12 }}>{userRole}</div>
@@ -310,7 +322,7 @@ class Profile extends Component {
                                                 )) : (
                                                     <Fade>
                                                         <div style={{ width: '100%', textAlign: 'center', opacity: 0.8 }}>
-                                                            {t('profile.noHistory')}
+                                                            {t(historyFailed ? 'profile.statsFailed' : 'profile.noHistory')}
                                                         </div>
                                                     </Fade>
                                                 )}

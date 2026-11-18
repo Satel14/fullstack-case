@@ -250,6 +250,7 @@
         "noDrop": "No drop yet",
         "player": "Player",
         "noHistory": "This user has no opening history yet.",
+        "statsFailed": "Could not load",
         "roles": {
             "youtuber": "YouTuber",
             "streamer": "Streamer",
