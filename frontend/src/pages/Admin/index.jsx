@@ -7,6 +7,7 @@ import JournalTab from './JournalTab';
 import ArticlesTab from './ArticlesTab';
 import SettingsTab from './SettingsTab';
 import PromocodesTab from './PromocodesTab';
+import StatsTab from './StatsTab';
 
 const { TabPane } = Tabs;
 
@@ -18,6 +19,9 @@ const Admin = () => {
         <div className="adminpage">
             <h1>{t('admin.title')}</h1>
             <Tabs activeKey={activeKey} onChange={setActiveKey}>
+                <TabPane tab={t('admin.tabs.stats')} key="stats">
+                    <StatsTab active={activeKey === 'stats'} />
+                </TabPane>
                 <TabPane tab={t('admin.tabs.cases')} key="cases">
                     <CasesTab />
                 </TabPane>

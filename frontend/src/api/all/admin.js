@@ -2,6 +2,13 @@ import { get, post, put } from '../fetch';
 
 export const getAdminCases = () => get('/admin/cases');
 
+export const getAdminStats = ({ from, to } = {}) => {
+    const query = new URLSearchParams();
+    if (from !== undefined) { query.set('from', from); }
+    if (to !== undefined) { query.set('to', to); }
+    return get(`/admin/stats${query.toString() ? `?${query}` : ''}`);
+};
+
 export const updateAdminCase = (id, payload) => put(`/admin/case/${id}`, payload);
 
 export const getAdminArticles = () => get('/admin/articles');

@@ -3856,6 +3856,52 @@ footer.ant-layout-footer {
     }
 }
 
+.admin-stats {
+    &__dates label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: #8fb6e8;
+    }
+
+    input[type="date"] {
+        color-scheme: dark;
+    }
+
+    > p {
+        margin: 12px 0;
+    }
+
+    > .ant-alert {
+        margin: 12px 0;
+    }
+
+    &__figures {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin: 18px 0;
+
+        > div {
+            padding: 14px;
+            border: 1px solid #262e43;
+            border-radius: 8px;
+            background: #131725;
+        }
+
+        dt {
+            color: #8fb6e8;
+        }
+
+        dd {
+            margin: 6px 0 0;
+            color: #fff;
+            font-size: 20px;
+            overflow-wrap: anywhere;
+        }
+    }
+}
+
 .admin-settings {
     max-width: 420px;
 
