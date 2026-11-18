@@ -18,6 +18,7 @@ const deriveBaselineSchema = async () => {
 };
 
 const DOWN_EFFECTS = {
+    '20261118000200-admin-stats-indexes.js': 'drops the date indexes used by admin statistics',
     '20261118000100-chat-mute.js': 'drops users.mutedUntil and lifts every temporary chat mute',
     '20261118000000-admin-user-card.js':
         'drops the recorded prices paid for case opens and the (userId, id) indexes on storage, balance_history and '
