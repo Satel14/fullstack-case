@@ -12,3 +12,7 @@ module.exports.getArticleById = async (id) => {
         throw Error(e.message);
     }
 };
+
+module.exports.findArticleById = async (id, options = {}) => Article.findByPk(id, options);
+
+module.exports.getAllArticles = async () => Article.findAll({ order: [['article_id', 'ASC']] });
