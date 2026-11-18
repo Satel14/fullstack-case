@@ -83,7 +83,7 @@ const CasesTab = () => {
             key: 'case_price',
             render: (row) => (
                 <InputNumber
-                    min={0}
+                    min={1}
                     precision={0}
                     value={editValue(row, 'case_price')}
                     onChange={(value) => setEdit(row.case_id, 'case_price', value)}

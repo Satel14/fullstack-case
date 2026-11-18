@@ -121,3 +121,13 @@ test('an empty price is still refused', async () => {
     assert.strictEqual(result.code, 422);
     assert.deepStrictEqual(await stored(sequelize), { price: 5000, discount: 0 });
 });
+
+test('a zero price is refused, so a case can never be opened for free', async () => {
+    const sequelize = await seed(5000, 0);
+
+    const zero = await update('t1', { case_price: 0 });
+    const one = await update('t1', { case_price: 1 });
+
+    assert.deepStrictEqual([zero.code, one.code], [422, 200]);
+    assert.deepStrictEqual(await stored(sequelize), { price: 1, discount: 0 });
+});

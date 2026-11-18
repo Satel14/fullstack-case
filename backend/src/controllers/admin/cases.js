@@ -90,7 +90,7 @@ module.exports.validate = (method) => {
         case 'update': {
             return [
                 param('id').exists().isString().bail().matches(CASE_ID_PATTERN),
-                body('case_price').optional().not().isArray().isInt({ min: 0, max: MYSQL_INT_MAX }),
+                body('case_price').optional().not().isArray().isInt({ min: 1, max: MYSQL_INT_MAX }),
                 body('case_discount').optional({ nullable: true }).not().isArray().isInt({ min: 0, max: MYSQL_INT_MAX }),
                 body('case_published').optional().not().isArray().isInt({ min: 0, max: 1 }),
                 body('case_openLimit').optional().not().isArray().isInt({ min: -1, max: MYSQL_INT_MAX }),
