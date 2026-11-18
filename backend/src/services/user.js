@@ -17,8 +17,9 @@ const EDITABLE_FOR_USER_FIELDS = [
     "user_receiveInfo",
 ];
 
-module.exports.findUserById = (id) => User.findByPk(id, {
+module.exports.findUserById = (id, options = {}) => User.findByPk(id, {
     attributes: [...PUBLIC_FIELDS, "updated_at", "created_at"],
+    ...options,
 });
 
 module.exports.getUserById = async (id) => {

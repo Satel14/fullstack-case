@@ -21,6 +21,7 @@ module.exports = (app) => {
     app.post('/api/admin/promocode', adminLimiter, authenticate, adminOnly, PromocodesController.validate('create'), PromocodesController.create);
     app.put('/api/admin/promocode/:code', adminLimiter, authenticate, adminOnly, PromocodesController.validate('update'), PromocodesController.update);
     app.get('/api/admin/users', adminLimiter, authenticate, adminOnly, UsersController.list);
+    app.get('/api/admin/user/:id', adminLimiter, authenticate, adminOnly, UsersController.validate('getCard'), UsersController.getCard);
     app.put('/api/admin/user/:id/role', adminLimiter, authenticate, adminOnly, UsersController.validate('setRole'), UsersController.setRole);
     app.post('/api/admin/user/:id/balance', adminLimiter, authenticate, adminOnly, UsersController.validate('adjustBalance'), UsersController.adjustBalance);
 };

@@ -29,11 +29,15 @@ const parsePayload = (raw) => {
     }
 };
 
-module.exports.list = async ({ limit, offset } = {}) => {
+module.exports.list = async ({ limit, offset, targetType, targetId } = {}) => {
     const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 50, MAX_LIMIT));
     const safeOffset = pageOffset(offset);
 
     const rows = await AdminAction.findAll({
+        where: {
+            ...(targetType === undefined ? {} : { admin_targetType: targetType }),
+            ...(targetId === undefined ? {} : { admin_targetId: String(targetId) }),
+        },
         order: [['admin_id', 'DESC']],
         limit: safeLimit,
         offset: safeOffset,

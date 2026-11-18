@@ -1,5 +1,6 @@
 const { body, param, validationResult } = require('express-validator');
 const UserService = require('../../services/user');
+const AdminUserCardService = require('../../services/adminUserCard');
 const AdminActionService = require('../../services/adminAction');
 const ROLES = require('../../constant/enums/roles');
 const MESSAGE = require('../../constant/responseMessages');
@@ -7,11 +8,24 @@ const sequelize = require('../../config/db');
 const BalanceHistoryService = require('../../services/balanceHistory');
 const BalanceHistoryEnum = require('../../constant/enums/balance').BalanceHistory;
 const { withinChars } = require('../../helpers/charLength');
-const { loggable } = require('../../helpers/failure');
+const { answerFailure, loggable } = require('../../helpers/failure');
 const { MYSQL_INT_MAX } = require('../../constant/mysql');
 
 const ASSIGNABLE_ROLES = [ROLES.BANNED, ROLES.BANNED_CHAT, ROLES.NORMAL, ROLES.YOUTUBER, ROLES.STREAMER, ROLES.FAMOUS];
 const BALANCE_DELTA_LIMIT = 1000000;
+
+module.exports.getCard = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
+        }
+        const data = await AdminUserCardService.get(parseInt(req.params.id, 10));
+        return res.status(200).json({ status: 200, data });
+    } catch (e) {
+        return answerFailure(res, e, { status: 422, where: 'admin.users.getCard' });
+    }
+};
 
 module.exports.list = async (req, res) => {
     try {
@@ -158,6 +172,11 @@ module.exports.adjustBalance = async (req, res) => {
 
 module.exports.validate = (method) => {
     switch (method) {
+        case 'getCard': {
+            return [
+                param('id').exists({ checkNull: true }).not().isArray().isInt({ min: 1, max: MYSQL_INT_MAX, allow_leading_zeroes: false }),
+            ];
+        }
         case 'setRole': {
             return [
                 param('id').exists().isInt({ min: 1, max: MYSQL_INT_MAX, allow_leading_zeroes: false }),
