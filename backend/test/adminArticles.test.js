@@ -213,6 +213,36 @@ test('an article that does not exist, a Ukrainian text that cleans to nothing an
     assert.deepStrictEqual(await journal(), []);
 });
 
+test('a save based on an older copy of the article is refused, so it cannot overwrite newer edits', async () => {
+    const { adminId } = await freshSite();
+    const before = await stored(6);
+    const loadedAt = new Date(before.updated_at).toISOString();
+
+    const first = await saveArticle(6, { ...edited, article_updatedAt: loadedAt }, adminId);
+    const afterFirst = await stored(6);
+    const stale = await saveArticle(6, { ...edited, article_titleEn: 'Old copy', article_updatedAt: loadedAt }, adminId);
+
+    assert.strictEqual(first.code, 200);
+    assert.deepStrictEqual([stale.code, stale.payload.message], [409, MESSAGE.ADMIN.ARTICLE_CHANGED]);
+    assert.deepStrictEqual(await stored(6), afterFirst);
+    assert.strictEqual((await journal()).length, 1);
+
+    const fresh = await saveArticle(6, {
+        ...edited, article_titleEn: 'New copy', article_updatedAt: new Date(afterFirst.updated_at).toISOString(),
+    }, adminId);
+    assert.strictEqual(fresh.code, 200);
+    assert.strictEqual((await stored(6)).titleEn, 'New copy');
+});
+
+test('a save that does not say which copy it was based on is still taken, and a malformed moment is refused', async () => {
+    const { adminId } = await freshSite();
+
+    const unnamed = await saveArticle(6, edited, adminId);
+    const malformed = await saveArticle(6, { ...edited, article_updatedAt: 'yesterday' }, adminId);
+
+    assert.deepStrictEqual([unnamed.code, malformed.code], [200, 422]);
+});
+
 test('a journal that cannot be written leaves the article as it was', async () => {
     const { adminId } = await freshSite();
     const before = await stored(6);

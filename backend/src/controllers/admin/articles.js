@@ -28,6 +28,10 @@ const isText = (value) => typeof value === 'string';
 
 const differs = (current, next) => (field) => (current[field] ?? '') !== next[field];
 
+const wholeSecond = (moment) => (moment ? Math.floor(new Date(moment).getTime() / 1000) : null);
+
+const isMomentOrNull = (value) => value === null || (isText(value) && !Number.isNaN(Date.parse(value)));
+
 module.exports.list = async (req, res) => {
     try {
         const articles = await ArticleService.getAllArticles();
@@ -64,6 +68,12 @@ module.exports.update = async (req, res) => {
             if (!current) {
                 throw new Error(MESSAGE.ARTICLE.NOT_EXIST);
             }
+            if (req.body.article_updatedAt !== undefined
+                && wholeSecond(req.body.article_updatedAt) !== wholeSecond(current.updated_at)) {
+                const err = new Error(MESSAGE.ADMIN.ARTICLE_CHANGED);
+                err.code = 'ARTICLE_CHANGED';
+                throw err;
+            }
 
             const changed = Object.keys(JOURNAL_NAMES).filter(differs(current, next));
             if (changed.length === 0) {
@@ -71,7 +81,7 @@ module.exports.update = async (req, res) => {
             }
 
             const before = titlesOf(current);
-            await current.update({ ...next, updated_at: new Date() }, { transaction: t });
+            await current.update({ ...next, updated_at: new Date(wholeSecond(new Date()) * 1000) }, { transaction: t });
             await AdminActionService.record(
                 {
                     adminId: req.user.profile.user_id,
@@ -87,6 +97,9 @@ module.exports.update = async (req, res) => {
 
         return res.status(200).json({ status: 200, data: saved });
     } catch (e) {
+        if (e && e.code === 'ARTICLE_CHANGED') {
+            return res.status(409).json({ status: 409, message: MESSAGE.ADMIN.ARTICLE_CHANGED });
+        }
         return answerFailure(res, e, { status: 422, where: 'admin articles.update' });
     }
 };
@@ -100,6 +113,7 @@ module.exports.validate = (method) => {
                 body('article_text').custom(isText),
                 body('article_titleEn').custom(withinChars(0, TITLE_CHARS)).bail().trim(),
                 body('article_textEn').custom(isText),
+                body('article_updatedAt').optional().custom(isMomentOrNull),
             ];
         }
         default:
