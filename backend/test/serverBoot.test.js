@@ -22,6 +22,8 @@ const boot = () => {
     const cacheSync = { stop: async () => stopped.push('cache') };
     const withdrawal = { stop: async () => stopped.push('withdrawal') };
     const email = { stop: async () => stopped.push('email') };
+    const upgraded = new Set();
+    const tracked = [];
     const migrations = Promise.withResolvers();
     let lifecycle;
     let wiring;
@@ -53,6 +55,7 @@ const boot = () => {
             },
         },
         './src/shutdown': {
+            trackUpgrades: (httpServer) => { tracked.push(httpServer); return upgraded; },
             installShutdown: (options) => {
                 wiring = options;
                 lifecycle = installShutdown({ ...options, processRef, log: (line) => logged.push(line) });
@@ -78,7 +81,7 @@ const boot = () => {
 
     return {
         exits, started, stopped, migrations, lifecycle, wiring, processRef,
-        health, sequelize, server, io, cacheSync, withdrawal, email, redis,
+        health, sequelize, server, io, cacheSync, withdrawal, email, redis, upgraded, tracked,
     };
 };
 
@@ -102,6 +105,8 @@ test('CI does not exit the server before migrations finish and the listeners and
     assert.strictEqual(resources.io, stand.io);
     assert.strictEqual(resources.cacheSync, stand.cacheSync);
     assert.deepStrictEqual(Array.from(resources.sweeps), [stand.withdrawal, stand.email]);
+    assert.deepStrictEqual(stand.tracked, [stand.server]);
+    assert.strictEqual(resources.upgraded, stand.upgraded);
     stand.processRef.emit('SIGTERM');
     assert.strictEqual(await stand.lifecycle.finished, 0);
     assert.deepStrictEqual(stand.stopped, ['health', 'http', 'socket', 'withdrawal', 'email', 'cache', 'redis', 'db']);

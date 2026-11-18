@@ -24,16 +24,19 @@ const sequelize = require('./src/config/db');
 const { assertMigrationsApplied } = require('./src/db/migrator');
 const RedisManager = require('./src/redis/manager');
 const chat = require('./src/socket/chat');
-const { installShutdown } = require('./src/shutdown');
+const { installShutdown, trackUpgrades } = require('./src/shutdown');
 const { loggable } = require('./src/helpers/failure');
 
 let server;
+let upgraded;
 let cacheSync;
 let withdrawalSweep;
 let emailSweep;
 const lifecycle = installShutdown({
     health: app.locals.health,
-    getResources: () => ({ server, io: chat.getIo(), sweeps: [withdrawalSweep, emailSweep], cacheSync }),
+    getResources: () => ({
+        server, upgraded, io: chat.getIo(), sweeps: [withdrawalSweep, emailSweep], cacheSync,
+    }),
     redis: RedisManager,
     sequelize,
 });
@@ -45,6 +48,7 @@ assertMigrationsApplied(sequelize).then(() => {
     server = app.listen(config.port, () =>
         console.log(`Listening on port ${config.port}`)
     );
+    upgraded = trackUpgrades(server);
 
     chat(server);
 

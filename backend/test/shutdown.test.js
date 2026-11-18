@@ -115,11 +115,14 @@ test('shutdown closes Socket.IO before waiting for HTTP to drain and keeps depen
 });
 
 test('the default deadline is ten seconds and a second signal forces one nonzero exit', async () => {
-    const stand = fixture(({ resources, steps }) => {
+    let now = 1000;
+    const stand = fixture(({ options, resources, steps }) => {
         resources.server.close = () => { steps.push('http'); };
+        options.now = () => now;
     });
     stand.processRef.emit('SIGTERM');
     assert.deepStrictEqual([...stand.timers.pending.values()].map(({ ms }) => ms), [10000]);
+    now += 1500;
     stand.processRef.emit('SIGINT');
     assert.strictEqual(await stand.lifecycle.finished, 1);
     stand.timers.fire();
@@ -231,4 +234,57 @@ test('real HTTP requests drain and a real Socket.IO WebSocket closes before the 
     assert.deepStrictEqual(await answer.json(), { ok: true });
     assert.strictEqual(await lifecycle.finished, 0);
     assert.deepStrictEqual(steps, ['stopping', 'redis', 'db', 'exit:0']);
+});
+
+test('a signal repeated within a second, as npm forwards a Ctrl+C the terminal already sent, does not force the exit', async () => {
+    let now = 1000;
+    const http = Promise.withResolvers();
+    const stand = fixture(({ options, resources, steps }) => {
+        resources.server.close = (done) => { steps.push('http'); http.promise.then(() => done()); };
+        options.now = () => now;
+    });
+    stand.processRef.emit('SIGINT');
+    now += 20;
+    stand.processRef.emit('SIGINT');
+    now += 900;
+    stand.processRef.emit('SIGTERM');
+    assert.deepStrictEqual(stand.exits, []);
+
+    http.resolve();
+    assert.strictEqual(await stand.lifecycle.finished, 0);
+    assert.deepStrictEqual(stand.exits, [0]);
+    assert.strictEqual(stand.logged.length, 2);
+});
+
+test('a WebSocket whose peer never answers the close frame is cut after a short grace, so the drain finishes', { timeout: 5000 }, async (t) => {
+    const { installShutdown, trackUpgrades } = require('../src/shutdown');
+    const WebSocket = require('ws');
+    const server = http.createServer();
+    const io = new Server(server);
+    const upgraded = trackUpgrades(server);
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    t.after(() => new Promise((resolve) => { server.close(() => resolve()); }));
+    const peer = new WebSocket(`ws://127.0.0.1:${server.address().port}/socket.io/?EIO=4&transport=websocket`);
+    await new Promise((resolve) => peer.once('open', resolve));
+    t.after(() => peer.terminate());
+    peer._socket.pause();
+    assert.strictEqual(upgraded.size, 1);
+
+    const steps = [];
+    const processRef = new EventEmitter();
+    processRef.exit = (code) => steps.push(`exit:${code}`);
+    const started = process.hrtime.bigint();
+    const lifecycle = installShutdown({
+        health: { stop: () => {} },
+        getResources: () => ({ server, io, upgraded }),
+        redis: { quit: async () => steps.push('redis') },
+        sequelize: { close: async () => steps.push('db') },
+        processRef, log: () => {},
+    });
+    processRef.emit('SIGTERM');
+
+    assert.strictEqual(await lifecycle.finished, 0);
+    assert.ok(Number(process.hrtime.bigint() - started) / 1e6 < 4000, 'the drain waited for the peer instead of cutting it');
+    assert.deepStrictEqual(steps, ['redis', 'db', 'exit:0']);
+    assert.ok([...upgraded].every((socket) => socket.destroyed));
 });

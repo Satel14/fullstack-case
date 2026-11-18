@@ -1,6 +1,8 @@
 const { loggable } = require('./helpers/failure');
 
 const SHUTDOWN_TIMEOUT_MS = 10000;
+const REPEATED_SIGNAL_MS = 1000;
+const UPGRADE_GRACE_MS = 1000;
 
 const close = (target) => new Promise((resolve, reject) => {
     if (!target) {
@@ -17,11 +19,21 @@ const close = (target) => new Promise((resolve, reject) => {
     }
 });
 
+const trackUpgrades = (server) => {
+    const sockets = new Set();
+    server.on('upgrade', (req, socket) => {
+        sockets.add(socket);
+        socket.once('close', () => sockets.delete(socket));
+    });
+    return sockets;
+};
+
 const installShutdown = ({
     health, getResources, redis, sequelize, processRef = process,
-    deadlineMs = SHUTDOWN_TIMEOUT_MS, log = (line) => console.warn(line), timers = globalThis,
+    deadlineMs = SHUTDOWN_TIMEOUT_MS, log = (line) => console.warn(line), timers = globalThis, now = () => Date.now(),
 }) => {
     let stopping = false;
+    let startedAt = 0;
     let exited = false;
     let deadline;
     let resolveFinished;
@@ -54,10 +66,16 @@ const installShutdown = ({
                 errors.push(`${name}: ${safeError(e)}`);
             }
         };
-        const { server, io, sweeps = [], cacheSync } = getResources();
+        const {
+            server, io, sweeps = [], cacheSync, upgraded,
+        } = getResources();
         const drained = attempt('HTTP', () => close(server));
+        const cutStragglers = upgraded
+            ? timers.setTimeout(() => upgraded.forEach((socket) => socket.destroy()), UPGRADE_GRACE_MS)
+            : null;
         await attempt('Socket.IO', () => close(io));
         await drained;
+        timers.clearTimeout(cutStragglers);
         await Promise.all(sweeps.filter(Boolean).map((sweep) => attempt('sweep', () => sweep.stop())));
         await attempt('item cache', () => cacheSync && cacheSync.stop());
         await attempt('Redis', () => redis.quit());
@@ -67,10 +85,13 @@ const installShutdown = ({
 
     const shutdown = (signal = 'manual') => {
         if (stopping) {
-            finish(1, `second signal ${signal}`);
+            if (now() - startedAt >= REPEATED_SIGNAL_MS) {
+                finish(1, `second signal ${signal}`);
+            }
             return finished;
         }
         stopping = true;
+        startedAt = now();
         health.stop();
         log(`[shutdown] starting: ${signal}`);
         deadline = timers.setTimeout(() => finish(1, 'deadline exceeded'), deadlineMs);
@@ -87,4 +108,4 @@ const installShutdown = ({
     return { shutdown, finished, isStopping: () => stopping };
 };
 
-module.exports = { installShutdown, SHUTDOWN_TIMEOUT_MS };
+module.exports = { installShutdown, trackUpgrades, SHUTDOWN_TIMEOUT_MS };
