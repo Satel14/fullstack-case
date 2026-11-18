@@ -142,6 +142,7 @@ module.exports.recordOpen = async (data, options = {}) => {
             co_nonce: data.nonce,
             co_resultItemId: data.resultItemId,
             co_resultColor: data.resultColor,
+            co_pricePaid: data.pricePaid,
             co_drawTable: data.drawTable,
             co_created_at: new Date(),
         },

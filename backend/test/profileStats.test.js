@@ -135,7 +135,7 @@ test('the migrations index storage by player and case and by player, item and co
     const indexes = await storageIndexes(sequelize);
     Object.entries(STATS_INDEXES).forEach(([name, fields]) => assert.deepStrictEqual(indexes[name], fields, name));
 
-    await createMigrator(sequelize, { quiet: true }).down({ to: INDEX_MIGRATION });
+    await createMigrator(sequelize, { quiet: true }).down({ migrations: [INDEX_MIGRATION] });
 
     const kept = Object.keys(indexes).filter((name) => !STATS_INDEXES[name]).sort();
     assert.deepStrictEqual(Object.keys(await storageIndexes(sequelize)).sort(), kept);

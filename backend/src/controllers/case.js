@@ -159,6 +159,7 @@ module.exports.openCaseById = async (req, res) => {
                         nonce,
                         resultItemId: resultCase.winner.item.id,
                         resultColor: resultCase.winner.item.color,
+                        pricePaid: lockedPrice,
                         drawTable: drawTableJson,
                     },
                     { transaction: t },

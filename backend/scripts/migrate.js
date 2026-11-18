@@ -18,6 +18,9 @@ const deriveBaselineSchema = async () => {
 };
 
 const DOWN_EFFECTS = {
+    '20261118000000-admin-user-card.js':
+        'drops the recorded prices paid for case opens and the (userId, id) indexes on storage, balance_history and '
+        + 'bonus_history, so player cards sort the entire history of each player again',
     '20260922000000-baseline.js': 'drops every table in the schema and all rows in them',
     '20260922000100-money-precision.js':
         'narrows users.balance back to DECIMAL(10,0), users.rank back to DECIMAL(10,0) and '
