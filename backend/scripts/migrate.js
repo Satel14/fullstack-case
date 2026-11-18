@@ -72,6 +72,8 @@ const DOWN_EFFECTS = {
     '20261029000000-item-grade.js':
         'drops items.grade, so every item loses its CS2 rarity grade and the site shows items without grade colours '
         + 'until the column is restored and npm run seed fills it again',
+    '20261029000100-promocode-status.js':
+        'drops promocodes.active and promocodes.expiresAt, losing disabled states and end dates',
 };
 
 const status = async (migrator) => {

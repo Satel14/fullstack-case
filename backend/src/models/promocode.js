@@ -25,6 +25,16 @@ module.exports = sequelize.define(
             field: 'limit',
             type: Sequelize.INTEGER,
         },
+        promo_active: {
+            field: 'active',
+            type: Sequelize.BOOLEAN,
+            allowNull: false,
+            defaultValue: true,
+        },
+        promo_expiresAt: {
+            field: 'expiresAt',
+            type: Sequelize.DATE,
+        },
         created_at: {
             field: 'created_at',
             type: Sequelize.DATE,
