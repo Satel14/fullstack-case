@@ -8,6 +8,12 @@ export const getAdminArticles = () => get('/admin/articles');
 
 export const updateAdminArticle = (id, payload) => put(`/admin/article/${id}`, payload);
 
+export const getAdminPromocodes = () => get('/admin/promocodes');
+
+export const createAdminPromocode = (payload) => post('/admin/promocode', payload);
+
+export const updateAdminPromocode = (code, payload) => put(`/admin/promocode/${encodeURIComponent(code)}`, payload);
+
 export const getAdminUsers = ({ search = '', limit = 50, offset = 0 } = {}) => {
     const query = new URLSearchParams({ limit: String(limit), offset: String(offset) });
     if (search) {
