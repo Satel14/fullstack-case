@@ -7,9 +7,16 @@ const clientOrigin = require('./src/config/clientOrigin');
 const { parseTrustProxy } = require('./src/config/trustProxy');
 const { jsonBody } = require('./src/middleware/jsonBody');
 const answerUnhandled = require('./src/middleware/answerUnhandled');
+const sequelize = require('./src/config/db');
+const RedisManager = require('./src/redis/manager');
+const { createHealth } = require('./src/services/health');
 
-const buildApp = () => {
+const buildApp = ({ health } = {}) => {
     const app = express();
+    app.locals.health = health || createHealth({
+        checkDb: () => sequelize.query('SELECT 1', { logging: false }),
+        checkRedis: () => RedisManager.ping(),
+    });
     app.set('query parser', 'simple');
     app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
     app.use(helmet({

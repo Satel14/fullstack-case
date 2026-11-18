@@ -1,4 +1,5 @@
 module.exports = (app) => {
+    require('./src/routes/health')(app);
     require("./src/auth/login")(app);
     require("./src/auth/register")(app);
     require("./src/auth/profile")(app);
