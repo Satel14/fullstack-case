@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import { colorName, renderItemProp } from '../helpers/Case';
 import { gradeName, gradeStyle } from '../helpers/grade';
+import itemName from '../helpers/itemName';
 import ItemColor from './mini/ItemColor';
 import { getStorageLastItemsWithUserInfo } from '../api/all/storage';
 import { itemInfoFetch, addItemsToCache } from '../store/actions/itemCache';
@@ -91,7 +92,7 @@ class HeaderThird extends React.Component {
         const { t } = this.props;
         const info = this.getShortInfoItem(item.storage_itemId);
         return [
-            (info && info.item_name) || t('item.placeholder', { id: String(item.storage_itemId) }),
+            itemName(info, t, item.storage_itemId),
             gradeName(info && info.item_grade, t),
             item.storage_color !== 'default' && colorName(item.storage_color, t),
         ].filter(Boolean).join(', ');

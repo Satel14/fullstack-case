@@ -13,6 +13,7 @@ import ItemColor from '../components/mini/ItemColor';
 import openNotification from '../components/mini/openNotification';
 import { clientErrorMessage, isRefusal } from '../helpers/serverMessage';
 import { gradeName } from '../helpers/grade';
+import cachedItemName from '../helpers/itemName';
 import { isAuthorized } from '../helpers/Player';
 import { itemInfoFetch } from '../store/actions/itemCache';
 import {
@@ -130,7 +131,7 @@ const ProvablyFair = () => {
         }
     }, [resultItemId, dispatch]);
 
-    const itemName = (id) => (itemCache[id] && itemCache[id].item_name) || t('item.placeholder', { id: String(id) });
+    const itemName = (id) => cachedItemName(itemCache[id], t, id);
 
     const reloadHistory = () => loadHistory(generation.current);
 

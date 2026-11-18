@@ -1,6 +1,5 @@
 import { ADD_ITEM_LIST_CACHE } from '../types';
 import { getItemsInfo } from '../../api/all/item';
-import i18n from '../../i18n';
 
 const ITEMS_PER_REQUEST = 200;
 const ITEM_ID = /^[1-9]\d{0,9}$/;
@@ -10,7 +9,6 @@ let queue = [];
 
 const placeholderItem = (id, failed) => ({
     item_itemId: id,
-    item_name: i18n.t('item.placeholder', { id: String(id) }),
     item_rare: '',
     item_type: '',
     placeholder: failed ? 'failed' : 'unknown',

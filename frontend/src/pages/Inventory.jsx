@@ -16,6 +16,7 @@ import Loader from '../components/mini/Loader';
 import LoadError from '../components/mini/LoadError';
 import { gradeStyle } from '../helpers/grade';
 import { itemCaption } from '../helpers/Case';
+import itemName from '../helpers/itemName';
 import { clientErrorMessage, joinSentences } from '../helpers/serverMessage';
 
 const { TabPane } = Tabs;
@@ -151,7 +152,12 @@ const Inventory = ({
         };
     }, [pending.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const info = (id, field) => (itemCache[id] ? itemCache[id][field] : '');
+    const info = (id, field) => {
+        if (field === 'item_name') {
+            return itemName(itemCache[id], t, id);
+        }
+        return itemCache[id] ? itemCache[id][field] : '';
+    };
 
     const priceOf = (row) => computeItemPriceUAH(info(row.storage_itemId, 'pricesInCredits'), row.storage_color, rate);
 

@@ -1,12 +1,6 @@
 import { itemColors } from '../data/itemConfig';
 import { gradeName } from './grade';
-
-const itemName = (item, t) => {
-    if (item.item_name) {
-        return item.item_name;
-    }
-    return item.item_itemId ? t('item.placeholder', { id: String(item.item_itemId) }) : '';
-};
+import itemName from './itemName';
 
 const COLOR_NAMES = new Map([
     ['default', 'item.colors.default'],

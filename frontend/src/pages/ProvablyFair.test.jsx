@@ -13,7 +13,7 @@ import { LOGIN_USER } from '../store/types';
 import ProvablyFair from './ProvablyFair';
 
 jest.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (key) => key }),
+    useTranslation: () => ({ t: (key, options) => (key === 'item.placeholder' ? `${key} ${JSON.stringify(options)}` : key) }),
     initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 

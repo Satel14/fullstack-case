@@ -94,11 +94,11 @@ test('an item the server does not know gets a placeholder', async () => {
     const [known, unknown] = await Promise.all([dispatch(itemInfoFetch(1)), dispatch(itemInfoFetch(999))]);
 
     expect(known.item_name).toBe('name 1');
-    expect(unknown.item_name).toBe('Предмет #999');
-    expect(state.itemCache[999].item_name).toBe('Предмет #999');
+    expect(unknown).toMatchObject({ item_itemId: 999, placeholder: 'unknown' });
+    expect(state.itemCache[999]).not.toHaveProperty('item_name');
 });
 
-test('an item that cannot be loaded is named in the player\'s language, without a made-up wear or type', async () => {
+test('a failed item keeps its kind and id without a language, made-up wear or type', async () => {
     getItemsInfo.mockRejectedValue({ error: 500 });
     const { dispatch } = makeStore();
 
@@ -108,10 +108,10 @@ test('an item that cannot be loaded is named in the player\'s language, without 
     const inEnglish = await dispatch(itemInfoFetch(42));
 
     expect(inUkrainian).toEqual({
-        item_itemId: 41, item_name: 'Предмет #41', item_rare: '', item_type: '', placeholder: 'failed',
+        item_itemId: 41, item_rare: '', item_type: '', placeholder: 'failed',
     });
     expect(inEnglish).toEqual({
-        item_itemId: 42, item_name: 'Item #42', item_rare: '', item_type: '', placeholder: 'failed',
+        item_itemId: 42, item_rare: '', item_type: '', placeholder: 'failed',
     });
 });
 
@@ -121,7 +121,9 @@ test('an id the server would refuse gets a placeholder without spoiling the requ
     const results = await Promise.all([1, undefined, 'abc', 0, 2].map((id) => dispatch(itemInfoFetch(id))));
 
     expect(requestedIds()).toEqual([['1', '2']]);
-    expect(results.map((r) => r.item_name)).toEqual(['name 1', 'Предмет #undefined', 'Предмет #abc', 'Предмет #0', 'name 2']);
+    expect(results.map((r) => r.item_name)).toEqual(['name 1', undefined, undefined, undefined, 'name 2']);
+    expect(results.slice(1, 4).map((r) => [r.item_itemId, r.placeholder]))
+        .toEqual([[undefined, 'unknown'], ['abc', 'unknown'], [0, 'unknown']]);
 });
 
 test('nothing is requested when every id is one the server would refuse', async () => {
@@ -129,7 +131,7 @@ test('nothing is requested when every id is one the server would refuse', async 
 
     const result = await dispatch(itemInfoFetch('x'));
 
-    expect(result.item_name).toBe('Предмет #x');
+    expect(result).toMatchObject({ item_itemId: 'x', placeholder: 'unknown' });
     expect(getItemsInfo).not.toHaveBeenCalled();
 });
 
@@ -138,8 +140,8 @@ test('a failed request gives every item in it a placeholder that the next lookup
     const { state, dispatch } = makeStore();
 
     const failed = await Promise.all([dispatch(itemInfoFetch(1)), dispatch(itemInfoFetch(2))]);
-    expect(failed.map((r) => r.item_name)).toEqual(['Предмет #1', 'Предмет #2']);
-    expect(state.itemCache[2].item_name).toBe('Предмет #2');
+    expect(failed.map((r) => [r.item_itemId, r.placeholder])).toEqual([[1, 'failed'], [2, 'failed']]);
+    expect(state.itemCache[2]).not.toHaveProperty('item_name');
 
     expect((await dispatch(itemInfoFetch(2))).item_name).toBe('name 2');
     expect(state.itemCache[2].item_name).toBe('name 2');
@@ -151,7 +153,7 @@ test('an item the server does not know is not asked for again', async () => {
     const { dispatch } = makeStore();
 
     await dispatch(itemInfoFetch(999));
-    expect((await dispatch(itemInfoFetch(999))).item_name).toBe('Предмет #999');
+    expect(await dispatch(itemInfoFetch(999))).toMatchObject({ item_itemId: 999, placeholder: 'unknown' });
 
     expect(getItemsInfo).toHaveBeenCalledTimes(1);
 });

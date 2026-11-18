@@ -121,7 +121,7 @@ test('the inventory still opens when the item lookup fails, with plain sell butt
     renderInventory();
 
     expect(await screen.findAllByText('inventory.sell')).toHaveLength(2);
-    expect(screen.getAllByText('Предмет #1')).toHaveLength(2);
+    expect(screen.getAllByText('item.placeholder {"id":"1"}')).toHaveLength(2);
     const metas = [...document.querySelectorAll('.inventorypage-card__meta')].map((meta) => meta.textContent.trim());
     expect(metas).toEqual(['', '']);
     expect(screen.queryByText(/openCase.sellFor/)).toBeNull();

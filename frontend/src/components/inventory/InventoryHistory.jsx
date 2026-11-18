@@ -7,6 +7,7 @@ import { withTranslation } from 'react-i18next';
 import Loader from '../mini/Loader';
 import { itemInfoFetch } from '../../store/actions/itemCache';
 import { renderItemProp, itemCaption } from '../../helpers/Case';
+import itemName from '../../helpers/itemName';
 import { timeLeft } from '../../helpers/Time';
 import ItemColor from '../mini/ItemColor';
 import { getStorageLastItemsByUserId } from '../../api/all/storage';
@@ -58,6 +59,9 @@ class InventoryHistory extends React.Component {
 
     if (!fieldName) {
       return itemCache[id];
+    }
+    if (fieldName === 'item_name') {
+      return itemName(itemCache[id], this.props.t, id);
     }
     if (itemCache[id]) {
       return itemCache[id][fieldName];

@@ -42,7 +42,7 @@ test('a placeholder from the item cache shows only what is known about it', () =
         item_itemId: 31, item_name: 'Предмет #31', item_rare: '', item_type: '', placeholder: 'failed',
     }, 'painted', t);
 
-    expect(tooltip).toBe('item.name: Предмет #31, item.color: item.colors.painted');
+    expect(tooltip).toBe('item.name: item.placeholder {"id":"31"}, item.color: item.colors.painted');
 });
 
 test('nothing is shown for an item that is not loaded', () => {

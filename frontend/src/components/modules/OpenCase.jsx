@@ -21,6 +21,7 @@ import CasePrice from '../mini/CasePrice';
 import { computeItemPriceUAH } from '../../helpers/price';
 import { gradeStyle } from '../../helpers/grade';
 import { itemCaption } from '../../helpers/Case';
+import itemName from '../../helpers/itemName';
 import { clientErrorMessage, joinSentences } from '../../helpers/serverMessage';
 
 const delayAnimation = 4;
@@ -150,6 +151,9 @@ class OpenCase extends Component {
 
     getShortInfoItem(id, fieldName) {
         const { itemCache } = this.props;
+        if (fieldName === 'item_name') {
+            return itemName(itemCache[id], this.props.t, id);
+        }
         if (itemCache[id]) {
             return itemCache[id][fieldName];
         }

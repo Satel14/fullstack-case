@@ -9,6 +9,7 @@ import { itemInfoFetch } from '../store/actions/itemCache';
 import { getCaseById } from '../api/all/cases';
 import { getProvablyFairState } from '../api/all/provablyFair';
 import { renderItemProp } from '../helpers/Case';
+import itemName from '../helpers/itemName';
 import { gradeName, gradeRank, gradeStyle } from '../helpers/grade';
 import { formatChance, gradeOdds } from '../helpers/odds';
 import { computeItemPriceUAH } from '../helpers/price';
@@ -75,6 +76,10 @@ class Case extends Component {
 
         if (fieldName === null) {
             return itemCache[id];
+        }
+
+        if (fieldName === 'item_name') {
+            return itemName(itemCache[id], this.props.t, id);
         }
 
         if (itemCache[id]) {
