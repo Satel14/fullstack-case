@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { getAdminArticles, updateAdminArticle } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
 import ArticleText from '../../components/mini/ArticleText';
+import { hasVisibleText } from '../../helpers/articleHtml';
 
 const { TextArea } = Input;
 const { TabPane } = Tabs;
@@ -120,7 +121,7 @@ const ArticlesTab = () => {
         },
     ];
 
-    const englishReady = Boolean(draft && draft.article_titleEn && draft.article_textEn);
+    const englishReady = Boolean(draft && draft.article_titleEn.trim() && hasVisibleText(draft.article_textEn));
 
     return (
         <Space direction="vertical" style={{ width: '100%' }}>
@@ -148,8 +149,11 @@ const ArticlesTab = () => {
                 className="article-editor"
                 destroyOnClose
                 getContainer={false}
+                closable={!saving}
+                maskClosable={!saving}
+                keyboard={!saving}
                 footer={[
-                    <Button key="cancel" onClick={close}>{t('admin.cancel')}</Button>,
+                    <Button key="cancel" onClick={close} disabled={saving}>{t('admin.cancel')}</Button>,
                     <Button key="save" type="primary" loading={saving} onClick={save}>{t('admin.save')}</Button>,
                 ]}
             >

@@ -1,4 +1,4 @@
-import { cleanArticleHtml } from './articleHtml';
+import { cleanArticleHtml, hasVisibleText } from './articleHtml';
 
 test('the formatting an article may use is kept', () => {
     const html = '<h2>A</h2><h3>B</h3><h4>C</h4>'
@@ -38,4 +38,15 @@ test('a link keeps only a web, mail or site address', () => {
 test('nothing at all gives an empty text', () => {
     expect(cleanArticleHtml(undefined)).toBe('');
     expect(cleanArticleHtml(null)).toBe('');
+});
+
+test('the page drops what the server drops: hidden text, control characters and addresses outside links', () => {
+    expect(cleanArticleHtml('<p>a</p><textarea>hidden</textarea><option>hidden</option><title>hidden</title>')).toBe('<p>a</p>');
+    expect(cleanArticleHtml('<p href="/x">a\u0000b</p>')).toBe('<p>ab</p>');
+});
+
+test('visible text ignores markup, spaces and invisible characters', () => {
+    expect(hasVisibleText('<p>Text</p>')).toBe(true);
+    ['', '<p></p>', '<p> &nbsp; </p>', '<p>&#8203;\u200B\uFEFF</p>', '<textarea>hidden</textarea>', '<script>x()</script>']
+        .forEach((html) => expect(hasVisibleText(html)).toBe(false));
 });

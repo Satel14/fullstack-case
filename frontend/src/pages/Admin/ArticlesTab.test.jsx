@@ -87,7 +87,25 @@ test('an edited article is saved with all four fields and the editor then shows 
     }));
     await waitFor(() => expect(screen.getByLabelText('admin.articles.text').value).toBe('<p>Нові правила</p>'));
     expect(openNotification).toHaveBeenCalledWith('success', 'admin.articles.saved', 'Правила');
-    expect(screen.getAllByText('Правила').length).toBeGreaterThan(0);
+    expect(within(document.querySelector('[data-row-key="6"]')).getByText('Правила')).toBeInTheDocument();
+});
+
+test('the editor cannot be closed while a save is on its way, so the answer never lands in another article', async () => {
+    let answer;
+    updateAdminArticle.mockReturnValue(new Promise((resolve) => { answer = resolve; }));
+    renderTab();
+    await openEditor('Правила сервісу');
+
+    fireEvent.click(screen.getByRole('button', { name: 'admin.save' }));
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'admin.cancel' })).toBeDisabled());
+    expect(document.querySelector('.ant-modal-close')).toBeNull();
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape', keyCode: 27 });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    answer({ data: { ...rules, article_text: '<p>Збережено</p>' } });
+    await waitFor(() => expect(screen.getByLabelText('admin.articles.text').value).toBe('<p>Збережено</p>'));
+    expect(screen.getByRole('button', { name: 'admin.cancel' })).not.toBeDisabled();
 });
 
 test('the preview shows the text as the article page will, without markup an article may not use', async () => {
@@ -102,14 +120,48 @@ test('the preview shows the text as the article page will, without markup an art
     expect(preview().querySelector('img, script, [onclick]')).toBeNull();
 });
 
+const englishPreview = async () => {
+    fireEvent.click(screen.getByRole('tab', { name: 'admin.articles.previewEn' }));
+    await waitFor(() => expect(document.querySelectorAll('.article-editor__preview')).toHaveLength(2));
+    return document.querySelectorAll('.article-editor__preview')[1];
+};
+
+test('an article with an English version previews it in English', async () => {
+    renderTab();
+    await openEditor('Правила сервісу');
+
+    const english = await englishPreview();
+
+    expect(within(english).getByText('Service Rules')).toBeInTheDocument();
+    expect(within(english).getByText('Old rules')).toBeInTheDocument();
+    expect(screen.queryByText('admin.articles.enFallback')).toBeNull();
+});
+
 test('an article without an English version warns that English readers see the Ukrainian one', async () => {
     renderTab();
     await openEditor('Контакти');
 
-    fireEvent.click(screen.getByRole('tab', { name: 'admin.articles.previewEn' }));
+    const english = await englishPreview();
 
-    expect(await screen.findByText('admin.articles.enFallback')).toBeInTheDocument();
+    expect(screen.getByText('admin.articles.enFallback')).toBeInTheDocument();
+    expect(within(english).getByText('Контакти')).toBeInTheDocument();
+    expect(within(english).getByText('Пишіть у чат')).toBeInTheDocument();
     expect(screen.getByLabelText('admin.articles.titleEn').value).toBe('');
+});
+
+test('an English title of spaces or an English text with nothing to show counts as no English version', async () => {
+    renderTab();
+    await openEditor('Правила сервісу');
+
+    fireEvent.change(screen.getByLabelText('admin.articles.titleEn'), { target: { value: '   ' } });
+    const english = await englishPreview();
+    expect(screen.getByText('admin.articles.enFallback')).toBeInTheDocument();
+    expect(within(english).getByText('Правила сервісу')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('admin.articles.titleEn'), { target: { value: 'Service Rules' } });
+    fireEvent.change(screen.getByLabelText('admin.articles.textEn'), { target: { value: '<p> </p><textarea>English text</textarea>' } });
+    expect(screen.getByText('admin.articles.enFallback')).toBeInTheDocument();
+    expect(within(english).getByText('Старі правила')).toBeInTheDocument();
 });
 
 test('a refused save shows the reason the server gave and keeps the editor open', async () => {
