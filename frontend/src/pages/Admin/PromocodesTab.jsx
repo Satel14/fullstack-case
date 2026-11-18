@@ -33,7 +33,6 @@ const PromocodesTab = () => {
     const [failed, setFailed] = useState(false);
     const [editing, setEditing] = useState(undefined);
     const [saving, setSaving] = useState(null);
-    const [form] = Form.useForm();
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -145,11 +144,11 @@ const PromocodesTab = () => {
                 getContainer={false}
                 footer={[
                     <Button key="cancel" disabled={saving !== null} onClick={() => setEditing(undefined)}>{t('admin.cancel')}</Button>,
-                    <Button key="save" type="primary" loading={saving !== null} onClick={() => form.submit()}>{t('admin.save')}</Button>,
+                    <Button key="save" type="primary" htmlType="submit" form="promocode-editor" loading={saving !== null}>{t('admin.save')}</Button>,
                 ]}
             >
                 {editing !== undefined && (
-                    <Form form={form} layout="vertical" initialValues={draftOf(editing)} preserve={false} onFinish={submit}>
+                    <Form id="promocode-editor" layout="vertical" initialValues={draftOf(editing)} preserve={false} onFinish={submit}>
                         {!editing && (
                             <>
                                 <Form.Item name="code" label={t('admin.promocodes.code')} rules={[{ pattern: /^[A-Za-z0-9_-]{3,32}$/, required: true, message: t('admin.promocodes.codeInvalid') }]}>

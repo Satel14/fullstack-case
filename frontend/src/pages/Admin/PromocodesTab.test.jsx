@@ -16,6 +16,8 @@ jest.mock('../../api/all/admin', () => ({
 
 jest.mock('../../components/mini/openNotification', () => jest.fn());
 
+jest.mock('../../api/fetch', () => ({ put: jest.fn() }));
+
 const { getAdminPromocodes, createAdminPromocode, updateAdminPromocode } = require('../../api/all/admin');
 const openNotification = require('../../components/mini/openNotification');
 
@@ -45,8 +47,8 @@ beforeEach(() => {
     });
 });
 
-const openEditor = async () => {
-    const tableRow = (await screen.findByText(row.code)).closest('tr');
+const openEditor = async (code = row.code) => {
+    const tableRow = (await screen.findByText(code)).closest('tr');
     fireEvent.click(within(tableRow).getByRole('button', { name: 'admin.promocodes.edit' }));
     return screen.findByRole('dialog');
 };
@@ -103,15 +105,78 @@ test('an edit keeps code and bonus fixed and clears the end date with null', asy
     expect(screen.getByText('New description')).toBeInTheDocument();
 });
 
-test('a changed end date is sent as an ISO instant while unchanged fields are omitted', async () => {
+test.each([0, 3650 * 86400000])('a changed end date is sent as an ISO instant at clock offset %i while unchanged fields are omitted', async (offset) => {
+    const clock = jest.spyOn(Date, 'now').mockReturnValue(Date.now() + offset);
+    try {
+        render(<PromocodesTab />);
+        const dialog = await openEditor();
+        const nextDay = new Date(Date.now() + 86400000);
+        const localDate = new Date(nextDay.getTime() - nextDay.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        fireEvent.change(within(dialog).getByLabelText('admin.promocodes.expiresAt'), { target: { value: localDate } });
+        fireEvent.click(within(dialog).getByRole('button', { name: 'admin.save' }));
+        await waitFor(() => expect(updateAdminPromocode).toHaveBeenCalledWith('SUMMER_50', {
+            expiresAt: new Date(localDate).toISOString(),
+        }));
+    } finally { clock.mockRestore(); }
+});
+
+test.each(['cancel', 'save'])('opening another code after %s shows and sends its own values', async (action) => {
+    const second = {
+        ...row, code: 'SECOND', limit: 3, active: false, expiresAt: null, description: 'Second gift',
+    };
+    getAdminPromocodes.mockResolvedValue({ data: [row, second] });
+    updateAdminPromocode.mockImplementation(async (code, fields) => ({
+        data: { ...(code === row.code ? row : second), ...fields },
+    }));
+    render(<PromocodesTab />);
+    const firstDialog = await openEditor();
+    fireEvent.change(within(firstDialog).getByLabelText('admin.promocodes.limit'), { target: { value: '20' } });
+    fireEvent.change(within(firstDialog).getByLabelText('admin.promocodes.expiresAt'), { target: { value: '' } });
+    fireEvent.change(within(firstDialog).getByLabelText('admin.promocodes.description'), { target: { value: 'Edited first' } });
+    fireEvent.click(within(firstDialog).getByRole('button', { name: `admin.${action}` }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    if (action === 'save') {
+        expect(updateAdminPromocode).toHaveBeenCalledWith(row.code, { limit: 20, expiresAt: null, description: 'Edited first' });
+    } else {
+        expect(updateAdminPromocode).not.toHaveBeenCalled();
+    }
+    const secondDialog = await openEditor(second.code);
+    expect(within(secondDialog).getByLabelText('admin.promocodes.limit')).toHaveValue('3');
+    expect(within(secondDialog).getByLabelText('admin.promocodes.expiresAt')).toHaveValue('');
+    expect(within(secondDialog).getByLabelText('admin.promocodes.description')).toHaveValue('Second gift');
+    expect(within(secondDialog).getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+    fireEvent.click(within(secondDialog).getByRole('switch'));
+    fireEvent.click(within(secondDialog).getByRole('button', { name: 'admin.save' }));
+    await waitFor(() => expect(updateAdminPromocode).toHaveBeenLastCalledWith(second.code, { active: true }));
+    expect(updateAdminPromocode).toHaveBeenCalledTimes(action === 'save' ? 2 : 1);
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+});
+
+test('creating after cancelling an edit starts with fresh defaults', async () => {
     render(<PromocodesTab />);
     const dialog = await openEditor();
-    const localDate = '2031-07-08T16:30';
-    fireEvent.change(within(dialog).getByLabelText('admin.promocodes.expiresAt'), { target: { value: localDate } });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'admin.save' }));
-    await waitFor(() => expect(updateAdminPromocode).toHaveBeenCalledWith('SUMMER_50', {
-        expiresAt: new Date(localDate).toISOString(),
-    }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'admin.cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'admin.promocodes.create' }));
+    const createDialog = await screen.findByRole('dialog');
+    expect(within(createDialog).getByLabelText('admin.promocodes.code')).toHaveValue('');
+    expect(within(createDialog).getByLabelText('admin.promocodes.bonus')).toHaveValue('');
+    expect(within(createDialog).getByLabelText('admin.promocodes.limit')).toHaveValue('1');
+    expect(within(createDialog).getByLabelText('admin.promocodes.expiresAt')).toHaveValue('');
+    expect(within(createDialog).getByLabelText('admin.promocodes.description')).toHaveValue('');
+    expect(within(createDialog).getByRole('switch')).toHaveAttribute('aria-checked', 'true');
+});
+
+test.each([
+    ['GO', 'GO'],
+    ['BONUS.100', 'BONUS.100'],
+    ['код', '%D0%BA%D0%BE%D0%B4'],
+    ['BONUS/100 ?#%', 'BONUS%2F100%20%3F%23%25'],
+])('the update API encodes legacy code %s as one URL segment', (code, encoded) => {
+    const api = jest.requireActual('../../api/all/admin');
+    const { put } = require('../../api/fetch');
+    api.updateAdminPromocode(code, { active: false });
+    expect(put).toHaveBeenCalledWith(`/admin/promocode/${encoded}`, { active: false });
 });
 
 test('the table active switch saves its state, and a refusal preserves the old state and shows its reason', async () => {
