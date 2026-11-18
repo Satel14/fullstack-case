@@ -22,20 +22,40 @@ require('./src/models/emailVerification');
 
 const sequelize = require('./src/config/db');
 const { assertMigrationsApplied } = require('./src/db/migrator');
+const RedisManager = require('./src/redis/manager');
+const chat = require('./src/socket/chat');
+const { installShutdown } = require('./src/shutdown');
+const { loggable } = require('./src/helpers/failure');
+
+let server;
+let cacheSync;
+let withdrawalSweep;
+let emailSweep;
+const lifecycle = installShutdown({
+    health: app.locals.health,
+    getResources: () => ({ server, io: chat.getIo(), sweeps: [withdrawalSweep, emailSweep], cacheSync }),
+    redis: RedisManager,
+    sequelize,
+});
 
 assertMigrationsApplied(sequelize).then(() => {
-    const server = app.listen(config.port, () =>
+    if (lifecycle.isStopping()) {
+        return;
+    }
+    server = app.listen(config.port, () =>
         console.log(`Listening on port ${config.port}`)
     );
 
-    require('./src/socket/chat')(server);
+    chat(server);
 
-    const RedisManager = require('./src/redis/manager');
-    RedisManager.startItemCacheSync();
+    cacheSync = RedisManager.startItemCacheSync();
 
-    require('./src/services/withdrawal').startSweep();
-    require('./src/services/emailVerification').startSweep();
+    withdrawalSweep = require('./src/services/withdrawal').startSweep();
+    emailSweep = require('./src/services/emailVerification').startSweep();
 }).catch((err) => {
-    console.error(err.message);
+    if (lifecycle.isStopping()) {
+        return;
+    }
+    console.error(loggable(err));
     process.exit(1);
 });

@@ -1,6 +1,7 @@
 const { Transaction } = require('sequelize');
 const sequelize = require('../config/db');
 const Storage = require('../models/storage');
+const { loggable } = require('../helpers/failure');
 
 const WITHDRAW_DELAY_MS = 60 * 1000;
 const SWEEP_INTERVAL_MS = 10 * 1000;
@@ -32,22 +33,25 @@ const completeDue = async (now = new Date()) => {
 const startSweep = ({ intervalMs = SWEEP_INTERVAL_MS, run = completeDue } = {}) => {
     let stopped = false;
     let timer = null;
+    let running = Promise.resolve();
     const tick = async () => {
         try {
             await run();
         } catch (e) {
-            console.error('[Withdrawal] sweep failed:', e.message);
+            console.error('[Withdrawal] sweep failed:', loggable(e));
         }
         if (!stopped) {
-            timer = setTimeout(tick, intervalMs);
+            timer = setTimeout(next, intervalMs);
             timer.unref();
         }
     };
-    tick();
+    const next = () => { running = tick(); };
+    next();
     return {
         stop: () => {
             stopped = true;
             clearTimeout(timer);
+            return running;
         },
     };
 };

@@ -3,6 +3,7 @@ const { Op } = require('sequelize');
 const sequelize = require('../config/db');
 const EmailVerification = require('../models/emailVerification');
 const User = require('../models/user');
+const { loggable } = require('../helpers/failure');
 
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 const SWEEP_INTERVAL_MS = 60 * 60 * 1000;
@@ -41,22 +42,25 @@ module.exports.sweepStale = sweepStale;
 module.exports.startSweep = ({ intervalMs = SWEEP_INTERVAL_MS, run = sweepStale } = {}) => {
     let stopped = false;
     let timer = null;
+    let running = Promise.resolve();
     const tick = async () => {
         try {
             await run();
         } catch (e) {
-            console.error('[EmailVerification] sweep failed:', e.message);
+            console.error('[EmailVerification] sweep failed:', loggable(e));
         }
         if (!stopped) {
-            timer = setTimeout(tick, intervalMs);
+            timer = setTimeout(next, intervalMs);
             timer.unref();
         }
     };
-    tick();
+    const next = () => { running = tick(); };
+    next();
     return {
         stop: () => {
             stopped = true;
             clearTimeout(timer);
+            return running;
         },
     };
 };
