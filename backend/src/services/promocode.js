@@ -10,6 +10,12 @@ module.exports.usePromocode = async (code, userId, options = {}) => {
             throw new Error(MESSAGE.PROMOCODE.NOT_EXIST);
         }
         const promo = data.dataValues;
+        if (!promo.promo_active) {
+            throw new Error(MESSAGE.PROMOCODE.INACTIVE);
+        }
+        if (promo.promo_expiresAt && new Date(promo.promo_expiresAt).getTime() <= Date.now()) {
+            throw new Error(MESSAGE.PROMOCODE.EXPIRED);
+        }
         const bonus = Number(promo.promo_bonus);
         if (!Number.isFinite(bonus) || bonus <= 0 || !Number.isInteger(promo.promo_limit)) {
             throw new Error(MESSAGE.PROMOCODE.INVALID);

@@ -171,3 +171,90 @@ test('a blank or missing code is rejected by validation', async () => {
     }
     assert.deepStrictEqual(await balances(sequelize), [['alice', 100], ['bob', 100]]);
 });
+
+for (const [label, active, expiresAt, message] of [
+    ['disabled', false, null, 'INACTIVE'],
+    ['expired', true, '2000-01-01 00:00:00', 'EXPIRED'],
+]) {
+    test(`a ${label} code answers its refusal as 200 without balance, usage or history changes`, async () => {
+        const sequelize = await resetTestDatabase();
+        activeSequelize = sequelize;
+        await seedPlayers(sequelize);
+        await addPromocode(sequelize, 'CLOSED', '50.00', 10);
+        await sequelize.query('UPDATE promocodes SET active = ?, expiresAt = ? WHERE code = ?', {
+            replacements: [active, expiresAt, 'CLOSED'],
+        });
+        const result = await redeemThroughRoute(1, { promocode: 'closed' });
+        assert.strictEqual(result.code, 200);
+        assert.ok(MESSAGE.PROMOCODE[message]);
+        assert.strictEqual(result.payload.message, MESSAGE.PROMOCODE[message]);
+        assert.strictEqual(result.payload.balance, undefined);
+        assert.deepStrictEqual(await balances(sequelize), [['alice', 100], ['bob', 100]]);
+        assert.deepStrictEqual(await promocodeState(sequelize, 'CLOSED'), { usedIds: [], credits: 0 });
+    });
+}
+
+test('a future end date allows redemption, and the limit and once-per-player rules still hold', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayers(sequelize);
+    await addPromocode(sequelize, 'FUTURE', '50.00', 2);
+    await sequelize.query("UPDATE promocodes SET expiresAt = DATE_ADD(NOW(), INTERVAL 1 DAY) WHERE code = 'FUTURE'");
+    assert.strictEqual(Number((await redeemThroughRoute(1, { promocode: 'future' })).payload.balance), 150);
+    assert.strictEqual((await redeem(1, 'FUTURE')).payload.message, MESSAGE.PROMOCODE.USED_BY_YOURSELF);
+    assert.strictEqual(Number((await redeem(2, 'FUTURE')).payload.balance), 150);
+    assert.strictEqual((await redeem(1, 'FUTURE')).payload.message, MESSAGE.PROMOCODE.LIMIT_MAX);
+    assert.deepStrictEqual(await promocodeState(sequelize, 'FUTURE'), { usedIds: [1, 2], credits: 2 });
+});
+
+test('two concurrent players cannot redeem the last use twice', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayers(sequelize);
+    await addPromocode(sequelize, 'LAST', '50.00', 1);
+    const results = await Promise.all([redeem(1, 'LAST'), redeem(2, 'LAST')]);
+    assert.strictEqual(results.filter((result) => result.payload.balance !== undefined).length, 1);
+    assert.strictEqual(results.find((result) => result.payload.balance === undefined).payload.message, MESSAGE.PROMOCODE.LIMIT_MAX);
+    assert.strictEqual((await balances(sequelize)).reduce((sum, [, balance]) => sum + balance, 0), 250);
+    const state = await promocodeState(sequelize, 'LAST');
+    assert.strictEqual(state.usedIds.length, 1);
+    assert.strictEqual(state.credits, 1);
+});
+
+test('a redemption waiting for the code lock sees a switch-off committed before it acquires the row', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayers(sequelize);
+    await addPromocode(sequelize, 'CLOSING', '50.00', 10);
+    const transaction = await sequelize.transaction();
+    let pending;
+    try {
+        await sequelize.query("SELECT code FROM promocodes WHERE code = 'CLOSING' FOR UPDATE", { transaction });
+        pending = redeemThroughRoute(1, { promocode: 'CLOSING' });
+        const outcome = await Promise.race([
+            pending.then(() => 'answered'), new Promise((resolve) => setTimeout(() => resolve('waiting'), 150)),
+        ]);
+        assert.strictEqual(outcome, 'waiting');
+        await sequelize.query("UPDATE promocodes SET active = 0 WHERE code = 'CLOSING'", { transaction });
+    } finally { await transaction.commit(); }
+    assert.strictEqual((await pending).payload.message, MESSAGE.PROMOCODE.INACTIVE);
+    assert.deepStrictEqual(await balances(sequelize), [['alice', 100], ['bob', 100]]);
+    assert.deepStrictEqual(await promocodeState(sequelize, 'CLOSING'), { usedIds: [], credits: 0 });
+});
+
+test('the exact end instant is expired', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedPlayers(sequelize);
+    await addPromocode(sequelize, 'BOUNDARY', '50.00', 10);
+    const boundary = new Date('2030-01-01T12:00:00Z');
+    await sequelize.query("UPDATE promocodes SET expiresAt = ? WHERE code = 'BOUNDARY'", {
+        replacements: [boundary.toISOString().slice(0, 19).replace('T', ' ')],
+    });
+    const now = Date.now;
+    Date.now = () => boundary.getTime();
+    try {
+        assert.strictEqual((await redeem(1, 'BOUNDARY')).payload.message, MESSAGE.PROMOCODE.EXPIRED);
+    } finally { Date.now = now; }
+    assert.deepStrictEqual(await promocodeState(sequelize, 'BOUNDARY'), { usedIds: [], credits: 0 });
+});
