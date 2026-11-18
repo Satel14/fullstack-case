@@ -3604,6 +3604,11 @@ footer.ant-layout-footer {
         }
     }
 
+    .ant-table-tbody > tr > td.admin-actions {
+        white-space: nowrap;
+        word-break: normal;
+    }
+
     .ant-table-tbody > tr.ant-table-row:hover > td,
     .ant-table-tbody > tr > td.ant-table-cell-row-hover {
         background: #131725;
@@ -3835,7 +3840,15 @@ footer.ant-layout-footer {
     }
 }
 
+.ant-modal.article-editor {
+    max-width: calc(100% - 16px);
+}
+
 .article-editor {
+    &__field {
+        margin-bottom: 14px;
+    }
+
     .ant-typography.ant-typography-secondary {
         display: block;
         margin-top: 12px;
@@ -4006,6 +4019,10 @@ footer.ant-layout-footer {
 
         a {
             color: #00a0ff;
+
+            &:not([href]) {
+                color: inherit;
+            }
         }
     }
 }

@@ -106,6 +106,7 @@ const ArticlesTab = () => {
         {
             title: '',
             key: 'actions',
+            className: 'admin-actions',
             render: (row) => (
                 <Space>
                     <Button type="primary" size="small" onClick={() => edit(row)}>
