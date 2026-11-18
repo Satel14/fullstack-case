@@ -244,6 +244,8 @@ test('a backup service dumps the database every day into ./backups and keeps the
     assert.match(backup, /^ {6}BACKUP_KEEP: \$\{BACKUP_KEEP:-14\}$/m);
     assert.match(backup, /condition: service_healthy/);
     assert.doesNotMatch(backup, /ports:/);
+    assert.match(backup, /^ {6}test: \["CMD", "sh", "\/ops\/mysql-backup\.sh", "--healthy"\]$/m);
+    assert.match(backup, /^ {6}BACKUP_RETRY_SECONDS: \$\{BACKUP_RETRY_SECONDS:-60\}$/m);
     assert.match(read('.gitignore'), /^\/backups\/$/m);
     assert.match(read('.env.example'), /^BACKUP_KEEP=14$/m);
 });
