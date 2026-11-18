@@ -32,23 +32,43 @@ const invoke = async (method, id, body = {}, adminId = 1) => {
 const journal = async () => (await sequelize.query('SELECT * FROM admin_actions ORDER BY id'))[0];
 const player = async () => (await sequelize.query('SELECT role, mutedUntil FROM users WHERE id = 2'))[0][0];
 
+const HAS_REDIS = Boolean(process.env.CI || process.env.REDIS_PORT);
+const needsRedis = { skip: !HAS_REDIS && 'needs a Redis: set REDIS_PORT (CI uses its service on 6379)' };
+
+const managerReady = async () => {
+    for (let attempt = 0; attempt < 50; attempt += 1) {
+        try {
+            await manager.ping();
+            return;
+        } catch (e) {
+            await new Promise((resolve) => { setTimeout(resolve, 100); });
+        }
+    }
+    await manager.ping();
+};
+
 test.before(async () => {
     sequelize = await resetTestDatabase();
     controller = require('../src/controllers/admin/chat');
     manager = require('../src/redis/manager');
     ChatService = require('../src/services/chat');
     chat = require('../src/socket/chat');
-    raw = require('redis').createClient(Number(process.env.REDIS_PORT), process.env.REDIS_HOST || '127.0.0.1');
+    if (!HAS_REDIS) {
+        return;
+    }
+    raw = require('redis').createClient(Number(process.env.REDIS_PORT) || 6379, process.env.REDIS_HOST || '127.0.0.1');
     raw.on('error', () => {});
     if (!raw.ready) await once(raw, 'ready');
-    await manager.ping();
+    await managerReady();
 });
 
 test.beforeEach(async () => {
     await sequelize.query('DELETE FROM admin_actions');
     await sequelize.query('DELETE FROM users');
     await sequelize.query("INSERT INTO users (id, login, password, email, role) VALUES (1, 'boss', 'x', 'boss@e.ua', 10), (2, 'player', 'x', 'player@e.ua', 1), (3, 'peer', 'x', 'peer@e.ua', 10)");
-    await call('del', 'chat_messages', 'chat_hash');
+    if (raw) {
+        await call('del', 'chat_messages', 'chat_hash');
+    }
 });
 
 test.afterEach(async () => {
@@ -170,7 +190,7 @@ const connect = async (port, userId) => {
     return client;
 };
 
-test('real sockets refuse a fresh mute with remaining time, notify only its player and resume after lifting', async () => {
+test('real sockets refuse a fresh mute with remaining time, notify only its player and resume after lifting', needsRedis, async () => {
     const { port } = await startChatServer(chat);
     const sender = await connect(port, 2);
     const secondTab = await connect(port, 2);
@@ -200,7 +220,7 @@ test('real sockets refuse a fresh mute with remaining time, notify only its play
     assert.equal((await sender.request('chat message', { msg: 'permanent' })).reason, 'banned');
 });
 
-test('opening the chat refreshes a mute missed while it was hidden, using the current session', async () => {
+test('opening the chat refreshes a mute missed while it was hidden, using the current session', needsRedis, async () => {
     await invoke('mute', 2, { durationMinutes: 15, reason: 'spam' });
     const { port } = await startChatServer(chat);
     const sender = await connect(port, 2);
@@ -211,7 +231,7 @@ test('opening the chat refreshes a mute missed while it was hidden, using the cu
     assert.equal(sender.events('chat messages').length, 1);
 });
 
-test('new stored messages have stable distinct ids while legacy messages stay readable', async () => {
+test('new stored messages have stable distinct ids while legacy messages stay readable', needsRedis, async () => {
     await call('rpush', 'chat_messages', JSON.stringify({ id: 2, login: 'old', msg: 'legacy', time: 1 }));
     const supplied = { messageId: randomUUID(), id: 2, login: 'player', msg: 'kept', time: 2 };
     await ChatService.add(supplied);
@@ -224,7 +244,7 @@ test('new stored messages have stable distinct ids while legacy messages stay re
     assert.deepEqual(await ChatService.get(), messages);
 });
 
-test('removal is broadcast to author, administrator and guest and journals only author and a short excerpt', async () => {
+test('removal is broadcast to author, administrator and guest and journals only author and a short excerpt', needsRedis, async () => {
     const { port } = await startChatServer(chat);
     const sender = await connect(port, 2);
     const admin = await connect(port, 1);
@@ -252,7 +272,7 @@ test('removal is broadcast to author, administrator and guest and journals only 
     assert.equal((await invoke('removeMessage', '2')).code, 422);
 });
 
-test('atomic removal preserves concurrent appends and legacy entries and only one concurrent delete succeeds', async () => {
+test('atomic removal preserves concurrent appends and legacy entries and only one concurrent delete succeeds', needsRedis, async () => {
     const keep = { id: 2, login: 'old', msg: 'legacy', time: 1 };
     await call('rpush', 'chat_messages', JSON.stringify(keep), '{broken');
     const target = { messageId: randomUUID(), id: 2, login: 'player', msg: 'remove', time: 2 };
@@ -269,7 +289,7 @@ test('atomic removal preserves concurrent appends and legacy entries and only on
     assert.equal((await journal()).length, 1);
 });
 
-test('failed journalling leaves the message in Redis and emits no removal', async (t) => {
+test('failed journalling leaves the message in Redis and emits no removal', needsRedis, async (t) => {
     const { port } = await startChatServer(chat);
     const guest = await connect(port, null);
     await ChatService.add({ messageId: randomUUID(), id: 2, login: 'player', msg: 'kept', time: 1 });
@@ -282,7 +302,7 @@ test('failed journalling leaves the message in Redis and emits no removal', asyn
     assert.deepEqual(guest.events('chat message removed'), []);
 });
 
-test('even a short message is excerpted rather than copied in full into the journal', async () => {
+test('even a short message is excerpted rather than copied in full into the journal', needsRedis, async () => {
     const messageId = randomUUID();
     await ChatService.add({ messageId, id: 2, login: 'player', msg: 'short text', time: 1 });
     assert.equal((await invoke('removeMessage', messageId)).code, 200);
@@ -291,7 +311,7 @@ test('even a short message is excerpted rather than copied in full into the jour
     assert.ok(!payload.excerpt.includes('short text'));
 });
 
-test('a message trimmed during moderation creates no false deletion journal and keeps the capped new history', async (t) => {
+test('a message trimmed during moderation creates no false deletion journal and keeps the capped new history', needsRedis, async (t) => {
     const messageId = randomUUID();
     await ChatService.add({ messageId, id: 2, login: 'player', msg: 'old', time: 1 });
     const remove = ChatService.remove;
