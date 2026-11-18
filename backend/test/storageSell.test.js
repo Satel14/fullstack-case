@@ -41,12 +41,25 @@ const seedSellableItem = async (sequelize) => {
     );
 };
 
-const sell = (storageId) => {
+const sell = async (storageId, body = {}) => {
     const StorageController = require('../src/controllers/storage');
-    return respond(StorageController.sellItemByStorageId, {
-        params: { id: String(storageId) },
-        user: { profile: { user_id: 1 } },
-    });
+    const req = { params: { id: String(storageId) }, body, user: { profile: { user_id: 1 } } };
+    await Promise.all(StorageController.validate('sellItemByStorageId').map((rule) => rule.run(req)));
+    return respond(StorageController.sellItemByStorageId, req);
+};
+
+const withLogsCaught = async (fn) => {
+    const lines = [];
+    const originalLog = console.log;
+    const originalError = console.error;
+    console.log = (...args) => { lines.push(args.map(String).join(' ')); };
+    console.error = (...args) => { lines.push(args.map(String).join(' ')); };
+    try {
+        return { result: await fn(), lines };
+    } finally {
+        console.log = originalLog;
+        console.error = originalError;
+    }
 };
 
 const sellOutcome = async (sequelize) => {
@@ -70,6 +83,7 @@ test('selling works on a database with no uah-credit-rate module row, at the rat
 
     assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
     assert.strictEqual(Number(result.payload.balance), 120);
+    assert.strictEqual(result.payload.rate, 1);
     assert.deepStrictEqual(await sellOutcome(sequelize), {
         balance: 120,
         status: 'money',
@@ -107,11 +121,101 @@ test('selling at a fractional rate pays the exact value floored to kopiyky, not 
     const result = await sell(1);
 
     assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
+    assert.strictEqual(result.payload.rate, 0.7);
     assert.deepStrictEqual(await sellOutcome(sequelize), {
         balance: 158.9,
         status: 'money',
         history: [['sellitem', 158.9]],
     });
+});
+
+test('a sale sent with the rate the player saw pays at that rate and names it', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedSellableItem(sequelize);
+    await sequelize.query("UPDATE modules SET extraData = '0.85' WHERE param = 'uah-credit-rate'");
+
+    const result = await sell(1, { rate: 0.85 });
+
+    assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
+    assert.strictEqual(result.payload.rate, 0.85);
+    assert.deepStrictEqual(await sellOutcome(sequelize), {
+        balance: 102,
+        status: 'money',
+        history: [['sellitem', 102]],
+    });
+});
+
+test('a rate written another way but equal to the current one is the same rate', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedSellableItem(sequelize);
+    await sequelize.query(
+        "INSERT INTO storage (userId, itemId, color, caseId, status) VALUES (1, 707, 'default', 'dust2', 'inventory')",
+    );
+    await sequelize.query("UPDATE modules SET extraData = '0.85' WHERE param = 'uah-credit-rate'");
+
+    const answers = [await sell(1, { rate: '0.850' }), await sell(2, { rate: '0.85' })];
+
+    assert.deepStrictEqual(answers.map(({ code, payload }) => [code, payload.rate]), [[200, 0.85], [200, 0.85]]);
+});
+
+const PRICE_CHANGES = [
+    ['the rate fell below the full price the player saw', '0.85', 1, 0.85],
+    ['the rate went back up to 1 from the one the player saw', '1', 0.85, 1],
+    ['the rate differs from the one the player saw in its last digit', '0.7', 0.7001, 0.7],
+    ['the rate the player sent is the current one plus float noise', '0.3', 0.1 + 0.2, 0.3],
+];
+
+for (const [what, current, seen, answered] of PRICE_CHANGES) {
+    test(`a sale is refused before anything changes when ${what}, and the answer names the current rate`, async () => {
+        const sequelize = await resetTestDatabase();
+        activeSequelize = sequelize;
+        await seedSellableItem(sequelize);
+        await sequelize.query("UPDATE modules SET extraData = ? WHERE param = 'uah-credit-rate'", { replacements: [current] });
+        const MESSAGE = require('../src/constant/responseMessages');
+
+        const { result, lines } = await withLogsCaught(() => sell(1, { rate: seen }));
+
+        assert.deepStrictEqual(
+            [result.code, result.payload.message, result.payload.rate],
+            [409, MESSAGE.ITEM.PRICE_CHANGED, answered],
+        );
+        assert.match(result.payload.message, /[а-яіїєґ]/i);
+        assert.deepStrictEqual(lines, []);
+        assert.deepStrictEqual(await sellOutcome(sequelize), { balance: 0, status: 'inventory', history: [] });
+    });
+}
+
+test('without a module row a sale sent with another rate is refused and told the rate of 1', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedSellableItem(sequelize);
+    await sequelize.query("DELETE FROM modules WHERE param = 'uah-credit-rate'");
+
+    const result = await sell(1, { rate: 0.9 });
+
+    assert.deepStrictEqual([result.code, result.payload.rate], [409, 1]);
+    assert.deepStrictEqual(await sellOutcome(sequelize), { balance: 0, status: 'inventory', history: [] });
+});
+
+test('a sale rate that is not a positive number is refused as invalid input', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    await seedSellableItem(sequelize);
+    const MESSAGE = require('../src/constant/responseMessages');
+    const crafted = [[0.85], [0.85, 'x'], 'abc', 0, -1, null, {}, true, ''];
+
+    const answers = [];
+    for (const rate of crafted) {
+        answers.push(await sell(1, { rate }));
+    }
+
+    assert.deepStrictEqual(
+        answers.map(({ code, payload }) => [code, payload.message]),
+        crafted.map(() => [422, MESSAGE.VALIDATOR.ERROR]),
+    );
+    assert.deepStrictEqual(await sellOutcome(sequelize), { balance: 0, status: 'inventory', history: [] });
 });
 
 test('selling applies the uah-credit-rate module when the row exists', async () => {
@@ -168,20 +272,6 @@ test('a sale locks the player before the item, so it cannot deadlock with a prof
     const result = await sale;
     assert.strictEqual(result.code, 200, JSON.stringify(result.payload));
 });
-
-const withLogsCaught = async (fn) => {
-    const lines = [];
-    const originalLog = console.log;
-    const originalError = console.error;
-    console.log = (...args) => { lines.push(args.map(String).join(' ')); };
-    console.error = (...args) => { lines.push(args.map(String).join(' ')); };
-    try {
-        return { result: await fn(), lines };
-    } finally {
-        console.log = originalLog;
-        console.error = originalError;
-    }
-};
 
 test('selling an item twice at once sells it once and leaves nothing in the log', async () => {
     const sequelize = await resetTestDatabase();

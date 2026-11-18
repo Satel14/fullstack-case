@@ -182,12 +182,18 @@ module.exports.sellItemByStorageId = async (req, res) => {
 
         const rateModule = await ModuleService.findModuleById(SALE_RATE_MODULE);
 
-        const rate = rateModule ? rateModule.extraData : DEFAULT_SALE_RATE;
+        const rate = parseFloat(rateModule ? rateModule.extraData : DEFAULT_SALE_RATE);
 
-        const actualPrice = salePayout(price, parseFloat(rate));
+        const actualPrice = salePayout(price, rate);
 
         if (!actualPrice) {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NO_PRICE });
+        }
+
+        const seenRate = req.body && req.body.rate;
+
+        if (seenRate !== undefined && Number(seenRate) !== rate) {
+            return res.status(409).json({ status: 409, message: MESSAGE.ITEM.PRICE_CHANGED, rate });
         }
 
         await sequelize.transaction(async (t) => {
@@ -212,7 +218,7 @@ module.exports.sellItemByStorageId = async (req, res) => {
 
         const actualBalance = await UserService.getBalanceByUserId(user_id);
 
-        return res.status(200).json({ status: 200, balance: actualBalance });
+        return res.status(200).json({ status: 200, balance: actualBalance, rate });
     } catch (e) {
         if (e && e.code === 'NOT_SELLABLE') {
             return res.status(422).json({ status: 422, message: MESSAGE.ITEM.NOT_IN_INVENTORY });
@@ -383,6 +389,7 @@ module.exports.validate = (method) => {
         case 'sellItemByStorageId': {
             return [
                 check('id').exists().isNumeric(),
+                body('rate').optional().not().isArray().isFloat({ gt: 0 }),
             ];
         }
         case 'receiveItemByStorageId': {
