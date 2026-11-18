@@ -4,6 +4,7 @@ const { postChatMessage } = require('./chatMessage');
 const { createRateLimiter, createTrailingThrottle } = require('./throttle');
 const { createPresence } = require('./presence');
 const { oncePerConnection } = require('./connectionClaim');
+const clientOrigin = require('../config/clientOrigin');
 
 let ioInstance = null;
 let presenceInstance = null;
@@ -54,7 +55,7 @@ const onUserConnected = (socket, presence) => async () => {
 module.exports = function (server) {
     const io = require('socket.io')(server, {
         cors: {
-            origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+            origin: clientOrigin(),
             methods: ['GET', 'POST'],
             credentials: true,
         },
