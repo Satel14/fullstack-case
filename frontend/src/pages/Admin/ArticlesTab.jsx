@@ -150,8 +150,8 @@ const ArticlesTab = () => {
                 destroyOnClose
                 getContainer={false}
                 closable={!saving}
-                maskClosable={!saving}
-                keyboard={!saving}
+                maskClosable={false}
+                keyboard={false}
                 footer={[
                     <Button key="cancel" onClick={close} disabled={saving}>{t('admin.cancel')}</Button>,
                     <Button key="save" type="primary" loading={saving} onClick={save}>{t('admin.save')}</Button>,

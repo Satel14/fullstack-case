@@ -108,6 +108,19 @@ test('the editor cannot be closed while a save is on its way, so the answer neve
     expect(screen.getByRole('button', { name: 'admin.cancel' })).not.toBeDisabled();
 });
 
+test('a stray click beside the editor or Escape keeps the unsaved text, and only Cancel closes it', async () => {
+    renderTab();
+    await openEditor('Правила сервісу');
+    fireEvent.change(screen.getByLabelText('admin.articles.text'), { target: { value: '<p>Unsaved</p>' } });
+
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape', keyCode: 27 });
+    fireEvent.click(document.querySelector('.ant-modal-wrap'));
+    expect(screen.getByLabelText('admin.articles.text').value).toBe('<p>Unsaved</p>');
+
+    fireEvent.click(screen.getByRole('button', { name: 'admin.cancel' }));
+    await waitFor(() => expect(screen.queryByLabelText('admin.articles.text')).toBeNull());
+});
+
 test('the preview shows the text as the article page will, without markup an article may not use', async () => {
     renderTab();
     await openEditor('Правила сервісу');
