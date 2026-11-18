@@ -7,6 +7,7 @@ import { createStore, combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import { MemoryRouter, Route, Switch } from 'react-router-dom';
 import itemCacheReducer from '../../store/reducers/itemCache';
+import moduleReducer from '../../store/reducers/module';
 import OpenCase from './OpenCase';
 
 jest.mock('react-i18next', () => {
@@ -42,23 +43,24 @@ const baseCase = {
     case_openedCount: 0,
 };
 
-const renderOpenCase = (data = baseCase, props = {}, itemCache = {}) => {
+const renderOpenCase = (data = baseCase, props = {}, itemCache = {}, modules = {}) => {
     const store = createStore(
         combineReducers({
             user: (state = { login: 'player' }) => state,
             itemCache: itemCacheReducer,
-            modules: (state = {}) => state,
+            modules: moduleReducer,
         }),
-        { itemCache },
+        { itemCache, modules },
         applyMiddleware(thunk),
     );
-    return render(
+    render(
         <Provider store={store}>
             <MemoryRouter>
                 <OpenCase data={data} {...props} />
             </MemoryRouter>
         </Provider>,
     );
+    return store;
 };
 
 const openControlsAreBack = () => {
@@ -265,7 +267,7 @@ test('a sell button cannot sell the same item twice while its sale is in flight'
     fireEvent.click(sellButton);
 
     expect(sellItemByStorageId).toHaveBeenCalledTimes(1);
-    expect(sellItemByStorageId).toHaveBeenCalledWith(50);
+    expect(sellItemByStorageId).toHaveBeenCalledWith(50, 1);
 
     await act(async () => { sale.resolve(soldAnswer(925)); });
 
@@ -288,7 +290,7 @@ test('sell all cannot run twice at once, and single sells wait for it', async ()
 
     await act(async () => { first.resolve(soldAnswer(925)); });
     expect(sellItemByStorageId).toHaveBeenCalledTimes(2);
-    expect(sellItemByStorageId).toHaveBeenLastCalledWith(51);
+    expect(sellItemByStorageId).toHaveBeenLastCalledWith(51, 1);
 
     await act(async () => { second.resolve(soldAnswer(929)); });
 
@@ -539,4 +541,67 @@ test('sell all names a refusal and still reports a sale that failed without a re
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
         'error', 'openCase.sellErrorTitle', 'balance is full. openCase.sellErrorText.',
     ));
+});
+
+const saleRate = (extraData) => ({ 'uah-credit-rate': { param: 'uah-credit-rate', status: 1, extraData } });
+
+const openTwoAt = async (modules) => {
+    openTwo();
+    const store = renderOpenCase(baseCase, {}, cachedGuns, modules);
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.fast$/ }));
+    await screen.findAllByText(/openCase\.sellFor/);
+    return store;
+};
+
+const priceChanged = (rate) => ({ error: 409, message: 'price changed', rate });
+
+test('the prices of the won items are counted at the sale rate, and a sale sends that rate', async () => {
+    sellItemByStorageId.mockResolvedValue({ status: 200, balance: 912.5, rate: 0.5 });
+    await openTwoAt(saleRate(0.5));
+
+    expect(screen.getByText('openCase.sellFor {"price":2}')).toBeInTheDocument();
+    expect(screen.getByText('openCase.sellAllFor {"sum":"14.50"}')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.sellFor \{"price":12.5\}/ }));
+
+    await waitFor(() => expect(screen.getAllByText('inventory.soldLabel')).toHaveLength(1));
+    expect(sellItemByStorageId).toHaveBeenCalledWith(50, 0.5);
+});
+
+test('a sale refused because the rate changed says so, and every price follows the new rate', async () => {
+    sellItemByStorageId.mockRejectedValue(priceChanged(0.5));
+    const store = await openTwoAt({});
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.sellFor \{"price":25\}/ }));
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'openCase.sellErrorTitle', 'price changed'));
+    expect(await screen.findByText('openCase.sellFor {"price":12.5}')).toBeInTheDocument();
+    expect(screen.getByText('openCase.sellFor {"price":2}')).toBeInTheDocument();
+    expect(screen.getByText('openCase.sellAllFor {"sum":"14.50"}')).toBeInTheDocument();
+    expect(screen.queryByText('inventory.soldLabel')).toBeNull();
+    expect(store.getState().modules['uah-credit-rate'].extraData).toBe(0.5);
+});
+
+test('sell all stops at the first price change instead of selling the rest at prices not shown', async () => {
+    sellItemByStorageId.mockRejectedValueOnce(priceChanged(0.5)).mockResolvedValue(soldAnswer(925));
+    await openTwoAt({});
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.sellAllFor/ }));
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'openCase.sellErrorTitle', 'price changed'));
+    expect(sellItemByStorageId).toHaveBeenCalledTimes(1);
+    expect(sellItemByStorageId).toHaveBeenCalledWith(50, 1);
+    expect(screen.queryByText('inventory.soldLabel')).toBeNull();
+    expect(screen.getByText('openCase.sellAllFor {"sum":"14.50"}')).toBeInTheDocument();
+    expect(openNotification).not.toHaveBeenCalledWith('success', 'openCase.allSold');
+});
+
+test('a sale answered at another rate than the page had moves the prices left to that rate', async () => {
+    sellItemByStorageId.mockResolvedValue({ status: 200, balance: 925, rate: 0.5 });
+    const store = await openTwoAt({});
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.sellFor \{"price":25\}/ }));
+
+    expect(await screen.findByText('openCase.sellFor {"price":2}')).toBeInTheDocument();
+    expect(screen.getAllByText('inventory.soldLabel')).toHaveLength(1);
+    expect(store.getState().modules['uah-credit-rate'].extraData).toBe(0.5);
 });

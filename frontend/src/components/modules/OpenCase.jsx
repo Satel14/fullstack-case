@@ -23,6 +23,8 @@ import { gradeStyle } from '../../helpers/grade';
 import { itemCaption } from '../../helpers/Case';
 import itemName from '../../helpers/itemName';
 import { clientErrorMessage, joinSentences } from '../../helpers/serverMessage';
+import { PRICE_CHANGED, saleRateOf } from '../../helpers/saleRate';
+import { syncSaleRate } from '../../store/actions/module';
 
 const delayAnimation = 4;
 
@@ -71,6 +73,7 @@ const randomInteger = (min, max) => {
 
 const mapDispatchToProps = (dispatch) => ({
     itemInfoFetch: (id) => dispatch(itemInfoFetch(id)),
+    syncSaleRate: (rate) => dispatch(syncSaleRate(rate)),
 });
 
 const mapStateToProps = (state) => ({
@@ -107,6 +110,7 @@ class OpenCase extends Component {
             processWorking: false,
             loading: false,
             openCount: '1',
+            wonPrices: [],
             selling: [],
             sellingAll: false,
         };
@@ -188,18 +192,18 @@ class OpenCase extends Component {
             loadAll: false,
             clicked: false,
             openCount: '1',
-            prices: [],
+            wonPrices: [],
             selling: [],
             sellingAll: false,
         });
     }
 
     getSummAll() {
-        const { prices } = this.state;
+        const { wonPrices } = this.state;
         let sum = 0.0;
 
-        for (let index = 0; index < prices.length; index++) {
-            const element = parseFloat(prices[index]);
+        for (let index = 0; index < wonPrices.length; index++) {
+            const element = this.salePrice(index);
             if (element) {
                 sum += element;
             }
@@ -210,6 +214,14 @@ class OpenCase extends Component {
         }
 
         return sum.toFixed(2);
+    }
+
+    salePrice(index) {
+        const { winner, wonPrices, sold } = this.state;
+        if (!winner || !winner[index] || sold.includes(index)) {
+            return null;
+        }
+        return computeItemPriceUAH(wonPrices[index], winner[index].item.color, saleRateOf(this.props.modules));
     }
 
     dropResult() {
@@ -279,7 +291,7 @@ class OpenCase extends Component {
             clicked: false,
             processWorking: false,
             loading: false,
-            prices: [],
+            wonPrices: [],
             selling: [],
             sellingAll: false,
         });
@@ -310,9 +322,13 @@ class OpenCase extends Component {
         this.sellItem(storageId, i);
     }
 
-    async sellItem(storageId, i, notify = true, generation = this.resultGeneration) {
+    async sellItem(storageId, i, {
+        notify = true,
+        generation = this.resultGeneration,
+        rate = saleRateOf(this.props.modules),
+    } = {}) {
         if (this.pendingSells.has(storageId)) {
-            return { sold: false, reason: null };
+            return { sold: false, reason: null, priceChanged: false };
         }
         const isCurrent = () => generation === this.resultGeneration;
         if (isCurrent()) {
@@ -322,9 +338,11 @@ class OpenCase extends Component {
 
         let sold = false;
         let reason = null;
+        let priceChanged = false;
         try {
-            const result = await sellItemByStorageId(storageId);
+            const result = await sellItemByStorageId(storageId, rate);
             if (result.status === 200) {
+                this.props.syncSaleRate(result.rate);
                 if (window.HeaderSecond) {
                     window.HeaderSecond.changeBalance(result.balance);
                 }
@@ -339,6 +357,10 @@ class OpenCase extends Component {
                 }
             }
         } catch (e) {
+            if (e && e.error === PRICE_CHANGED) {
+                priceChanged = true;
+                this.props.syncSaleRate(e.rate);
+            }
             reason = clientErrorMessage(e);
             if (notify && reason) {
                 openNotification('error', this.props.t('openCase.sellErrorTitle'), reason);
@@ -351,13 +373,10 @@ class OpenCase extends Component {
             this.pendingSells.delete(storageId);
             this.safeSetState((prev) => ({
                 selling: prev.selling.filter((id) => id !== storageId),
-                ...(sold && {
-                    prices: prev.prices.map((price, index) => (index === i ? undefined : price)),
-                    sold: [...prev.sold, i],
-                }),
+                ...(sold && { sold: [...prev.sold, i] }),
             }));
         }
-        return { sold, reason };
+        return { sold, reason, priceChanged };
     }
 
     async open() {
@@ -408,13 +427,7 @@ class OpenCase extends Component {
 
         const won = Object.values(result.data);
         const wonItems = await Promise.all(won.map((element) => this.props.itemInfoFetch(element.winner.item.id).catch(() => null)));
-        const moduleRate = this.props.modules && this.props.modules['uah-credit-rate'];
-        const creditToUAH = moduleRate ? moduleRate.extraData : 1;
-        const actualPricesD = won.map((element, index) => computeItemPriceUAH(
-            wonItems[index] && wonItems[index].pricesInCredits,
-            element.winner.item.color,
-            creditToUAH,
-        ));
+        const wonPrices = wonItems.map((item) => (item && item.pricesInCredits) || null);
 
         const randomList = [];
         const winnerList = [];
@@ -427,7 +440,7 @@ class OpenCase extends Component {
         this.setState({
             randomItemsList: randomList,
             winner: winnerList,
-            prices: actualPricesD,
+            wonPrices,
         });
 
         window.HeaderSecond.changeBalance(result.balance);
@@ -540,6 +553,7 @@ class OpenCase extends Component {
         }
         const { winner, sold } = this.state;
         const generation = this.resultGeneration;
+        const rate = saleRateOf(this.props.modules);
         this.sellingAll = true;
         this.setState({ sellingAll: true });
 
@@ -551,11 +565,14 @@ class OpenCase extends Component {
                 continue;
             }
             // eslint-disable-next-line no-await-in-loop
-            const outcome = await this.sellItem(winner[index].storageId, index, false, generation);
+            const outcome = await this.sellItem(winner[index].storageId, index, { notify: false, generation, rate });
             if (outcome.reason) {
                 reasons.add(outcome.reason);
             } else if (!outcome.sold) {
                 unexplained = true;
+            }
+            if (outcome.priceChanged) {
+                break;
             }
         }
 
@@ -732,6 +749,7 @@ class OpenCase extends Component {
                                         <div className="opencase-result__items">
                                         {winner && winner.map((w, i) => {
                                             const isSold = this.state.sold.includes(i);
+                                            const price = this.salePrice(i);
                                             return (
                                             <div
                                                 key={`winner-${w.storageId}`}
@@ -754,7 +772,7 @@ class OpenCase extends Component {
                                                 </span>
                                                 {isSold ? (
                                                     <div className="opencase-result__sold-label">{t('inventory.soldLabel')}</div>
-                                                ) : (this.state.prices && this.state.prices[i] && (
+                                                ) : (Boolean(price) && (
                                                     <Button
                                                         type="primary"
                                                         icon={<WalletOutlined />}
@@ -765,7 +783,7 @@ class OpenCase extends Component {
                                                         onClick={() => this.sellOne(w.storageId, i)}
                                                         style={{ marginTop: 8 }}
                                                     >
-                                                        {t('openCase.sellFor', { price: this.state.prices[i] })}
+                                                        {t('openCase.sellFor', { price })}
                                                     </Button>
                                                 ))}
                                             </div>
@@ -791,7 +809,7 @@ class OpenCase extends Component {
                                             >
                                                 {t('openCase.goBack')}
                                             </Button>
-                                            {this.state.prices && this.state.prices.length > 1 && this.getSummAll() && (
+                                            {this.state.wonPrices.length > 1 && this.getSummAll() && (
                                                 <Button
                                                     type="primary"
                                                     icon={<WalletOutlined />}
