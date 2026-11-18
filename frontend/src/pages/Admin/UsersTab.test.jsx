@@ -15,11 +15,12 @@ jest.mock('../../api/all/admin', () => ({
     getAdminUsers: jest.fn(),
     setUserRole: jest.fn(),
     adjustUserBalance: jest.fn(),
+    unmuteUser: jest.fn(),
 }));
 
 jest.mock('../../components/mini/openNotification', () => jest.fn());
 
-const { getAdminUsers, setUserRole } = require('../../api/all/admin');
+const { getAdminUsers, setUserRole, unmuteUser } = require('../../api/all/admin');
 const openNotification = require('../../components/mini/openNotification');
 
 const player = {
@@ -89,4 +90,34 @@ test('mute controls show the deadline for players and are disabled for administr
     expect(screen.getByText('admin.mute.current')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'admin.mute.lift' })).not.toBeDisabled();
     screen.getAllByRole('button', { name: 'admin.mute.action' }).forEach((button) => expect(button).toBeDisabled());
+});
+
+test('an administrator with an active mute can be unmuted with a confirmed reason', async () => {
+    getAdminUsers.mockResolvedValue({
+        data: [{ ...player, user_role: 10, user_mutedUntil: '2099-01-01T00:00:00Z' }],
+        count: 1,
+    });
+    unmuteUser.mockResolvedValue({ status: 200 });
+    render(<Provider store={createStore(() => ({ user: { id: 1 } }))}><UsersTab /></Provider>);
+    const lift = await screen.findByRole('button', { name: 'admin.mute.lift' });
+    expect(lift).not.toBeDisabled();
+    fireEvent.click(lift);
+    expect(screen.queryByLabelText('admin.mute.duration')).toBeNull();
+    fireEvent.change(screen.getByLabelText('admin.mute.reason'), { target: { value: '  promoted  ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'admin.mute.review' }));
+    expect(unmuteUser).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'admin.mute.confirm' }));
+    await waitFor(() => expect(unmuteUser).toHaveBeenCalledWith(7, 'promoted'));
+    await waitFor(() => expect(getAdminUsers).toHaveBeenCalledTimes(2));
+});
+
+test('your own active mute cannot be lifted through the users list', async () => {
+    getAdminUsers.mockResolvedValue({
+        data: [{
+            ...player, user_id: 1, user_role: 10, user_mutedUntil: '2099-01-01T00:00:00Z',
+        }],
+        count: 1,
+    });
+    render(<Provider store={createStore(() => ({ user: { id: 1 } }))}><UsersTab /></Provider>);
+    expect(await screen.findByRole('button', { name: 'admin.mute.lift' })).toBeDisabled();
 });

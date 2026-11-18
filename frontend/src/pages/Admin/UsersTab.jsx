@@ -137,7 +137,7 @@ const UsersTab = ({ user }) => {
                         {muted && <span>{t('admin.mute.current', { until: new Date(row.user_mutedUntil).toLocaleString(i18n && i18n.language) })}</span>}
                         <Button
                             size="small"
-                            disabled={Number(row.user_id) === Number(user && user.id) || Number(row.user_role) === roles.ADMINISTRATOR}
+                            disabled={Number(row.user_id) === Number(user && user.id) || (!muted && Number(row.user_role) === roles.ADMINISTRATOR)}
                             onClick={() => setMuteTarget(row)}
                         >
                             {t(muted ? 'admin.mute.lift' : 'admin.mute.action')}
