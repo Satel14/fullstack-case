@@ -487,6 +487,42 @@
         },
         "save": "Save",
         "cancel": "Cancel",
+        "playerCard": {
+            "open": "Open player card for {{login}}",
+            "title": "Player: {{login}}",
+            "loading": "Loading player card",
+            "loadFailed": "Could not load the player card",
+            "retry": "Try again",
+            "notSet": "Not specified",
+            "rank": "Rank",
+            "avatar": "Avatar",
+            "createdAt": "Registered",
+            "updatedAt": "Updated",
+            "receiveInfo": "Withdrawal contact",
+            "limitHint": "Each tab shows up to 50 newest records. Inventory counts include all items.",
+            "type": "Type",
+            "change": "Balance change",
+            "pricePaid": "Price paid",
+            "priceUnknown": "Not recorded",
+            "claim": "Bonus claim",
+            "tabs": {
+                "balanceHistory": "Balance history",
+                "opens": "Case opens",
+                "inventory": "Inventory",
+                "bonuses": "Bonuses",
+                "adminActions": "Admin actions"
+            },
+            "balanceTypes": {
+                "payment": "Top-up",
+                "promocode": "Promocode",
+                "sellitem": "Item sale",
+                "opencase": "Case open",
+                "bonus": "Bonus",
+                "sendmoney": "Transfer",
+                "admin_adjust": "Admin correction",
+                "reset": "Profile reset"
+            }
+        },
         "cases": {
             "id": "Id",
             "name": "Title",

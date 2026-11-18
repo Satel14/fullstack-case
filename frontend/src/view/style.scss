@@ -3885,6 +3885,61 @@ footer.ant-layout-footer {
     }
 }
 
+.admin-player-card {
+    .ant-drawer-extra .ant-btn {
+        color: #fff;
+        background: #262e43;
+        border-color: #2a3350;
+
+        &:hover,
+        &:focus {
+            color: #00a0ff;
+            border-color: #00a0ff;
+        }
+    }
+
+    .ant-drawer-content,
+    .ant-drawer-header {
+        background: #0d101a;
+        border-color: #262e43;
+    }
+
+    .ant-drawer-title,
+    .ant-descriptions-item-content {
+        color: #fff;
+    }
+
+    .ant-descriptions-item-label {
+        color: #8fb6e8;
+    }
+
+    .ant-descriptions-item-content {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .ant-drawer-title {
+        overflow-wrap: anywhere;
+    }
+
+    &__counts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    &__count {
+        color: #fff;
+    }
+
+    @media (max-width: 767px) {
+        .ant-drawer-body {
+            padding: 12px;
+        }
+    }
+}
+
 .ant-modal.article-editor {
     max-width: calc(100% - 16px);
 }

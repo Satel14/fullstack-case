@@ -8,6 +8,7 @@ import { getAdminUsers, setUserRole } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
 import roles from '../../enum/role';
 import BalanceModal from './BalanceModal';
+import PlayerCard from './PlayerCard';
 
 const { Option } = Select;
 const PAGE_SIZE = 20;
@@ -33,6 +34,7 @@ const UsersTab = ({ user }) => {
     const [loading, setLoading] = useState(false);
     const [failed, setFailed] = useState(false);
     const [balanceTarget, setBalanceTarget] = useState(null);
+    const [cardTarget, setCardTarget] = useState(null);
 
     const fetchUsers = useCallback(async (nextPage, nextSearch) => {
         setLoading(true);
@@ -78,7 +80,19 @@ const UsersTab = ({ user }) => {
 
     const columns = [
         { title: t('admin.users.id'), dataIndex: 'user_id', key: 'user_id' },
-        { title: t('admin.users.login'), dataIndex: 'user_login', key: 'user_login' },
+        {
+            title: t('admin.users.login'),
+            key: 'user_login',
+            render: (row) => (
+                <Button
+                    type="link"
+                    aria-label={t('admin.playerCard.open', { login: row.user_login })}
+                    onClick={() => setCardTarget(row)}
+                >
+                    {row.user_login}
+                </Button>
+            ),
+        },
         { title: t('admin.users.email'), dataIndex: 'user_email', key: 'user_email' },
         {
             title: t('admin.users.balance'),
@@ -160,6 +174,14 @@ const UsersTab = ({ user }) => {
                 onClose={() => setBalanceTarget(null)}
                 onDone={() => { setBalanceTarget(null); load(); }}
             />
+            {cardTarget && (
+                <PlayerCard
+                    key={cardTarget.user_id}
+                    userId={cardTarget.user_id}
+                    login={cardTarget.user_login}
+                    onClose={() => setCardTarget(null)}
+                />
+            )}
         </Space>
     );
 };

@@ -8,6 +8,7 @@ import UsersTab from './UsersTab';
 
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key) => key }),
+    initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
 jest.mock('../../api/all/admin', () => ({
