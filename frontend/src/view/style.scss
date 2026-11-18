@@ -3856,6 +3856,35 @@ footer.ant-layout-footer {
     }
 }
 
+.admin-settings {
+    max-width: 420px;
+
+    label {
+        display: block;
+        margin: 16px 0 6px;
+        color: #8fb6e8;
+        font-size: 12px;
+        letter-spacing: 0.6px;
+
+        &:first-child {
+            margin-top: 0;
+        }
+    }
+
+    .ant-input-number {
+        width: 100%;
+    }
+
+    .ant-typography.ant-typography-secondary {
+        margin: 8px 0 0;
+        color: #7a8194;
+    }
+
+    > .ant-btn {
+        margin-top: 20px;
+    }
+}
+
 .ant-modal.article-editor {
     max-width: calc(100% - 16px);
 }

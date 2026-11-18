@@ -5,6 +5,7 @@ import CasesTab from './CasesTab';
 import UsersTab from './UsersTab';
 import JournalTab from './JournalTab';
 import ArticlesTab from './ArticlesTab';
+import SettingsTab from './SettingsTab';
 
 const { TabPane } = Tabs;
 
@@ -27,6 +28,9 @@ const Admin = () => {
                 </TabPane>
                 <TabPane tab={t('admin.tabs.journal')} key="journal">
                     <JournalTab active={activeKey === 'journal'} />
+                </TabPane>
+                <TabPane tab={t('admin.tabs.settings')} key="settings">
+                    <SettingsTab />
                 </TabPane>
             </Tabs>
         </div>

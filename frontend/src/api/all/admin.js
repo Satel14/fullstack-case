@@ -21,3 +21,7 @@ export const setUserRole = (id, role) => put(`/admin/user/${id}/role`, { role })
 export const adjustUserBalance = (id, delta, reason) => post(`/admin/user/${id}/balance`, { delta, reason });
 
 export const getAdminActions = ({ limit = 50, offset = 0 } = {}) => get(`/admin/actions?limit=${limit}&offset=${offset}`);
+
+export const getSaleRate = () => get('/admin/sale-rate');
+
+export const updateSaleRate = (rate, reason) => put('/admin/sale-rate', { rate, reason });

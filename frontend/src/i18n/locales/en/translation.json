@@ -479,7 +479,8 @@
             "cases": "Cases",
             "users": "Users",
             "articles": "Articles",
-            "journal": "Action log"
+            "journal": "Action log",
+            "settings": "Settings"
         },
         "save": "Save",
         "cancel": "Cancel",
@@ -549,6 +550,14 @@
             "saved": "Article saved",
             "saveFailed": "Article not saved",
             "loadFailed": "Could not load the articles"
+        },
+        "settings": {
+            "saleRate": "Item sale rate",
+            "saleRateHint": "A player who sells an item gets its price × the rate: 1 is the full price, 0.9 is 10% less. It cannot be above 1, or selling winnings would return more than the cases cost.",
+            "reason": "Reason (optional)",
+            "saved": "Sale rate changed",
+            "saveFailed": "Sale rate not changed",
+            "loadFailed": "Could not load the settings"
         }
     },
     "bonus": {
