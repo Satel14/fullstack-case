@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 const userFields = {
     user_id: 'id',
     user_login: 'login',
