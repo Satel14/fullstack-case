@@ -19,7 +19,7 @@ export const serverText = (t, answer) => {
     if (typeof answer.code !== 'string' || !CODE.test(answer.code)) {
         return message;
     }
-    return nonEmptyText(t(`server.${answer.code}`, { ...valuesOf(answer), defaultValue: message || '' }));
+    return nonEmptyText(t(`server.${answer.code}`, { replace: valuesOf(answer), defaultValue: message || '' }));
 };
 
 export const promocodeText = (t, answer) => {
@@ -27,9 +27,9 @@ export const promocodeText = (t, answer) => {
         return serverText(t, answer);
     }
     const { bonus, description } = valuesOf(answer);
-    const added = t('server.PROMOCODE.ADDED', { bonus });
+    const added = t('server.PROMOCODE.ADDED', { replace: { bonus } });
     return nonEmptyText(description) && description.trim()
-        ? `${added} ${t('server.PROMOCODE.DESCRIPTION', { description })}`
+        ? `${added} ${t('server.PROMOCODE.DESCRIPTION', { replace: { description } })}`
         : added;
 };
 

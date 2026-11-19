@@ -50,6 +50,10 @@ test('a known code is shown in the language of the site', () => {
     expect(clientErrorMessage(en, { error: 429, code: 'LIMIT.SELL', message: 'Забагато продажів. Зачекайте трохи.' })).toBe('Too many sales. Wait a little.');
 });
 
+test('a params key that shadows an i18next option does not steer the translation', () => {
+    expect(serverText(en, { code: 'PROMOCODE.EXPIRED', message: 'x', params: { lng: 'uk' } })).toBe('This promocode has expired');
+});
+
 test('an unknown or malformed code shows the message the server sent', () => {
     expect(serverText(en, { code: 'PROMOCODE.SOMETHING_NEW', message: 'Нова відмова' })).toBe('Нова відмова');
     expect(serverText(en, { code: 'faq.q2.answer', message: 'Відмова' })).toBe('Відмова');
