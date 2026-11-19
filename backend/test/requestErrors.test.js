@@ -207,7 +207,7 @@ test('the app answers a malformed JSON body as JSON and keeps it out of the log'
     try {
         const { result, logged } = await withLogsCaught(() => send(`${stand.url}/api/provably-fair/verify`, '{"a":\n[auth] administrator signed in}'));
 
-        assert.deepStrictEqual([result.status, result.payload], [400, { status: 400, message: MESSAGE.SERVER.BAD_REQUEST }]);
+        assert.deepStrictEqual([result.status, result.payload], [400, { status: 400, message: MESSAGE.SERVER.BAD_REQUEST, code: 'SERVER.BAD_REQUEST' }]);
         assert.deepStrictEqual(logged, []);
     } finally {
         await stand.close();

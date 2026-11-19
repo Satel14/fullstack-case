@@ -5,6 +5,7 @@ const compression = require('compression');
 const routes = require('./routes');
 const clientOrigin = require('./src/config/clientOrigin');
 const { parseTrustProxy } = require('./src/config/trustProxy');
+const { messageCodes } = require('./src/middleware/messageCodes');
 const { jsonBody } = require('./src/middleware/jsonBody');
 const answerUnhandled = require('./src/middleware/answerUnhandled');
 const sequelize = require('./src/config/db');
@@ -19,6 +20,7 @@ const buildApp = ({ health } = {}) => {
     });
     app.set('query parser', 'simple');
     app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
+    app.use(messageCodes);
     app.use(helmet({
         contentSecurityPolicy: {
             useDefaults: false,
