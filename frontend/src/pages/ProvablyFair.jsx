@@ -189,7 +189,7 @@ const ProvablyFair = () => {
             || nonceInt < 0;
         if (incomplete) {
             // Guard client-side so we never fire a request that would 422.
-            setCalcError(t('provablyFair.verifyFailed'));
+            setCalcError({ key: 'provablyFair.verifyFailed' });
             return;
         }
 
@@ -209,8 +209,11 @@ const ProvablyFair = () => {
             }
         } catch (e) {
             if (mounted.current) {
-                const refusal = e.error === 429 ? clientErrorMessage(t, e) : t('provablyFair.verifyFailed');
-                setCalcError((isRefusal(e) && refusal) || t('common.serverError'));
+                if (!isRefusal(e)) {
+                    setCalcError({ key: 'common.serverError' });
+                } else {
+                    setCalcError(e.error === 429 ? { answer: e } : { key: 'provablyFair.verifyFailed' });
+                }
             }
         }
     };
@@ -228,6 +231,10 @@ const ProvablyFair = () => {
 
     const computedGrade = calcResult
         && (gradeName(itemCache[calcResult.itemId] && itemCache[calcResult.itemId].item_grade, t) || gradeName(calcResult.rarity, t));
+
+    const calcErrorText = (error) => (error.answer
+        ? clientErrorMessage(t, error.answer) || t('common.serverError')
+        : t(error.key));
 
     const columns = [
         { title: t('provablyFair.case'), dataIndex: 'caseId' },
@@ -348,7 +355,7 @@ const ProvablyFair = () => {
                     </div>
                 </>
             )}
-            {calcError && <div className="provablyfair-error">{calcError}</div>}
+            {calcError && <div className="provablyfair-error">{calcErrorText(calcError)}</div>}
         </div>
     );
 };

@@ -7,6 +7,7 @@ import { confirmEmailFetch } from '../../store/actions/user';
 import { TOKEN_NOT_SAVED } from '../../api/token';
 import openNotification from '../../components/mini/openNotification';
 import { useLinkToken } from '../../helpers/linkToken';
+import { serverText } from '../../helpers/serverMessage';
 
 const ConfirmEmailForm = ({ token }) => {
     const { t } = useTranslation();
@@ -33,25 +34,26 @@ const ConfirmEmailForm = ({ token }) => {
             history.push('/');
         } catch (e) {
             if (e && e.error === TOKEN_NOT_SAVED) {
-                setFailure({ message: t('auth.tokenNotSaved'), refused: true });
+                setFailure({ key: 'auth.tokenNotSaved', refused: true });
                 setLoading(false);
                 return;
             }
             const answered = Boolean(e && e.error);
-            setFailure({
-                message: (answered && e.message) || t('common.serverError'),
-                refused: answered && e.error === 422,
-            });
+            setFailure({ answer: answered ? e : null, refused: answered && e.error === 422 });
             setLoading(false);
         }
     };
+
+    const failureText = failure && (failure.key
+        ? t(failure.key)
+        : serverText(t, failure.answer) || t('common.serverError'));
 
     return (
         <div className="loginpage">
             <h1 className="title">{t('auth.confirm.title')}</h1>
             {failure && failure.refused ? (
                 <>
-                    <p>{failure.message}</p>
+                    <p>{failureText}</p>
                     <p>
                         <Link to="/registration">{t('auth.confirm.toRegister')}</Link>
                         {' · '}
@@ -61,7 +63,7 @@ const ConfirmEmailForm = ({ token }) => {
             ) : (
                 <>
                     <p>{t('auth.confirm.intro')}</p>
-                    {failure && <p>{failure.message}</p>}
+                    {failure && <p>{failureText}</p>}
                     <Button type="primary" loading={loading} onClick={onConfirm}>{t('auth.confirm.submit')}</Button>
                 </>
             )}
