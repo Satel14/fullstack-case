@@ -1,11 +1,12 @@
 const { rateLimit } = require('express-rate-limit');
+const MESSAGE = require('../constant/responseMessages');
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 20,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато спроб. Спробуйте пізніше.' },
+    message: { status: 429, message: MESSAGE.LIMIT.AUTH },
 });
 
 const caseOpenLimiter = rateLimit({
@@ -13,7 +14,7 @@ const caseOpenLimiter = rateLimit({
     max: 60,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато відкриттів. Зачекайте трохи.' },
+    message: { status: 429, message: MESSAGE.LIMIT.CASE_OPEN },
 });
 
 const onlineLimiter = rateLimit({
@@ -21,7 +22,7 @@ const onlineLimiter = rateLimit({
     max: 5,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато запитів. Зачекайте трохи.' },
+    message: { status: 429, message: MESSAGE.LIMIT.REQUESTS },
 });
 
 const depositLimiter = rateLimit({
@@ -29,7 +30,7 @@ const depositLimiter = rateLimit({
     max: 30,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато спроб поповнення. Зачекайте трохи.' },
+    message: { status: 429, message: MESSAGE.LIMIT.DEPOSIT },
 });
 
 const resetLimiter = rateLimit({
@@ -37,7 +38,7 @@ const resetLimiter = rateLimit({
     max: 10,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато скидань профілю. Зачекайте трохи.' },
+    message: { status: 429, message: MESSAGE.LIMIT.PROFILE_RESET },
 });
 
 const bonusLimiter = rateLimit({
@@ -45,7 +46,7 @@ const bonusLimiter = rateLimit({
     max: 20,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато спроб. Зачекайте трохи.' },
+    message: { status: 429, message: MESSAGE.LIMIT.BONUS },
 });
 
 const seedRotateLimiter = rateLimit({
@@ -53,7 +54,7 @@ const seedRotateLimiter = rateLimit({
     max: 10,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато оновлень сіда. Зачекайте трохи.' },
+    message: { status: 429, message: MESSAGE.LIMIT.SEED_ROTATE },
 });
 
 const verifyLimiter = rateLimit({
@@ -61,7 +62,7 @@ const verifyLimiter = rateLimit({
     max: 30,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато перевірок. Зачекайте трохи.' },
+    message: { status: 429, message: MESSAGE.LIMIT.VERIFY },
 });
 
 const adminLimiter = rateLimit({
@@ -69,7 +70,7 @@ const adminLimiter = rateLimit({
     max: 120,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато запитів. Зачекайте трохи.' },
+    message: { status: 429, message: MESSAGE.LIMIT.REQUESTS },
 });
 
 const byPlayer = (req) => String(req.user.profile.user_id);
@@ -80,7 +81,7 @@ const promocodeLimiter = rateLimit({
     keyGenerator: byPlayer,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато спроб активувати промокод. Спробуйте пізніше.' },
+    message: { status: 429, message: MESSAGE.LIMIT.PROMOCODE },
 });
 
 const transferLimiter = rateLimit({
@@ -89,7 +90,7 @@ const transferLimiter = rateLimit({
     keyGenerator: byPlayer,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато переказів. Зачекайте трохи.' },
+    message: { status: 429, message: MESSAGE.LIMIT.TRANSFER },
 });
 
 const sellLimiter = rateLimit({
@@ -98,7 +99,7 @@ const sellLimiter = rateLimit({
     keyGenerator: byPlayer,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато продажів. Зачекайте трохи.' },
+    message: { status: 429, message: MESSAGE.LIMIT.SELL },
 });
 
 const receiveLimiter = rateLimit({
@@ -107,7 +108,7 @@ const receiveLimiter = rateLimit({
     keyGenerator: byPlayer,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато запитів на виведення. Зачекайте трохи.' },
+    message: { status: 429, message: MESSAGE.LIMIT.WITHDRAW },
 });
 
 const withdrawCancelLimiter = rateLimit({
@@ -116,7 +117,7 @@ const withdrawCancelLimiter = rateLimit({
     keyGenerator: byPlayer,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { status: 429, message: 'Забагато скасувань виведення. Зачекайте трохи.' },
+    message: { status: 429, message: MESSAGE.LIMIT.WITHDRAW_CANCEL },
 });
 
 module.exports = {
