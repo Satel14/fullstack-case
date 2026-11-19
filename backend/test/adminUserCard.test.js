@@ -154,7 +154,7 @@ test('an unknown player answers 422 with the existing admin message through the 
     const finder = t.mock.method(UserService, 'findUserById', async () => null);
     const res = await card('999999');
     assert.equal(res.code, 422);
-    assert.deepEqual(res.body, { status: 422, message: MESSAGE.ADMIN.USER_NOT_EXIST });
+    assert.deepEqual(res.body, { status: 422, message: MESSAGE.USER.NOT_EXIST });
     assert.equal(finder.mock.calls.length, 1);
     assert.equal(finder.mock.calls[0].arguments[0], 999999);
 });

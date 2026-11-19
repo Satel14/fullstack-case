@@ -15,7 +15,7 @@ const changeMute = async (req, res, lift) => {
         if (targetId === Number(adminId)) throw new Error(MESSAGE.ADMIN.SELF_FORBIDDEN);
         const mutedUntil = await sequelize.transaction(async (transaction) => {
             const target = await User.findByPk(targetId, { transaction, lock: transaction.LOCK.UPDATE });
-            if (!target) throw new Error(MESSAGE.ADMIN.USER_NOT_EXIST);
+            if (!target) throw new Error(MESSAGE.USER.NOT_EXIST);
             if (!lift && Number(target.user_role) === ROLES.ADMINISTRATOR) throw new Error(MESSAGE.ADMIN.MUTE_ADMIN_FORBIDDEN);
             const before = target.user_mutedUntil ? target.user_mutedUntil.toISOString() : null;
             const after = lift ? null : new Date(Math.floor(Date.now() / 1000) * 1000 + Number(req.body.durationMinutes) * 60000);

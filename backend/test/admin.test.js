@@ -70,7 +70,7 @@ test('adminOnly blocks every non-administrator role and passes only the administ
         const rejected = await call({ user_role: role });
         assert.strictEqual(rejected.blocked, true, `role ${role} must never reach an admin handler`);
         assert.strictEqual(rejected.res.statusCode, 403, `role ${role} must be rejected with 403`);
-        assert.strictEqual(rejected.res.body.message, MESSAGE.ADMIN.NOT_ADMIN);
+        assert.strictEqual(rejected.res.body.message, MESSAGE.AUTH.NOT_AUTHORIZED);
         assert.strictEqual(rejected.res.body.status, 403);
     }
 
@@ -80,7 +80,7 @@ test('adminOnly blocks every non-administrator role and passes only the administ
     const anonymous = await call(undefined);
     assert.strictEqual(anonymous.blocked, true, 'an unauthenticated request must never reach an admin handler');
     assert.strictEqual(anonymous.res.statusCode, 403);
-    assert.strictEqual(anonymous.res.body.message, MESSAGE.ADMIN.NOT_ADMIN);
+    assert.strictEqual(anonymous.res.body.message, MESSAGE.AUTH.NOT_AUTHORIZED);
 });
 
 test('admin_actions table and admin_adjust enum value exist', async () => {

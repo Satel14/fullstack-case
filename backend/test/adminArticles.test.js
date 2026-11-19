@@ -332,7 +332,7 @@ test('an article save reads a body up to 256 KB, and only once the administrator
             [200, 6],
             [413, MESSAGE.SERVER.BAD_REQUEST],
             [401, MESSAGE.AUTH.NOT_AUTHORIZED],
-            [403, MESSAGE.ADMIN.NOT_ADMIN],
+            [403, MESSAGE.AUTH.NOT_AUTHORIZED],
             [400, MESSAGE.SERVER.BAD_REQUEST],
             [413, MESSAGE.SERVER.BAD_REQUEST],
             [413, MESSAGE.SERVER.BAD_REQUEST],

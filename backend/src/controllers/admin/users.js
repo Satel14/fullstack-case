@@ -65,7 +65,7 @@ module.exports.setRole = async (req, res) => {
 
         const target = await UserService.findUserById(targetId);
         if (!target) {
-            return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.USER_NOT_EXIST });
+            return res.status(422).json({ status: 422, message: MESSAGE.USER.NOT_EXIST });
         }
         if (Number(target.user_role) === ROLES.ADMINISTRATOR) {
             return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.TARGET_ADMIN_FORBIDDEN });
@@ -121,7 +121,7 @@ module.exports.adjustBalance = async (req, res) => {
 
         const target = await UserService.findUserById(targetId);
         if (!target) {
-            return res.status(422).json({ status: 422, message: MESSAGE.ADMIN.USER_NOT_EXIST });
+            return res.status(422).json({ status: 422, message: MESSAGE.USER.NOT_EXIST });
         }
 
         let resulting = null;

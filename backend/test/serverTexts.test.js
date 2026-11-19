@@ -35,3 +35,13 @@ test('no server text uses the modifier apostrophe, which the site fonts lack', (
 
     assert.deepStrictEqual(offending, []);
 });
+
+test('every server text is unique, so a text names exactly one code', () => {
+    const keysByText = new Map();
+    for (const [key, text] of texts(MESSAGE)) {
+        keysByText.set(text, [...(keysByText.get(text) || []), key]);
+    }
+    const shared = [...keysByText.values()].filter((keys) => keys.length > 1);
+
+    assert.deepStrictEqual(shared, []);
+});

@@ -84,7 +84,7 @@ module.exports.openCaseById = async (req, res) => {
         if (balance < priceCase * count) {
             return res.status(200).json({
                 status: 200,
-                message: MESSAGE.CASE.NOT_HAVE_MONEY,
+                message: MESSAGE.USER.MONEY_NOT_ENOUGH,
             })
         }
 
@@ -122,7 +122,7 @@ module.exports.openCaseById = async (req, res) => {
             const lockedPrice = lockedCase.case_discount || lockedCase.case_price;
             console.log('[DEBUG] Locked price:', lockedPrice, 'locked balance:', lockedBalance);
             if (lockedBalance < lockedPrice * count) {
-                throw refusal('NOT_HAVE_MONEY', MESSAGE.CASE.NOT_HAVE_MONEY);
+                throw refusal('NOT_HAVE_MONEY', MESSAGE.USER.MONEY_NOT_ENOUGH);
             }
 
             for (let index = 0; index < count; index++) {
@@ -207,7 +207,7 @@ module.exports.openCaseById = async (req, res) => {
         console.error('[DEBUG] openCaseById error:', loggable(e));
         if (e && e.code === 'NOT_HAVE_MONEY') {
             return res.status(200).json({
-                status: 200, message: MESSAGE.CASE.NOT_HAVE_MONEY,
+                status: 200, message: MESSAGE.USER.MONEY_NOT_ENOUGH,
             })
         }
         if (e && (e.code === 'NOT_PUBLISHED' || e.code === 'LIMIT_EXCEEDED')) {

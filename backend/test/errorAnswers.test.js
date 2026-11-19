@@ -236,7 +236,7 @@ const REFUSALS = [
         stubs: [[User, 'findByPk', nothing]],
         call: () => respond(require('../src/controllers/admin/users').setRole, { params: { id: '2' }, body: { role: 1 }, user: player }),
         code: 422,
-        message: MESSAGE.ADMIN.USER_NOT_EXIST,
+        message: MESSAGE.USER.NOT_EXIST,
     },
     {
         name: 'an admin balance correction of a player who does not exist',
@@ -246,7 +246,7 @@ const REFUSALS = [
             { params: { id: '2' }, body: { delta: 10, reason: 'gift' }, user: player },
         ),
         code: 422,
-        message: MESSAGE.ADMIN.USER_NOT_EXIST,
+        message: MESSAGE.USER.NOT_EXIST,
     },
     {
         name: 'an admin update of a case that does not exist',

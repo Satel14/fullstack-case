@@ -15,7 +15,7 @@ const PROFILE_FIELDS = ['user_id', 'user_login', 'user_email', 'user_role', 'use
 module.exports.get = async (userId) => {
     const user = await UserService.findUserById(userId, { attributes: PROFILE_FIELDS });
     if (!user) {
-        throw new Error(MESSAGE.ADMIN.USER_NOT_EXIST);
+        throw new Error(MESSAGE.USER.NOT_EXIST);
     }
 
     const [history, opens, items, counts, bonuses, adminActions] = await Promise.all([

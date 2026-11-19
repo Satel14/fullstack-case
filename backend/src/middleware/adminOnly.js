@@ -4,7 +4,7 @@ const MESSAGE = require('../constant/responseMessages');
 function adminOnly(req, res, next) {
     const role = req.user && req.user.profile && req.user.profile.user_role;
     if (Number(role) !== ROLES.ADMINISTRATOR) {
-        return res.status(403).json({ status: 403, message: MESSAGE.ADMIN.NOT_ADMIN });
+        return res.status(403).json({ status: 403, message: MESSAGE.AUTH.NOT_AUTHORIZED });
     }
     return next();
 }
