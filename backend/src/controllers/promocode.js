@@ -36,7 +36,13 @@ module.exports.usePromocode = async (req, res) => {
         });
 
         const actualBalance = await UserService.getBalanceByUserId(user_id);
-        return res.status(200).json({ status: 200, balance: actualBalance, message: `${MESSAGE.PROMOCODE.ADDED} ${bonus} ₴. ${MESSAGE.PROMOCODE.DESCRIPTION}: ${description}` });
+        return res.status(200).json({
+            status: 200,
+            balance: actualBalance,
+            code: 'PROMOCODE.ADDED',
+            params: { bonus, description },
+            message: `${MESSAGE.PROMOCODE.ADDED} ${bonus} ₴. ${MESSAGE.PROMOCODE.DESCRIPTION}: ${description}`,
+        });
     } catch (e) {
         return answerFailure(res, e, { status: 200, where: 'promocode' });
     }

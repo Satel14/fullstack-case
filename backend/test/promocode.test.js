@@ -140,6 +140,9 @@ test('a promocode credits exactly its bonus, kopiyky included', async () => {
 
     assert.strictEqual(Number(result.payload.balance), 112.5);
     assert.match(result.payload.message, /12\.50? ₴/);
+    assert.strictEqual(result.payload.code, 'PROMOCODE.ADDED');
+    assert.strictEqual(Number(result.payload.params.bonus), 12.5);
+    assert.strictEqual(result.payload.params.description, 'gift');
     assert.deepStrictEqual(await balances(sequelize), [['alice', 112.5], ['bob', 100]]);
     assert.deepStrictEqual(await promocodeState(sequelize, 'CENTS'), { usedIds: [1], credits: 1 });
 });
