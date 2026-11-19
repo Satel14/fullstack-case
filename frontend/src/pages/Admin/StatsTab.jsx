@@ -104,7 +104,7 @@ const StatsTab = ({ active = true }) => {
                     type="error"
                     showIcon
                     message={t('admin.stats.loadFailed')}
-                    description={serverText(t, failure) || t('common.serverError')}
+                    description={(failure && failure.error && serverText(t, failure)) || t('common.serverError')}
                     action={<Button onClick={() => load(lastQuery.current)}>{t('admin.stats.retry')}</Button>}
                 />
             )}

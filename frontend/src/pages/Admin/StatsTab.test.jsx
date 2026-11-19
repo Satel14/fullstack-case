@@ -158,6 +158,13 @@ test('an initial failure says loading failed and retry recovers the report', asy
     expect(screen.queryByText('admin.stats.loadFailed')).not.toBeInTheDocument();
 });
 
+test('a network failure shows the generic server error, not the raw message', async () => {
+    getAdminStats.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    render(<StatsTab />);
+    expect(await screen.findByText('admin.stats.loadFailed')).toBeInTheDocument();
+    expect(screen.getByText('common.serverError')).toBeInTheDocument();
+});
+
 test('a failed refresh removes stale totals and says why instead of showing zeros', async () => {
     render(<StatsTab />);
     await screen.findByText('Dust II');

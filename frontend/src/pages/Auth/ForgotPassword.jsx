@@ -71,7 +71,7 @@ const ForgotPassword = () => {
             openNotification('error', t('auth.forgot.errorTitle'), serverText(t, results));
             return undefined;
         }).catch((failure) => {
-            openNotification('error', t('auth.forgot.errorTitle'), serverText(t, failure) || t('common.serverError'));
+            openNotification('error', t('auth.forgot.errorTitle'), (failure && failure.error && serverText(t, failure)) || t('common.serverError'));
         });
     };
 
