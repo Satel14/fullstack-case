@@ -721,7 +721,7 @@
         "SERVER": { "ERROR": "Something went wrong on the server. Please try again later", "BAD_REQUEST": "Invalid request" },
         "AUTH": {
             "NOT_CORRECT": "Wrong login or password",
-            "NOT_AUTHORIZED": "You are not signed in",
+            "NOT_AUTHORIZED": "You are not authorized",
             "SUCCESS_LOGOUT": "Signed out",
             "EMPTY_DATA": "No data received",
             "USER_IS_EXIST": "This login (or email) already exists",

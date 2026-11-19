@@ -39,6 +39,10 @@ test('the site translates no code the server does not send', () => {
     assert.deepStrictEqual(codesIn(en).filter((code) => !known.has(code)), []);
 });
 
+test('every code the server sends has the shape the site accepts', () => {
+    assert.deepStrictEqual(CATALOGUE.map(([code]) => code).filter((code) => !/^[A-Z_]+\.[A-Z_]+$/.test(code)), []);
+});
+
 test('the promocode templates name their values in both languages', () => {
     for (const tree of [uk, en]) {
         assert.match(at(tree, 'PROMOCODE.ADDED'), /\{\{bonus\}\}/);
