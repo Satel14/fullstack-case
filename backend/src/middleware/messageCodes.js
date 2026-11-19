@@ -20,7 +20,7 @@ const withCode = (body) => {
 
 const messageCodes = (req, res, next) => {
     const json = res.json.bind(res);
-    res.json = (body) => json(withCode(body));
+    res.json = (body, ...rest) => json(withCode(body), ...rest);
     next();
 };
 
