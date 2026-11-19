@@ -716,5 +716,110 @@
                 "hint": "Withdraw an item"
             }
         }
+    },
+    "server": {
+        "SERVER": { "ERROR": "Something went wrong on the server. Please try again later", "BAD_REQUEST": "Invalid request" },
+        "AUTH": {
+            "NOT_CORRECT": "Wrong login or password",
+            "NOT_AUTHORIZED": "You are not signed in",
+            "SUCCESS_LOGOUT": "Signed out",
+            "EMPTY_DATA": "No data received",
+            "USER_IS_EXIST": "This login (or email) already exists",
+            "RESET_LINK_SENT": "If an account with this email exists, we have sent it a link to change the password",
+            "RESET_LINK_INVALID": "The link is invalid or has expired. Request a new one",
+            "LOGIN_INVALID": "A login must be 3 to 32 characters long: Latin letters, digits, dot, hyphen or underscore",
+            "EMAIL_INVALID": "Enter a valid email address in Latin characters",
+            "PASSWORD_INVALID": "A password must be at least 6 characters and at most 72 bytes: up to 72 Latin letters or up to 36 Cyrillic ones",
+            "PASSWORD_CHANGED": "Password changed. Log in with the new password",
+            "PASSWORD_RESET_UNAVAILABLE": "Password recovery is temporarily unavailable",
+            "SESSION_CHECK_FAILED": "Could not check the session. Try again in a moment",
+            "LOGIN_TAKEN": "This login is already taken",
+            "CONFIRM_EMAIL_SENT": "Check your email: we have sent a link to finish the registration",
+            "CONFIRM_LINK_INVALID": "The link is invalid or has expired. Register again",
+            "CONFIRM_LOGIN_TAKEN": "This login was taken while you were confirming your email. Register with another login",
+            "CONFIRM_EMAIL_TAKEN": "An account with this email already exists. Log in or recover your password",
+            "CONFIRM_FAILED": "Could not confirm the email. Please try again"
+        },
+        "VALIDATOR": { "ERROR": "Validation error" },
+        "MODULE": { "NOT_EXIST": "No such module" },
+        "CASE": {
+            "ERROR": "Case error",
+            "ERROR_CATEGORY": "Category error",
+            "NOT_EXIST": "No such case",
+            "NOT_PUBLISHED": "This case cannot be opened",
+            "LIMIT_EXCEEDED": "The case opening limit has been exceeded"
+        },
+        "ITEM": {
+            "NOT_EXIST": "No such item",
+            "RECEIVE_INFO_REQUIRED": "Add a link to your Steam profile in the settings",
+            "WITHDRAW_NOT_PENDING": "This item is not awaiting withdrawal",
+            "NO_PRICE": "This item cannot be sold right now",
+            "NOT_IN_INVENTORY": "This item is not in your inventory",
+            "PRICE_CHANGED": "The sale price has changed: check the new amount and try again"
+        },
+        "PROMOCODE": {
+            "NOT_EXIST": "No such promocode",
+            "LIMIT_MAX": "This promocode has no activations left",
+            "USED_BY_YOURSELF": "You have already used this promocode",
+            "INVALID": "This promocode is not valid",
+            "INACTIVE": "This promocode is disabled",
+            "EXPIRED": "This promocode has expired",
+            "ALREADY_EXISTS": "A promocode with this code already exists",
+            "LIMIT_BELOW_USED": "The limit cannot be lower than the number of promocode uses",
+            "ADDED": "Promocode activated: {{bonus}} ₴ credited.",
+            "DESCRIPTION": "Bonus description: {{description}}"
+        },
+        "USER": {
+            "NOT_EXIST": "No such user",
+            "MONEY_NOT_ENOUGH": "Not enough credits on your balance",
+            "BALANCE_LIMIT": "This credit would exceed the maximum balance",
+            "RECIPIENT_BALANCE_LIMIT": "The transfer would exceed the recipient's maximum balance",
+            "CANT_UPDATE_FIELD": "This field cannot be changed",
+            "AVATAR_INVALID": "Choose an avatar from the list"
+        },
+        "BONUS": {
+            "NOT_EXIST": "No such bonus",
+            "ALREADY_USED": "This bonus has already been claimed",
+            "NOT_AVAILABLE": "The bonus condition has not been met yet"
+        },
+        "ARTICLE": { "NOT_EXIST": "No such article" },
+        "PROVABLY_FAIR": {
+            "SEED_UPDATED": "Client seed updated",
+            "ROTATED": "Server seed updated",
+            "CLIENT_SEED_INVALID": "Invalid client seed",
+            "OPEN_NOT_FOUND": "No such opening",
+            "NO_SNAPSHOT": "This opening was made before the site started saving case contents, so it cannot be verified"
+        },
+        "ADMIN": {
+            "ERROR": "Administration error",
+            "BANNED": "Your account is blocked",
+            "REASON_REQUIRED": "Enter a reason",
+            "SELF_FORBIDDEN": "You cannot change your own account",
+            "NEGATIVE_BALANCE": "The balance cannot be negative",
+            "ROLE_INVALID": "Unknown role",
+            "ROLE_ADMIN_FORBIDDEN": "The administrator role is granted only through the CLI",
+            "TARGET_ADMIN_FORBIDDEN": "Another administrator's role cannot be changed in the panel",
+            "MUTE_ADMIN_FORBIDDEN": "An administrator cannot be restricted in the chat",
+            "CHAT_MESSAGE_NOT_EXIST": "The message has already been removed or is no longer in the chat history",
+            "DISCOUNT_INVALID": "The sale price must be lower than the case price, and 0 removes the sale",
+            "ARTICLE_TEXT_EMPTY": "After the HTML is cleaned, the Ukrainian article text is empty",
+            "ARTICLE_TOO_LONG": "The article text is too long",
+            "ARTICLE_CHANGED": "The article was changed while you were editing it. Open it again so you do not overwrite the new edits"
+        },
+        "LIMIT": {
+            "AUTH": "Too many attempts. Try again later.",
+            "CASE_OPEN": "Too many openings. Wait a little.",
+            "REQUESTS": "Too many requests. Wait a little.",
+            "DEPOSIT": "Too many top-up attempts. Wait a little.",
+            "PROFILE_RESET": "Too many profile resets. Wait a little.",
+            "BONUS": "Too many attempts. Wait a little.",
+            "SEED_ROTATE": "Too many seed updates. Wait a little.",
+            "VERIFY": "Too many checks. Wait a little.",
+            "PROMOCODE": "Too many promocode attempts. Try again later.",
+            "TRANSFER": "Too many transfers. Wait a little.",
+            "SELL": "Too many sales. Wait a little.",
+            "WITHDRAW": "Too many withdrawal requests. Wait a little.",
+            "WITHDRAW_CANCEL": "Too many withdrawal cancellations. Wait a little."
+        }
     }
 }
