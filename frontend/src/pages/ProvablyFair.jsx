@@ -147,7 +147,7 @@ const ProvablyFair = () => {
     }, [load]);
 
     const reportFailure = (failure) => {
-        openNotification('error', t('common.error'), clientErrorMessage(failure) || t('common.serverError'));
+        openNotification('error', t('common.error'), clientErrorMessage(t, failure) || t('common.serverError'));
     };
 
     const onSaveClientSeed = async () => {
@@ -209,7 +209,7 @@ const ProvablyFair = () => {
             }
         } catch (e) {
             if (mounted.current) {
-                const refusal = e.error === 429 ? clientErrorMessage(e) : t('provablyFair.verifyFailed');
+                const refusal = e.error === 429 ? clientErrorMessage(t, e) : t('provablyFair.verifyFailed');
                 setCalcError((isRefusal(e) && refusal) || t('common.serverError'));
             }
         }

@@ -184,7 +184,7 @@ const Inventory = ({
             if (e && e.error === PRICE_CHANGED) {
                 syncRate(e.rate);
             }
-            const reason = clientErrorMessage(e);
+            const reason = clientErrorMessage(t, e);
             if (reason) {
                 openNotification('error', t('openCase.sellErrorTitle'), reason);
             } else {
@@ -213,7 +213,7 @@ const Inventory = ({
             } catch (e) {
                 if (e && e.error === PRICE_CHANGED) {
                     syncRate(e.rate);
-                    return { failure: PRICE_CHANGED, soldCount, reason: clientErrorMessage(e) };
+                    return { failure: PRICE_CHANGED, soldCount, reason: clientErrorMessage(t, e) };
                 }
                 if (!e || e.error !== UNSELLABLE) {
                     return { failure: (e && e.error) || true, soldCount };

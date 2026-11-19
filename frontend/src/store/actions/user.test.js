@@ -61,6 +61,16 @@ test('a failed login does not reconnect the socket', async () => {
     expect(reconnectSocket).not.toHaveBeenCalled();
 });
 
+test('a refused login and a refused registration keep the code of the answer', async () => {
+    global.fetch = jest.fn(() => Promise.resolve({
+        status: 429, json: () => Promise.resolve({ message: 'Забагато спроб. Спробуйте пізніше.', code: 'LIMIT.AUTH' }),
+    }));
+    expect(await userPostFetch({ login: 'player', password: 'bad' })(jest.fn()))
+        .toEqual({ error: 429, message: 'Забагато спроб. Спробуйте пізніше.', code: 'LIMIT.AUTH' });
+    expect(await userPostRegisterFetch({ login: 'player', password: 'secret123', email: 'player@e.ua' })(jest.fn()))
+        .toEqual({ error: 429, message: 'Забагато спроб. Спробуйте пізніше.', code: 'LIMIT.AUTH' });
+});
+
 describe('userPostRegisterFetch', () => {
     test('a confirm-email answer resolves to the status and signs nobody in', async () => {
         global.fetch = jest.fn(() => Promise.resolve({

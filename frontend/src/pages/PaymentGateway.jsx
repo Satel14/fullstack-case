@@ -37,7 +37,7 @@ const PaymentGateway = (props) => {
             openNotification('error', t('payment.errorTitle'), t('payment.errorText'));
             setProcessing(false);
         } catch (e) {
-            openNotification('error', t('payment.errorTitle'), clientErrorMessage(e) || t('common.serverError'));
+            openNotification('error', t('payment.errorTitle'), clientErrorMessage(t, e) || t('common.serverError'));
             setProcessing(false);
         }
     };

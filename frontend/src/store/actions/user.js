@@ -5,6 +5,7 @@ import {
 } from '../types';
 
 import { API_URL } from '../../api/config';
+import { answerFields } from '../../api/fetch';
 import {
     getToken, setToken, removeToken, TOKEN_NOT_SAVED,
 } from '../../api/token';
@@ -81,7 +82,7 @@ export const userPostFetch = (body, remember = true) => (dispatch) => fetch(`${A
     .then(readWithStatus)
     .then(({ status, data }) => {
         if (Object.prototype.hasOwnProperty.call(data, 'message')) {
-            return { error: status, message: data.message };
+            return { error: status, ...answerFields(data) };
         }
         return signIn(dispatch, data, remember);
     });
@@ -109,7 +110,7 @@ export const userPostRegisterFetch = (body) => (dispatch) => fetch(`${API_URL}/p
         }
         if (!data || !data.jwt) {
             return data && typeof data.message === 'string'
-                ? { error: status, message: data.message }
+                ? { error: status, ...answerFields(data) }
                 : { error: status };
         }
 

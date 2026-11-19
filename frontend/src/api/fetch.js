@@ -25,14 +25,26 @@ const endSessionIfRevoked = (result, headers) => {
     }
 };
 
+export const answerFields = (body) => {
+    const message = body && typeof body.message === 'string' ? body.message : '';
+    const code = body && typeof body.code === 'string' ? body.code : '';
+    const params = body && body.params && typeof body.params === 'object' && !Array.isArray(body.params)
+        ? body.params
+        : null;
+    return {
+        ...(message && { message }),
+        ...(code && { code }),
+        ...(params && { params }),
+    };
+};
+
 const errorPayload = async (result) => {
     try {
         const body = await result.json();
-        const message = body && typeof body.message === 'string' ? body.message : '';
         const rate = body && typeof body.rate === 'number' ? body.rate : null;
         return {
             error: result.status,
-            ...(message && { message }),
+            ...answerFields(body),
             ...(rate !== null && { rate }),
         };
     } catch (e) {

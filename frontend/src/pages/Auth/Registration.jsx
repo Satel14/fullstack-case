@@ -76,7 +76,7 @@ const Registration = (props) => {
                 return undefined;
             }
             if (result) {
-                openNotification('error', t('auth.register.errorTitle'), clientErrorMessage(result) || t('common.serverError'));
+                openNotification('error', t('auth.register.errorTitle'), clientErrorMessage(t, result) || t('common.serverError'));
                 return undefined;
             }
             props.history.push('/');

@@ -31,7 +31,7 @@ const ResetPasswordForm = ({ token }) => {
             openNotification('success', t('auth.reset.successTitle'), result.message);
             history.push('/login');
         } catch (failure) {
-            openNotification('error', t('auth.reset.errorTitle'), clientErrorMessage(failure) || t('common.serverError'));
+            openNotification('error', t('auth.reset.errorTitle'), clientErrorMessage(t, failure) || t('common.serverError'));
             setLoading(false);
         }
     };

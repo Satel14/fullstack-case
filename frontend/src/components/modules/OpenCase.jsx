@@ -361,7 +361,7 @@ class OpenCase extends Component {
                 priceChanged = true;
                 this.props.syncSaleRate(e.rate);
             }
-            reason = clientErrorMessage(e);
+            reason = clientErrorMessage(this.props.t, e);
             if (notify && reason) {
                 openNotification('error', this.props.t('openCase.sellErrorTitle'), reason);
             } else if (notify) {

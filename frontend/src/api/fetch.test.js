@@ -110,3 +110,15 @@ test('a refusal that names a sale rate hands the rate to the caller with the mes
     global.fetch.mockReturnValue(respond(409, { status: 409, message: 'price changed', rate: '0.85' }));
     await expect(put('/storage/sell/5', { rate: 1 })).rejects.toEqual({ error: 409, message: 'price changed' });
 });
+
+test('a refusal hands its code and values to the caller with the message', async () => {
+    global.fetch.mockReturnValue(respond(422, {
+        status: 422, message: 'Відмова', code: 'PROMOCODE.EXPIRED', params: { bonus: 5 },
+    }));
+    await expect(put('/promocode/use', {})).rejects.toEqual({
+        error: 422, message: 'Відмова', code: 'PROMOCODE.EXPIRED', params: { bonus: 5 },
+    });
+
+    global.fetch.mockReturnValue(respond(422, { message: 'Відмова', code: 7, params: [1] }));
+    await expect(post('/promocode/use', {})).rejects.toEqual({ error: 422, message: 'Відмова' });
+});
