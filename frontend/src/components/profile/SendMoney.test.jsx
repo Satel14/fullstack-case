@@ -62,6 +62,12 @@ test('a player banned mid-session is told why the transfer failed', async () => 
     expect(await screen.findByText('Ваш акаунт заблоковано')).toBeInTheDocument();
 });
 
+test('a refused transfer is shown through the code of its reason', async () => {
+    sendMoneyForUser.mockRejectedValue({ error: 422, code: 'USER.NOT_EXIST', message: 'Такого користувача не існує' });
+    send(25);
+    expect(await screen.findByText(/^server\.USER\.NOT_EXIST/)).toBeInTheDocument();
+});
+
 test('a transfer form sent without an amount says so under the field and keeps it out of the browser console', async () => {
     const log = jest.spyOn(console, 'log').mockImplementation(() => {});
     render(<SendMoney userIdTo={9} nickname="friend" />);

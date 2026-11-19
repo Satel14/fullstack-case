@@ -70,6 +70,16 @@ test('a mail-unavailable (503) answer shows its message', async () => {
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.forgot.errorTitle', 'Відправлення листів тимчасово недоступне'));
 });
 
+test('a coded answer is shown through its code', async () => {
+    forgotPassword.mockRejectedValue({ error: 503, code: 'AUTH.PASSWORD_RESET_UNAVAILABLE', message: 'Відновлення пароля тимчасово недоступне' });
+    openModal();
+    fireEvent.change(screen.getByLabelText('auth.forgot.emailLabel'), { target: { value: 'player@e.ua' } });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.forgot.ok' }));
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
+        'error', 'auth.forgot.errorTitle', expect.stringMatching(/^server\.AUTH\.PASSWORD_RESET_UNAVAILABLE/),
+    ));
+});
+
 test('a refused address is shown under the field and kept out of the browser console', async () => {
     const log = jest.spyOn(console, 'log').mockImplementation(() => {});
     openModal();

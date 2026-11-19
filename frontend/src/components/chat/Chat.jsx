@@ -13,6 +13,7 @@ import smiles from '../../data/smiles';
 import { Rules } from './Rules';
 import { getProfileFetch } from '../../store/actions/user';
 import { removeChatMessage } from '../../api/all/admin';
+import { serverText } from '../../helpers/serverMessage';
 
 const MAX_MESSAGE_LENGTH = 500;
 const ACK_TIMEOUT_MS = 8000;
@@ -300,7 +301,7 @@ export const Chat = ({ user, enabled, refreshProfile }) => {
             setChat((current) => current.filter((el) => el.messageId !== target.messageId));
             setRemoveTarget(null);
         } catch (e) {
-            message.error(e && e.error && e.message ? e.message : t('common.serverError'));
+            message.error((e && e.error && serverText(t, e)) || t('common.serverError'));
         } finally {
             setRemoving(false);
         }

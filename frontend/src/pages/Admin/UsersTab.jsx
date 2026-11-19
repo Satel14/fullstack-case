@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import { getAdminUsers, setUserRole } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
+import { serverText } from '../../helpers/serverMessage';
 import roles from '../../enum/role';
 import BalanceModal from './BalanceModal';
 import PlayerCard from './PlayerCard';
@@ -74,7 +75,7 @@ const UsersTab = ({ user }) => {
             openNotification('success', t('admin.users.roleChanged'), row.user_login);
             await load();
         } catch (e) {
-            const message = e && e.error && e.message ? e.message : t('common.serverError');
+            const message = (e && e.error && serverText(t, e)) || t('common.serverError');
             openNotification('error', t('admin.users.roleFailed'), message);
             await load();
         }

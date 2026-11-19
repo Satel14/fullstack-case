@@ -6,6 +6,7 @@ import {
 } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { getAdminStats } from '../../api/all/admin';
+import { serverText } from '../../helpers/serverMessage';
 
 const DAY = 86400000;
 const FIGURES = ['opens', 'spent', 'valueGiven', 'realizedEdge', 'sales', 'deposits', 'bonuses', 'promocodes', 'adminCorrections', 'withdrawalsCompleted'];
@@ -103,7 +104,7 @@ const StatsTab = ({ active = true }) => {
                     type="error"
                     showIcon
                     message={t('admin.stats.loadFailed')}
-                    description={failure.message || t('common.serverError')}
+                    description={serverText(t, failure) || t('common.serverError')}
                     action={<Button onClick={() => load(lastQuery.current)}>{t('admin.stats.retry')}</Button>}
                 />
             )}

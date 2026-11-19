@@ -5,6 +5,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { muteUser, unmuteUser } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
+import { serverText } from '../../helpers/serverMessage';
 
 const MuteModal = ({ user, onClose, onDone }) => {
     const { t, i18n } = useTranslation();
@@ -23,7 +24,7 @@ const MuteModal = ({ user, onClose, onDone }) => {
             openNotification('success', t('admin.mute.done'), user.user_login);
             onDone();
         } catch (e) {
-            openNotification('error', t('admin.mute.failed'), e && e.error && e.message ? e.message : t('common.serverError'));
+            openNotification('error', t('admin.mute.failed'), (e && e.error && serverText(t, e)) || t('common.serverError'));
         } finally {
             setSubmitting(false);
         }

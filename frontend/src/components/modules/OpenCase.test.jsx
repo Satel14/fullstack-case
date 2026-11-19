@@ -128,6 +128,13 @@ test('a rate-limited open shows the limiter message', async () => {
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', 'Забагато відкриттів'));
 });
 
+test('a coded refusal of an open is shown through its code', async () => {
+    openCaseById.mockRejectedValue({ error: 429, code: 'LIMIT.CASE_OPEN', message: 'Забагато відкриттів. Зачекайте трохи.' });
+    renderOpenCase();
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.fast$/ }));
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'common.error', expect.stringMatching(/^server\.LIMIT\.CASE_OPEN/)));
+});
+
 test('an open refused for missing funds in block mode brings the open controls back', async () => {
     openCaseById.mockResolvedValue({ status: 200, message: 'Недостатньо кредитів на балансі' });
     renderOpenCase();

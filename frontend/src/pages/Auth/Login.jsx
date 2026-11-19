@@ -11,6 +11,7 @@ import ForgotPassword from './ForgotPassword';
 import { userPostFetch } from '../../store/actions/user';
 import { TOKEN_NOT_SAVED } from '../../api/token';
 import openNotification from '../../components/mini/openNotification';
+import { serverText } from '../../helpers/serverMessage';
 
 const mapDispatchToProps = (dispatch) => ({
     userPostFetch: (userInfo, remember) => dispatch(userPostFetch(userInfo, remember)),
@@ -38,8 +39,11 @@ const Login = (props) => {
         if (failure.error === 401) {
             return t('auth.login.errorWrong');
         }
-        if (failure.error === 429 && failure.message) {
-            return failure.message;
+        if (failure.error === 429) {
+            const text = serverText(t, failure);
+            if (text) {
+                return text;
+            }
         }
         return t('common.serverError');
     };

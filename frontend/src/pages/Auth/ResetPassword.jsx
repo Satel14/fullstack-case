@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { resetPassword } from '../../api/all/user';
 import openNotification from '../../components/mini/openNotification';
 import { acceptablePassword } from '../../helpers/credentials';
-import { clientErrorMessage } from '../../helpers/serverMessage';
+import { clientErrorMessage, serverText } from '../../helpers/serverMessage';
 import { useLinkToken } from '../../helpers/linkToken';
 
 const ResetPasswordForm = ({ token }) => {
@@ -28,7 +28,7 @@ const ResetPasswordForm = ({ token }) => {
         setLoading(true);
         try {
             const result = await resetPassword(token, password);
-            openNotification('success', t('auth.reset.successTitle'), result.message);
+            openNotification('success', t('auth.reset.successTitle'), serverText(t, result));
             history.push('/login');
         } catch (failure) {
             openNotification('error', t('auth.reset.errorTitle'), clientErrorMessage(t, failure) || t('common.serverError'));

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { getSaleRate, updateSaleRate } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
+import { serverText } from '../../helpers/serverMessage';
 import { syncSaleRate } from '../../store/actions/module';
 
 const MIN_RATE = 0.0001;
@@ -48,7 +49,7 @@ const SettingsTab = () => {
             setReason('');
             openNotification('success', t('admin.settings.saved'), String(res.data.rate));
         } catch (e) {
-            const message = e && e.error && e.message ? e.message : t('common.serverError');
+            const message = (e && e.error && serverText(t, e)) || t('common.serverError');
             openNotification('error', t('admin.settings.saveFailed'), message);
         } finally {
             setSaving(false);

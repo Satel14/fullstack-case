@@ -5,6 +5,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { forgotPassword } from '../../api/all/user';
 import openNotification from '../../components/mini/openNotification';
+import { serverText } from '../../helpers/serverMessage';
 
 const CollectionCreateForm = ({
     visible, onCreate, onCancel,
@@ -63,14 +64,14 @@ const ForgotPassword = () => {
     const onCreate = async (values) => {
         await forgotPassword(values.email).then((results) => {
             if (results.status === 'sended') {
-                openNotification('success', t('auth.forgot.successTitle'), results.message);
+                openNotification('success', t('auth.forgot.successTitle'), serverText(t, results));
                 setVisible(false);
                 return undefined;
             }
-            openNotification('error', t('auth.forgot.errorTitle'), results.message);
+            openNotification('error', t('auth.forgot.errorTitle'), serverText(t, results));
             return undefined;
         }).catch((failure) => {
-            openNotification('error', t('auth.forgot.errorTitle'), (failure && failure.message) || t('common.serverError'));
+            openNotification('error', t('auth.forgot.errorTitle'), serverText(t, failure) || t('common.serverError'));
         });
     };
 

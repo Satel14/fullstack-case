@@ -8,6 +8,7 @@ import { getAdminArticles, updateAdminArticle } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
 import ArticleText from '../../components/mini/ArticleText';
 import { hasVisibleText } from '../../helpers/articleHtml';
+import { serverText } from '../../helpers/serverMessage';
 
 const { TextArea } = Input;
 const { TabPane } = Tabs;
@@ -91,7 +92,7 @@ const ArticlesTab = () => {
             setBasedOn(saved.updated_at || null);
             openNotification('success', t('admin.articles.saved'), saved.article_title);
         } catch (e) {
-            const message = e && e.error && e.message ? e.message : t('common.serverError');
+            const message = (e && e.error && serverText(t, e)) || t('common.serverError');
             openNotification('error', t('admin.articles.saveFailed'), message);
             if (e && e.error === 409) {
                 load();

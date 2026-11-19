@@ -324,6 +324,25 @@ test('sell all names the reasons of the items still in the inventory, each once'
     ));
 });
 
+test('sell all names each coded reason once', async () => {
+    server.inventory = inventoryRows(4);
+    const sell = sellItemByStorageId.getMockImplementation();
+    const reasons = {
+        2: { error: 422, code: 'ITEM.NO_PRICE', message: 'no price' },
+        3: { error: 422, code: 'ITEM.NO_PRICE', message: 'no price' },
+        4: { error: 422, code: 'USER.BALANCE_LIMIT', message: 'balance is full' },
+    };
+    sellItemByStorageId.mockImplementation((storageId) => (reasons[storageId] ? Promise.reject(reasons[storageId]) : sell(storageId)));
+    renderInventory();
+
+    await clickSellAll();
+
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'openCase.sellErrorTitle', expect.any(String)));
+    const summary = openNotification.mock.calls.find(([kind]) => kind === 'error')[2];
+    expect(summary.match(/server\.ITEM\.NO_PRICE/g)).toHaveLength(1);
+    expect(summary).toMatch(/server\.USER\.BALANCE_LIMIT/);
+});
+
 test.each([
     ['the limiter', { error: 429, message: 'too many sales' }, 'inventory.sellAllRateLimited {"sold":0}. balance is full.'],
     ['a failed request', { error: 500 }, 'inventory.sellAllStopped {"sold":0}. balance is full.'],

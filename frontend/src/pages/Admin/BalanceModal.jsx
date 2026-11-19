@@ -5,6 +5,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { adjustUserBalance } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
+import { serverText } from '../../helpers/serverMessage';
 
 const MAX_DELTA = 1000000;
 const DELTA_FORMAT = /^[+-]?\d+([.,]\d{1,2})?$/;
@@ -60,7 +61,7 @@ const BalanceModal = ({
             );
             onDone();
         } catch (e) {
-            const message = e && e.error && e.message ? e.message : t('common.serverError');
+            const message = (e && e.error && serverText(t, e)) || t('common.serverError');
             openNotification('error', t('admin.balance.failed'), message);
         } finally {
             setSubmitting(false);

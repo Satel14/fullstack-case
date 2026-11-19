@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { redeemPromocodeFetch } from '../../store/actions/user';
 import openNotification from '../mini/openNotification';
+import { promocodeText, serverText } from '../../helpers/serverMessage';
 
 const mapDispatchToProps = (dispatch) => ({
   redeemPromocodeFetch: (body) => dispatch(redeemPromocodeFetch(body)),
@@ -33,10 +34,10 @@ const Promocode = (props) => {
         release();
         // eslint-disable-next-line promise/always-return
         if (!data.balance) {
-          openNotification('error', t('promocode.errorTitle'), data.message);
+          openNotification('error', t('promocode.errorTitle'), serverText(t, data) || t('promocode.failed'));
           return;
         }
-        openNotification('success', t('promocode.successTitle'), data.message);
+        openNotification('success', t('promocode.successTitle'), promocodeText(t, data));
       })
       .catch(() => {
         release();

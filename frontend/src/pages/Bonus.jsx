@@ -9,6 +9,7 @@ import { updateBalance } from '../store/actions/user';
 import { isAuthorized } from '../helpers/Player';
 import openNotification from '../components/mini/openNotification';
 import Loader from '../components/mini/Loader';
+import { serverText } from '../helpers/serverMessage';
 
 const SHOWN_REASONS = [403, 422, 429];
 
@@ -90,7 +91,7 @@ const Bonus = ({
             openNotification('success', t('bonus.credited', { amount: res.bonus }));
             setBonuses((prev) => prev.map((b) => (b.id === bonus.id ? { ...b, claimed: true, available: false } : b)));
         } catch (e) {
-            const reason = e && SHOWN_REASONS.includes(e.error) && e.message;
+            const reason = e && SHOWN_REASONS.includes(e.error) && serverText(t, e);
             openNotification('error', t('bonus.errorTitle'), reason || t('common.serverError'));
             await load();
         }

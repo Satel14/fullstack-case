@@ -125,6 +125,16 @@ test('a refused withdrawal shows the server reason and keeps the item', async ()
     expect(screen.getByRole('button', { name: /inventory\.withdraw$/ })).toBeInTheDocument();
 });
 
+test('a coded withdrawal refusal is shown through its code', async () => {
+    server.rows = [row(1, 'inventory')];
+    receiveItemByStorageId.mockRejectedValue({ error: 422, code: 'ITEM.NOT_IN_INVENTORY', message: 'Цього предмета немає у вашому інвентарі' });
+    renderInventory();
+    fireEvent.click(await screen.findByRole('button', { name: /inventory\.withdraw$/ }));
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
+        'error', 'inventory.withdrawErrorTitle', expect.stringMatching(/^server\.ITEM\.NOT_IN_INVENTORY/),
+    ));
+});
+
 test('an unexpected failure shows the generic error, not raw text', async () => {
     server.rows = [row(1, 'inventory')];
     receiveItemByStorageId.mockRejectedValue(new TypeError('Failed to fetch'));

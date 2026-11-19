@@ -188,6 +188,13 @@ test('a refused claim shows the server reason, an unexpected failure the generic
     await waitFor(() => expect(getBonusList).toHaveBeenCalledTimes(3));
 });
 
+test('a coded refused claim is shown through its code', async () => {
+    activateBonus.mockRejectedValueOnce({ error: 422, code: 'BONUS.ALREADY_USED', message: 'Бонус вже отримано' });
+    renderBonus();
+    fireEvent.click(within(await card('welcome')).getByRole('button', { name: /bonus\.claim$/ }));
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'bonus.errorTitle', expect.stringMatching(/^server\.BONUS\.ALREADY_USED/)));
+});
+
 test('while a claim is in flight every claim button is disabled', async () => {
     const pending = deferred();
     activateBonus.mockImplementation(() => pending.promise);

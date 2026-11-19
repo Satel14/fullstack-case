@@ -22,7 +22,7 @@ import { computeItemPriceUAH } from '../../helpers/price';
 import { gradeStyle } from '../../helpers/grade';
 import { itemCaption } from '../../helpers/Case';
 import itemName from '../../helpers/itemName';
-import { clientErrorMessage, joinSentences } from '../../helpers/serverMessage';
+import { clientErrorMessage, joinSentences, serverText } from '../../helpers/serverMessage';
 import { PRICE_CHANGED, saleRateOf } from '../../helpers/saleRate';
 import { syncSaleRate } from '../../store/actions/module';
 
@@ -302,8 +302,11 @@ class OpenCase extends Component {
         if (err && err.error === 401) {
             return t('openCase.authRequired');
         }
-        if (err && [403, 422, 429].includes(err.error) && err.message) {
-            return err.message;
+        if (err && [403, 422, 429].includes(err.error)) {
+            const text = serverText(t, err);
+            if (text) {
+                return text;
+            }
         }
         return t('common.serverError');
     }
@@ -351,7 +354,7 @@ class OpenCase extends Component {
                 }
                 sold = true;
             } else {
-                reason = result.message || null;
+                reason = serverText(this.props.t, result);
                 if (notify) {
                     openNotification('error', this.props.t('openCase.sellErrorTitle'), reason || this.props.t('openCase.sellErrorText'));
                 }
@@ -421,7 +424,7 @@ class OpenCase extends Component {
 
         if (!result || (!result.balance && result.balance !== 0)) {
             this.resetView();
-            openNotification('error', this.props.t('common.error'), (result && result.message) || this.props.t('common.serverError'));
+            openNotification('error', this.props.t('common.error'), serverText(this.props.t, result) || this.props.t('common.serverError'));
             return false;
         }
 

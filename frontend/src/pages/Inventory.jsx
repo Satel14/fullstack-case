@@ -17,7 +17,7 @@ import LoadError from '../components/mini/LoadError';
 import { gradeStyle } from '../helpers/grade';
 import { itemCaption } from '../helpers/Case';
 import itemName from '../helpers/itemName';
-import { clientErrorMessage, joinSentences } from '../helpers/serverMessage';
+import { clientErrorMessage, joinSentences, serverText } from '../helpers/serverMessage';
 import { PRICE_CHANGED, saleRateOf } from '../helpers/saleRate';
 import { syncSaleRate } from '../store/actions/module';
 
@@ -178,7 +178,7 @@ const Inventory = ({
                 setActive((prev) => prev.filter((x) => x.storage_id !== row.storage_id));
                 setSold((prev) => [row, ...prev]);
             } else {
-                openNotification('error', t('openCase.sellErrorTitle'), res.message || t('openCase.sellErrorText'));
+                openNotification('error', t('openCase.sellErrorTitle'), serverText(t, res) || t('openCase.sellErrorText'));
             }
         } catch (e) {
             if (e && e.error === PRICE_CHANGED) {
@@ -202,7 +202,7 @@ const Inventory = ({
                 // eslint-disable-next-line no-await-in-loop
                 const res = await sellItemByStorageId(rows[i].storage_id, rate);
                 if (res.status === UNSELLABLE) {
-                    refused.set(rows[i].storage_id, res.message || null);
+                    refused.set(rows[i].storage_id, serverText(t, res));
                 } else if (res.status !== 200) {
                     return { failure: res.status || true, soldCount };
                 } else {
@@ -218,7 +218,7 @@ const Inventory = ({
                 if (!e || e.error !== UNSELLABLE) {
                     return { failure: (e && e.error) || true, soldCount };
                 }
-                refused.set(rows[i].storage_id, e.message || null);
+                refused.set(rows[i].storage_id, serverText(t, e));
             }
         }
         return { failure: null, soldCount };
@@ -289,7 +289,7 @@ const Inventory = ({
         await load();
     };
 
-    const failureReason = (e) => (e && SHOWN_REASONS.includes(e.error) && e.message) || t('common.serverError');
+    const failureReason = (e) => (e && SHOWN_REASONS.includes(e.error) && serverText(t, e)) || t('common.serverError');
 
     const onWithdraw = async (item) => {
         if (busy.current) {

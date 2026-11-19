@@ -6,6 +6,7 @@ import { SendOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { sendMoneyForUser } from '../../api/all/profile';
 import openNotification from '../mini/openNotification';
+import { serverText } from '../../helpers/serverMessage';
 
 const CollectionCreateForm = ({
   visible,
@@ -66,17 +67,17 @@ const SendMoney = (props) => {
       money_count: values.moneycount,
     }).then((result) => {
       if (result.sended === true) {
-        openNotification('success', t('sendMoney.successTitle'), result.message);
+        openNotification('success', t('sendMoney.successTitle'), serverText(t, result));
         setVisible(false);
         if (window.HeaderSecond) {
           window.HeaderSecond.changeBalance(result.balance);
         }
       } else {
-        openNotification('error', t('sendMoney.failTitle'), result.message);
+        openNotification('error', t('sendMoney.failTitle'), serverText(t, result));
       }
       return null;
     }).catch((e) => {
-      const reason = e && [403, 422, 429].includes(e.error) && e.message;
+      const reason = e && [403, 422, 429].includes(e.error) && serverText(t, e);
       openNotification('error', t('sendMoney.failTitle'), reason || t('sendMoney.failed'));
     });
   };

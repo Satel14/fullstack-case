@@ -217,6 +217,13 @@ test('a sign-in the browser does not let the site save says so, without the welc
     expect(screen.queryByText('home page')).toBeNull();
 });
 
+test('a coded limiter answer is shown through its code', async () => {
+    userPostFetch.mockImplementation(() => () => Promise.resolve({ error: 429, code: 'LIMIT.AUTH', message: 'Забагато спроб. Спробуйте пізніше.' }));
+    renderForm();
+    fill();
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'auth.login.errorTitle', expect.stringMatching(/^server\.LIMIT\.AUTH/)));
+});
+
 test('a server failure is reported as a server error, never with its raw text', async () => {
     userPostFetch.mockImplementation(() => () => Promise.resolve({ error: 500, message: 'ER_CON_COUNT_ERROR raw database text' }));
     renderForm();

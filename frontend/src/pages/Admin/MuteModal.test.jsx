@@ -47,3 +47,13 @@ test('a failed save keeps the modal open and reports the refusal', async () => {
     await waitFor(() => expect(notify).toHaveBeenCalledWith('error', 'admin.mute.failed', 'refused'));
     expect(onDone).not.toHaveBeenCalled();
 });
+
+test('a coded refusal is reported through its code', async () => {
+    const notify = require('../../components/mini/openNotification');
+    muteUser.mockRejectedValue({ error: 422, code: 'ADMIN.MUTE_ADMIN_FORBIDDEN', message: 'Адміністратора не можна обмежити в чаті' });
+    render(<MuteModal user={player} onClose={jest.fn()} onDone={jest.fn()} />);
+    fireEvent.change(screen.getByLabelText('admin.mute.reason'), { target: { value: 'spam' } });
+    fireEvent.click(screen.getByRole('button', { name: 'admin.mute.review' }));
+    fireEvent.click(screen.getByRole('button', { name: 'admin.mute.confirm' }));
+    await waitFor(() => expect(notify).toHaveBeenCalledWith('error', 'admin.mute.failed', expect.stringMatching(/^server\.ADMIN\.MUTE_ADMIN_FORBIDDEN/)));
+});

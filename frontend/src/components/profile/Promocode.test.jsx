@@ -73,3 +73,9 @@ test('an answer without a balance shows the server message as an error', async (
     expect(await screen.findByText('Такого промокоду не існує')).toBeInTheDocument();
     expect(screen.getByText('promocode.errorTitle')).toBeInTheDocument();
 });
+
+test('a coded refusal is shown through its code', async () => {
+    redeemPromocode.mockResolvedValue({ status: 200, code: 'PROMOCODE.EXPIRED', message: 'Термін дії цього промокоду минув' });
+    submit('OLD');
+    expect(await screen.findByText(/^server\.PROMOCODE\.EXPIRED/)).toBeInTheDocument();
+});

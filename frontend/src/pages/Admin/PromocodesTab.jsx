@@ -5,6 +5,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { getAdminPromocodes, createAdminPromocode, updateAdminPromocode } from '../../api/all/admin';
 import openNotification from '../../components/mini/openNotification';
+import { serverText } from '../../helpers/serverMessage';
 
 const MYSQL_INT_MAX = 2147483647;
 const MUTABLE = ['active', 'limit', 'expiresAt', 'description'];
@@ -57,7 +58,7 @@ const PromocodesTab = () => {
             openNotification('success', t('admin.promocodes.saved'), res.data.code);
             return true;
         } catch (e) {
-            const message = e && e.error && e.message ? e.message : t('common.serverError');
+            const message = (e && e.error && serverText(t, e)) || t('common.serverError');
             openNotification('error', t('admin.promocodes.saveFailed'), message);
             return false;
         } finally {
