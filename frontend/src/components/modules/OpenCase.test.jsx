@@ -525,6 +525,16 @@ test('a won item the server refuses to sell says why, on its own and in "sell al
     await waitFor(() => expect(openNotification).toHaveBeenCalledWith('error', 'openCase.sellErrorTitle', 'balance is full'));
 });
 
+test('a coded refusal of a sale is shown through its code', async () => {
+    sellItemByStorageId.mockRejectedValue({ error: 422, code: 'ITEM.NO_PRICE', message: 'Цей предмет зараз не можна продати' });
+    await openTwoAndShowResult();
+
+    fireEvent.click(screen.getByRole('button', { name: /openCase\.sellFor \{"price":25\}/ }));
+    await waitFor(() => expect(openNotification).toHaveBeenCalledWith(
+        'error', 'openCase.sellErrorTitle', expect.stringMatching(/^server\.ITEM\.NO_PRICE/),
+    ));
+});
+
 test('sell all whose sales all failed without a reason says so and never that everything sold', async () => {
     sellItemByStorageId.mockReset();
     sellItemByStorageId.mockRejectedValue({ error: 502 });
