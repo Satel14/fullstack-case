@@ -193,7 +193,7 @@ test('a malformed JSON body keeps the CORS and security headers without a log li
     });
 
     assert.strictEqual(response.status, 400);
-    assert.deepStrictEqual(await response.json(), { status: 400, message: MESSAGE.SERVER.BAD_REQUEST });
+    assert.deepStrictEqual(await response.json(), { status: 400, message: MESSAGE.SERVER.BAD_REQUEST, code: 'SERVER.BAD_REQUEST' });
     assert.strictEqual(response.headers.get('access-control-allow-origin'), 'http://localhost:3000');
     assertSecurityHeaders(response);
     assert.deepStrictEqual(logged, []);
