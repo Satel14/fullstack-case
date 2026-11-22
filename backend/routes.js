@@ -12,6 +12,7 @@ module.exports = (app) => {
     require("./src/routes/case")(app);
     require("./src/routes/storage")(app);
     require("./src/routes/item")(app);
+    require('./src/routes/upgrade')(app);
     require("./src/routes/stats")(app);
     require("./src/routes/module")(app);
     require("./src/routes/bonusHistory")(app);

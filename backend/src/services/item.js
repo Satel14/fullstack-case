@@ -48,6 +48,15 @@ const parsePrices = (raw) => {
     }
 };
 
+module.exports.getAllItemsWithPrices = async () => {
+    const [items] = await sequelize.query(
+        'SELECT items.itemId AS item_itemId, items.name AS item_name, items.grade AS item_grade, '
+        + 'items.imagePath AS item_imagePath, insider_prices.pricesInCredits FROM items '
+        + 'LEFT JOIN insider_prices ON insider_prices.name = items.name',
+    );
+    return items.map((item) => ({ ...item, pricesInCredits: parsePrices(item.pricesInCredits) }));
+};
+
 module.exports.getItemsWithPrices = async (itemIds) => {
     const items = await Item.findAll({ where: { item_itemId: itemIds } });
 
