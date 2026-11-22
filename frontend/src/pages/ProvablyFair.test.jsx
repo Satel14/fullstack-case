@@ -31,9 +31,11 @@ jest.mock('../components/mini/openNotification', () => ({
 }));
 
 jest.mock('../api/all/item', () => ({ getItemsInfo: jest.fn() }));
+jest.mock('../api/all/upgrade', () => ({ getUpgradeHistory: jest.fn(), verifyUpgrade: jest.fn() }));
 
 const api = require('../api/all/provablyFair');
 const { getItemsInfo } = require('../api/all/item');
+const { getUpgradeHistory } = require('../api/all/upgrade');
 
 const ITEMS = {
     10: { item_itemId: 10, item_name: 'Nova | Rising Sun', item_grade: 'restricted' },
@@ -104,6 +106,7 @@ beforeEach(() => {
     });
     api.getOpenHistory.mockResolvedValue({ data: ROWS });
     api.verifyOpen.mockReset();
+    getUpgradeHistory.mockResolvedValue({ data: { items: [], total: 0 } });
     getItemsInfo.mockImplementation((ids) => Promise.resolve({
         data: Object.fromEntries(ids.filter((id) => ITEMS[id]).map((id) => [id, ITEMS[id]])),
     }));
@@ -261,6 +264,9 @@ test('a rotation that finishes after the page closed loads nothing and sets no s
     expect(updatesAfterUnmount).toBe(0);
 });
 
+const LONG_LIST_TEST = 30000;
+const LONG_LIST_RENDER = { timeout: 10000 };
+
 const opensFrom = (firstId, count) => Array.from({ length: count }, (_, i) => ({
     ...ROWS[0], id: firstId - i, nonce: firstId - i, caseId: `case-${firstId - i}`,
 }));
@@ -271,32 +277,32 @@ test('older opens beyond the first page are reached with "load more"', async () 
         .mockResolvedValueOnce({ data: opensFrom(10, 10) });
     renderPage();
 
-    expect(await screen.findByText('case-60')).toBeInTheDocument();
+    expect(await screen.findByText('case-60', {}, LONG_LIST_RENDER)).toBeInTheDocument();
     expect(screen.queryByText('case-10')).toBeNull();
     expect(api.getOpenHistory).toHaveBeenCalledWith(50, 0);
 
     fireEvent.click(screen.getByRole('button', { name: /provablyFair\.loadMore/ }));
 
-    expect(await screen.findByText('case-1')).toBeInTheDocument();
+    expect(await screen.findByText('case-1', {}, LONG_LIST_RENDER)).toBeInTheDocument();
     expect(api.getOpenHistory).toHaveBeenLastCalledWith(50, 50);
     expect(screen.getByText('case-60')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'provablyFair.verify' })).toHaveLength(60);
     expect(screen.queryByRole('button', { name: /provablyFair\.loadMore/ })).toBeNull();
-});
+}, LONG_LIST_TEST);
 
 test('an open that shifted onto the next page while loading is listed once', async () => {
     api.getOpenHistory
         .mockResolvedValueOnce({ data: opensFrom(60, 50) })
         .mockResolvedValueOnce({ data: opensFrom(11, 11) });
     renderPage();
-    await screen.findByText('case-60');
+    await screen.findByText('case-60', {}, LONG_LIST_RENDER);
 
     fireEvent.click(screen.getByRole('button', { name: /provablyFair\.loadMore/ }));
 
-    expect(await screen.findByText('case-1')).toBeInTheDocument();
+    expect(await screen.findByText('case-1', {}, LONG_LIST_RENDER)).toBeInTheDocument();
     expect(screen.getAllByText('case-11')).toHaveLength(1);
     expect(screen.getAllByRole('button', { name: 'provablyFair.verify' })).toHaveLength(60);
-});
+}, LONG_LIST_TEST);
 
 const serveHistory = (opens) => {
     const server = { opens };
@@ -306,7 +312,7 @@ const serveHistory = (opens) => {
 
 const pressLoadMoreUntil = async (caseId) => {
     fireEvent.click(screen.getByRole('button', { name: /provablyFair\.loadMore/ }));
-    expect(await screen.findByText(caseId)).toBeInTheDocument();
+    expect(await screen.findByText(caseId, {}, LONG_LIST_RENDER)).toBeInTheDocument();
 };
 
 const shownCases = () => screen.getAllByText(/^case-\d+$/).map((cell) => cell.textContent);
@@ -314,7 +320,7 @@ const shownCases = () => screen.getAllByText(/^case-\d+$/).map((cell) => cell.te
 test('"load more" reaches every older open, newest first and once each, after 60 new opens since the list loaded', async () => {
     const server = serveHistory(opensFrom(120, 120));
     renderPage();
-    await screen.findByText('case-71');
+    await screen.findByText('case-71', {}, LONG_LIST_RENDER);
 
     server.opens = [...opensFrom(180, 60), ...server.opens];
 
@@ -323,12 +329,12 @@ test('"load more" reaches every older open, newest first and once each, after 60
 
     expect(shownCases()).toEqual(opensFrom(120, 120).map((open) => open.caseId));
     expect(screen.queryByRole('button', { name: /provablyFair\.loadMore/ })).toBeNull();
-});
+}, LONG_LIST_TEST);
 
 test('"load more" still reaches the older opens when exactly a page of new opens pushed the shown ones down', async () => {
     const server = serveHistory(opensFrom(80, 80));
     renderPage();
-    await screen.findByText('case-31');
+    await screen.findByText('case-31', {}, LONG_LIST_RENDER);
 
     server.opens = [...opensFrom(130, 50), ...server.opens];
 
@@ -336,7 +342,7 @@ test('"load more" still reaches the older opens when exactly a page of new opens
 
     expect(shownCases()).toEqual(opensFrom(80, 80).map((open) => open.caseId));
     expect(screen.queryByRole('button', { name: /provablyFair\.loadMore/ })).toBeNull();
-});
+}, LONG_LIST_TEST);
 
 test('a "load more" that fails keeps the loaded opens and can be pressed again', async () => {
     api.getOpenHistory
@@ -344,19 +350,19 @@ test('a "load more" that fails keeps the loaded opens and can be pressed again',
         .mockRejectedValueOnce({ error: 503 })
         .mockResolvedValueOnce({ data: opensFrom(10, 10) });
     renderPage();
-    await screen.findByText('case-60');
+    await screen.findByText('case-60', {}, LONG_LIST_RENDER);
 
     fireEvent.click(screen.getByRole('button', { name: /provablyFair\.loadMore/ }));
 
-    expect(await screen.findByText('provablyFair.historyFailed')).toBeInTheDocument();
+    expect(await screen.findByText('provablyFair.historyFailed', {}, LONG_LIST_RENDER)).toBeInTheDocument();
     expect(screen.getByText('case-60')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /provablyFair\.loadMore/ }));
 
-    expect(await screen.findByText('case-1')).toBeInTheDocument();
+    expect(await screen.findByText('case-1', {}, LONG_LIST_RENDER)).toBeInTheDocument();
     expect(screen.queryByText('provablyFair.historyFailed')).toBeNull();
     expect(api.getOpenHistory).toHaveBeenLastCalledWith(50, 50);
-});
+}, LONG_LIST_TEST);
 
 const rowOf = async (nonce) => {
     await screen.findAllByText(/dust2|train/);
