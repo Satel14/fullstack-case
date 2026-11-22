@@ -14,6 +14,7 @@ const allCases = require('../src/constant/cases/_all');
 
 const BACKEND = path.join(__dirname, '..');
 const CASES_DIR = path.join(BACKEND, 'src', 'constant', 'cases');
+const PUBLIC_DIR = path.join(BACKEND, '..', 'frontend', 'public');
 const readJson = (file) => JSON.parse(fs.readFileSync(path.join(BACKEND, 'scripts', 'data', file), 'utf8'));
 const readCaseFile = (name) => fs.readFileSync(path.join(CASES_DIR, name), 'utf8').replace(/\r\n/g, '\n');
 
@@ -27,6 +28,21 @@ const caseFor = ({ id }) => {
     assert.ok(allCases[id], `${id} is not registered`);
     return allCases[id];
 };
+
+test('every catalogue image is an existing WebP file, with one image shared by bomj and victory', () => {
+    const entries = catalogue();
+    for (const entry of entries) {
+        assert.match(entry.image, /^\/img\/case\/[^/]+\.webp$/, entry.id);
+        assert.ok(fs.statSync(path.join(PUBLIC_DIR, entry.image.slice(1))).isFile(), entry.id);
+    }
+    assert.strictEqual(new Set(entries.map(({ image }) => image)).size, 73);
+    assert.strictEqual(entries.find(({ id }) => id === 'bomj').image, '/img/case/case-victory.webp');
+    assert.strictEqual(entries.find(({ id }) => id === 'victory').image, '/img/case/case-victory.webp');
+});
+
+test('the case image directory contains no PNG files', () => {
+    assert.deepStrictEqual(fs.readdirSync(path.join(PUBLIC_DIR, 'img', 'case')).filter((name) => /\.png$/i.test(name)), []);
+});
 
 test('the committed priceMap.json regenerates exactly the committed case files', () => {
     const { files } = generated();
