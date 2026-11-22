@@ -1,0 +1,63 @@
+const ITEMS_CONFIG = require('../../constant/itemConfigs')
+
+const allColors = [
+    ITEMS_CONFIG.COLORS.DEFAULT,
+    ITEMS_CONFIG.COLORS.PAINTED,
+];
+
+module.exports = {
+    CHANCES: {
+        'item-1524': 1616667,
+        'item-1085': 1616667,
+        'item-1479': 1616667,
+        'item-760': 1616667,
+        'item-1248': 1616666,
+        'item-1204': 1616666,
+        'item-164': 26103,
+        'item-383': 25132,
+        'item-425': 24472,
+        'item-368': 23545,
+        'item-424': 22840,
+        'item-115': 22143,
+        'item-252': 21488,
+        'item-102': 20842,
+        'item-114': 19917,
+        'item-269': 18977,
+        'item-287': 18055,
+        'item-285': 16867,
+        'item-278': 14925,
+        'item-242': 13066,
+        'item-245': 11628,
+        COLORS: {
+            DEFAULT: 90,
+            PAINTED: 10,
+            LIST: {
+                [ITEMS_CONFIG.COLORS.DEFAULT]: 50,
+                [ITEMS_CONFIG.COLORS.PAINTED]: 50,
+            },
+        },
+    },
+    ITEMS: [
+    { id: 1524, rare: 'item-1524', colors: allColors },
+    { id: 1085, rare: 'item-1085', colors: allColors },
+    { id: 1479, rare: 'item-1479', colors: allColors },
+    { id: 760, rare: 'item-760', colors: allColors },
+    { id: 1248, rare: 'item-1248', colors: allColors },
+    { id: 1204, rare: 'item-1204', colors: allColors },
+    { id: 164, rare: 'item-164', colors: allColors },
+    { id: 383, rare: 'item-383', colors: allColors },
+    { id: 425, rare: 'item-425', colors: allColors },
+    { id: 368, rare: 'item-368', colors: allColors },
+    { id: 424, rare: 'item-424', colors: allColors },
+    { id: 115, rare: 'item-115', colors: allColors },
+    { id: 252, rare: 'item-252', colors: allColors },
+    { id: 102, rare: 'item-102', colors: allColors },
+    { id: 114, rare: 'item-114', colors: allColors },
+    { id: 269, rare: 'item-269', colors: allColors },
+    { id: 287, rare: 'item-287', colors: allColors },
+    { id: 285, rare: 'item-285', colors: allColors },
+    { id: 278, rare: 'item-278', colors: allColors },
+    { id: 242, rare: 'item-242', colors: allColors },
+    { id: 245, rare: 'item-245', colors: allColors },
+    ],
+};

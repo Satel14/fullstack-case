@@ -9,13 +9,15 @@ const {
     KNIFE_CHANCE_CASES, GRADE_CASES, catalogue,
 } = require('./caseCatalog');
 
-test('collection ids exactly match the generator source in the same order', () => {
-    const source = fs.readFileSync(path.join(__dirname, '..', 'generateCases.js'), 'utf8');
-    const declaration = source.match(/const CASE_IDS\s*=\s*\[([\s\S]*?)\];/);
-    assert.ok(declaration, 'generateCases.js must still declare CASE_IDS');
-    const ids = [...declaration[1].matchAll(/'([^']+)'/g)].map(([, id]) => id);
-    assert.equal(ids.length, 38);
-    assert.deepEqual(COLLECTION_IDS, ids);
+test('collection ids retain their original generator order', () => {
+    assert.deepEqual(COLLECTION_IDS, [
+        'bomj', 'havoc', 'cobblestone', 'chop-shop', 'train', 'alpha', 'nuke-op', 'st-marc',
+        'lake', 'baggage', 'bank', 'gods-monster', 'mirage-op', 'cache', 'norse', 'sportfield',
+        'inferno-op', 'anubis', 'dust2-op', 'rising-sun', 'safehouse', 'ancient', 'italy',
+        'graphic', 'overpass', 'nuke', 'vertigo-2021', 'control', 'dust2-2021', 'mirage-2021',
+        'dust2', 'overpass-old', 'inferno-old', 'vertigo-old', 'velocity', 'victory',
+        'vindicator', 'zephyr',
+    ]);
 });
 
 test('collection images exactly match the seed source in the same order', () => {

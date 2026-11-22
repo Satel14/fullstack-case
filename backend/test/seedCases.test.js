@@ -106,7 +106,7 @@ test('a missing casePrices.json refuses every case instead of pricing them at a 
 
     await assert.rejects(
         seedCases({ casePrices: {}, log: quietLog }),
-        (error) => /38 of 38 cases/.test(error.message),
+        (error) => /74 of 74 cases/.test(error.message),
     );
 
     const [[cases]] = await sequelize.query('SELECT COUNT(*) AS n FROM cases');
