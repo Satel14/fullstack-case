@@ -18,6 +18,10 @@ const deriveBaselineSchema = async () => {
 };
 
 const DOWN_EFFECTS = {
+    '20261123000100-upgrades.js':
+        'drops the upgrades table and its entire provably-fair upgrade history',
+    '20261123000000-storage-upgraded-status.js':
+        'removes upgraded from the storage.status ENUM — it refuses while any storage row still uses that status',
     '20261122000200-case-images-webp.js':
         'points every case picture back at a .png file the repository no longer has, so case pictures stay broken until the PNGs are restored',
     '20261122000100-case-categories.js':

@@ -33,6 +33,7 @@ test('migrations create every expected table', async () => {
         'provably_fair_seeds',
         'sequelizemeta',
         'storage',
+        'upgrades',
         'users',
     ]);
 });

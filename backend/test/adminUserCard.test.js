@@ -116,7 +116,7 @@ test('opens come from the durable audit trail, limited to this player and 50 row
 
 test('inventory counts cover all this player\'s rows while only the newest 50 items are returned', async () => {
     const { body } = await card();
-    assert.deepEqual(body.data.inventory.counts, { inventory: 15, received: 15, waitingtrade: 15, money: 15 });
+    assert.deepEqual(body.data.inventory.counts, { inventory: 15, received: 15, waitingtrade: 15, money: 15, upgraded: 0 });
     assert.deepEqual(body.data.inventory.items.map(({ id }) => id), newestIds);
     assert.deepEqual(body.data.inventory.items[0], {
         id: 119, itemId: 119, color: 'painted', caseId: 'dust2', caseTitle: 'Dust II', status: 'money',
@@ -140,12 +140,12 @@ test('the journal filters both target type and player id, limits to 50 and prese
     assert.deepEqual(body.data.adminActions[1].payload, { delta: 117 });
 });
 
-test('a player without activity has empty histories and all four zero counts, and reading never journals', async () => {
+test('a player without activity has empty histories and all status counts zero, and reading never journals', async () => {
     const [[before]] = await sequelize.query('SELECT COUNT(*) AS n FROM admin_actions');
     const { body, code } = await card('3');
     assert.equal(code, 200);
     assert.deepEqual([body.data.balanceHistory, body.data.opens, body.data.bonuses, body.data.adminActions, body.data.inventory.items], [[], [], [], [], []]);
-    assert.deepEqual(body.data.inventory.counts, { inventory: 0, received: 0, waitingtrade: 0, money: 0 });
+    assert.deepEqual(body.data.inventory.counts, { inventory: 0, received: 0, waitingtrade: 0, money: 0, upgraded: 0 });
     const [[after]] = await sequelize.query('SELECT COUNT(*) AS n FROM admin_actions');
     assert.equal(after.n, before.n);
 });

@@ -1,3 +1,3 @@
 module.exports = {
-    STORAGE_STATUSES: ['inventory', 'received', 'waitingtrade', 'money'],
+    STORAGE_STATUSES: ['inventory', 'received', 'waitingtrade', 'money', 'upgraded'],
 };

@@ -73,7 +73,7 @@ const listStorage = async (body) => respond(
     await checkedBy(StorageController.validate('getProfileStorage'), { body, user: player }),
 );
 
-test('the item list is asked for by one of the four statuses and nothing else reaches the query', async () => {
+test('the item list is asked for by a supported status and nothing else reaches the query', async () => {
     const crafted = [
         { status: { a: 'x'.repeat(1000) } },
         { status: ['inventory', { a: 1 }] },
@@ -91,7 +91,7 @@ test('the item list is asked for by one of the four statuses and nothing else re
 });
 
 test('the item list still answers each status the inventory page asks for, and nothing for no status', async () => {
-    const statuses = ['inventory', 'received', 'waitingtrade', 'money'];
+    const statuses = ['inventory', 'received', 'waitingtrade', 'money', 'upgraded'];
 
     const { result: answers } = await quietly(storageAnswers, () => Promise.all([
         ...statuses.map((status) => listStorage({ status, limit: 50, offset: 0 })),
