@@ -18,6 +18,9 @@ const deriveBaselineSchema = async () => {
 };
 
 const DOWN_EFFECTS = {
+    '20261122000000-item-images-webp.js':
+        'points every item picture back at a .png file the repository no longer has, '
+        + 'so item pictures stay broken until the PNGs are restored',
     '20261118000200-admin-stats-indexes.js': 'drops the date indexes used by admin statistics',
     '20261118000100-chat-mute.js': 'drops users.mutedUntil and lifts every temporary chat mute',
     '20261118000000-admin-user-card.js':
