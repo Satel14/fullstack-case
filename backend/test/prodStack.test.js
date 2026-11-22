@@ -5,11 +5,11 @@ const path = require('node:path');
 
 const root = path.join(__dirname, '..', '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8').split('\r\n').join('\n');
-const readmeSection = (title) => {
-    const readme = read('README.md');
+const guideSection = (title) => {
+    const guide = read('ops/README.md');
     const heading = `## ${title}\n`;
-    assert.ok(readme.includes(heading), `missing README section ${title}`);
-    return readme.split(heading)[1].split('\n## ')[0];
+    assert.ok(guide.includes(heading), `missing operator guide section ${title}`);
+    return guide.split(heading)[1].split('\n## ')[0];
 };
 
 const base = read('docker-compose.yml');
@@ -109,11 +109,15 @@ test('the environment template lists the production domain and ACME email', () =
     assert.match(env, /^ACME_EMAIL=$/m);
 });
 
-test('the README explains server deployment after stack operations and names every setup step', () => {
-    const readme = read('README.md');
+test('the main README sends operators to the operator guide', () => {
+    assert.match(read('README.md'), /\]\(ops\/README\.md\)/);
+});
 
-    assert.match(readme, /^## Operating the stack\n[\s\S]*?\n## Deploying to a server\n/m);
-    const section = readmeSection('Deploying to a server');
+test('the operator guide explains server deployment after stack operations and names every setup step', () => {
+    const guide = read('ops/README.md');
+
+    assert.match(guide, /^## Operating the stack\n[\s\S]*?\n## Deploying to a server\n/m);
+    const section = guideSection('Deploying to a server');
     for (const step of [
         'ops/server-setup.sh', 'ops/init-env.sh', 'ops/deploy.sh', 'ops/first-seed.sh',
         'grant-admin', 'DOMAIN=case.localhost',
@@ -123,7 +127,7 @@ test('the README explains server deployment after stack operations and names eve
 });
 
 test('the server guide requires only an A record and explains why AAAA would share rate limits', () => {
-    const section = readmeSection('Deploying to a server');
+    const section = guideSection('Deploying to a server');
 
     assert.match(section, /only an `A` record/);
     assert.match(section, /Do not add an `AAAA` record/);
@@ -132,15 +136,15 @@ test('the server guide requires only an A record and explains why AAAA would sha
     assert.match(section, /IPv6 visitors share IP-based rate limits/);
 });
 
-test('the older Docker guide is explicitly local and points server operators to the production guide', () => {
-    const section = readmeSection('Docker');
+test('the local Docker guide is explicitly local and points server operators to the production guide', () => {
+    const section = guideSection('Local Docker stack');
 
     assert.match(section, /for local use only/);
     assert.match(section, /\[Deploying to a server\]\(#deploying-to-a-server\)/);
 });
 
 test('the update guide runs both case update modes inside the production backend after deployment', () => {
-    const updates = readmeSection('Deploying to a server').split('For later updates,')[1].split('Database dumps')[0];
+    const updates = guideSection('Deploying to a server').split('For later updates,')[1].split('Database dumps')[0];
     const deploy = updates.indexOf('sh ops/deploy.sh');
     assert.ok(deploy !== -1);
     assert.match(updates, /release adds cases/);
@@ -152,7 +156,7 @@ test('the update guide runs both case update modes inside the production backend
 });
 
 test('the local HTTPS guide removes the regular stack before deploying because names and ports are fixed', () => {
-    const local = readmeSection('Deploying to a server').split('To test HTTPS locally,')[1];
+    const local = guideSection('Deploying to a server').split('To test HTTPS locally,')[1];
     const down = local.indexOf('docker compose down');
     assert.ok(down !== -1);
     assert.ok(down < local.indexOf('sh ops/deploy.sh --no-pull'));
