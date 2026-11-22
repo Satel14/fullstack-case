@@ -817,6 +817,7 @@
             "ROTATED": "Server seed updated",
             "CLIENT_SEED_INVALID": "Invalid client seed",
             "OPEN_NOT_FOUND": "No such opening",
+            "UPGRADE_NOT_FOUND": "No such upgrade",
             "NO_SNAPSHOT": "This opening was made before the site started saving case contents, so it cannot be verified"
         },
         "ADMIN": {

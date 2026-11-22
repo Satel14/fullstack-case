@@ -1,7 +1,10 @@
-const { body, check, validationResult } = require('express-validator');
+const { body, check, query, validationResult } = require('express-validator');
 const PFService = require('../services/provablyFair');
 const { deriveWinner, deriveFromTable, sha256 } = require('../modules/provablyFair');
 const CaseOpenRecord = require('../models/caseOpenRecord');
+const Upgrade = require('../models/upgrade');
+const { upgradeRoll, ROLL_SCALE } = require('../modules/upgradeFair');
+const { MYSQL_INT_MAX } = require('../constant/mysql');
 const RedisManager = require('../redis/manager');
 const allCases = require('../constant/cases/_all');
 const MESSAGE = require('../constant/responseMessages');
@@ -103,6 +106,55 @@ module.exports.verify = async (req, res) => {
     }
 };
 
+module.exports.getUpgradeHistory = async (req, res) => {
+    try {
+        if (!validationResult(req).isEmpty()) {
+            return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
+        }
+        const data = await PFService.getUpgradeHistory(
+            req.user.profile.user_id, Number(req.query.limit ?? 50), Number(req.query.offset ?? 0),
+        );
+        return res.status(200).json({ status: 200, data });
+    } catch (e) {
+        return answerFailure(res, e, { status: 500, where: 'provably-fair.upgrade-history' });
+    }
+};
+
+module.exports.verifyUpgrade = async (req, res) => {
+    try {
+        if (!validationResult(req).isEmpty()) {
+            return res.status(422).json({ status: 422, message: MESSAGE.VALIDATOR.ERROR });
+        }
+        const { serverSeed, clientSeed, upgradeId } = req.body;
+        const nonce = Number(req.body.nonce);
+        const roll = upgradeRoll(serverSeed, clientSeed, nonce);
+        if (upgradeId === undefined) {
+            const threshold = req.body.threshold === undefined ? null : Number(req.body.threshold);
+            return res.status(200).json({ status: 200, data: { roll, threshold, won: threshold === null ? null : roll < threshold } });
+        }
+        const record = await Upgrade.findByPk(upgradeId, {
+            attributes: ['up_serverSeedHash', 'up_clientSeed', 'up_nonce', 'up_threshold', 'up_roll', 'up_won'],
+        });
+        if (!record) {
+            return res.status(422).json({ status: 422, message: MESSAGE.PROVABLY_FAIR.UPGRADE_NOT_FOUND });
+        }
+        const threshold = record.up_threshold;
+        const won = roll < threshold;
+        const inputsMatchRecord = clientSeed === record.up_clientSeed && nonce === record.up_nonce;
+        return res.status(200).json({
+            status: 200,
+            data: {
+                roll, threshold, won,
+                seedMatches: sha256(serverSeed) === record.up_serverSeedHash,
+                inputsMatchRecord,
+                matchesRecord: inputsMatchRecord && roll === record.up_roll && won === record.up_won,
+            },
+        });
+    } catch (e) {
+        return answerFailure(res, e, { status: 500, where: 'provably-fair.verify-upgrade' });
+    }
+};
+
 module.exports.validate = (method) => {
     switch (method) {
         case 'setClientSeed':
@@ -114,6 +166,20 @@ module.exports.validate = (method) => {
                 body('nonce').exists().not().isArray().isInt({ min: 0 }),
                 body('openId').optional({ nullable: true }).not().isArray().isInt({ min: 1 }),
                 body('caseId').if(body('openId').not().exists({ checkNull: true })).exists().isString(),
+            ];
+        case 'getUpgradeHistory':
+            return [
+                query().custom((fields) => Object.keys(fields).every((field) => ['limit', 'offset'].includes(field))),
+                query('limit').optional().isString().bail().isInt({ min: 1, max: 50 }),
+                query('offset').optional().isString().bail().isInt({ min: 0, max: MYSQL_INT_MAX }),
+            ];
+        case 'verifyUpgrade':
+            return [
+                body('serverSeed').not().isArray().isString().bail().custom(withinChars(1, 128)),
+                body('clientSeed').not().isArray().isString().bail().custom(withinChars(1, 64)),
+                body('nonce').not().isArray().isInt({ min: 0, max: Number.MAX_SAFE_INTEGER }),
+                body('threshold').optional().not().isArray().isInt({ min: 0, max: ROLL_SCALE }),
+                body('upgradeId').optional().not().isArray().isInt({ min: 1, max: MYSQL_INT_MAX }),
             ];
         default:
             return [];

@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const { pageOffset } = require('../helpers/paging');
 const ProvablyFairSeed = require('../models/provablyFairSeed');
 const CaseOpenRecord = require('../models/caseOpenRecord');
+const Upgrade = require('../models/upgrade');
 const User = require('../models/user');
 const sequelize = require('../config/db');
 const { sha256, deriveWinner } = require('../modules/provablyFair');
@@ -214,6 +215,45 @@ module.exports.getHistory = async (userId, limit, offset, itemHash = null) => {
             verification: verificationOf(r, hasSnapshot),
         };
     });
+};
+
+module.exports.getUpgradeHistory = async (userId, limit = 50, offset = 0) => {
+    const { rows, count } = await Upgrade.findAndCountAll({
+        attributes: [
+            'up_id', 'up_seedId', 'up_created_at', 'up_nonce', 'up_clientSeed', 'up_serverSeedHash',
+            'up_stake', 'up_stakeValue', 'up_targetItemId', 'up_targetColor', 'up_targetPrice',
+            'up_threshold', 'up_roll', 'up_won',
+        ],
+        where: { up_userId: userId },
+        order: [['up_id', 'DESC']],
+        limit,
+        offset,
+    });
+    const seedIds = [...new Set(rows.map((row) => row.up_seedId))];
+    const seeds = seedIds.length ? await ProvablyFairSeed.findAll({
+        attributes: ['pf_id', 'pf_serverSeed'],
+        where: { pf_userId: userId, pf_id: seedIds, pf_status: 'revealed' },
+    }) : [];
+    const revealedById = new Map(seeds.map((seed) => [seed.pf_id, seed.pf_serverSeed]));
+    return {
+        items: rows.map((row) => ({
+            upgradeId: row.up_id,
+            created_at: row.up_created_at,
+            nonce: row.up_nonce,
+            clientSeed: row.up_clientSeed,
+            serverSeedHash: row.up_serverSeedHash,
+            revealedServerSeed: revealedById.get(row.up_seedId) ?? null,
+            stake: JSON.parse(row.up_stake).map(({ itemId, color, price }) => ({ itemId, color, price })),
+            stakeValue: row.up_stakeValue,
+            targetItemId: row.up_targetItemId,
+            targetColor: row.up_targetColor,
+            targetPrice: row.up_targetPrice,
+            threshold: row.up_threshold,
+            roll: row.up_roll,
+            won: row.up_won,
+        })),
+        total: count,
+    };
 };
 
 module.exports.HISTORY_MAX_LIMIT = HISTORY_MAX_LIMIT;

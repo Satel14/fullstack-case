@@ -85,6 +85,7 @@ module.exports = {
         ROTATED: 'Server seed оновлено',
         CLIENT_SEED_INVALID: 'Некоректний client seed',
         OPEN_NOT_FOUND: 'Такого відкриття не існує',
+        UPGRADE_NOT_FOUND: 'Такого апгрейду не існує',
         NO_SNAPSHOT: 'Це відкриття зроблене до того, як сайт почав зберігати склад кейса, тож перевірити його неможливо',
     },
     ADMIN: {
