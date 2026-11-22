@@ -1,0 +1,55 @@
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env before starting the production stack}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in .env before starting the production stack}
+    volumes:
+      - ./ops/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    networks:
+      - public
+      - private
+    logging: *logging
+
+  nginx:
+    profiles: ["local"]
+    logging: *logging
+
+  backend:
+    environment:
+      CLIENT_ORIGIN: https://${DOMAIN:?Set DOMAIN in .env before starting the production stack}
+    logging: *logging
+
+  frontend:
+    logging: *logging
+
+  redis:
+    logging: *logging
+
+  mysql-db:
+    logging: *logging
+
+  mysql-backup:
+    logging: *logging
+
+volumes:
+  caddy-data:
+  caddy-config:
