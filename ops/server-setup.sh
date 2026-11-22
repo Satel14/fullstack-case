@@ -27,6 +27,10 @@ systemctl enable --now docker
 
 apt-get install -y ufw
 ufw allow OpenSSH
+ssh_ports="$(sshd -T 2>/dev/null | sed -n 's/^port \([0-9][0-9]*\)$/\1/p')"
+for ssh_port in $ssh_ports; do
+    ufw allow "$ssh_port/tcp"
+done
 ufw allow 80/tcp
 ufw allow 443/tcp
 ufw allow 443/udp
@@ -43,4 +47,4 @@ if [ -z "$(swapon --noheadings 2>/dev/null || true)" ]; then
     fi
 fi
 
-echo "server-setup.sh: Docker, the firewall (22, 80, 443) and swap are ready"
+echo "server-setup.sh: Docker, the firewall (SSH, 80, 443) and swap are ready"

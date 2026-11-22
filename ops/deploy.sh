@@ -26,7 +26,9 @@ compose="docker compose -f docker-compose.yml -f docker-compose.prod.yml"
 if [ "$pull" = 1 ]; then
     git pull --ff-only
 fi
+$compose --profile local rm -sf nginx
 $compose up -d --build --remove-orphans
+$compose restart caddy mysql-backup
 
 limit="${DEPLOY_HEALTH_TIMEOUT:-180}"
 waited=0

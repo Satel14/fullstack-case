@@ -109,7 +109,7 @@ const exited = (result, code) => {
     assert.equal(result.status, code, `${result.stdout}${result.stderr}`);
 };
 
-test('deploy pulls, rebuilds, waits for backend health and checks HTTPS in order', needsShell, (t) => {
+test('deploy removes old nginx, rebuilds and refreshes mounted files before checking health', needsShell, (t) => {
     const { run, calls, writeEnv } = stand(t, 'deploy.sh');
     writeEnv();
 
@@ -118,7 +118,9 @@ test('deploy pulls, rebuilds, waits for backend health and checks HTTPS in order
     exited(result, 0);
     assert.deepEqual(calls(), [
         ['git', 'pull', '--ff-only'],
+        ['docker', ...COMPOSE, '--profile', 'local', 'rm', '-sf', 'nginx'],
         ['docker', ...COMPOSE, 'up', '-d', '--build', '--remove-orphans'],
+        ['docker', ...COMPOSE, 'restart', 'caddy', 'mysql-backup'],
         ['docker', 'inspect', '-f', '{{.State.Health.Status}}', 'fullstack_case_backend'],
         ['curl', '-fsS', '--max-time', '5', 'https://example.test/api/health'],
     ]);
@@ -132,7 +134,11 @@ test('deploy --no-pull skips git and still rebuilds and checks HTTPS', needsShel
     exited(run(['--no-pull']), 0);
 
     assert.ok(calls().every(([command]) => command !== 'git'));
-    assert.deepEqual(calls()[0], ['docker', ...COMPOSE, 'up', '-d', '--build', '--remove-orphans']);
+    assert.deepEqual(calls().slice(0, 3), [
+        ['docker', ...COMPOSE, '--profile', 'local', 'rm', '-sf', 'nginx'],
+        ['docker', ...COMPOSE, 'up', '-d', '--build', '--remove-orphans'],
+        ['docker', ...COMPOSE, 'restart', 'caddy', 'mysql-backup'],
+    ]);
     assert.equal(calls().at(-1)[0], 'curl');
 });
 
@@ -355,11 +361,17 @@ test('server-setup refuses a non-root user before changing the system', needsShe
     assert.deepEqual(calls(), [['id', '-u']]);
 });
 
-test('server-setup includes the Compose plugin, HTTPS over UDP and swap setup', () => {
+test('server-setup includes Compose, swap and all SSH ports before enabling the firewall', () => {
     const source = fs.readFileSync(path.join(ROOT, 'ops', 'server-setup.sh'), 'utf8');
+    const beforeEnable = source.split('ufw --force enable')[0];
 
     assert.match(source, /docker-compose-plugin/);
-    assert.match(source, /ufw allow 443\/udp/);
+    assert.match(source, /ufw --force enable/);
+    assert.match(beforeEnable, /ufw allow OpenSSH/);
+    assert.match(beforeEnable, /sshd -T/);
+    assert.match(beforeEnable, /sed -n 's\/\^port /);
+    assert.match(beforeEnable, /for ssh_port in \$ssh_ports; do\s+ufw allow "\$ssh_port\/tcp"\s+done/);
+    assert.match(beforeEnable, /ufw allow 443\/udp/);
     assert.match(source, /swapon/);
 });
 
