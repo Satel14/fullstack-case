@@ -136,6 +136,32 @@ test('deploy --no-pull skips git and still rebuilds and checks HTTPS', needsShel
     assert.equal(calls().at(-1)[0], 'curl');
 });
 
+for (const domain of ['localhost', 'case.localhost']) {
+    test(`deploy accepts Caddy's local certificate for ${domain}`, needsShell, (t) => {
+        const { run, calls, writeEnv } = stand(t, 'deploy.sh');
+        writeEnv(`DOMAIN=${domain}\n`);
+
+        exited(run(), 0);
+
+        assert.deepEqual(calls().filter(([command]) => command === 'curl'), [
+            ['curl', '-fsS', '--max-time', '5', '--insecure', `https://${domain}/api/health`],
+        ]);
+    });
+}
+
+for (const domain of ['example.test', 'localhost.example.test', 'notlocalhost']) {
+    test(`deploy verifies the HTTPS certificate for ${domain}`, needsShell, (t) => {
+        const { run, calls, writeEnv } = stand(t, 'deploy.sh');
+        writeEnv(`DOMAIN=${domain}\n`);
+
+        exited(run(), 0);
+
+        assert.deepEqual(calls().filter(([command]) => command === 'curl'), [
+            ['curl', '-fsS', '--max-time', '5', `https://${domain}/api/health`],
+        ]);
+    });
+}
+
 test('deploy without .env names init-env.sh and calls no external command', needsShell, (t) => {
     const { run, calls } = stand(t, 'deploy.sh');
 

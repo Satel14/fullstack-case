@@ -39,8 +39,13 @@ until [ "$(docker inspect -f '{{.State.Health.Status}}' fullstack_case_backend 2
     waited=$((waited + 5))
 done
 
+set --
+case "$domain" in
+    localhost|*.localhost) set -- --insecure ;;
+esac
+
 tries=0
-until curl -fsS --max-time 5 "https://$domain/api/health" >/dev/null; do
+until curl -fsS --max-time 5 "$@" "https://$domain/api/health" >/dev/null; do
     tries=$((tries + 1))
     if [ "$tries" -ge "${DEPLOY_HTTPS_TRIES:-12}" ]; then
         echo "deploy.sh: https://$domain/api/health does not answer; read Caddy's logs with: $compose logs --tail 100 caddy" >&2
