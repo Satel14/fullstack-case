@@ -1,6 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { resetTestDatabase } = require('./helpers/db');
+const { resetTestDatabase, recreateTestDatabase, TEST_DB } = require('./helpers/db');
+const { createMigrator } = require('../src/db/migrator');
+const { CATEGORIES, COLLECTION_IDS, catalogue } = require('../scripts/lib/caseCatalog');
 
 let activeSequelize;
 
@@ -23,7 +25,7 @@ const storedPrices = async (sequelize) => {
     return Object.fromEntries(rows.map((row) => [row.id, Number(row.price)]));
 };
 
-test('every case is seeded at its price from the committed casePrices.json', async () => {
+test('the full seed writes catalogue categories and case metadata at the committed prices', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
     const { seedCases } = require('../scripts/seedCases');
@@ -35,6 +37,25 @@ test('every case is seeded at its price from the committed casePrices.json', asy
     const expected = Object.fromEntries(Object.keys(allCases).sort().map((id) => [id, prices[id]]));
     assert.deepStrictEqual(await storedPrices(sequelize), expected);
     assert.ok(!Object.values(expected).includes(100), 'no case may carry the old default price');
+    const [categories] = await sequelize.query('SELECT id, slug, title, priority, published FROM categories ORDER BY priority DESC');
+    assert.deepStrictEqual(categories, CATEGORIES.map((category) => ({ ...category, published: 1 })));
+    const [cases] = await sequelize.query('SELECT * FROM cases ORDER BY id');
+    const entries = new Map(catalogue().map((entry) => [entry.id, entry]));
+    cases.forEach((row) => {
+        const entry = entries.get(row.id);
+        assert.deepStrictEqual(row, {
+            id: entry.id,
+            title: entry.title,
+            price: prices[entry.id],
+            discount: null,
+            categoryId: CATEGORIES.find(({ slug }) => slug === entry.category).id,
+            published: 1,
+            img: entry.image,
+            openedCount: 0,
+            type: 'weapon',
+            openLimit: entry.openLimit,
+        }, entry.id);
+    });
 });
 
 test('a case without a price stops the seed before anything is written, naming the case', async () => {
@@ -180,7 +201,7 @@ test('re-pricing again changes nothing, and a case without a price gets one', as
     assert.deepStrictEqual(await repriceCases({ log: quietLog }), { repriced: 0 });
 });
 
-test('the seed script refuses an argument it does not know instead of running the full seed', async () => {
+test('the seed script refuses unknown, combined and repeated flags without changing rows', async () => {
     const { spawnSync } = require('child_process');
     const path = require('path');
     const { TEST_DB } = require('./helpers/db');
@@ -191,16 +212,132 @@ test('the seed script refuses an argument it does not know instead of running th
         + "VALUES ('bomj', 'Kept', 500, NULL, 1, 0, 42, 'weapon', 77)",
     );
 
-    const run = spawnSync(process.execPath, [path.join('scripts', 'seedCases.js'), '--price-only'], {
+    for (const args of [
+        ['--price-only'], ['--bogus'], ['--add-new', '--prices-only'],
+        ['--add-new', '--add-new'], ['--prices-only', '--prices-only'],
+    ]) {
+        const run = spawnSync(process.execPath, [path.join('scripts', 'seedCases.js'), ...args], {
+            cwd: path.join(__dirname, '..'),
+            encoding: 'utf8',
+            env: { ...process.env, NODE_ENV: 'development', DB_NAME: TEST_DB },
+        });
+        const output = `${run.stdout}${run.stderr}`;
+        assert.strictEqual(run.status, 1, output);
+        assert.ok(output.includes(args.join(' ')), output);
+        assert.match(output, /--prices-only/);
+        assert.match(output, /--add-new/);
+    }
+    const [rows] = await sequelize.query('SELECT id, title, price, published, openedCount, openLimit FROM cases');
+    assert.deepStrictEqual(rows.map((row) => ({ ...row, price: Number(row.price) })), [{
+        id: 'bomj', title: 'Kept', price: 500, published: 0, openedCount: 42, openLimit: 77,
+    }]);
+});
+
+const storedRows = async (sequelize) => {
+    const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY id');
+    const [cases] = await sequelize.query('SELECT * FROM cases ORDER BY id');
+    return { categories, cases };
+};
+
+const withoutUpdates = async (sequelize, run) => {
+    const queries = [];
+    const previous = sequelize.options.logging;
+    sequelize.options.logging = (sql) => queries.push(sql);
+    try {
+        const result = await run();
+        assert.deepStrictEqual(queries.filter((sql) => (
+            /\bUPDATE\s+`?(?:cases|categories)`?\b/i.test(sql) || /\bON DUPLICATE KEY UPDATE\b/i.test(sql)
+        )), []);
+        return result;
+    } finally {
+        sequelize.options.logging = previous;
+    }
+};
+
+test('addNewCases restores four categories and 36 cases without updating existing rows, and is idempotent', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const { seedCases, addNewCases } = require('../scripts/seedCases');
+    assert.strictEqual(typeof addNewCases, 'function');
+    await seedCases({ log: quietLog });
+    const fresh = await storedRows(sequelize);
+    const newIds = catalogue().filter(({ family }) => family !== 'collection').map(({ id }) => id);
+    await sequelize.query('DELETE FROM cases WHERE id IN (:ids)', { replacements: { ids: newIds } });
+    await sequelize.query('DELETE FROM categories WHERE id IN (4, 5, 6, 7)');
+    await sequelize.query(
+        "UPDATE categories SET slug = 'custom-collections', title = 'Kept collections', priority = 31, published = 0, titleHelp = 'Kept help' WHERE id = 1",
+    );
+    await sequelize.query("INSERT INTO categories (id, title, priority, published) VALUES (2, 'Legacy category', 19, 1)");
+    await sequelize.query(
+        "UPDATE cases SET openedCount = 42, published = 0, openLimit = 77, price = 500, discount = 600, title = 'Kept case', categoryId = 2, img = '/img/case/custom.png', type = 'souvenir' WHERE id = 'bomj'",
+    );
+    await sequelize.query("INSERT INTO cases (id, title, price, categoryId, published) VALUES ('nocode', 'Kept custom case', 11, 2, 0)");
+    const before = await storedRows(sequelize);
+    assert.strictEqual(before.cases.filter(({ id }) => COLLECTION_IDS.includes(id)).length, 38);
+    const messages = [];
+    const options = { log: { ...quietLog, log: (line) => messages.push(line) } };
+
+    assert.deepStrictEqual(await withoutUpdates(sequelize, () => addNewCases(options)), { categories: 4, cases: 36 });
+
+    const after = await storedRows(sequelize);
+    assert.deepStrictEqual(after.categories.filter(({ id }) => before.categories.some((row) => row.id === id)), before.categories);
+    assert.deepStrictEqual(after.cases.filter(({ id }) => before.cases.some((row) => row.id === id)), before.cases);
+    assert.deepStrictEqual(after.categories.filter(({ id }) => id >= 4), fresh.categories.filter(({ id }) => id >= 4));
+    assert.deepStrictEqual(after.cases.filter(({ id }) => newIds.includes(id)), fresh.cases.filter(({ id }) => newIds.includes(id)));
+    await sequelize.query(
+        "UPDATE categories SET slug = 'custom-weapons', title = 'Kept weapons', priority = 41, published = 0, titleHelp = 'Custom help' WHERE id = 4",
+    );
+    const settled = await storedRows(sequelize);
+
+    assert.deepStrictEqual(await withoutUpdates(sequelize, () => addNewCases(options)), { categories: 0, cases: 0 });
+    assert.deepStrictEqual(await storedRows(sequelize), settled);
+    assert.deepStrictEqual(messages, [
+        '✓ Added 4 categories and 36 cases; existing rows were left as they were',
+        '✓ Added 0 categories and 0 cases; existing rows were left as they were',
+    ]);
+});
+
+test('addNewCases requires migrations before validating prices or writing rows', async () => {
+    const sequelize = await recreateTestDatabase();
+    activeSequelize = sequelize;
+    await createMigrator(sequelize, { quiet: true }).up({ to: '20261118000200-admin-stats-indexes.js' });
+    const { addNewCases } = require('../scripts/seedCases');
+    await assert.rejects(
+        () => addNewCases({ casePrices: {}, log: quietLog }),
+        /pending migration.*20261122000100-case-categories\.js/,
+    );
+    assert.deepStrictEqual(await storedRows(sequelize), { categories: [], cases: [] });
+});
+
+test('addNewCases refuses a missing case price before inserting any categories or cases', async () => {
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const { addNewCases } = require('../scripts/seedCases');
+    const casePrices = committedPrices();
+    delete casePrices['ak-47'];
+    await assert.rejects(() => addNewCases({ casePrices, log: quietLog }), /ak-47/);
+    assert.deepStrictEqual(await storedRows(sequelize), { categories: [], cases: [] });
+});
+
+test('the --add-new CLI inserts missing rows and reports zero additions on its next run', async () => {
+    const { spawnSync } = require('child_process');
+    const path = require('path');
+    const sequelize = await resetTestDatabase();
+    activeSequelize = sequelize;
+    const run = () => spawnSync(process.execPath, [path.join('scripts', 'seedCases.js'), '--add-new'], {
         cwd: path.join(__dirname, '..'),
         encoding: 'utf8',
         env: { ...process.env, NODE_ENV: 'development', DB_NAME: TEST_DB },
     });
 
-    assert.strictEqual(run.status, 1, `${run.stdout}${run.stderr}`);
-    assert.match(`${run.stdout}${run.stderr}`, /--price-only/);
-    const [rows] = await sequelize.query('SELECT id, title, price, published, openedCount, openLimit FROM cases');
-    assert.deepStrictEqual(rows.map((row) => ({ ...row, price: Number(row.price) })), [{
-        id: 'bomj', title: 'Kept', price: 500, published: 0, openedCount: 42, openLimit: 77,
-    }]);
+    const first = run();
+    assert.strictEqual(first.status, 0, `${first.stdout}${first.stderr}`);
+    assert.match(first.stdout, /Added 5 categories and 74 cases; existing rows were left as they were/);
+    assert.deepStrictEqual(await storedPrices(sequelize), committedPrices());
+    const before = await storedRows(sequelize);
+    assert.strictEqual(before.categories.length, 5);
+    const second = run();
+    assert.strictEqual(second.status, 0, `${second.stdout}${second.stderr}`);
+    assert.match(second.stdout, /Added 0 categories and 0 cases; existing rows were left as they were/);
+    assert.deepStrictEqual(await storedRows(sequelize), before);
 });

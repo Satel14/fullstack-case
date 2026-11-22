@@ -1,7 +1,5 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { CASE_ID_PATTERN } = require('../../src/constant/caseId');
 const manifest = require('../../src/constant/itemIds.json');
 const {
@@ -20,14 +18,47 @@ test('collection ids retain their original generator order', () => {
     ]);
 });
 
-test('collection images exactly match the seed source in the same order', () => {
-    const source = fs.readFileSync(path.join(__dirname, '..', 'seedCases.js'), 'utf8');
-    const declaration = source.match(/const imageMap\s*=\s*\{([\s\S]*?)\};/);
-    assert.ok(declaration, 'seedCases.js must still declare imageMap');
-    const images = [...declaration[1].matchAll(/'([^']+)'\s*:\s*'([^']+)'/g)]
-        .map(([, id, filename]) => [id, filename]);
-    assert.equal(images.length, 38);
-    assert.deepEqual(Object.entries(COLLECTION_IMAGES), images);
+test('collection images retain their original seed filenames and order', () => {
+    assert.deepEqual(Object.entries(COLLECTION_IMAGES), Object.entries({
+        'bomj': 'case-victory.png',
+        'havoc': '12havoc.png',
+        'cobblestone': '12cobble.png',
+        'chop-shop': '12chop-shop.png',
+        'train': '12train.png',
+        'alpha': '12alpha.png',
+        'nuke-op': '12nuke.png',
+        'st-marc': '12st-marc.png',
+        'lake': '12lake.png',
+        'baggage': '12baggage.png',
+        'bank': '12bank.png',
+        'gods-monster': 'gods-of-monster1.png',
+        'mirage-op': '12mirage.png',
+        'cache': '12cache.png',
+        'norse': 'norse1.png',
+        'sportfield': 'SportField.png',
+        'inferno-op': '12inferno.png',
+        'anubis': 'anubis.png',
+        'dust2-op': '12dust2.png',
+        'rising-sun': '1rising-sun.png',
+        'safehouse': '12safehouse.png',
+        'ancient': 'anicent.png',
+        'italy': '12italy.png',
+        'graphic': 'graphic.png',
+        'overpass': '2024OverpassCollection.png',
+        'nuke': 'nuke-2.png',
+        'vertigo-2021': 'vertigo2021.png',
+        'control': 'control1.png',
+        'dust2-2021': 'dust20211.png',
+        'mirage-2021': 'mirage20211.png',
+        'dust2': 'dust2.png',
+        'overpass-old': 'overpass1.png',
+        'inferno-old': 'inferno-old.png',
+        'vertigo-old': 'vertigo-old.png',
+        'velocity': 'case-velocity.png',
+        'victory': 'case-victory.png',
+        'vindicator': 'case-vindicator.png',
+        'zephyr': 'case-zephyr.png',
+    }));
 });
 
 test('the catalogue contains 74 distinct valid ids in collection, weapon, grade, chance and knife order', () => {

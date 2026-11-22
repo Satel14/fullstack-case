@@ -5,7 +5,7 @@ const Category = require('../src/models/category');
 const Case = require('../src/models/case');
 const sequelize = require('../src/config/db');
 const { assertMigrationsApplied } = require('../src/db/migrator');
-const allCases = require('../src/constant/cases/_all');
+const { CATEGORIES, catalogue } = require('./lib/caseCatalog');
 const { requireCasePrices } = require('./lib/casePrices');
 
 const CASE_PRICES_FILE = path.join(__dirname, 'data', 'casePrices.json');
@@ -14,52 +14,29 @@ const readCasePrices = () => (
     fs.existsSync(CASE_PRICES_FILE) ? JSON.parse(fs.readFileSync(CASE_PRICES_FILE, 'utf8')) : {}
 );
 
-const categories = [
-    { id: 1, title: 'CS:GO Weapon Cases', priority: 100, published: 1 },
-    { id: 2, title: 'Operation Cases', priority: 90, published: 1 },
-    { id: 3, title: 'Souvenir Packages', priority: 80, published: 1 }
-];
+const entries = catalogue();
+const caseIds = entries.map(({ id }) => id);
+const categoryIds = Object.fromEntries(CATEGORIES.map(({ slug, id }) => [slug, id]));
 
-const imageMap = {
-    'bomj': 'case-victory.png',
-    'havoc': '12havoc.png',
-    'cobblestone': '12cobble.png',
-    'chop-shop': '12chop-shop.png',
-    'train': '12train.png',
-    'alpha': '12alpha.png',
-    'nuke-op': '12nuke.png',
-    'st-marc': '12st-marc.png',
-    'lake': '12lake.png',
-    'baggage': '12baggage.png',
-    'bank': '12bank.png',
-    'gods-monster': 'gods-of-monster1.png',
-    'mirage-op': '12mirage.png',
-    'cache': '12cache.png',
-    'norse': 'norse1.png',
-    'sportfield': 'SportField.png',
-    'inferno-op': '12inferno.png',
-    'anubis': 'anubis.png',
-    'dust2-op': '12dust2.png',
-    'rising-sun': '1rising-sun.png',
-    'safehouse': '12safehouse.png',
-    'ancient': 'anicent.png',
-    'italy': '12italy.png',
-    'graphic': 'graphic.png',
-    'overpass': '2024OverpassCollection.png',
-    'nuke': 'nuke-2.png',
-    'vertigo-2021': 'vertigo2021.png',
-    'control': 'control1.png',
-    'dust2-2021': 'dust20211.png',
-    'mirage-2021': 'mirage20211.png',
-    'dust2': 'dust2.png',
-    'overpass-old': 'overpass1.png',
-    'inferno-old': 'inferno-old.png',
-    'vertigo-old': 'vertigo-old.png',
-    'velocity': 'case-velocity.png',
-    'victory': 'case-victory.png',
-    'vindicator': 'case-vindicator.png',
-    'zephyr': 'case-zephyr.png'
-};
+const categoryValues = ({ id, slug, title, priority }) => ({
+    category_id: id,
+    category_slug: slug,
+    category_title: title,
+    category_priority: priority,
+    category_published: 1,
+});
+
+const caseValues = (entry, casePrices) => ({
+    case_id: entry.id,
+    case_title: entry.title,
+    case_price: casePrices[entry.id],
+    case_categoryId: categoryIds[entry.category],
+    case_published: 1,
+    case_img: entry.image,
+    case_openedCount: 0,
+    case_type: 'weapon',
+    case_openLimit: entry.openLimit,
+});
 
 const clearStaleSale = async (caseId, transaction) => {
     const notBelowPrice = { case_id: caseId, case_discount: { [Op.gte]: sequelize.col('price') } };
@@ -71,38 +48,23 @@ const clearStaleSale = async (caseId, transaction) => {
 };
 
 const seedCases = async ({ casePrices = readCasePrices(), log = console } = {}) => {
-    requireCasePrices(Object.keys(allCases), casePrices);
+    requireCasePrices(caseIds, casePrices);
     log.log('🚀 Starting cases and categories seed...');
 
     await assertMigrationsApplied(sequelize);
     log.log('✓ Migrations verified for cases');
 
-    for (const cat of categories) {
-        await Category.upsert({
-            category_id: cat.id,
-            category_title: cat.title,
-            category_priority: cat.priority,
-            category_published: cat.published
-        });
+    for (const category of CATEGORIES) {
+        await Category.upsert(categoryValues(category));
     }
     log.log('✓ Categories added');
 
     let count = 0;
-    for (const [caseId, caseConfig] of Object.entries(allCases)) {
+    for (const entry of entries) {
+        const caseId = entry.id;
         try {
-            const imgFilename = imageMap[caseId] || `${caseId}.png`;
             const stale = await sequelize.transaction(async (transaction) => {
-                await Case.upsert({
-                    case_id: caseId,
-                    case_title: caseConfig.name || caseId.toUpperCase(),
-                    case_price: casePrices[caseId],
-                    case_categoryId: caseConfig.type === 'souvenir' ? 3 : 1,
-                    case_published: 1,
-                    case_img: `/img/case/${imgFilename}`,
-                    case_openedCount: 0,
-                    case_type: caseConfig.type || 'weapon',
-                    case_openLimit: 1000
-                }, { transaction });
+                await Case.upsert(caseValues(entry, casePrices), { transaction });
                 return clearStaleSale(caseId, transaction);
             });
             if (stale) {
@@ -118,12 +80,38 @@ const seedCases = async ({ casePrices = readCasePrices(), log = console } = {}) 
     log.log('✅ Cases seeded successfully!');
 };
 
+const addNewCases = async ({ casePrices = readCasePrices(), log = console } = {}) => {
+    await assertMigrationsApplied(sequelize);
+    requireCasePrices(caseIds, casePrices);
+
+    let categories = 0;
+    for (const category of CATEGORIES) {
+        const [, created] = await Category.findOrCreate({
+            where: { category_id: category.id },
+            defaults: categoryValues(category),
+        });
+        if (created) categories += 1;
+    }
+
+    let cases = 0;
+    for (const entry of entries) {
+        const [, created] = await Case.findOrCreate({
+            where: { case_id: entry.id },
+            defaults: caseValues(entry, casePrices),
+        });
+        if (created) cases += 1;
+    }
+
+    log.log(`✓ Added ${categories} categories and ${cases} cases; existing rows were left as they were`);
+    return { categories, cases };
+};
+
 const repriceCases = async ({ casePrices = readCasePrices(), log = console } = {}) => {
-    requireCasePrices(Object.keys(allCases), casePrices);
+    requireCasePrices(caseIds, casePrices);
     await assertMigrationsApplied(sequelize);
 
     let repriced = 0;
-    for (const caseId of Object.keys(allCases)) {
+    for (const caseId of caseIds) {
         const stale = await sequelize.transaction(async (transaction) => {
             const [changed] = await Case.update(
                 { case_price: casePrices[caseId] },
@@ -148,15 +136,24 @@ const repriceCases = async ({ casePrices = readCasePrices(), log = console } = {
 };
 
 const PRICES_ONLY = '--prices-only';
+const ADD_NEW = '--add-new';
 
 const main = async () => {
     const args = process.argv.slice(2);
-    const unknown = args.filter((arg) => arg !== PRICES_ONLY);
     try {
-        if (unknown.length > 0) {
-            throw new Error(`unknown argument ${unknown.join(' ')}; run it without arguments to seed, or with ${PRICES_ONLY} to re-price the cases already in the database`);
+        if (args.length > 1 || args.some((arg) => ![PRICES_ONLY, ADD_NEW].includes(arg))) {
+            throw new Error(
+                `unknown argument ${args.join(' ')}; run it without arguments to seed, with ${PRICES_ONLY} `
+                + `to re-price the cases already in the database, or with ${ADD_NEW} to add missing categories and cases`,
+            );
         }
-        await (args.includes(PRICES_ONLY) ? repriceCases() : seedCases());
+        if (args[0] === PRICES_ONLY) {
+            await repriceCases();
+        } else if (args[0] === ADD_NEW) {
+            await addNewCases();
+        } else {
+            await seedCases();
+        }
     } catch (error) {
         console.error('❌ Error seeding cases:', error.message);
         process.exitCode = 1;
@@ -169,4 +166,4 @@ if (require.main === module) {
     main();
 }
 
-module.exports = { seedCases, repriceCases };
+module.exports = { seedCases, repriceCases, addNewCases };
