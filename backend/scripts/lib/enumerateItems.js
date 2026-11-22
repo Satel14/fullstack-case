@@ -16,6 +16,7 @@ const wears = Object.values(ITEMS.RARITY);
 
 const IMAGES_PATH = path.join(__dirname, '../../../frontend/public/img/items');
 const MANIFEST_PATH = path.join(__dirname, '../../src/constant/itemIds.json');
+const IMAGE_EXTENSION = '.webp';
 const LISTED_KEYS = 10;
 
 const byName = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -25,15 +26,23 @@ const subdirectories = (dir) => fs.readdirSync(dir, { withFileTypes: true })
     .map((d) => d.name)
     .sort(byName);
 
+const listKeys = (keys) => {
+    const shown = keys.slice(0, LISTED_KEYS).join(', ');
+    return keys.length > LISTED_KEYS ? `${shown} and ${keys.length - LISTED_KEYS} more` : shown;
+};
+
 const listImages = (basePath = IMAGES_PATH) => {
     const keys = [];
+    const pngs = [];
     for (const category of subdirectories(basePath)) {
         for (const weapon of subdirectories(path.join(basePath, category))) {
-            const skins = fs.readdirSync(path.join(basePath, category, weapon))
-                .filter((f) => f.endsWith('.png'))
-                .sort(byName);
-            skins.forEach((skin) => keys.push(`${category}/${weapon}/${skin}`));
+            const files = fs.readdirSync(path.join(basePath, category, weapon)).sort(byName);
+            files.filter((f) => f.endsWith('.png')).forEach((f) => pngs.push(`${category}/${weapon}/${f}`));
+            files.filter((f) => f.endsWith(IMAGE_EXTENSION)).forEach((f) => keys.push(`${category}/${weapon}/${f}`));
         }
+    }
+    if (pngs.length > 0) {
+        throw new Error(`${pngs.length} item images are still PNG: ${listKeys(pngs)}. Run node scripts/convertItemImages.js first.`);
     }
     return keys;
 };
@@ -72,11 +81,6 @@ const slotsInFolder = (manifest) => {
     return slots;
 };
 
-const listKeys = (keys) => {
-    const shown = keys.slice(0, LISTED_KEYS).join(', ');
-    return keys.length > LISTED_KEYS ? `${shown} and ${keys.length - LISTED_KEYS} more` : shown;
-};
-
 const enumerateItems = (basePath = IMAGES_PATH, manifest = readManifest()) => {
     const keys = listImages(basePath);
     const unregistered = keys.filter((key) => !Object.hasOwn(manifest, key));
@@ -96,7 +100,7 @@ const enumerateItems = (basePath = IMAGES_PATH, manifest = readManifest()) => {
             const slot = slots.get(key);
             return {
                 itemId,
-                name: `${weapon} | ${skin.replace('.png', '')}`,
+                name: `${weapon} | ${skin.slice(0, -IMAGE_EXTENSION.length)}`,
                 rare: wears[slot % wears.length],
                 type: categoryMapping[category] || 'unknown',
                 colors: slot % 3 === 0 ? 'painted' : 'default',

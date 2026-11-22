@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const sharp = require('sharp');
-const { convertItemTree, pngFilesUnder } = require('./convertImages');
+const { convertItemTree, convertToWebp, pngFilesUnder } = require('./convertImages');
 
 const quiet = { log() {} };
 
@@ -99,4 +99,53 @@ test('a PNG whose WebP key already has an id stops the run before any file chang
         assert.deepStrictEqual(fs.readFileSync(path.join(images, file)), originals[index]);
         assert.ok(!fs.existsSync(path.join(images, file.replace(/\.png$/, '.webp'))));
     });
+});
+
+test('an interrupted run recovers converted ids in place and keeps missing image ids reserved', async (t) => {
+    const { images, manifestPath } = await tree(t, ['Rifles/AK-47/Redline.png', 'Rifles/AK-47/Vulcan.png'], {
+        'Rifles/AK-47/Vulcan.png': 3,
+        'Rifles/AK-47/Gone.png': 10,
+        'Rifles/AK-47/Redline.png': 7,
+    });
+    const convertedPath = await convertToWebp(path.join(images, 'Rifles/AK-47/Redline.png'));
+    const convertedBefore = fs.readFileSync(convertedPath);
+
+    assert.deepStrictEqual(await convertItemTree({ imagesPath: images, manifestPath, log: quiet }), { converted: 1, renamed: 2 });
+    assert.deepStrictEqual(Object.entries(JSON.parse(fs.readFileSync(manifestPath, 'utf8'))), [
+        ['Rifles/AK-47/Vulcan.webp', 3],
+        ['Rifles/AK-47/Gone.png', 10],
+        ['Rifles/AK-47/Redline.webp', 7],
+    ]);
+    assert.deepStrictEqual(fs.readFileSync(convertedPath), convertedBefore);
+    assert.deepStrictEqual(pngFilesUnder(images), []);
+    assert.ok(!fs.existsSync(path.join(images, 'Rifles/AK-47/Gone.png')));
+    assert.ok(!fs.existsSync(path.join(images, 'Rifles/AK-47/Gone.webp')));
+});
+
+test('a run interrupted after every conversion repairs the manifest without any PNGs left', async (t) => {
+    const { images, manifestPath } = await tree(t, ['Pistols/P250/Asiimov.png'], { 'Pistols/P250/Asiimov.png': 1 });
+    await convertToWebp(path.join(images, 'Pistols/P250/Asiimov.png'));
+
+    assert.deepStrictEqual(await convertItemTree({ imagesPath: images, manifestPath, log: quiet }), { converted: 0, renamed: 1 });
+    assert.deepStrictEqual(JSON.parse(fs.readFileSync(manifestPath, 'utf8')), { 'Pistols/P250/Asiimov.webp': 1 });
+});
+
+test('a recovered WebP key with an existing id stops the run before other images change', async (t) => {
+    const { images, manifestPath } = await tree(t, ['Rifles/AK-47/Redline.png', 'Rifles/M4A4/Howl.png'], {
+        'Rifles/AK-47/Redline.png': 7,
+        'Rifles/M4A4/Howl.png': 5,
+        'Rifles/M4A4/Howl.webp': 6,
+    });
+    const recoveredPath = await convertToWebp(path.join(images, 'Rifles/M4A4/Howl.png'));
+    const before = fs.readFileSync(manifestPath, 'utf8');
+    const pendingPath = path.join(images, 'Rifles/AK-47/Redline.png');
+    const pendingBefore = fs.readFileSync(pendingPath);
+    const recoveredBefore = fs.readFileSync(recoveredPath);
+
+    await assert.rejects(convertItemTree({ imagesPath: images, manifestPath, log: quiet }), /Rifles\/M4A4\/Howl\.webp/);
+
+    assert.strictEqual(fs.readFileSync(manifestPath, 'utf8'), before);
+    assert.deepStrictEqual(fs.readFileSync(pendingPath), pendingBefore);
+    assert.deepStrictEqual(fs.readFileSync(recoveredPath), recoveredBefore);
+    assert.ok(!fs.existsSync(path.join(images, 'Rifles/AK-47/Redline.webp')));
 });

@@ -29,12 +29,16 @@ const keyOf = (imagesPath, file) => path.relative(imagesPath, file).split(path.s
 const convertItemTree = async ({ imagesPath, manifestPath, log = console }) => {
     const pngs = pngFilesUnder(imagesPath);
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    const taken = pngs.map((png) => webpPathOf(keyOf(imagesPath, png))).filter((key) => Object.hasOwn(manifest, key));
+    const recovered = Object.keys(manifest).filter((key) => key.endsWith('.png')
+        && !fs.existsSync(path.join(imagesPath, key))
+        && fs.existsSync(path.join(imagesPath, webpPathOf(key))));
+    const taken = [...pngs.map((png) => keyOf(imagesPath, png)), ...recovered]
+        .map(webpPathOf).filter((key) => Object.hasOwn(manifest, key));
     if (taken.length > 0) {
         throw new Error(`${taken.join(', ')} already have an id; a converted PNG would give the same picture a second one`);
     }
 
-    const renames = new Map();
+    const renames = new Map(recovered.map((key) => [key, webpPathOf(key)]));
     for (const png of pngs) {
         await convertToWebp(png);
         const key = keyOf(imagesPath, png);
