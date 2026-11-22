@@ -220,7 +220,7 @@ test('a history refusal shows the server reason without claiming the history is 
 });
 
 test.each([
-    [{ error: 422, code: 'PROVABLY_FAIR.UPGRADE_NOT_FOUND', message: 'Unknown upgrade' }, 'Unknown upgrade'],
+    [{ error: 422, code: 'PROVABLY_FAIR.UPGRADE_NOT_FOUND', message: 'Unknown upgrade' }, 'server.PROVABLY_FAIR.UPGRADE_NOT_FOUND'],
     [{ error: 500, message: 'internal detail' }, 'common.serverError'],
     [new TypeError('Failed to fetch'), 'common.serverError'],
 ])('calculator failures use server text only for refusals (%p)', async (failure, expected) => {

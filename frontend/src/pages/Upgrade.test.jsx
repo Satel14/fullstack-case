@@ -226,7 +226,7 @@ test('a 409 keeps the pair and adopts the current threshold for the next press',
     renderPage();
     await selectPair();
     fireEvent.click(submit());
-    expect(await screen.findByRole('alert')).toHaveTextContent('Chance changed');
+    expect(await screen.findByRole('alert')).toHaveTextContent(i18n.t('server.UPGRADE.CHANCE_CHANGED'));
     expect(stake(1)).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('img', { name: i18n.t('upgrade.ringLabel', { chance: '40%' }) })).toBeInTheDocument();
     expect(submit()).toBeEnabled();
