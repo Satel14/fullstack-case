@@ -10,10 +10,10 @@ const nginx = read('nginx/default.conf');
 const frontendDockerfile = read('frontend/Dockerfile');
 const compose = read('docker-compose.yml');
 
-const location = (prefix) => {
-    const start = nginx.indexOf(`location ${prefix} {`);
+const location = (prefix, config = nginx) => {
+    const start = config.indexOf(`location ${prefix} {`);
     assert.ok(start !== -1, `nginx has no location ${prefix}`);
-    return nginx.slice(start, nginx.indexOf('}', start));
+    return config.slice(start, config.indexOf('}', start));
 };
 
 const composeService = (name) => {
@@ -85,6 +85,16 @@ test('nginx sends the API to the backend and everything else to the frontend', (
     assert.match(location('/api'), /proxy_pass\s+http:\/\/backend;/);
     assert.match(location('/'), /proxy_pass\s+http:\/\/frontend;/);
     assert.match(composeService('nginx'), /ports:\s*\n\s*- "3009:3009"/);
+});
+
+test('the frontend caches pictures for seven days and returns 404 for missing files', () => {
+    const config = read('frontend/nginx/nginx.conf');
+    const block = location('/img/', config);
+
+    assert.match(block, /root\s+\/usr\/share\/nginx\/html;/);
+    assert.match(block, /expires\s+7d;/);
+    assert.match(block, /try_files\s+\$uri\s+=404;/);
+    assert.ok(config.indexOf('location /img/ {') < config.indexOf('location / {'));
 });
 
 test('the site address used in password-reset links can be set to the one players open', () => {
