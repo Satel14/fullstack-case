@@ -1,0 +1,1802 @@
+[
+  {
+    "serverSeed": "e",
+    "clientSeed": "client-0",
+    "nonce": 0,
+    "roll": 582421
+  },
+  {
+    "serverSeed": "8211ca74366ed7fb",
+    "clientSeed": "client:seed:1",
+    "nonce": 7919,
+    "roll": 930818
+  },
+  {
+    "serverSeed": "e1a6db7e555a820e47602304aa93646f",
+    "clientSeed": "client seed 2",
+    "nonce": 15838,
+    "roll": 737593
+  },
+  {
+    "serverSeed": "9e727d12fb35159da5c72de8fdc865ad24d02e784e49e7c0d43772ef25f215b1",
+    "clientSeed": "апгрейд-3",
+    "nonce": 23757,
+    "roll": 65071
+  },
+  {
+    "serverSeed": "65db3bf01fb7f2f026864ea3570ee79fe89b02bec4cab6d0c2a1621ed4c6ea9f138bd92eb8804886bdf481cc621e4445",
+    "clientSeed": "🔑-client-4",
+    "nonce": 31676,
+    "roll": 722379
+  },
+  {
+    "serverSeed": "1218734dce793d6e8ec8d9965f0826d76e17c744a6b33305458052ebf52e28cc41431fc18613d109593072dff7028eca2e748d6c951b319620944ae4e417d066",
+    "clientSeed": "ef73c2e66a0662f4a1dea4e7b7135795c7c94e4873810ce9e68428b62a6480eb",
+    "nonce": 39595,
+    "roll": 320468
+  },
+  {
+    "serverSeed": "d",
+    "clientSeed": "client-6",
+    "nonce": 47514,
+    "roll": 162291
+  },
+  {
+    "serverSeed": "052f9850c7824fd7",
+    "clientSeed": "client:seed:7",
+    "nonce": 55433,
+    "roll": 315781
+  },
+  {
+    "serverSeed": "48373fa3418d39bb849c3b7e6ece2ac5",
+    "clientSeed": "client seed 8",
+    "nonce": 63352,
+    "roll": 955028
+  },
+  {
+    "serverSeed": "c91095a09ac9bfe507aea28139698fe4cf8156e81c27864c9528839f12b10771",
+    "clientSeed": "апгрейд-9",
+    "nonce": 71271,
+    "roll": 489909
+  },
+  {
+    "serverSeed": "fb9c98bda89750da0461574f54470b4c08d55174d3f280076881410e30bb08753b657e1182e2820bb087916cf857dc69",
+    "clientSeed": "🔑-client-10",
+    "nonce": 79190,
+    "roll": 246970
+  },
+  {
+    "serverSeed": "b74d41d6a4aa6706c43e3a12a4ea50c881907b517ef64711c067e9bbfafc66ef2b12be412b29d3aefc34f129d36dc7985f1b541155987f2155acb96f7714d7fd",
+    "clientSeed": "4c18154651e191c3098e43fb9cd36b2c085307a96eaa0b3b494edc53898a30a8",
+    "nonce": 87109,
+    "roll": 2902
+  },
+  {
+    "serverSeed": "f",
+    "clientSeed": "client-12",
+    "nonce": 95028,
+    "roll": 880044
+  },
+  {
+    "serverSeed": "111f7e3a682ac5f9",
+    "clientSeed": "client:seed:13",
+    "nonce": 102947,
+    "roll": 144289
+  },
+  {
+    "serverSeed": "784d7150b20fc57294e4db44257a57bd",
+    "clientSeed": "client seed 14",
+    "nonce": 110866,
+    "roll": 777154
+  },
+  {
+    "serverSeed": "f1dd20b8602549d19284fed36b0b995f21452479f14884cbed7eba4800f7c8ba",
+    "clientSeed": "апгрейд-15",
+    "nonce": 118785,
+    "roll": 252288
+  },
+  {
+    "serverSeed": "30b243468e26788003bf0093651355f6bb21c67778f5e62879395bf0154e5fa73c37d1fcf34e4e55c9e88f03b678dde8",
+    "clientSeed": "🔑-client-16",
+    "nonce": 126704,
+    "roll": 585059
+  },
+  {
+    "serverSeed": "c948147de2109c695449d5064eb40c6a3b09c1aa3c55bd2a4fc071fe158e55bcb81d757159f0c479c75d4c084e2c9cfc7c603860c9cd9f2fc54e3a20a95ffb16",
+    "clientSeed": "258748971117e2604486fc0b017084e6afbcb1c078238fc70e3e26340cf2c191",
+    "nonce": 134623,
+    "roll": 934913
+  },
+  {
+    "serverSeed": "2",
+    "clientSeed": "client-18",
+    "nonce": 142542,
+    "roll": 715314
+  },
+  {
+    "serverSeed": "091cbf0e0c18acf1",
+    "clientSeed": "client:seed:19",
+    "nonce": 150461,
+    "roll": 409473
+  },
+  {
+    "serverSeed": "616fa7b2d08ec76662fa17e5ed697194",
+    "clientSeed": "client seed 20",
+    "nonce": 158380,
+    "roll": 923738
+  },
+  {
+    "serverSeed": "66c5a5cda2a7ad56b0a90db4dafd9e25df1ebcec1f25967ff796d5775402ac25",
+    "clientSeed": "апгрейд-21",
+    "nonce": 166299,
+    "roll": 817427
+  },
+  {
+    "serverSeed": "49bd92367b40d4aa4b52fea4157c0e828069e956771ff445c87aef4a686d32d60c7e635a61745c74a1954a323eb566cc",
+    "clientSeed": "🔑-client-22",
+    "nonce": 174218,
+    "roll": 83414
+  },
+  {
+    "serverSeed": "9707a16fa7c9b456abd76aa4c4115d36695f918850263d63fdb3483e8f6895d63673d5aa970a3c995658a94b603475bdf8fdab2ca133f4de94c5b1ab943641a9",
+    "clientSeed": "55e00acad94fc49a8a0bad0cdcae844a0422d0464e4d0b92bdbddf0746b259e9",
+    "nonce": 182137,
+    "roll": 289694
+  },
+  {
+    "serverSeed": "7",
+    "clientSeed": "client-24",
+    "nonce": 190056,
+    "roll": 632446
+  },
+  {
+    "serverSeed": "c051fcabbc7ad00a",
+    "clientSeed": "client:seed:25",
+    "nonce": 197975,
+    "roll": 399676
+  },
+  {
+    "serverSeed": "47b656f39d6684304a04d4695d9c6e17",
+    "clientSeed": "client seed 26",
+    "nonce": 205894,
+    "roll": 524623
+  },
+  {
+    "serverSeed": "85c24c97dc0962b3ac478ae2f39c5a1d93e9a8528fa9e4f11f76fc32f5ed68c6",
+    "clientSeed": "апгрейд-27",
+    "nonce": 213813,
+    "roll": 306847
+  },
+  {
+    "serverSeed": "5d69a3ab4aaf524f7cd4db68594e8b9838640067e73474a4aaccd3e26acce80168888c43cf6ea6613900c12bcd041302",
+    "clientSeed": "🔑-client-28",
+    "nonce": 221732,
+    "roll": 843075
+  },
+  {
+    "serverSeed": "4ad761bbc519dfda68261026fcbd3d4c55ad756a6b60dba64674a312b007a289eb65bc9acf5fee92f7cac3e406dcaa8c8f8e6ed8cff5f8673cc802b9dc868452",
+    "clientSeed": "968f024ef194c40ab92497a9746471b0efd2c287cd6039465b0cfb32b4d4de59",
+    "nonce": 229651,
+    "roll": 318778
+  },
+  {
+    "serverSeed": "1",
+    "clientSeed": "client-30",
+    "nonce": 237570,
+    "roll": 540320
+  },
+  {
+    "serverSeed": "30b26a6ca0e1c9ec",
+    "clientSeed": "client:seed:31",
+    "nonce": 245489,
+    "roll": 24794
+  },
+  {
+    "serverSeed": "339444e03e8773dbc49fa1beb1d92025",
+    "clientSeed": "client seed 32",
+    "nonce": 253408,
+    "roll": 142880
+  },
+  {
+    "serverSeed": "0cb21b926a46316b0c1470372415806bf62604e32ead6de79dc7e8f026254b0b",
+    "clientSeed": "апгрейд-33",
+    "nonce": 261327,
+    "roll": 853812
+  },
+  {
+    "serverSeed": "da4e0f3bdf777cd2b9c028dc56567e379242dbbb5b3f80b19fce6612d7eeecb4d11f2cacd3919fbead59685d0a67b23e",
+    "clientSeed": "🔑-client-34",
+    "nonce": 269246,
+    "roll": 270110
+  },
+  {
+    "serverSeed": "109af51532053436a11be1aaa72b32ab7ac03aa290801fe99a0b5810672b1ea520c0a72a8e207564430053d780532b59f05ec6616280df9aacf0d9e5ec2ab780",
+    "clientSeed": "c4aaed9b56a5f5c48cc120f85577092b476973d4667df37e014dce3bc5367f67",
+    "nonce": 277165,
+    "roll": 722467
+  },
+  {
+    "serverSeed": "5",
+    "clientSeed": "client-36",
+    "nonce": 285084,
+    "roll": 567403
+  },
+  {
+    "serverSeed": "ba40d1aaf931a6ad",
+    "clientSeed": "client:seed:37",
+    "nonce": 293003,
+    "roll": 673924
+  },
+  {
+    "serverSeed": "93c6674a14c17440020c3e7fa1c7115e",
+    "clientSeed": "client seed 38",
+    "nonce": 300922,
+    "roll": 749050
+  },
+  {
+    "serverSeed": "28b715c7919a6183b1c67af00ed749ed12372182b6246cc7920f2fff2d5840fd",
+    "clientSeed": "апгрейд-39",
+    "nonce": 308841,
+    "roll": 824523
+  },
+  {
+    "serverSeed": "0c11a132e5a2d7d11a94ccfdf057b8646157993837ef3615b2af5524ee85f5ddefa1ff1610e78d06276dd195ec4623a2",
+    "clientSeed": "🔑-client-40",
+    "nonce": 316760,
+    "roll": 216521
+  },
+  {
+    "serverSeed": "efd942cf82dec767639644f6351e829fa27b42aa823d63896900843192b93687845b61a46c28bd540a52c29611c65a253011fa2586f274b582c7880920d6dda1",
+    "clientSeed": "02260e73a1bf91ae1cd5889fcf4d3e31060524852dc5b9264b18d7f987cb1ee5",
+    "nonce": 324679,
+    "roll": 86757
+  },
+  {
+    "serverSeed": "6",
+    "clientSeed": "client-42",
+    "nonce": 332598,
+    "roll": 152356
+  },
+  {
+    "serverSeed": "9077da74eb74cb80",
+    "clientSeed": "client:seed:43",
+    "nonce": 340517,
+    "roll": 916581
+  },
+  {
+    "serverSeed": "e4db047e079488b96ac93d861c769470",
+    "clientSeed": "client seed 44",
+    "nonce": 348436,
+    "roll": 81145
+  },
+  {
+    "serverSeed": "fabd10c1cfe149d9fff328f3b3975b013fa9749c3d147eaeafe24836c2661c42",
+    "clientSeed": "апгрейд-45",
+    "nonce": 356355,
+    "roll": 111211
+  },
+  {
+    "serverSeed": "0b84b52e2fa23791775ceab3b42f45b2f8af64bc3f14d370365c76c3dafa9205cb57aad7a061c225261bf98601e51acb",
+    "clientSeed": "🔑-client-46",
+    "nonce": 364274,
+    "roll": 288352
+  },
+  {
+    "serverSeed": "663c080c309619afeadf4437ae01af6c5a4f28acdf3e2c2c1869dcc6c63563068fcb7e67d5126b6097d0698865b0c25cce244ba99ab4442cb9bd49a82e5dff95",
+    "clientSeed": "9b6eed8ca7e2958953643853c880d4f52df97e1389b638ab9ba29062094a11f0",
+    "nonce": 372193,
+    "roll": 186034
+  },
+  {
+    "serverSeed": "9",
+    "clientSeed": "client-48",
+    "nonce": 380112,
+    "roll": 839346
+  },
+  {
+    "serverSeed": "6a96da1f47c21f95",
+    "clientSeed": "client:seed:49",
+    "nonce": 2147483647,
+    "roll": 940732
+  },
+  {
+    "serverSeed": "f60462b84d19dc24ab157e3ed2ae2d9a",
+    "clientSeed": "client seed 50",
+    "nonce": 0,
+    "roll": 173648
+  },
+  {
+    "serverSeed": "8638cd65eedb633745e95fd24db4c141df57caa654f46f77d8159ccb96675437",
+    "clientSeed": "апгрейд-51",
+    "nonce": 403869,
+    "roll": 526920
+  },
+  {
+    "serverSeed": "d2b845e45bf1381d98c2e7df2856e5e262e1757c0ea53014dfc61e18d2359a9ad263ae1aef5eae410d2741c38505e36f",
+    "clientSeed": "🔑-client-52",
+    "nonce": 411788,
+    "roll": 51252
+  },
+  {
+    "serverSeed": "3fd030f6302e0ca221f1c6e6321fb39d8e7f7e5070d225d529c86411f747f93412ef91112c4f6eae06cf18472e48e609c6933c2f982cccdc086e4dd933337f66",
+    "clientSeed": "1962a72e22896dd8ab7089f6cac5d06d90fb1f39c7a13b70b1c5ef842bf72657",
+    "nonce": 419707,
+    "roll": 50054
+  },
+  {
+    "serverSeed": "1",
+    "clientSeed": "client-54",
+    "nonce": 427626,
+    "roll": 155705
+  },
+  {
+    "serverSeed": "f21516f3a973be83",
+    "clientSeed": "client:seed:55",
+    "nonce": 435545,
+    "roll": 243549
+  },
+  {
+    "serverSeed": "c4ddc9d5dc612384b0689389d3eae1cf",
+    "clientSeed": "client seed 56",
+    "nonce": 443464,
+    "roll": 45471
+  },
+  {
+    "serverSeed": "a651d787163eb451706133ba2da8cce5347283025634f9aca8d5e857287cc7ad",
+    "clientSeed": "апгрейд-57",
+    "nonce": 451383,
+    "roll": 617401
+  },
+  {
+    "serverSeed": "62c9cea58b12b571ebe3f935917f9abe996d43b5b8fdb1756ba33afa24cc185166d5def7263ee460220a8f416d933f92",
+    "clientSeed": "🔑-client-58",
+    "nonce": 459302,
+    "roll": 932464
+  },
+  {
+    "serverSeed": "7b12d6cc221ad5c3e109e528bbf4a29fd46211df9b7eb6aa3b4285159500ed12a29e472c8d0492c75276963d524d77c0f2be62a1006a88cf73ec638d766931e4",
+    "clientSeed": "9e7c19250f980709d0539d5d1f5e2014246d468b937aee441b37350a8cbbef4e",
+    "nonce": 467221,
+    "roll": 480902
+  },
+  {
+    "serverSeed": "3",
+    "clientSeed": "client-60",
+    "nonce": 475140,
+    "roll": 46225
+  },
+  {
+    "serverSeed": "13a565d97e2ea8e0",
+    "clientSeed": "client:seed:61",
+    "nonce": 483059,
+    "roll": 83247
+  },
+  {
+    "serverSeed": "177a36cdfce449b96f384bb7eef56be5",
+    "clientSeed": "client seed 62",
+    "nonce": 490978,
+    "roll": 299650
+  },
+  {
+    "serverSeed": "d1cd5a58e0d95d4fd55d780301b36b80c1b162a1d37d9f50355c7b7c4d0e21aa",
+    "clientSeed": "апгрейд-63",
+    "nonce": 498897,
+    "roll": 554346
+  },
+  {
+    "serverSeed": "f957a944b297e44fe3f266d7969115bdda4eb4b180ae14a27154ff90a7d5319ddcf127692b020e2ea4327d2e1075e051",
+    "clientSeed": "🔑-client-64",
+    "nonce": 506816,
+    "roll": 685056
+  },
+  {
+    "serverSeed": "c0e368ccc83bbc01f10fc55cb8cbef3369e541f3e9db6354c9c233433fa743bf1f5aaee69f764c3d2485637619a6b5b46d7e0759d5142f1f464381059f4cf9cc",
+    "clientSeed": "fa8d648fde387a6a6e2f0992b9ec1059cc54165d6cc56412d177ce62dbfaee5a",
+    "nonce": 514735,
+    "roll": 636657
+  },
+  {
+    "serverSeed": "a",
+    "clientSeed": "client-66",
+    "nonce": 522654,
+    "roll": 934736
+  },
+  {
+    "serverSeed": "033707f8bfe6243b",
+    "clientSeed": "client:seed:67",
+    "nonce": 530573,
+    "roll": 53102
+  },
+  {
+    "serverSeed": "f31214b97c58a0180ced5f5d1ad7041f",
+    "clientSeed": "client seed 68",
+    "nonce": 538492,
+    "roll": 516631
+  },
+  {
+    "serverSeed": "bd91b9d9723b726dcb1de62ca2f335bc51fa1daabc09562e5ac9fd644ff643d9",
+    "clientSeed": "апгрейд-69",
+    "nonce": 546411,
+    "roll": 815260
+  },
+  {
+    "serverSeed": "e64257dd27b3736874441381e1b69e1da48a9fb996f2bdaedafd701ebb1b167a15ebb3255546980fc074a51941c2d5f3",
+    "clientSeed": "🔑-client-70",
+    "nonce": 554330,
+    "roll": 537412
+  },
+  {
+    "serverSeed": "72a088ec6dd7d6f04b81066db505c23d233674d5770c9d686a7f40141f7081dbf3d13fa5d0c6cc1321af74b0ce11222d056e7622916927c0a20aa4aeefbb4029",
+    "clientSeed": "45f86763561a4195163cd24c383c4f355fd9ac6d4e5d41a82eac385620d6738c",
+    "nonce": 562249,
+    "roll": 149503
+  },
+  {
+    "serverSeed": "2",
+    "clientSeed": "client-72",
+    "nonce": 570168,
+    "roll": 491632
+  },
+  {
+    "serverSeed": "ee956610a29f6f79",
+    "clientSeed": "client:seed:73",
+    "nonce": 578087,
+    "roll": 292081
+  },
+  {
+    "serverSeed": "3f25c6cc0960e1ed23316686667a6b84",
+    "clientSeed": "client seed 74",
+    "nonce": 586006,
+    "roll": 807714
+  },
+  {
+    "serverSeed": "499fb2b690d1be6901a4fb68c07394fdeea51544ae3921b8bddb4985dea1cb08",
+    "clientSeed": "апгрейд-75",
+    "nonce": 593925,
+    "roll": 514054
+  },
+  {
+    "serverSeed": "f944beab6c8fdcf9d9f8bf4f1b8bff4b660f6161e864400ff4eed61c52c006992e4e3dcf165a292ad218f9c6e14af0a3",
+    "clientSeed": "🔑-client-76",
+    "nonce": 601844,
+    "roll": 809957
+  },
+  {
+    "serverSeed": "f8ac8ac4e0d4919b5eec2bd39ac9f107620414af5de11d97a5e38c5f78aeacc1e38f849336db1b0088e2b42fb409e24c8fa5cdb9b977e50264cae7af765b1008",
+    "clientSeed": "74d30fb2890ff568d76b5f1f2ee00001cb8637ef27cd8cbde1cc2d0bbba31f1f",
+    "nonce": 609763,
+    "roll": 916746
+  },
+  {
+    "serverSeed": "2",
+    "clientSeed": "client-78",
+    "nonce": 617682,
+    "roll": 46253
+  },
+  {
+    "serverSeed": "202c10938381a172",
+    "clientSeed": "client:seed:79",
+    "nonce": 625601,
+    "roll": 477737
+  },
+  {
+    "serverSeed": "4910f8a2434536b1000aaf6bd5e50ea7",
+    "clientSeed": "client seed 80",
+    "nonce": 633520,
+    "roll": 900156
+  },
+  {
+    "serverSeed": "938d0bd13af3882d5a3ce5308410b4200c370d59e7c5bf196c426e98f59170f6",
+    "clientSeed": "апгрейд-81",
+    "nonce": 641439,
+    "roll": 287750
+  },
+  {
+    "serverSeed": "d8dc40c4bf8c2b23b2f2ed051ede359b8d2583eab353a796b1bc151572fc6290c67915415868eb0456505a3a83771c08",
+    "clientSeed": "🔑-client-82",
+    "nonce": 649358,
+    "roll": 793824
+  },
+  {
+    "serverSeed": "ab6165f2591ffff5059a05a2ad0f282285f524d9e57641c96da2933f593ec1b4f41f4b854ba319acfbaab91f77de2b0feb133bb6e0b45d7f6b742defb0cf669c",
+    "clientSeed": "8849c3b24c1c7860afe8c4430f8be07d382d5c52be401dd0b40eeca6a33e0038",
+    "nonce": 657277,
+    "roll": 702906
+  },
+  {
+    "serverSeed": "5",
+    "clientSeed": "client-84",
+    "nonce": 665196,
+    "roll": 764915
+  },
+  {
+    "serverSeed": "c18690552cf2dd16",
+    "clientSeed": "client:seed:85",
+    "nonce": 673115,
+    "roll": 572493
+  },
+  {
+    "serverSeed": "083340cbbe717285e511e70028160afc",
+    "clientSeed": "client seed 86",
+    "nonce": 681034,
+    "roll": 659256
+  },
+  {
+    "serverSeed": "d3e8d375010d557a3ad17d3f5462a7ef05b94b982f3210b4ecd850bbad9b7364",
+    "clientSeed": "апгрейд-87",
+    "nonce": 688953,
+    "roll": 494426
+  },
+  {
+    "serverSeed": "7f99c417812c90a78805f31c2e1e33d1deb344f96547a254b3325786422a8a97090ae9acd4b17524e172873faf64349d",
+    "clientSeed": "🔑-client-88",
+    "nonce": 696872,
+    "roll": 922006
+  },
+  {
+    "serverSeed": "49053e1452a7c3a0b3be8576a902e0e5e4a7e50196064765f39d387f5a36da97f0cefaef4aa1ba747d414e5ee89cffb16bd24c37b52574b7ee12b420b12fb50d",
+    "clientSeed": "b07927c32f3747229e5f833ff106d66fc58bd4f15957bbfa1d72975f61ae5f42",
+    "nonce": 704791,
+    "roll": 951436
+  },
+  {
+    "serverSeed": "3",
+    "clientSeed": "client-90",
+    "nonce": 712710,
+    "roll": 720124
+  },
+  {
+    "serverSeed": "2bc9ed38384273d5",
+    "clientSeed": "client:seed:91",
+    "nonce": 720629,
+    "roll": 129336
+  },
+  {
+    "serverSeed": "11d9a4e9e696b1596f97343050520ba1",
+    "clientSeed": "client seed 92",
+    "nonce": 728548,
+    "roll": 122237
+  },
+  {
+    "serverSeed": "bf0bbf61802a333c9d5b78db22ba5f62b0ee800ab6a5d5bea21ebbbddea0e90b",
+    "clientSeed": "апгрейд-93",
+    "nonce": 736467,
+    "roll": 639691
+  },
+  {
+    "serverSeed": "92f111ab30c9fd63d98602e609aff0aeb55b593a5ec907020a38d047b784aff73f8a7995b88d5f7ebbde8ad3890b4f07",
+    "clientSeed": "🔑-client-94",
+    "nonce": 744386,
+    "roll": 23798
+  },
+  {
+    "serverSeed": "b387d0c3ecc781a773b43dc14661e813a24f887d56592a628823a738192f1a496a354454137b2eb9b88a41662ae25e5ed6ea0089e7db674de3cb566f362ee2b1",
+    "clientSeed": "c873d8480a984e2c50fa1e903ea46395e81a5dcfbd0ce1577f79086d53c67423",
+    "nonce": 752305,
+    "roll": 247160
+  },
+  {
+    "serverSeed": "f",
+    "clientSeed": "client-96",
+    "nonce": 760224,
+    "roll": 32210
+  },
+  {
+    "serverSeed": "b2b43f6fdadd6de7",
+    "clientSeed": "client:seed:97",
+    "nonce": 768143,
+    "roll": 637593
+  },
+  {
+    "serverSeed": "0d9de97d8de39d43c0f3dd700776f7cc",
+    "clientSeed": "client seed 98",
+    "nonce": 776062,
+    "roll": 559391
+  },
+  {
+    "serverSeed": "12b45e3845a71815bccbe4906a6da02579efee115572a3a3633f45c66fe2173f",
+    "clientSeed": "апгрейд-99",
+    "nonce": 2147483647,
+    "roll": 52389
+  },
+  {
+    "serverSeed": "1654f0df90afa1d5d2c01aece80526947a48bc626028be8ceb69374b062cff86c8e324bc4c0fec89854f859b1b62315e",
+    "clientSeed": "🔑-client-100",
+    "nonce": 0,
+    "roll": 582986
+  },
+  {
+    "serverSeed": "9f07fbefd7767296b04e37c260b502192c82daccfff85ee39d4fa9e55d3a4517a972c954d31810004aa75e726896c9149f2da52f0c8c7c8906f3e5fd455f7591",
+    "clientSeed": "2b9ee8d0e766b64a4f2d06718b61c10f2c38222eca7f543d57206f91003874e3",
+    "nonce": 799819,
+    "roll": 767310
+  },
+  {
+    "serverSeed": "1",
+    "clientSeed": "client-102",
+    "nonce": 807738,
+    "roll": 87315
+  },
+  {
+    "serverSeed": "cd195f4326f82b68",
+    "clientSeed": "client:seed:103",
+    "nonce": 815657,
+    "roll": 908646
+  },
+  {
+    "serverSeed": "b8d8dae28aae9454117d81738e586bb3",
+    "clientSeed": "client seed 104",
+    "nonce": 823576,
+    "roll": 98996
+  },
+  {
+    "serverSeed": "03c003c253878c910c9b964340c0e48529a786154421db458fd9a572fc986a04",
+    "clientSeed": "апгрейд-105",
+    "nonce": 831495,
+    "roll": 945049
+  },
+  {
+    "serverSeed": "1c53597d20467df9845e18409806a267f0b15af0afe5e97000c81b8159618d06c9f2285ee69a6afb4da364f93caef999",
+    "clientSeed": "🔑-client-106",
+    "nonce": 839414,
+    "roll": 788793
+  },
+  {
+    "serverSeed": "f472746e7fc58f46eede92bef570af56abb5545fe617c4b174645734ce7f4726674299a1a173009989e9a9e411b1a5989f8b2b93777dd73007e9ea9abc7d1272",
+    "clientSeed": "d5450c73ad2cd9203c210ac5a8fa8eb52c8270405b51cfd68d6e472c66006cc2",
+    "nonce": 847333,
+    "roll": 867161
+  },
+  {
+    "serverSeed": "d",
+    "clientSeed": "client-108",
+    "nonce": 855252,
+    "roll": 463278
+  },
+  {
+    "serverSeed": "4cd4ce587fbb5737",
+    "clientSeed": "client:seed:109",
+    "nonce": 863171,
+    "roll": 406976
+  },
+  {
+    "serverSeed": "82eaa024f53a1c17d46f6a7470807d82",
+    "clientSeed": "client seed 110",
+    "nonce": 871090,
+    "roll": 530062
+  },
+  {
+    "serverSeed": "ce07c19a74611307fd9713812805f7331baedc4d46eac44fbca741fa8e5156a5",
+    "clientSeed": "апгрейд-111",
+    "nonce": 879009,
+    "roll": 831781
+  },
+  {
+    "serverSeed": "085a495a8affb7557867b347af0bc82c637aa08835b0aa737885b95886fe29fa92e5beafb514fb35cb2aaac4a0db191e",
+    "clientSeed": "🔑-client-112",
+    "nonce": 886928,
+    "roll": 764157
+  },
+  {
+    "serverSeed": "0e96184308d179b77e1ea876df856632fc01910ed43c9754dfd71a74c8ed06e8d958af598ebf4018980b27cb40c4e04a0dee7d755062d372f73d675b395459cb",
+    "clientSeed": "d42cb786dfb1d2a4dd0c75b5b26ca2b693314e375c368b8015265e30db7e92ec",
+    "nonce": 894847,
+    "roll": 503784
+  },
+  {
+    "serverSeed": "b",
+    "clientSeed": "client-114",
+    "nonce": 902766,
+    "roll": 513905
+  },
+  {
+    "serverSeed": "e5b3eda525870023",
+    "clientSeed": "client:seed:115",
+    "nonce": 910685,
+    "roll": 583208
+  },
+  {
+    "serverSeed": "baa8d209d4304707a3477c26f35f0466",
+    "clientSeed": "client seed 116",
+    "nonce": 918604,
+    "roll": 226906
+  },
+  {
+    "serverSeed": "521d3e5f19d2b3c581ee287b1e7ca6af6a1572b94465938ce116fd03d3d5faed",
+    "clientSeed": "апгрейд-117",
+    "nonce": 926523,
+    "roll": 102720
+  },
+  {
+    "serverSeed": "53e99f901e066bcf0e507b691805cdbfc1d29d284c88dfdaad5be12af878c8fa057354a3c1da0b825b731c1a57f6e064",
+    "clientSeed": "🔑-client-118",
+    "nonce": 934442,
+    "roll": 501455
+  },
+  {
+    "serverSeed": "6241d744765826aa0cc756947d9ee423af1032c6ebb4fd03f9deaf03e09095dfd56ccbc9276f1e2854a1447918ca9e4afb3e05fb2dede9ff2a2b30ef5c68084c",
+    "clientSeed": "18d392c099748b941502f2decb8acef0081b5ad4d012424d55190b510c8451a4",
+    "nonce": 942361,
+    "roll": 824182
+  },
+  {
+    "serverSeed": "5",
+    "clientSeed": "client-120",
+    "nonce": 950280,
+    "roll": 43706
+  },
+  {
+    "serverSeed": "ffc2f72777ca2e5f",
+    "clientSeed": "client:seed:121",
+    "nonce": 958199,
+    "roll": 651956
+  },
+  {
+    "serverSeed": "ecf6747c5ca0f9565bb69d8b73a545bf",
+    "clientSeed": "client seed 122",
+    "nonce": 966118,
+    "roll": 16025
+  },
+  {
+    "serverSeed": "ad4a7e1c433d22866da44e54f033f9962c435a9ba10e9be8e208feeab840fc38",
+    "clientSeed": "апгрейд-123",
+    "nonce": 974037,
+    "roll": 728142
+  },
+  {
+    "serverSeed": "c365b64feaa7f85f9a2693add90e1e249913f5fc72e02b780f01ae04d1c0f7f972edd9d7588c4cfb8101ccd7105a9640",
+    "clientSeed": "🔑-client-124",
+    "nonce": 981956,
+    "roll": 841179
+  },
+  {
+    "serverSeed": "f035d60800a012f1d4179b22d5e15ba8397d4899e66be0689a40a04365d074fc9e7837edd7ec9abef2bc8a103f523c8092b0c080865883cadf29f99ce749c285",
+    "clientSeed": "2a1db1fed79c67e37ba0217f486a32f6823beeaef3ac760c7eff4d6748da58c3",
+    "nonce": 989875,
+    "roll": 189208
+  },
+  {
+    "serverSeed": "3",
+    "clientSeed": "client-126",
+    "nonce": 997794,
+    "roll": 818566
+  },
+  {
+    "serverSeed": "da8761d73c49051d",
+    "clientSeed": "client:seed:127",
+    "nonce": 1005713,
+    "roll": 614161
+  },
+  {
+    "serverSeed": "689fe60f21fe87cd790b0cf3d5fa7f37",
+    "clientSeed": "client seed 128",
+    "nonce": 1013632,
+    "roll": 148087
+  },
+  {
+    "serverSeed": "47fa834614eee8214aef9f8f170e3a0636aa7b2d6431b7df310496c363d3c0cc",
+    "clientSeed": "апгрейд-129",
+    "nonce": 1021551,
+    "roll": 715709
+  },
+  {
+    "serverSeed": "cae7b2bec8ba6db15448ab2d7b48879f68977b1de11d5760966e4387ec0572713658271e36213ed7af5113fefb35ceaa",
+    "clientSeed": "🔑-client-130",
+    "nonce": 1029470,
+    "roll": 497850
+  },
+  {
+    "serverSeed": "30d8587491ab05a16bdb3dd841e1b7c1a6c35eb3937d6bd8c76abc2a7f23dc10eb301802b9393bab6d4d660a338530ecaeab05d56f51c3443b6e104940b65601",
+    "clientSeed": "cce26995e0f1fec01de941127633a45e8d6de63c682ca148153730aba1d38701",
+    "nonce": 1037389,
+    "roll": 844811
+  },
+  {
+    "serverSeed": "e",
+    "clientSeed": "client-132",
+    "nonce": 1045308,
+    "roll": 520222
+  },
+  {
+    "serverSeed": "5a29f3e285b351db",
+    "clientSeed": "client:seed:133",
+    "nonce": 1053227,
+    "roll": 352441
+  },
+  {
+    "serverSeed": "4dc839f70641cfbd8437d565018961a4",
+    "clientSeed": "client seed 134",
+    "nonce": 1061146,
+    "roll": 592702
+  },
+  {
+    "serverSeed": "bf6efc16d0a0d88791f6a921a7ed5ea5ff99f688221eed9140f65a3a2f8b7c52",
+    "clientSeed": "апгрейд-135",
+    "nonce": 1069065,
+    "roll": 29886
+  },
+  {
+    "serverSeed": "b11f2f0b964727f29453181bdad2da5ce0efe7b279bba49553b925b78bf675a2366af5621065ae955f89d6a988099eeb",
+    "clientSeed": "🔑-client-136",
+    "nonce": 1076984,
+    "roll": 487545
+  },
+  {
+    "serverSeed": "2e9ce41085d696a2a6916c1f1931b49e6ec881aae7ebf473e5ee86bb0fd64be43e2da774c744f9cc4f75114e38e5424e5281dc935a8419f95a45388c8713867c",
+    "clientSeed": "e54aab0d83178b83e8a84c54475c3ea511e98a3f5320428b86c0e77f1900a74b",
+    "nonce": 1084903,
+    "roll": 107497
+  },
+  {
+    "serverSeed": "8",
+    "clientSeed": "client-138",
+    "nonce": 1092822,
+    "roll": 34265
+  },
+  {
+    "serverSeed": "4403c11b8ae2adbe",
+    "clientSeed": "client:seed:139",
+    "nonce": 1100741,
+    "roll": 68380
+  },
+  {
+    "serverSeed": "0b889295d981a6571e0c829de843e8c3",
+    "clientSeed": "client seed 140",
+    "nonce": 1108660,
+    "roll": 398448
+  },
+  {
+    "serverSeed": "8e8eb5ad934a143f48af55e0f62574e5d64c850544835976413949b97c276379",
+    "clientSeed": "апгрейд-141",
+    "nonce": 1116579,
+    "roll": 931095
+  },
+  {
+    "serverSeed": "f36399360871afac1bc2f14a78ab1cc9e470f6d4c48cc627236a795ce3061f2d17120a0372846b87f02aa20c36f58e85",
+    "clientSeed": "🔑-client-142",
+    "nonce": 1124498,
+    "roll": 122228
+  },
+  {
+    "serverSeed": "379ff3ff3283f832ba02c54e5911dbe511f598010b586e569e8ffde13d76dfc1a4eefbd5cc0755b5ae536d87ca1e5a6d3e1ecd8ace72962015ca43fef0c1cf82",
+    "clientSeed": "f9b3fb49b8af534f6ef62b7fd7bd10f1a29115efb31d7decd8ab8540b7d295d0",
+    "nonce": 1132417,
+    "roll": 347858
+  },
+  {
+    "serverSeed": "7",
+    "clientSeed": "client-144",
+    "nonce": 1140336,
+    "roll": 880786
+  },
+  {
+    "serverSeed": "171fc1272c8c45af",
+    "clientSeed": "client:seed:145",
+    "nonce": 1148255,
+    "roll": 932533
+  },
+  {
+    "serverSeed": "ee55f413549b484fe5799c016c26a2df",
+    "clientSeed": "client seed 146",
+    "nonce": 1156174,
+    "roll": 934335
+  },
+  {
+    "serverSeed": "5a291ff67cf600f2e9b56d2021f322c64b2a0ad72e84acf00830d7875a819f02",
+    "clientSeed": "апгрейд-147",
+    "nonce": 1164093,
+    "roll": 168345
+  },
+  {
+    "serverSeed": "a0ad6db6a5bab9287a00f1e1857a1833000bc3667908add5e5d4ae913669c178aa52cb4d2512c6506e99ef5cd0cdc0e7",
+    "clientSeed": "🔑-client-148",
+    "nonce": 1172012,
+    "roll": 667708
+  },
+  {
+    "serverSeed": "5f42d65b30322d56dd0433d9b2dc048656d7b06a0385a49b061d688042b58ba5b53508c82e475f6e429f0368ef6c1c5e9144cb3ba1c1184b098ca682af8d6cce",
+    "clientSeed": "6d66d980fbbbed89155ed786ee8db1c22d17bd3ad3cf3e18296bceae6dfbf210",
+    "nonce": 2147483647,
+    "roll": 987350
+  },
+  {
+    "serverSeed": "f",
+    "clientSeed": "client-150",
+    "nonce": 0,
+    "roll": 981919
+  },
+  {
+    "serverSeed": "2f83193c59361df0",
+    "clientSeed": "client:seed:151",
+    "nonce": 1195769,
+    "roll": 233197
+  },
+  {
+    "serverSeed": "cd770b4f23f29fd4f86859acaeb0e781",
+    "clientSeed": "client seed 152",
+    "nonce": 1203688,
+    "roll": 664775
+  },
+  {
+    "serverSeed": "9a84a00da0b3e52ddab6bf0dc237a478415fc131c6d5c822aead7d8dfd95d7ca",
+    "clientSeed": "апгрейд-153",
+    "nonce": 1211607,
+    "roll": 696181
+  },
+  {
+    "serverSeed": "d84ede87828bb89140e65185c68a22ef1dd3bd1cd09f729f607a72726896354fee8746d1d0e18d73359ee3398280c1ee",
+    "clientSeed": "🔑-client-154",
+    "nonce": 1219526,
+    "roll": 361566
+  },
+  {
+    "serverSeed": "1830b4cb95b5f16e44e33f6e995873f1ab147be50c9d4ee962a2e9dd380a5ae84b8b7df9a92ea2ef0ebe1d5a0a4e19935f08a448bb1feb285cb05881da9955e8",
+    "clientSeed": "7919ad6010bba3a3b1342b00e587dbb6f1f3136996b7a3a0eebae964633273f8",
+    "nonce": 1227445,
+    "roll": 988364
+  },
+  {
+    "serverSeed": "a",
+    "clientSeed": "client-156",
+    "nonce": 1235364,
+    "roll": 488947
+  },
+  {
+    "serverSeed": "ce1017e1bdcde217",
+    "clientSeed": "client:seed:157",
+    "nonce": 1243283,
+    "roll": 774857
+  },
+  {
+    "serverSeed": "409478212aa70cdb2668e2c234eaab5e",
+    "clientSeed": "client seed 158",
+    "nonce": 1251202,
+    "roll": 777509
+  },
+  {
+    "serverSeed": "21b4ad2a3d4e12da847228f41659806eb39e12814496a85b72edf27cc89c0559",
+    "clientSeed": "апгрейд-159",
+    "nonce": 1259121,
+    "roll": 977282
+  },
+  {
+    "serverSeed": "75882215f66887a86369983df2d1a28d5a22e320ee0829d939637e06f9f9ef85f649cd8a32a57e46e07e934e2db41673",
+    "clientSeed": "🔑-client-160",
+    "nonce": 1267040,
+    "roll": 716382
+  },
+  {
+    "serverSeed": "5c961149cab6a387ac2fe2be483a81ceef828f1f86b8be350c5c3f07c9dfe6a5cf8a4e5a1dbd95166ca7aba9dddb0dd0313b594103a61a1d75210aa8c831d895",
+    "clientSeed": "3854f1e3da0b24ca379c4524774e7973523ddf9295403ad3f1f7dc3c74b92476",
+    "nonce": 1274959,
+    "roll": 756164
+  },
+  {
+    "serverSeed": "d",
+    "clientSeed": "client-162",
+    "nonce": 1282878,
+    "roll": 958903
+  },
+  {
+    "serverSeed": "8a23736ef3612718",
+    "clientSeed": "client:seed:163",
+    "nonce": 1290797,
+    "roll": 62169
+  },
+  {
+    "serverSeed": "abff42eac7bae391f6b8c361cbad6006",
+    "clientSeed": "client seed 164",
+    "nonce": 1298716,
+    "roll": 622459
+  },
+  {
+    "serverSeed": "7f0dcc736b1ba10220b03749cbbe7a0a4299532435126cd127f41835470fb7ce",
+    "clientSeed": "апгрейд-165",
+    "nonce": 1306635,
+    "roll": 657219
+  },
+  {
+    "serverSeed": "bd94b192a29440c1707715082a5fe33381bade562d459b59d89b07a937391e9873f1accccfb0b518a69142aa0878a05c",
+    "clientSeed": "🔑-client-166",
+    "nonce": 1314554,
+    "roll": 791824
+  },
+  {
+    "serverSeed": "fffabdabe4d6d82e022ae556a9cc6efb9a530d8a571ffbba146d4dd2aa3d5c6154b1ac59be02297b14974f30ecd914f3a931a7d8cef1c3e51ceb235b52dc60f1",
+    "clientSeed": "d91d7c525be935eb30520ddc454970a93b17ee45725c5184d8cc11ae7800af06",
+    "nonce": 1322473,
+    "roll": 628910
+  },
+  {
+    "serverSeed": "2",
+    "clientSeed": "client-168",
+    "nonce": 1330392,
+    "roll": 910434
+  },
+  {
+    "serverSeed": "38db07bb6969a5d8",
+    "clientSeed": "client:seed:169",
+    "nonce": 1338311,
+    "roll": 417864
+  },
+  {
+    "serverSeed": "c671a08e6446a69638062cbf1b795031",
+    "clientSeed": "client seed 170",
+    "nonce": 1346230,
+    "roll": 318272
+  },
+  {
+    "serverSeed": "aa92ad1a8cc00d6484d1e16679d4724d712fb20a8980e1eacfbbc69a149d5119",
+    "clientSeed": "апгрейд-171",
+    "nonce": 1354149,
+    "roll": 744563
+  },
+  {
+    "serverSeed": "96e65b380bf8964cc3bb82a03d0ca58b2505b0139f6d56d89459af48cc66d18eeafc00bb5d8e82bd9a23796881617620",
+    "clientSeed": "🔑-client-172",
+    "nonce": 1362068,
+    "roll": 633428
+  },
+  {
+    "serverSeed": "ff43e85ce9784903f606bb1917dd7dce01bf1084d613e6d7d027bec9e549d0fcd11f3ccfdd758cf69d76e1a6c99b60803c5ea05a96165158ab36192b7719a437",
+    "clientSeed": "075fdc5710b6683246fca90775901f17ddc0b6546250a7959b130c9be52f3c77",
+    "nonce": 1369987,
+    "roll": 947400
+  },
+  {
+    "serverSeed": "d",
+    "clientSeed": "client-174",
+    "nonce": 1377906,
+    "roll": 936027
+  },
+  {
+    "serverSeed": "6b0824c98694d16f",
+    "clientSeed": "client:seed:175",
+    "nonce": 1385825,
+    "roll": 238629
+  },
+  {
+    "serverSeed": "5e1dd69921c111bf6dc21056cc0f60dc",
+    "clientSeed": "client seed 176",
+    "nonce": 1393744,
+    "roll": 166990
+  },
+  {
+    "serverSeed": "e727ab2877230d4f6fff552a87fb2f0ab0dfb58a88fa25b0e52a4c287e4e20e3",
+    "clientSeed": "апгрейд-177",
+    "nonce": 1401663,
+    "roll": 869072
+  },
+  {
+    "serverSeed": "9f30f256a289bd834120836c26eff72c5f3d8a44aecaa71ae3082bf5f6fe8956ec942d0cb297d70525111f753d6325b7",
+    "clientSeed": "🔑-client-178",
+    "nonce": 1409582,
+    "roll": 312803
+  },
+  {
+    "serverSeed": "ead5e21b65560fb6e6c311b11eb1d2531b587422c2e80d1184e14b6dd37841be9e3818923ca0a89a4a52f9775fedaf46bc0308af7c4f0441b72db6de9cdd6d8a",
+    "clientSeed": "a47cdcf6edd17797491734b716823c33ad9b7cbbf17ff4e68ed84f1a12a8f49a",
+    "nonce": 1417501,
+    "roll": 839892
+  },
+  {
+    "serverSeed": "3",
+    "clientSeed": "client-180",
+    "nonce": 1425420,
+    "roll": 514555
+  },
+  {
+    "serverSeed": "bb64f687a0bec39a",
+    "clientSeed": "client:seed:181",
+    "nonce": 1433339,
+    "roll": 492425
+  },
+  {
+    "serverSeed": "93423e9fdf31a630a9f115a9055d3c2b",
+    "clientSeed": "client seed 182",
+    "nonce": 1441258,
+    "roll": 910915
+  },
+  {
+    "serverSeed": "cfe1f037edd421dc19b2de5b99420993442c8f8a1f766d607767b8991c2ec913",
+    "clientSeed": "апгрейд-183",
+    "nonce": 1449177,
+    "roll": 824124
+  },
+  {
+    "serverSeed": "5a543e9243226802b384c39a49a8a3b6f2aadd00dc4594a1824846903eb636ee1f19c5829891ed515ad66a09988597ab",
+    "clientSeed": "🔑-client-184",
+    "nonce": 1457096,
+    "roll": 774999
+  },
+  {
+    "serverSeed": "bb95578231e589bbd4a3aa02553137da53413cdaacab0066caf888e593f00faef7320478d51f2ddb4753018f03c15edf05ddc2d0308deba0ab1d1668153ff93b",
+    "clientSeed": "319c40a22c3e99e057972d4892aaab77aa651154407aebe828a8207bb4ccd4ae",
+    "nonce": 1465015,
+    "roll": 495090
+  },
+  {
+    "serverSeed": "1",
+    "clientSeed": "client-186",
+    "nonce": 1472934,
+    "roll": 559275
+  },
+  {
+    "serverSeed": "f105977a25b93d10",
+    "clientSeed": "client:seed:187",
+    "nonce": 1480853,
+    "roll": 371127
+  },
+  {
+    "serverSeed": "d4921e1e69f9dd5d8b3e1478fbaced4b",
+    "clientSeed": "client seed 188",
+    "nonce": 1488772,
+    "roll": 49293
+  },
+  {
+    "serverSeed": "586324efb60f721d3717e04429758f6d6f214eb1b7dada2f36671ee78694d442",
+    "clientSeed": "апгрейд-189",
+    "nonce": 1496691,
+    "roll": 536848
+  },
+  {
+    "serverSeed": "3df1acd1b17192c508926702bf4e867c826d77f986aa706a95ef78abe6577148a517eead6724e1cd65b4963b7ba70c46",
+    "clientSeed": "🔑-client-190",
+    "nonce": 1504610,
+    "roll": 177401
+  },
+  {
+    "serverSeed": "c19d2d009ac0c0f347a4ecfea390087483b5ff988c4f66f84c73498a1f97fb6f6f2374f50e62e87f0a7fe2b923feb4d72c6f8fc03fb73d92acb5c344d75dd5b9",
+    "clientSeed": "a0a326b6337f9d8c60251bed4461c5fd0d931b3acfdd0ae5a4d13dff598ebcb6",
+    "nonce": 1512529,
+    "roll": 155295
+  },
+  {
+    "serverSeed": "d",
+    "clientSeed": "client-192",
+    "nonce": 1520448,
+    "roll": 599081
+  },
+  {
+    "serverSeed": "344e7ad9b5b8ca25",
+    "clientSeed": "client:seed:193",
+    "nonce": 1528367,
+    "roll": 340829
+  },
+  {
+    "serverSeed": "27c5edaf18ed4ae4c6380c1bf3da3190",
+    "clientSeed": "client seed 194",
+    "nonce": 1536286,
+    "roll": 987902
+  },
+  {
+    "serverSeed": "8221883bb9ba4790987238f61a3569b6eee4a0e6cde6099454c0b9343d4d2a9a",
+    "clientSeed": "апгрейд-195",
+    "nonce": 1544205,
+    "roll": 98485
+  },
+  {
+    "serverSeed": "ef394e9af4e3cc02ea3ef228cf43978b6e4a78c687adfddcbca24a08578ad0a423fd097dc58cf5b428c2c4c695698733",
+    "clientSeed": "🔑-client-196",
+    "nonce": 1552124,
+    "roll": 7816
+  },
+  {
+    "serverSeed": "646fdfb5dedd3d835ba7d13bdef4d13468a5ae984f20c38a3eb57a0aab58d8167ad072d9edec7ad0c3535a1e058afeceb66b85a21380d8f2bd28904989a09427",
+    "clientSeed": "ac56c0dc5339bb6c7a12881827538b4023ddc8a6e50956e90e26a587d99e06b2",
+    "nonce": 1560043,
+    "roll": 657883
+  },
+  {
+    "serverSeed": "5",
+    "clientSeed": "client-198",
+    "nonce": 1567962,
+    "roll": 468584
+  },
+  {
+    "serverSeed": "819ae83d207ff26c",
+    "clientSeed": "client:seed:199",
+    "nonce": 2147483647,
+    "roll": 468262
+  },
+  {
+    "serverSeed": "ce9cceda723728a73b1bedcbed8267ad",
+    "clientSeed": "client seed 200",
+    "nonce": 0,
+    "roll": 58996
+  },
+  {
+    "serverSeed": "02c1a3ff782534579a6b5e287175cb13e93f426532f0a3d428de169d3eec25b5",
+    "clientSeed": "апгрейд-201",
+    "nonce": 1591719,
+    "roll": 662564
+  },
+  {
+    "serverSeed": "e086d7f805c8ad757352d574b16283bb7ab06641c4271020337285232fcf2806cd1430603950c2c07edef04ecdefd3e9",
+    "clientSeed": "🔑-client-202",
+    "nonce": 1599638,
+    "roll": 703281
+  },
+  {
+    "serverSeed": "750fb25283b01ab4aeba53e952ba075489c487ac04e63701c7d43eae069c25d892ca6d6ab0df180fec19f072482844e2d788fd6aa7b8c76a771150e1b7092359",
+    "clientSeed": "32d69191dad2d468a92d01e1328234f343950904bedbe8e0d0debcec871bd4bd",
+    "nonce": 1607557,
+    "roll": 909194
+  },
+  {
+    "serverSeed": "d",
+    "clientSeed": "client-204",
+    "nonce": 1615476,
+    "roll": 237715
+  },
+  {
+    "serverSeed": "6cb7820fe4d65f6e",
+    "clientSeed": "client:seed:205",
+    "nonce": 1623395,
+    "roll": 523108
+  },
+  {
+    "serverSeed": "3e72573102f1d5ace9b0e3227ac962a2",
+    "clientSeed": "client seed 206",
+    "nonce": 1631314,
+    "roll": 685362
+  },
+  {
+    "serverSeed": "e7ca8e76a115e3aa728c549e75279e227742819860f89664fc88a5f03bae1e87",
+    "clientSeed": "апгрейд-207",
+    "nonce": 1639233,
+    "roll": 736775
+  },
+  {
+    "serverSeed": "846b0d7146ed2ba2b94a090183cb8ce6ed80407e7aff71490176c4cef45efc3af8fca4f9eaa48253eea90d59d300c7db",
+    "clientSeed": "🔑-client-208",
+    "nonce": 1647152,
+    "roll": 624921
+  },
+  {
+    "serverSeed": "2de1ac3466ae3f64d567bcf0a079795cb5710e59eb073f5a88320c694eef96202839415735b3bec64ead1fb144222f88d55668d41d2a88a4facb9c7e9d8f8a02",
+    "clientSeed": "de45e28f7b243c8b162ceefc44b6adb0db313c1fc10a90695db30e2d8a437548",
+    "nonce": 1655071,
+    "roll": 616701
+  },
+  {
+    "serverSeed": "0",
+    "clientSeed": "client-210",
+    "nonce": 1662990,
+    "roll": 352865
+  },
+  {
+    "serverSeed": "52c026576f3c1b8a",
+    "clientSeed": "client:seed:211",
+    "nonce": 1670909,
+    "roll": 331704
+  },
+  {
+    "serverSeed": "e48c98dc264e70bbb6cb5e9cbf623569",
+    "clientSeed": "client seed 212",
+    "nonce": 1678828,
+    "roll": 139868
+  },
+  {
+    "serverSeed": "3da4c4db3b9b0352b4b6f258ac75d84a447acb727f1d0fa378ddc403fc3e3b93",
+    "clientSeed": "апгрейд-213",
+    "nonce": 1686747,
+    "roll": 478731
+  },
+  {
+    "serverSeed": "27fc4f5c09260c7ce9368fab30061bb7daec16ab22e6cfab144006da9845d4edcbdedbb7e2b4c1d61b752d7890e7f382",
+    "clientSeed": "🔑-client-214",
+    "nonce": 1694666,
+    "roll": 78687
+  },
+  {
+    "serverSeed": "9a61cd81a16e9dd63b33b6e87ec440ff42dcc20265c914ccb0bb93fa227bc56d4eac8f8bf4b638caba9ae02011679803d4f1c7b9f559f598ee31506ff0d7a5df",
+    "clientSeed": "5f5a6d149af7704a4afe12d9e1106a2047029c9dac39b3c07f3c44e91cd13b2d",
+    "nonce": 1702585,
+    "roll": 595941
+  },
+  {
+    "serverSeed": "c",
+    "clientSeed": "client-216",
+    "nonce": 1710504,
+    "roll": 434229
+  },
+  {
+    "serverSeed": "0022e3627fa3943a",
+    "clientSeed": "client:seed:217",
+    "nonce": 1718423,
+    "roll": 237927
+  },
+  {
+    "serverSeed": "25ccc03cc1362467c73f72933a28bc8e",
+    "clientSeed": "client seed 218",
+    "nonce": 1726342,
+    "roll": 143687
+  },
+  {
+    "serverSeed": "47f51a52398883daaa90ba71ed25af99a76314a3e52f1fb8ec46c0a366cab5b4",
+    "clientSeed": "апгрейд-219",
+    "nonce": 1734261,
+    "roll": 989481
+  },
+  {
+    "serverSeed": "c7a895f7d33a5a230b1300e2c40de3b2ebf7f9180144831d4ba40e42f6c08ddf3e497701f05dba1a5179ad0cb69e0fff",
+    "clientSeed": "🔑-client-220",
+    "nonce": 1742180,
+    "roll": 379361
+  },
+  {
+    "serverSeed": "9d13015554255cc7e73d81020a8bb6a2e2c571f4d4c049fed8c0357be51e32d9e008ade8870285d817139c98535913babec09757575784fd6610d41755f9aaf4",
+    "clientSeed": "cbcc16cd0f852b47f4f7f491dcde0bd4623c5ebeb1876a2c71d2f4486da78e80",
+    "nonce": 1750099,
+    "roll": 132278
+  },
+  {
+    "serverSeed": "4",
+    "clientSeed": "client-222",
+    "nonce": 1758018,
+    "roll": 684900
+  },
+  {
+    "serverSeed": "a906aa6fdb487ac3",
+    "clientSeed": "client:seed:223",
+    "nonce": 1765937,
+    "roll": 59528
+  },
+  {
+    "serverSeed": "facf1373a31e509bd95e258f0640d110",
+    "clientSeed": "client seed 224",
+    "nonce": 1773856,
+    "roll": 802617
+  },
+  {
+    "serverSeed": "45204d0658e6ab815ca94d1404f64a1958b395aae495eb5c4f49fbf0835bef06",
+    "clientSeed": "апгрейд-225",
+    "nonce": 1781775,
+    "roll": 117971
+  },
+  {
+    "serverSeed": "f0deb9567d78574363a193073c70211db9686ff4b6924862a608d048c4ec91aa4340eaf9e27fdf6266a17b945295f5be",
+    "clientSeed": "🔑-client-226",
+    "nonce": 1789694,
+    "roll": 946590
+  },
+  {
+    "serverSeed": "7aa1010c47d863a2cfcd7aa21a09537432d0a84ba4e24c231e6c5f9b79ca1b07ac3f3fff55bde0378e5935fcb1fb146beccb1016de818cdafba163380df1cb8d",
+    "clientSeed": "0b66a21ae107297723e90b45d8a21819320b77353fa03e7a4dcbf34a91c8944b",
+    "nonce": 1797613,
+    "roll": 246194
+  },
+  {
+    "serverSeed": "b",
+    "clientSeed": "client-228",
+    "nonce": 1805532,
+    "roll": 853441
+  },
+  {
+    "serverSeed": "9b38bcd6d57f868b",
+    "clientSeed": "client:seed:229",
+    "nonce": 1813451,
+    "roll": 321776
+  },
+  {
+    "serverSeed": "c60ddeaff6756d4214e901d7f3881886",
+    "clientSeed": "client seed 230",
+    "nonce": 1821370,
+    "roll": 720741
+  },
+  {
+    "serverSeed": "52645f8a233992270a6b0b1cde617b27c47d80a71070e7286b3ba49220060f87",
+    "clientSeed": "апгрейд-231",
+    "nonce": 1829289,
+    "roll": 415206
+  },
+  {
+    "serverSeed": "c1cd70c1e0197f8a8b96016eaaa322ce4411a8d262beb231eccbe6b68f61d4ad4c48c41c5e1c6d436b77950bb5f9d41a",
+    "clientSeed": "🔑-client-232",
+    "nonce": 1837208,
+    "roll": 625552
+  },
+  {
+    "serverSeed": "7281c4331dbf1d50d03b1299435dc4e3ca1a9fd2c66843395c9a8b853c67537a9ca3d68630252261a06d704e9d712ee1323c8681f472838643ebf826288a548b",
+    "clientSeed": "fa52ab95b5ce21a2180d33a387709fc16eec41ad1b326ddc2342bf06d2160e49",
+    "nonce": 1845127,
+    "roll": 931083
+  },
+  {
+    "serverSeed": "c",
+    "clientSeed": "client-234",
+    "nonce": 1853046,
+    "roll": 242900
+  },
+  {
+    "serverSeed": "f05c1d2cd28d0758",
+    "clientSeed": "client:seed:235",
+    "nonce": 1860965,
+    "roll": 440846
+  },
+  {
+    "serverSeed": "a6adf78cdad6d65d0eab162c3f2a880c",
+    "clientSeed": "client seed 236",
+    "nonce": 1868884,
+    "roll": 389972
+  },
+  {
+    "serverSeed": "fc4e6ca235b32307f77c77401492be21cdfced75b2e1cba4e6e0cf5e12028f04",
+    "clientSeed": "апгрейд-237",
+    "nonce": 1876803,
+    "roll": 970455
+  },
+  {
+    "serverSeed": "a44ad5cd6ed4e4415e552ea8aabf2dce3a8b5b624a59750a9d7ae985e22db084a404441e6ab44d0afa470f54e72ef26f",
+    "clientSeed": "🔑-client-238",
+    "nonce": 1884722,
+    "roll": 267851
+  },
+  {
+    "serverSeed": "5074b30f78044a532dcb875005455521d0093de4c8978cb9b29ce88bdb2a63c1687830a3d2cea9bd32eb8464de8ed8b2bae6eb3e0dd8e8e0323bfa3a270a8aac",
+    "clientSeed": "173f3ce276d8d2c281230aeb5c4d055adefef579ced423a732662845d62c778b",
+    "nonce": 1892641,
+    "roll": 116146
+  },
+  {
+    "serverSeed": "5",
+    "clientSeed": "client-240",
+    "nonce": 1900560,
+    "roll": 92045
+  },
+  {
+    "serverSeed": "56fef5cbd13b587b",
+    "clientSeed": "client:seed:241",
+    "nonce": 1908479,
+    "roll": 686257
+  },
+  {
+    "serverSeed": "c4b78f715c93b03926f05ad6705213ef",
+    "clientSeed": "client seed 242",
+    "nonce": 1916398,
+    "roll": 64629
+  },
+  {
+    "serverSeed": "3ef9e7b8c0768bdfad6cb278ff467b92061dff8b26e4cc13a15102834bc13363",
+    "clientSeed": "апгрейд-243",
+    "nonce": 1924317,
+    "roll": 563402
+  },
+  {
+    "serverSeed": "5d9557edf612cd06626ed822443e5283accda2f1d9aea7695c43774104555f3ec6be95ff39f3f2fd8cb2302c64bda840",
+    "clientSeed": "🔑-client-244",
+    "nonce": 1932236,
+    "roll": 346778
+  },
+  {
+    "serverSeed": "02ff7d2d36dd0f64902ed33591bd08306b5a5df28a05379bdc412f149c6a3dab8b6f9922d403397152d097793cb67039a00641b72ead59ac8a6068de9613325d",
+    "clientSeed": "1ee6b1813191405aeac3ad415576c3814a596c5be075fbef33bc2b8ba2484002",
+    "nonce": 1940155,
+    "roll": 224167
+  },
+  {
+    "serverSeed": "8",
+    "clientSeed": "client-246",
+    "nonce": 1948074,
+    "roll": 938325
+  },
+  {
+    "serverSeed": "6b6c98dad0238f0b",
+    "clientSeed": "client:seed:247",
+    "nonce": 1955993,
+    "roll": 465115
+  },
+  {
+    "serverSeed": "a8b2fefef9d43cbbc4921f35f2f8f430",
+    "clientSeed": "client seed 248",
+    "nonce": 1963912,
+    "roll": 391151
+  },
+  {
+    "serverSeed": "b76bd9bc27c61107b09b4b7172b269f8bd2a70daa2a45fc55dae2e923e277524",
+    "clientSeed": "апгрейд-249",
+    "nonce": 2147483647,
+    "roll": 765593
+  },
+  {
+    "serverSeed": "50bdb96a2de37d224d64637735d57fd3e28231d534b25dd76080f86903df6242ad1440164875627abed64ccb742c9057",
+    "clientSeed": "🔑-client-250",
+    "nonce": 0,
+    "roll": 832162
+  },
+  {
+    "serverSeed": "d83a889ebf4e6ca88a79b7c8aed91709e79d1538ebb69bd924fb8f33fee5c3d7be708ab676b343aee9ee1cf4e25b4b9424f74a4410d55a47fd7cd26feebf0200",
+    "clientSeed": "93e6d7e48980b32833425bef7c8c8de78886f75bb741024c2e74b5ce19457a4a",
+    "nonce": 1987669,
+    "roll": 998800
+  },
+  {
+    "serverSeed": "0",
+    "clientSeed": "client-252",
+    "nonce": 1995588,
+    "roll": 753225
+  },
+  {
+    "serverSeed": "9eee5b8889f5afc9",
+    "clientSeed": "client:seed:253",
+    "nonce": 2003507,
+    "roll": 205301
+  },
+  {
+    "serverSeed": "be6a6be22aca7040257578d6bad91396",
+    "clientSeed": "client seed 254",
+    "nonce": 2011426,
+    "roll": 8348
+  },
+  {
+    "serverSeed": "2c77f55995ea7b1ddb7f0ceb4b9504409af6d2b722dd62983b69e8713665997c",
+    "clientSeed": "апгрейд-255",
+    "nonce": 2019345,
+    "roll": 727405
+  },
+  {
+    "serverSeed": "256695e1d2ac47197854a712a02e4d650664233e3c70fc3bd8e2a97174c37a2e0435a33ffea2e16c73be0bf4272158bf",
+    "clientSeed": "🔑-client-256",
+    "nonce": 2027264,
+    "roll": 529140
+  },
+  {
+    "serverSeed": "04f4d4caced1bef2e2844fb3d3ae36d806017f8dd73484e225d01f3058e57c42fcf4283b4b7ceef1ae61516c379be9f7631a512e8a2831798e71257f18d5dbd6",
+    "clientSeed": "32a8b392ab425cd57ed56d75e70939dbf4a0d74c528dd77cde1170ad41bbc5d3",
+    "nonce": 2035183,
+    "roll": 982670
+  },
+  {
+    "serverSeed": "8",
+    "clientSeed": "client-258",
+    "nonce": 2043102,
+    "roll": 965176
+  },
+  {
+    "serverSeed": "c958c02bd14f44e8",
+    "clientSeed": "client:seed:259",
+    "nonce": 2051021,
+    "roll": 23583
+  },
+  {
+    "serverSeed": "2d3251cce8340971069fcc353f80a571",
+    "clientSeed": "client seed 260",
+    "nonce": 2058940,
+    "roll": 333145
+  },
+  {
+    "serverSeed": "885a782dc04d646c03a7db784e873cdfc52f48e7640272a26b395634329c36eb",
+    "clientSeed": "апгрейд-261",
+    "nonce": 2066859,
+    "roll": 145773
+  },
+  {
+    "serverSeed": "023ebf1addf297ca151d321da3ed758f1d732a6348636f5fbba574f45ecb0cef2756675ef9e516234592b236d0361fb5",
+    "clientSeed": "🔑-client-262",
+    "nonce": 2074778,
+    "roll": 982831
+  },
+  {
+    "serverSeed": "ac26b2cde87b97dc1641a7ac928b01904b3ad22814aa1eba25d7288371e575cb7f97847937a643d3aa9f9ff7b6e5d2d0be5dac8923e031e8a3a82c7b7be368fd",
+    "clientSeed": "0155c68910d72dbd8ec71e3cbcf05d211cd2ddd0cd3535629c23c01355841d9a",
+    "nonce": 2082697,
+    "roll": 155865
+  },
+  {
+    "serverSeed": "9",
+    "clientSeed": "client-264",
+    "nonce": 2090616,
+    "roll": 641285
+  },
+  {
+    "serverSeed": "39c76d734e411839",
+    "clientSeed": "client:seed:265",
+    "nonce": 2098535,
+    "roll": 856306
+  },
+  {
+    "serverSeed": "1c086574afb270630afa9284029dcaae",
+    "clientSeed": "client seed 266",
+    "nonce": 2106454,
+    "roll": 901476
+  },
+  {
+    "serverSeed": "42c3deb80811b03885455bf2a973ca52487069efa2d03481671567399a1f988e",
+    "clientSeed": "апгрейд-267",
+    "nonce": 2114373,
+    "roll": 638124
+  },
+  {
+    "serverSeed": "4e4200b77f95aa7c048c42bc1618f23a7d3d06c244d783e7beac46fb0cc5d0a64870442c6d13c10b1059d27e985a2525",
+    "clientSeed": "🔑-client-268",
+    "nonce": 2122292,
+    "roll": 464546
+  },
+  {
+    "serverSeed": "caf6906c8738fc6d6ca8ee613695c2d4603dd78f6b6a81719e4e155e857bbe4c4cbff3da9a44e7dc86f603bb32769fd196151596a563ea473bcd90b4ff16e7b3",
+    "clientSeed": "1a36698fbb4a9eab7adb6d6b432a2ef20a849f09149a89dba71374642edb7888",
+    "nonce": 2130211,
+    "roll": 804146
+  },
+  {
+    "serverSeed": "e",
+    "clientSeed": "client-270",
+    "nonce": 2138130,
+    "roll": 703616
+  },
+  {
+    "serverSeed": "765e2b4bb50c7677",
+    "clientSeed": "client:seed:271",
+    "nonce": 2146049,
+    "roll": 321672
+  },
+  {
+    "serverSeed": "aafdb66daaef69cf08edb9af714cb869",
+    "clientSeed": "client seed 272",
+    "nonce": 2153968,
+    "roll": 345940
+  },
+  {
+    "serverSeed": "d588d2d975ee8a5790af9c3895531a48b10c49a203a5ed52b23ddefdd2651693",
+    "clientSeed": "апгрейд-273",
+    "nonce": 2161887,
+    "roll": 59803
+  },
+  {
+    "serverSeed": "745d59589b76601255dfe795c533cc297096bacce205522aa785bb8f51331cb98b4b84864070710c36d20864110021b8",
+    "clientSeed": "🔑-client-274",
+    "nonce": 2169806,
+    "roll": 698348
+  },
+  {
+    "serverSeed": "7c58a6f3a9e9944a66cbd08d28cd4c0a4665d2ac5662d003c55aa2dfe7c19624f6bd6d8fea72409a3ba6dcf387c1560cf80779d5cc410b99ca40389151f604f4",
+    "clientSeed": "7667b24451976ca8b381390f32db33e641f0fc53661edfcc3e9899d2ac880cd6",
+    "nonce": 2177725,
+    "roll": 991391
+  },
+  {
+    "serverSeed": "a",
+    "clientSeed": "client-276",
+    "nonce": 2185644,
+    "roll": 643962
+  },
+  {
+    "serverSeed": "c05e7876e3763eb4",
+    "clientSeed": "client:seed:277",
+    "nonce": 2193563,
+    "roll": 780362
+  },
+  {
+    "serverSeed": "ad0792a87306e47ee0c47163a9c75fb7",
+    "clientSeed": "client seed 278",
+    "nonce": 2201482,
+    "roll": 213136
+  },
+  {
+    "serverSeed": "f39f1e3e911d121e13a8966d1175147df297c6cee91f7a155398a937d0af643e",
+    "clientSeed": "апгрейд-279",
+    "nonce": 2209401,
+    "roll": 214807
+  },
+  {
+    "serverSeed": "583a51bf1992a4728f6cd653ed4fcac08c3f642d0947a84c8e5dadaf496a8ef8fde7cf56b53c8e81066c0c94cf2b3bf0",
+    "clientSeed": "🔑-client-280",
+    "nonce": 2217320,
+    "roll": 822986
+  },
+  {
+    "serverSeed": "fcf3fe60e92b9cef60f2c969974a28d87c29bef6039c14e24647a2980772bfccad31aefa7bff8e8626444ea0bd410ec37271b8467a6423f0cd73c1d6253a921a",
+    "clientSeed": "7b0488c984d12b0c80bf4bedf4fb42d84b662ad8ef2ea8b6c524557fddaa6613",
+    "nonce": 2225239,
+    "roll": 635980
+  },
+  {
+    "serverSeed": "a",
+    "clientSeed": "client-282",
+    "nonce": 2233158,
+    "roll": 660895
+  },
+  {
+    "serverSeed": "bfe55b0317e410f7",
+    "clientSeed": "client:seed:283",
+    "nonce": 2241077,
+    "roll": 485287
+  },
+  {
+    "serverSeed": "b00cb5518bfbe0d3d313504ff5597c11",
+    "clientSeed": "client seed 284",
+    "nonce": 2248996,
+    "roll": 604761
+  },
+  {
+    "serverSeed": "73e57378942db64ca15af2f1705f6823dc6ff0e6fb8158e35d59c627824c7c5a",
+    "clientSeed": "апгрейд-285",
+    "nonce": 2256915,
+    "roll": 639804
+  },
+  {
+    "serverSeed": "66fea0ccac4b1198423cc26c98e466553356cc709fe6bd9d4190714b5a209c0ee77309222a8bfe2091ff9b21719930d4",
+    "clientSeed": "🔑-client-286",
+    "nonce": 2264834,
+    "roll": 768693
+  },
+  {
+    "serverSeed": "1350de8771e67ab5f67a6152b25a36e7a432034b99f83c0685250cdb339910bfcde2d75740fda15db747419d13d9a9ecad16f3927c77c79794d0bb1d923210b7",
+    "clientSeed": "6dd3bcd0fce38ddb812aaa1c7d0196c0431beee2867a0a20ba513eb62580b192",
+    "nonce": 2272753,
+    "roll": 348041
+  },
+  {
+    "serverSeed": "c",
+    "clientSeed": "client-288",
+    "nonce": 2280672,
+    "roll": 124787
+  },
+  {
+    "serverSeed": "a77c052a9535248a",
+    "clientSeed": "client:seed:289",
+    "nonce": 2288591,
+    "roll": 368728
+  },
+  {
+    "serverSeed": "d5ca687bcbf75302e381391cda4a932a",
+    "clientSeed": "client seed 290",
+    "nonce": 2296510,
+    "roll": 805299
+  },
+  {
+    "serverSeed": "19be71bffa5bf54a6351b6c60d7c20c253c1ae54547211801d9d1055088c6e7b",
+    "clientSeed": "апгрейд-291",
+    "nonce": 2304429,
+    "roll": 167032
+  },
+  {
+    "serverSeed": "ff955691c3ad871ab0605aaa107cf863a4ca8b8c79183413abe5c6fbfbaa5fbdfeb18c7b92fbb5243271f0e45fc4bef3",
+    "clientSeed": "🔑-client-292",
+    "nonce": 2312348,
+    "roll": 885225
+  },
+  {
+    "serverSeed": "c6be540136ee027afdefa5100110c3633ad226d1cf6ef75c58e6284d5756acef512adb49e3bb99e547b4de081bd858e6a2cd8c64d705f681f8e613f534771c7e",
+    "clientSeed": "7fe8d984e7df6ff8879f08efbba6895a63d8fe6df7b802612f4367a8cb46751f",
+    "nonce": 2320267,
+    "roll": 374199
+  },
+  {
+    "serverSeed": "9",
+    "clientSeed": "client-294",
+    "nonce": 2328186,
+    "roll": 27626
+  },
+  {
+    "serverSeed": "83bc7c603156644f",
+    "clientSeed": "client:seed:295",
+    "nonce": 2336105,
+    "roll": 273666
+  },
+  {
+    "serverSeed": "4c2f70a7ebd4442c07c08d915292392f",
+    "clientSeed": "client seed 296",
+    "nonce": 2344024,
+    "roll": 651555
+  },
+  {
+    "serverSeed": "ed353c6348408f10b7f68a2459ddd0bbe9bf70bd79d961d7b510d47106d232cd",
+    "clientSeed": "апгрейд-297",
+    "nonce": 2351943,
+    "roll": 615483
+  },
+  {
+    "serverSeed": "c79617e7c68ab502283dd842495875bd0308a5a9c50ab62f30aaec71f053f778e67182af432a6719db95dbce3d9ddb25",
+    "clientSeed": "🔑-client-298",
+    "nonce": 2359862,
+    "roll": 83005
+  },
+  {
+    "serverSeed": "a0230ef89e39a1c846b725053ce4286b2ad351b78cdf3d9a307bdde1de80bf2898237dec3a5a6ce51a908e417993da5ba5925db5cbb3d79bd5d2d8ed50d8ffa0",
+    "clientSeed": "198b6c1827e0320cb2ec25334e74be49466a5202c8fb4179dda43bbade8bee80",
+    "nonce": 2147483647,
+    "roll": 381004
+  }
+]
