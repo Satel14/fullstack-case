@@ -297,6 +297,28 @@
         "failed": "Не вдалося надіслати кредити"
     },
     "cases": {
+        "categories": {
+            "weapons": {
+                "title": "Кейси",
+                "subTitle": "зброї"
+            },
+            "grades": {
+                "title": "За",
+                "subTitle": "рідкістю"
+            },
+            "knife-chance": {
+                "title": "Шанс",
+                "subTitle": "на ніж"
+            },
+            "knives": {
+                "title": "Кейси",
+                "subTitle": "з ножами"
+            },
+            "collections": {
+                "title": "Колекції",
+                "subTitle": "CS2"
+            }
+        },
         "searchPlaceholder": "Назва кейсу",
         "onlyDiscount": "Тільки зі знижкою",
         "reset": "Скинути",

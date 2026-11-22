@@ -17,6 +17,17 @@ const filteredCases = (categoryId, cases) => cases.filter((item) => item.case_ca
 
 const splitTitle = (title, index) => title.split(' ')[index];
 
+const sectionHeading = (t, i18n, category) => {
+    const key = `cases.categories.${category.category_slug}`;
+    if (category.category_slug && i18n.exists(`${key}.title`) && i18n.exists(`${key}.subTitle`)) {
+        return { title: t(`${key}.title`), subTitle: t(`${key}.subTitle`) };
+    }
+    return {
+        title: splitTitle(category.category_title, 0),
+        subTitle: splitTitle(category.category_title, 1),
+    };
+};
+
 class Cases extends Component {
     constructor(props) {
         super(props);
@@ -185,28 +196,31 @@ class Cases extends Component {
 
     renderCatalogue() {
         const { categories, allCases } = this.state;
-        const { t } = this.props;
+        const { t, i18n } = this.props;
 
         if (categories.length > 0) {
             return (
                 <>
-                    {map(categories, (category) => (
-                        <div key={`categories${category.category_title}`}>
-                            <H2A
-                                title={splitTitle(category.category_title, 0)}
-                                subTitle={splitTitle(category.category_title, 1)}
-                                help={category.category_titleHelp}
-                            />
-                            <div className="caselist">
-                                {map(filteredCases(category.category_id, allCases),
-                                    (item, i) => (
-                                        <Flip bottom delay={i * 30} key={`caselistfiltered-${category.category_id}-${item.case_id}`}>
-                                            <CaseMini data={item} />
-                                        </Flip>
-                                    ))}
+                    {map(categories, (category) => {
+                        const { title, subTitle } = sectionHeading(t, i18n, category);
+                        return (
+                            <div key={`categories${category.category_title}`}>
+                                <H2A
+                                    title={title}
+                                    subTitle={subTitle}
+                                    help={category.category_titleHelp}
+                                />
+                                <div className="caselist">
+                                    {map(filteredCases(category.category_id, allCases),
+                                        (item, i) => (
+                                            <Flip bottom delay={i * 30} key={`caselistfiltered-${category.category_id}-${item.case_id}`}>
+                                                <CaseMini data={item} />
+                                            </Flip>
+                                        ))}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </>
             );
         }

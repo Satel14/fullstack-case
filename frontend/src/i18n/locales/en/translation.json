@@ -297,6 +297,28 @@
         "failed": "Failed to send the credits"
     },
     "cases": {
+        "categories": {
+            "weapons": {
+                "title": "Weapon",
+                "subTitle": "cases"
+            },
+            "grades": {
+                "title": "By",
+                "subTitle": "rarity"
+            },
+            "knife-chance": {
+                "title": "Knife",
+                "subTitle": "chance"
+            },
+            "knives": {
+                "title": "Knife",
+                "subTitle": "cases"
+            },
+            "collections": {
+                "title": "CS2",
+                "subTitle": "collections"
+            }
+        },
         "searchPlaceholder": "Case name",
         "onlyDiscount": "Discounts only",
         "reset": "Reset",

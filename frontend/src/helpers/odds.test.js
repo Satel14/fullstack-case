@@ -7,6 +7,13 @@ test('a chance reads as a percentage with up to three significant digits in the 
     expect(formatChance(0.0917, undefined)).toBe('9,17%');
 });
 
+test('tiny chances keep their nonzero digits in both languages while ordinary chances keep their precision', () => {
+    ['uk', 'en'].forEach((language) => {
+        expect(formatChance(1e-7, language)).toMatch(/^0[,.]00001\s?%$/);
+    });
+    expect(formatChance(0.2662, 'en')).toBe('26.6%');
+});
+
 test('the chances add up by grade, the rarest grade first, each item counted once', () => {
     const items = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 2 }];
     const odds = {
