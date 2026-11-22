@@ -189,6 +189,7 @@ module.exports.openCaseById = async (req, res) => {
                     storage_userId: user_id,
                     storage_caseId: resultCase.caseId,
                     storage_color: resultCase.winner.item.color,
+                    source: 'case',
                 });
             });
         }

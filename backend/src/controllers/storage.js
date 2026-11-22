@@ -279,7 +279,8 @@ module.exports.getStorageLastItemsWithUserInfo = async (req, res) => {
         const userList = listByKey(userIds, new Map(users.map((user) => [String(user.user_id), user])));
         const caseList = listByKey(caseIds, new Map(cases.map((caseRow) => [String(caseRow.case_id), caseRow])));
 
-        return res.status(200).json({ status: 200, data: items, userList, caseList, itemList });
+        const data = items.map((item) => ({ ...item, source: item.storage_caseId === null ? 'upgrade' : 'case' }));
+        return res.status(200).json({ status: 200, data, userList, caseList, itemList });
     } catch (e) {
         return answerFailure(res, e, { status: 500, where: 'storage.list-userinfo' });
     }

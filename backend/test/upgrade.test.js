@@ -123,7 +123,7 @@ const refused = async (body, code, status = 422, userId = 1) => {
     return result.payload;
 };
 
-test('a known win consumes the stakes, stores the complete audit and returns exact amounts without logs or events', async (t) => {
+test('a known win consumes the stakes, stores the complete audit and returns exact amounts without logs', async (t) => {
     const logs = catchLogs(t);
     const before = await snapshot();
     const { status, payload } = await request();
@@ -162,7 +162,10 @@ test('a known win consumes the stakes, stores the complete audit and returns exa
     ]);
     assert.ok(created_at instanceof Date);
     assert.deepEqual(logs, []);
-    assert.deepEqual(emitted, []);
+    assert.deepEqual(emitted, [['new-drop', {
+        user_login: 'player1', storage_id: 12, storage_itemId: 30, storage_userId: 1,
+        storage_caseId: null, storage_color: 'default', source: 'upgrade',
+    }]]);
 });
 
 test('a known loss consumes the stakes and one nonce but creates no item or balance change', async (t) => {
@@ -443,7 +446,8 @@ test('a concurrent case open and upgrade use consecutive nonces from the same se
     assert.equal(after.provably_fair_seeds[0].nonce, NONCE + 2);
     assert.equal(after.users[0].balance, '900.00');
     assert.equal(results[0].payload.data.roll, upgradeRoll(WIN_SEED, CLIENT_SEED, after.upgrades[0].nonce));
-    assert.equal(emitted.length, 1);
+    assert.equal(emitted.filter(([, drop]) => drop.source === 'case').length, 1);
+    assert.equal(emitted.filter(([, drop]) => drop.source === 'upgrade').length, Number(results[0].payload.data.won));
 });
 
 test('a player without an active seed gets one and uses nonce zero', async () => {

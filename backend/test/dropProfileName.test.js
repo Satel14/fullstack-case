@@ -44,8 +44,9 @@ test('a live drop carries the public winner name so its profile link can be name
         assert.strictEqual(payload.user_login, 'Alice');
         assert.strictEqual(payload.storage_userId, 1);
         assert.strictEqual(payload.storage_id, result.payload.data[0].winner.storageId);
+        assert.strictEqual(payload.source, 'case');
         assert.deepStrictEqual(Object.keys(payload).sort(), [
-            'storage_id', 'storage_itemId', 'storage_userId', 'storage_caseId', 'storage_color', 'user_login',
+            'storage_id', 'storage_itemId', 'storage_userId', 'storage_caseId', 'storage_color', 'user_login', 'source',
         ].sort());
     } finally {
         await sequelize.close();

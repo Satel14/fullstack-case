@@ -1,6 +1,7 @@
 const { body, query, validationResult } = require('express-validator');
 const ItemService = require('../services/item');
 const UpgradeService = require('../services/upgrade');
+const { getIo } = require('../socket/chat');
 const MESSAGE = require('../constant/responseMessages');
 const { COLORS } = require('../constant/itemConfigs');
 const { MYSQL_INT_MAX } = require('../constant/mysql');
@@ -75,6 +76,20 @@ module.exports.upgrade = async (req, res) => {
             userId: req.user.profile.user_id, storageIds, targetItemId: Number(targetItemId),
             targetColor, expectedThreshold: Number(expectedThreshold),
         });
+        if (data.won) {
+            const io = getIo();
+            if (io) {
+                io.emit('new-drop', {
+                    user_login: req.user.profile.user_login,
+                    storage_id: data.item.storage_id,
+                    storage_itemId: data.item.storage_itemId,
+                    storage_userId: req.user.profile.user_id,
+                    storage_caseId: null,
+                    storage_color: data.item.storage_color,
+                    source: 'upgrade',
+                });
+            }
+        }
         return res.status(200).json({ status: 200, data });
     } catch (e) {
         if (e && e.code === 'CHANCE_CHANGED') {
