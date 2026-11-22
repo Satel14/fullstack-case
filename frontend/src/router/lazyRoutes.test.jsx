@@ -79,6 +79,7 @@ jest.mock('../pages/ProvablyFair', () => mockPage('ProvablyFair'));
 jest.mock('../pages/Inventory', () => mockPage('Inventory'));
 jest.mock('../pages/Admin', () => mockPage('Admin'));
 jest.mock('../pages/Bonus', () => mockPage('Bonus'));
+jest.mock('../pages/Upgrade', () => mockPage('Upgrade'));
 jest.mock('../store/actions/user', () => ({ getProfileFetch: jest.fn() }));
 jest.mock('../store/actions/module', () => ({ getAllModules: jest.fn() }));
 
@@ -238,6 +239,7 @@ test.each([
     ['/top', 'Top'],
     ['/faq', 'Faq'],
     ['/bonus', 'Bonus'],
+    ['/upgrade', 'Upgrade'],
 ])('the secondary route %s loads and renders its own page', async (path, name) => {
     getProfileFetch.mockImplementation(signsInAs({ ...PLAYER, user_role: roles.ADMINISTRATOR }));
     renderAt(path);

@@ -5,6 +5,7 @@ import './index.css';
 import 'antd/dist/antd.css';
 import RouterLayout from './router/RouterLayout';
 import './view/style.scss';
+import './view/upgrade.scss';
 import './i18n';
 import AntdLocale from './i18n/AntdLocale';
 import ErrorBoundary from './components/ErrorBoundary';

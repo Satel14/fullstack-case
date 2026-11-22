@@ -13,6 +13,7 @@ import {
     SafetyCertificateOutlined,
     AppstoreOutlined,
     SettingOutlined,
+    RocketOutlined,
 } from '@ant-design/icons';
 
 import LanguageSwitcher from './LanguageSwitcher';
@@ -25,6 +26,7 @@ const mapStateToProps = (state) => ({
 
 const KEY_OF_PAGE = {
     '/': 'cases',
+    '/upgrade': 'upgrade',
     '/top': 'topplayers',
     '/bonus': 'bonus',
     '/faq': 'faq',
@@ -58,6 +60,11 @@ class MenuLayoutSlider extends React.Component {
                 icon: <CodeSandboxOutlined />,
             },
             {
+                key: 'upgrade',
+                label: <Link to="/upgrade">{t('menu.upgrade')}</Link>,
+                icon: <RocketOutlined />,
+            },
+            {
                 key: 'topplayers',
                 label: <Link to="/top">{t('menu.topPlayers')}</Link>,
                 icon: <BarChartOutlined />,
@@ -85,7 +92,7 @@ class MenuLayoutSlider extends React.Component {
         ];
 
         if (isAuthorized(user)) {
-            defaultMenu.splice(3, 0, {
+            defaultMenu.splice(4, 0, {
                 key: 'inventory',
                 label: <Link to="/inventory">{t('inventory.title')}</Link>,
                 icon: <AppstoreOutlined />,

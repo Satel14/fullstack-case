@@ -22,6 +22,7 @@ const ProvablyFair = lazyPage(() => import('../pages/ProvablyFair'));
 const Inventory = lazyPage(() => import('../pages/Inventory'));
 const Admin = lazyPage(() => import('../pages/Admin'));
 const Bonus = lazyPage(() => import('../pages/Bonus'));
+const Upgrade = lazyPage(() => import('../pages/Upgrade'));
 
 export default {
     private: [
@@ -71,6 +72,13 @@ export default {
         },
     ],
     public: [
+        {
+            path: '/upgrade',
+            exact: true,
+            layout: Layout,
+            component: Upgrade,
+            titleKey: 'upgrade.title',
+        },
         {
             path: '/provably-fair',
             exact: true,

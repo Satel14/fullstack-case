@@ -5,7 +5,7 @@ export const getUpgradeTargets = ({
 } = {}) => {
     const query = new URLSearchParams();
     Object.entries({
-        minPrice, maxPrice, search, limit, offset,
+        minPrice, maxPrice, search: typeof search === 'string' ? search.trim() || undefined : undefined, limit, offset,
     }).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
             query.set(key, value);

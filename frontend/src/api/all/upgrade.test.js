@@ -54,6 +54,17 @@ test('zero price bounds are retained and absent filters are omitted', async () =
     expect(get).toHaveBeenLastCalledWith('/upgrade/targets?limit=60&offset=0');
 });
 
+test.each(['', '   ', undefined, null])('an empty target search %p is omitted', async (search) => {
+    await getUpgradeTargets({ search });
+    expect(get).toHaveBeenCalledWith('/upgrade/targets?limit=60&offset=0');
+});
+
+test('target search is trimmed before being sent', async () => {
+    await getUpgradeTargets({ search: '  AK-47  ' });
+    const url = new URL(get.mock.calls[0][0], 'https://example.test');
+    expect(url.searchParams.get('search')).toBe('AK-47');
+});
+
 test.each(['default', 'painted'])('upgrades POST the selected storage rows, %s target and shown threshold', async (targetColor) => {
     const body = {
         storageIds: [12, 34], targetItemId: 56, targetColor, expectedThreshold: 450000,

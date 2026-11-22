@@ -30,3 +30,9 @@ test('the provably-fair page is open to guests, so anyone can check a draw', () 
     expect(routes.public.map((route) => route.path)).toContain('/provably-fair');
     expect(routes.private.map((route) => route.path)).not.toContain('/provably-fair');
 });
+
+test('upgrade is a public page with its own translated title', () => {
+    const routes = require('./routes').default;
+    expect(routes.public.find((route) => route.path === '/upgrade')).toMatchObject({ exact: true, titleKey: 'upgrade.title' });
+    expect(routes.private.map((route) => route.path)).not.toContain('/upgrade');
+});
