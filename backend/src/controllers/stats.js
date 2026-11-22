@@ -6,7 +6,7 @@ const { answerFailure } = require('../helpers/failure');
 module.exports.getSiteStats = async (req, res) => {
     try {
         const openedCases = await StorageService.getCountOpenedCases();
-        const receivedItems = await StorageService.getCountOpenedCases('received');
+        const receivedItems = await StorageService.getCountReceivedItems();
         const online = onlinePresence();
         const onlineUserList = await UserService.getOnlineUsers(online.userIds);
         const userCounts = await UserService.getCountOfAllUsers();

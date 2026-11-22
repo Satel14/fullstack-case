@@ -2,7 +2,7 @@ const Storage = require('../models/storage');
 const { pageOffset } = require('../helpers/paging');
 const ItemService = require('./item');
 const MESSAGE = require('../constant/responseMessages');
-const { Op } = require('sequelize');
+const { IndexHints, Op } = require('sequelize');
 
 const PUBLIC_HISTORY_FIELDS = [
     'storage_id',
@@ -22,6 +22,7 @@ module.exports.getTopUsersByItemCount = async (limit, offset) => {
             ],
             where: {
                 storage_userId: { [Op.ne]: null },
+                storage_caseId: { [Op.ne]: null },
             },
             group: ['storage_userId'],
             order: [
@@ -228,8 +229,10 @@ module.exports.getStorageInfoById = async (userId, id, status, options = {}) => 
 module.exports.getStorageItemsCountByUserId = async (id) => {
     try {
         const obj = {
+            indexHints: [{ type: IndexHints.USE, values: ['storage_user_id_case_id'] }],
             where: {
                 storage_userId: id,
+                storage_caseId: { [Op.ne]: null },
             },
         };
 
@@ -293,7 +296,7 @@ module.exports.getDropStatsByUserId = async (userId) => {
 
 module.exports.getFavoriteCaseIdByUserId = async (userId) => {
     const [dropsByCase] = await Storage.sequelize.query(
-        'SELECT caseId, COUNT(*) AS drops, MAX(id) AS newestDrop FROM storage WHERE userId = ? GROUP BY caseId',
+        'SELECT caseId, COUNT(*) AS drops, MAX(id) AS newestDrop FROM storage WHERE userId = ? AND caseId IS NOT NULL GROUP BY caseId',
         { replacements: [userId] },
     );
 
@@ -310,19 +313,17 @@ module.exports.getFavoriteCaseIdByUserId = async (userId) => {
 
 module.exports.getCountOpenedCases = async (status = null) => {
     try {
-        let obj = {};
+        const where = { storage_caseId: { [Op.ne]: null } };
 
         if (status) {
-            obj = {
-                where: {
-                    storage_status: status,
-                },
-            };
+            where.storage_status = status;
         }
 
-        const count = await Storage.count(obj);
+        const count = await Storage.count({ where });
         return count;
     } catch (e) {
         throw Error(e.message);
     }
 };
+
+module.exports.getCountReceivedItems = async () => Storage.count({ where: { storage_status: 'received' } });
