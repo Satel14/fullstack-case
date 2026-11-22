@@ -324,7 +324,7 @@ test("a reset does not lock other players' items while it waits for an open in f
     assert.deepStrictEqual(rows.map((r) => r.userId), [3]);
 });
 
-test('a reset keeps pending withdrawals and delivered items', async () => {
+test('a reset clears upgraded stakes, keeps withdrawals and preserves upgrade snapshots', async () => {
     const sequelize = await resetTestDatabase();
     activeSequelize = sequelize;
     await seedPlayers(sequelize);
@@ -334,8 +334,25 @@ test('a reset keeps pending withdrawals and delivered items', async () => {
         + "(1, 11, 'default', 'bomj', 'https://steamcommunity.com/tradeoffer/new/?partner=1', 'waitingtrade'), "
         + "(1, 12, 'default', 'bomj', NULL, 'received'), "
         + "(1, 13, 'default', 'bomj', NULL, 'money'), "
-        + "(2, 14, 'default', 'bomj', NULL, 'inventory')",
+        + "(2, 14, 'default', 'bomj', NULL, 'inventory'), "
+        + "(1, 15, 'painted', 'bomj', NULL, 'upgraded'), "
+        + "(2, 16, 'default', 'bomj', NULL, 'upgraded')",
     );
+    await sequelize.getQueryInterface().bulkInsert('upgrades', [1, 2].map((userId) => ({
+        userId, seedId: userId, serverSeedHash: 'a'.repeat(64), clientSeed: 'reset-seed', nonce: 0,
+        stake: JSON.stringify([{ storageId: userId + 5, itemId: userId + 14, color: userId === 1 ? 'painted' : 'default', price: '20.00' }]),
+        stakeValue: '20.00', targetItemId: 30, targetColor: 'painted', targetPrice: '40.00',
+        threshold: 450000, roll: 900000, won: false, resultStorageId: null, created_at: new Date(),
+    })));
+    await sequelize.query("INSERT INTO bonus_history (userId, bonusId, created_at) VALUES (1, 'welcome', NOW())");
+    await sequelize.query('UPDATE users SET balance = 100, `rank` = 5 WHERE id = 1');
+    await sequelize.query("INSERT INTO balance_history (userId, type, balanceChange, extraData, created_at) VALUES (1, 'payment', 100, '', NOW())");
+    const [upgradesBefore] = await sequelize.query('SELECT * FROM upgrades ORDER BY id');
+    const [bonusesBefore] = await sequelize.query('SELECT * FROM bonus_history ORDER BY id');
+    const StorageService = require('../src/services/storage');
+    assert.strictEqual(await StorageService.getStorageItemsCountByUserId(1), 5);
+    assert.strictEqual(await StorageService.getCountOpenedCases(), 7);
+    assert.deepStrictEqual(await StorageService.getTopUsersByItemCount(50, 0), [{ userId: 1, count: 5 }, { userId: 2, count: 2 }]);
 
     assert.strictEqual((await reset(1)).code, 200);
 
@@ -344,5 +361,12 @@ test('a reset keeps pending withdrawals and delivered items', async () => {
         [1, 11, 'https://steamcommunity.com/tradeoffer/new/?partner=1', 'waitingtrade'],
         [1, 12, null, 'received'],
         [2, 14, null, 'inventory'],
+        [2, 16, null, 'upgraded'],
     ]);
+    assert.strictEqual(await StorageService.getStorageItemsCountByUserId(1), 2);
+    assert.strictEqual(await StorageService.getCountOpenedCases(), 4);
+    assert.deepStrictEqual(await StorageService.getTopUsersByItemCount(50, 0), [{ userId: 1, count: 2 }, { userId: 2, count: 2 }]);
+    assert.deepStrictEqual((await sequelize.query('SELECT * FROM upgrades ORDER BY id'))[0], upgradesBefore);
+    assert.deepStrictEqual((await sequelize.query('SELECT * FROM bonus_history ORDER BY id'))[0], bonusesBefore);
+    assert.deepStrictEqual(await historyOf(sequelize, 1), [['payment', 100], ['reset', -100]]);
 });

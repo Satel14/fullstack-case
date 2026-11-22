@@ -190,7 +190,7 @@ module.exports.setStorageStatusById = async (storage_id, storage_status, options
     }
 };
 
-const STATUSES_CLEARED_ON_RESET = ['inventory', 'money'];
+const STATUSES_CLEARED_ON_RESET = ['inventory', 'money', 'upgraded'];
 
 module.exports.cleanStorageUser = async (userId, options = {}) => {
     try {
