@@ -62,3 +62,87 @@ so no one else can confirm a registration or receive a password-reset link.
   <code>echo "UPDATE provably_fair_seeds SET status='revealed', revealed_at=UTC_TIMESTAMP() WHERE status='active'" | docker exec -i fullstack-case sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" case'</code>,
   <code>docker compose start backend</code>.
 
+## Deploying to a server
+
+Use a VPS with at least 2 GB RAM running Ubuntu 24.04 (22.04 also works) and a domain. Point the domain's
+`A` record at the VPS's IPv4 address; add an `AAAA` record if the VPS also has IPv6.
+
+For email, verify your domain in Resend using the DNS records it provides. After creating `.env` below,
+set `RESEND_API_KEY` and `RESEND_FROM` to an address on that verified domain. Without a key the site runs
+with mail off: registration signs in immediately and password recovery is unavailable.
+
+Connect over SSH with an account that can use `sudo`. Replace `<repository-url>` with this repository's
+Git URL, and use your own domain, email and login in the commands below:
+
+```sh
+sudo apt-get update
+sudo apt-get install -y git
+git clone <repository-url> fullstack-case
+cd fullstack-case
+sudo sh ops/server-setup.sh
+```
+
+The setup script installs Docker and its Compose plugin, configures the firewall, and adds 2 GB of swap
+when a machine with less than 4 GB RAM has none. If your non-root account does not already have Docker
+access, run `sudo usermod -aG docker "$USER"`, then disconnect and reconnect over SSH before continuing.
+
+From the repository directory, create `.env` with fresh secrets:
+
+```sh
+sh ops/init-env.sh your-domain.com you@your-domain.com
+```
+
+The script refuses to overwrite an existing `.env`. Edit it to add your mail settings:
+
+```dotenv
+RESEND_API_KEY=your-resend-api-key
+RESEND_FROM=CASES.UA <noreply@your-domain.com>
+```
+
+Set `REACT_APP_SUPPORT_EMAIL` too if you want the site to show a support address. Then deploy and seed
+the fresh database once:
+
+```sh
+sh ops/deploy.sh
+sh ops/first-seed.sh
+```
+
+The full seed resets case counters and admin settings, so `first-seed.sh` refuses an existing case
+catalogue. Register at `https://your-domain.com`, then make that login an administrator:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec backend npm run grant-admin -- <login>
+```
+
+For later updates, run:
+
+```sh
+sh ops/deploy.sh
+```
+
+It pulls with `git pull --ff-only`, rebuilds the containers, waits for backend health, and checks
+`/api/health` over HTTPS. Migrations run automatically when the backend starts.
+
+Database dumps land in `./backups`; copy them off the server too. Read a service's recent logs with:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail 100 <service>
+```
+
+To test HTTPS locally, use a separate fresh clone with Docker available. These commands create `.env`
+with `DOMAIN=case.localhost` and start the production stack without pulling:
+
+```sh
+sh ops/init-env.sh case.localhost you@your-domain.com
+sh ops/deploy.sh --no-pull
+curl -k https://case.localhost/api/health
+```
+
+Open `https://case.localhost` and accept Caddy's local certificate. Caddy uses its own local CA for
+`localhost` and names ending in `.localhost`; `deploy.sh` uses `curl --insecure` for those names only.
+All other domains keep certificate verification enabled.
+
+Only application ports 80 and 443 face the internet (443 also uses UDP); SSH remains open for
+administration. Docker publishes ports past `ufw`, which is why the backend, MySQL and Redis ports bind
+to `127.0.0.1`.
+

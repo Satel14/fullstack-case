@@ -102,3 +102,16 @@ test('the environment template lists the production domain and ACME email', () =
     assert.match(env, /^DOMAIN=$/m);
     assert.match(env, /^ACME_EMAIL=$/m);
 });
+
+test('the README explains server deployment after stack operations and names every setup step', () => {
+    const readme = read('README.md');
+
+    assert.match(readme, /^## Operating the stack\n[\s\S]*?\n## Deploying to a server\n/m);
+    const section = readme.split('## Deploying to a server\n')[1].split('\n## ')[0];
+    for (const step of [
+        'ops/server-setup.sh', 'ops/init-env.sh', 'ops/deploy.sh', 'ops/first-seed.sh',
+        'grant-admin', 'DOMAIN=case.localhost',
+    ]) {
+        assert.ok(section.includes(step), `the deployment guide must include ${step}`);
+    }
+});
