@@ -13,6 +13,11 @@ module.exports = sequelize.define(
             field: 'title',
             type: Sequelize.STRING,
         },
+        category_slug: {
+            field: 'slug',
+            type: Sequelize.STRING(32),
+            allowNull: true,
+        },
         category_published: {
             field: 'published',
             type: Sequelize.INTEGER,

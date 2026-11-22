@@ -18,6 +18,8 @@ const deriveBaselineSchema = async () => {
 };
 
 const DOWN_EFFECTS = {
+    '20261122000100-case-categories.js':
+        'drops categories.slug, so the case list shows the stored English section titles instead of the translated headings',
     '20261122000000-item-images-webp.js':
         'points every item picture back at a .png file the repository no longer has, '
         + 'so item pictures stay broken until the PNGs are restored',
