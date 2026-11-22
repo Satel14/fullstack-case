@@ -111,6 +111,20 @@ test('a refusal that names a sale rate hands the rate to the caller with the mes
     await expect(put('/storage/sell/5', { rate: 1 })).rejects.toEqual({ error: 409, message: 'price changed' });
 });
 
+test.each([450000, 0])('a refusal hands the numeric upgrade threshold %i to the caller', async (threshold) => {
+    global.fetch.mockReturnValue(respond(409, {
+        status: 409, message: 'chance changed', code: 'UPGRADE.CHANCE_CHANGED', threshold,
+    }));
+    await expect(post('/upgrade', {})).rejects.toEqual({
+        error: 409, message: 'chance changed', code: 'UPGRADE.CHANCE_CHANGED', threshold,
+    });
+});
+
+test.each(['450000', null, undefined])('a refusal ignores a nonnumeric upgrade threshold %p', async (threshold) => {
+    global.fetch.mockReturnValue(respond(409, { message: 'chance changed', threshold }));
+    await expect(post('/upgrade', {})).rejects.toEqual({ error: 409, message: 'chance changed' });
+});
+
 test('a refusal hands its code and values to the caller with the message', async () => {
     global.fetch.mockReturnValue(respond(422, {
         status: 422, message: 'Відмова', code: 'PROMOCODE.EXPIRED', params: { bonus: 5 },

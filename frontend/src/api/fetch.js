@@ -42,10 +42,12 @@ const errorPayload = async (result) => {
     try {
         const body = await result.json();
         const rate = body && typeof body.rate === 'number' ? body.rate : null;
+        const threshold = body && typeof body.threshold === 'number' ? body.threshold : null;
         return {
             error: result.status,
             ...answerFields(body),
             ...(rate !== null && { rate }),
+            ...(threshold !== null && { threshold }),
         };
     } catch (e) {
         return { error: result.status };
