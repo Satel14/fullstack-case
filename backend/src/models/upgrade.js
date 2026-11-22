@@ -8,7 +8,7 @@ module.exports = sequelize.define(
         up_userId: { field: 'userId', type: Sequelize.INTEGER, allowNull: false },
         up_seedId: { field: 'seedId', type: Sequelize.INTEGER, allowNull: false },
         up_serverSeedHash: { field: 'serverSeedHash', type: Sequelize.STRING(64), allowNull: false },
-        up_clientSeed: { field: 'clientSeed', type: Sequelize.STRING(64), allowNull: false },
+        up_clientSeed: { field: 'clientSeed', type: Sequelize.STRING(255), allowNull: false },
         up_nonce: { field: 'nonce', type: Sequelize.INTEGER, allowNull: false },
         up_stake: { field: 'stake', type: Sequelize.TEXT, allowNull: false },
         up_stakeValue: { field: 'stakeValue', type: Sequelize.DECIMAL(12, 2), allowNull: false },

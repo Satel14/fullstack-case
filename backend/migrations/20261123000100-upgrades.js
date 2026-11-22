@@ -7,7 +7,7 @@ module.exports = {
             userId: { type: DataTypes.INTEGER, allowNull: false },
             seedId: { type: DataTypes.INTEGER, allowNull: false },
             serverSeedHash: { type: DataTypes.STRING(64), allowNull: false },
-            clientSeed: { type: DataTypes.STRING(64), allowNull: false },
+            clientSeed: { type: DataTypes.STRING(255), allowNull: false },
             nonce: { type: DataTypes.INTEGER, allowNull: false },
             stake: { type: DataTypes.TEXT, allowNull: false },
             stakeValue: { type: DataTypes.DECIMAL(12, 2), allowNull: false },

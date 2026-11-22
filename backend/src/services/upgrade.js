@@ -50,8 +50,10 @@ module.exports.performUpgrade = async ({ userId, storageIds, targetItemId, targe
         const threshold = upgradeThreshold(stakeKop, targetKop);
         if (threshold > MAX_THRESHOLD) { throw new Error(MESSAGE.UPGRADE.CHANCE_TOO_HIGH); }
         if (threshold < MIN_THRESHOLD) { throw new Error(MESSAGE.UPGRADE.CHANCE_TOO_LOW); }
+        const stakeValue = credits(stakeKop);
+        const targetPrice = credits(targetKop);
         if (threshold !== expectedThreshold) {
-            throw Object.assign(new Error(MESSAGE.UPGRADE.CHANCE_CHANGED), { code: 'CHANCE_CHANGED', threshold });
+            throw Object.assign(new Error(MESSAGE.UPGRADE.CHANCE_CHANGED), { code: 'CHANCE_CHANGED', threshold, stakeValue, targetPrice });
         }
 
         const nonce = seed.pf_nonce;
@@ -61,8 +63,6 @@ module.exports.performUpgrade = async ({ userId, storageIds, targetItemId, targe
             where: { storage_id: ids, storage_userId: userId }, transaction: t,
         });
         const storageId = won ? await StorageService.addItem(userId, targetItemId, targetColor, null, { transaction: t }) : null;
-        const stakeValue = credits(stakeKop);
-        const targetPrice = credits(targetKop);
         const upgrade = await Upgrade.create({
             up_userId: userId,
             up_seedId: seed.pf_id,

@@ -168,6 +168,25 @@ test('a known win consumes the stakes, stores the complete audit and returns exa
     }]]);
 });
 
+test('an upgrade preserves a legacy active client seed of 200 code points', async (t) => {
+    const clientSeed = `😀${'\uFE0E\uFE0F'.repeat(99)}z`;
+    assert.equal(Array.from(clientSeed).length, 200);
+    await sequelize.query('UPDATE provably_fair_seeds SET clientSeed = ? WHERE id = 1', { replacements: [clientSeed] });
+    const logs = catchLogs(t);
+    const { status, payload } = await request();
+    assert.equal(status, 200, JSON.stringify(payload));
+    assert.equal(payload.data.clientSeed, clientSeed);
+    assert.equal(payload.data.roll, upgradeRoll(WIN_SEED, clientSeed, NONCE));
+    const after = await snapshot();
+    assert.equal(after.upgrades.length, 1);
+    assert.equal(after.upgrades[0].clientSeed, clientSeed);
+    assert.equal(after.upgrades[0].nonce, NONCE);
+    assert.equal(after.provably_fair_seeds[0].clientSeed, clientSeed);
+    assert.equal(after.provably_fair_seeds[0].nonce, NONCE + 1);
+    assert.deepEqual(after.storage.slice(0, 2).map((row) => row.status), ['upgraded', 'upgraded']);
+    assert.deepEqual(logs, []);
+});
+
 test('a known loss consumes the stakes and one nonce but creates no item or balance change', async (t) => {
     await sequelize.query('UPDATE provably_fair_seeds SET serverSeed = ?, serverSeedHash = ? WHERE id = 1', {
         replacements: [LOSS_SEED, hash(LOSS_SEED)],
@@ -231,10 +250,13 @@ test('seed preparation precedes the transaction and locked stakes precede every 
     }
 });
 
-test('a changed expected threshold returns 409 with the current value and rolls back quietly', async (t) => {
+test('a changed expected threshold returns 409 with current threshold and prices and rolls back quietly', async (t) => {
     const logs = catchLogs(t);
     const payload = await refused({ ...BODY, expectedThreshold: 450001 }, 'UPGRADE.CHANCE_CHANGED', 409);
-    assert.deepEqual(payload, { status: 409, message: MESSAGE.UPGRADE.CHANCE_CHANGED, code: 'UPGRADE.CHANCE_CHANGED', threshold: 450000 });
+    assert.deepEqual(payload, {
+        status: 409, message: MESSAGE.UPGRADE.CHANCE_CHANGED, code: 'UPGRADE.CHANCE_CHANGED',
+        threshold: 450000, stakeValue: '20.00', targetPrice: '40.00',
+    });
     assert.deepEqual(logs, []);
 });
 
@@ -244,10 +266,10 @@ test('prices changed before the storage lock completes are checked inside the tr
         const rows = await original.call(this, options);
         if (options.lock) {
             await sequelize.query('UPDATE insider_prices SET pricesInCredits = ? WHERE name = ?', {
-                replacements: ['{"default":"160.00"}', 'Item 30'],
+                replacements: ['{"default":"160.04"}', 'Item 30'],
             });
             await sequelize.query('UPDATE insider_prices SET pricesInCredits = ? WHERE name = ?', {
-                replacements: ['{"default":"25.00","painted":"15.00"}', 'Item 10'],
+                replacements: ['{"default":"25.01","painted":"15.00"}', 'Item 10'],
             });
         }
         return rows;
@@ -255,6 +277,8 @@ test('prices changed before the storage lock completes are checked inside the tr
     const logs = catchLogs(t);
     const payload = await refused(BODY, 'UPGRADE.CHANCE_CHANGED', 409);
     assert.equal(payload.threshold, 225000);
+    assert.equal(payload.stakeValue, '40.01');
+    assert.equal(payload.targetPrice, '160.04');
     assert.deepEqual(logs, []);
 });
 

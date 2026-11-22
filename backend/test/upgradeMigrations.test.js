@@ -77,7 +77,7 @@ test('the upgrades table has the contract columns, nullability, primary key and 
         userId: /^int(?:\(11\))?$/i,
         seedId: /^int(?:\(11\))?$/i,
         serverSeedHash: /^varchar\(64\)$/i,
-        clientSeed: /^varchar\(64\)$/i,
+        clientSeed: /^varchar\(255\)$/i,
         nonce: /^int(?:\(11\))?$/i,
         stake: /^text$/i,
         stakeValue: /^decimal\(12,2\)$/i,
@@ -107,8 +107,9 @@ test('the upgrades table has the contract columns, nullability, primary key and 
 test('the upgrade model round-trips every alias, exact prices, a win and a loss', async () => {
     await resetTestDatabase();
     const Upgrade = require('../src/models/upgrade');
+    assert.equal(Upgrade.rawAttributes.up_clientSeed.type.toSql(), 'VARCHAR(255)');
     const record = {
-        up_userId: 1, up_seedId: 2, up_serverSeedHash: 'a'.repeat(64), up_clientSeed: 'client:seed', up_nonce: 7,
+        up_userId: 1, up_seedId: 2, up_serverSeedHash: 'a'.repeat(64), up_clientSeed: `c${'\uFE0F'.repeat(254)}`, up_nonce: 7,
         up_stake: JSON.stringify([{ storageId: 10, itemId: 100, color: 'default', price: '12.34' }]),
         up_stakeValue: '12.34', up_targetItemId: 200, up_targetColor: 'painted', up_targetPrice: '24.68',
         up_threshold: 450000, up_roll: 123456, up_won: true, up_resultStorageId: 11,

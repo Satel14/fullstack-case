@@ -93,7 +93,10 @@ module.exports.upgrade = async (req, res) => {
         return res.status(200).json({ status: 200, data });
     } catch (e) {
         if (e && e.code === 'CHANCE_CHANGED') {
-            return res.status(409).json({ status: 409, message: MESSAGE.UPGRADE.CHANCE_CHANGED, threshold: e.threshold });
+            return res.status(409).json({
+                status: 409, message: MESSAGE.UPGRADE.CHANCE_CHANGED,
+                threshold: e.threshold, stakeValue: e.stakeValue, targetPrice: e.targetPrice,
+            });
         }
         return answerFailure(res, e, { status: 422, where: 'upgrade.perform' });
     }
