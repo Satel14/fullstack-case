@@ -11,7 +11,18 @@ import {
     targetPriceRange,
     multiplierRange,
     rollAngle,
+    rollPercent,
 } from './upgrade';
+
+test.each([
+    [0, 'en', '0.0000%'],
+    [1, 'en', '0.0001%'],
+    [450000, 'en', '45.0000%'],
+    [999999, 'en', '99.9999%'],
+    [90909, 'uk', '9,0909%'],
+])('roll %i is shown with four decimals in %s', (roll, language, expected) => {
+    expect(rollPercent(roll, language).replace(/\s/g, '')).toBe(expected);
+});
 
 test('upgrade constants match the approved rules', () => {
     expect(ROLL_SCALE).toBe(1000000);

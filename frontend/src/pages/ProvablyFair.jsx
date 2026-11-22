@@ -11,6 +11,8 @@ import { useHistory } from 'react-router-dom';
 import Loader from '../components/mini/Loader';
 import ItemColor from '../components/mini/ItemColor';
 import openNotification from '../components/mini/openNotification';
+import UpgradeHistory from '../components/provablyFair/UpgradeHistory';
+import UpgradeCalculator from '../components/provablyFair/UpgradeCalculator';
 import { clientErrorMessage, isRefusal } from '../helpers/serverMessage';
 import { gradeName } from '../helpers/grade';
 import cachedItemName from '../helpers/itemName';
@@ -70,6 +72,8 @@ const ProvablyFair = () => {
     });
     const [calcResult, setCalcResult] = useState(null);
     const [calcError, setCalcError] = useState(null);
+    const [calculatorMode, setCalculatorMode] = useState('case');
+    const [upgradeRecord, setUpgradeRecord] = useState(null);
     const generation = useRef(0);
     const mounted = useRef(true);
 
@@ -219,6 +223,7 @@ const ProvablyFair = () => {
     };
 
     const onVerifyRow = (row) => {
+        setCalculatorMode('case');
         setCalc({
             serverSeed: row.revealedServerSeed || '',
             clientSeed: row.clientSeed,
@@ -227,6 +232,11 @@ const ProvablyFair = () => {
             openId: row.verification === 'snapshot' ? row.id : null,
         });
         setCalcResult(null);
+    };
+
+    const onVerifyUpgrade = (row) => {
+        setUpgradeRecord({ ...row });
+        setCalculatorMode('upgrade');
     };
 
     const computedGrade = calcResult
@@ -312,6 +322,7 @@ const ProvablyFair = () => {
                 {historyLoaded && hasMoreHistory && (
                     <Button icon={<ReloadOutlined />} loading={historyLoading} onClick={loadMoreHistory}>{t('provablyFair.loadMore')}</Button>
                 )}
+                <UpgradeHistory key={state.active.serverSeedHash} onVerify={onVerifyUpgrade} />
             </>
         );
     };
@@ -333,29 +344,37 @@ const ProvablyFair = () => {
             )}
 
             <h3>{t('provablyFair.calculator')}</h3>
-            <Input placeholder={t('provablyFair.serverSeedPlaceholder')} value={calc.serverSeed} onChange={(e) => setCalc({ ...calc, serverSeed: e.target.value, openId: null })} />
-            <Input placeholder={t('provablyFair.clientSeedPlaceholder')} value={calc.clientSeed} onChange={(e) => setCalc({ ...calc, clientSeed: e.target.value, openId: null })} />
-            <Input placeholder={t('provablyFair.noncePlaceholder')} value={calc.nonce} onChange={(e) => setCalc({ ...calc, nonce: e.target.value, openId: null })} />
-            <Input placeholder={t('provablyFair.caseIdPlaceholder')} value={calc.caseId} onChange={(e) => setCalc({ ...calc, caseId: e.target.value, openId: null })} />
-            <Button onClick={onCompute}>{t('provablyFair.compute')}</Button>
-            {calcResult && (
-                <div className="provablyfair-item">
-                    {t('provablyFair.computed')}: {itemName(calcResult.itemId)}
-                    {computedGrade && ` — ${computedGrade}`}
-                    <ItemColor color={calcResult.color} />
-                </div>
-            )}
-            {calcResult && calcResult.source === 'snapshot' && (
+            <div className="provablyfair-modes" role="group" aria-label={t('provablyFair.upgradeCalculatorMode')}>
+                <Button aria-pressed={calculatorMode === 'case'} onClick={() => setCalculatorMode('case')}>{t('provablyFair.case')}</Button>
+                <Button aria-pressed={calculatorMode === 'upgrade'} onClick={() => setCalculatorMode('upgrade')}>{t('provablyFair.upgradeMode')}</Button>
+            </div>
+            {calculatorMode === 'upgrade' ? <UpgradeCalculator record={upgradeRecord} /> : (
                 <>
-                    <div className={calcResult.seedMatches ? 'provablyfair-ok' : 'provablyfair-error'}>
-                        {t(calcResult.seedMatches ? 'provablyFair.seedMatches' : 'provablyFair.seedMismatch')}
-                    </div>
-                    <div className={calcResult.matchesRecord ? 'provablyfair-ok' : 'provablyfair-error'}>
-                        {t(calcResult.matchesRecord ? 'provablyFair.matchesRecord' : 'provablyFair.mismatchRecord')}
-                    </div>
+                    <Input placeholder={t('provablyFair.serverSeedPlaceholder')} value={calc.serverSeed} onChange={(e) => setCalc({ ...calc, serverSeed: e.target.value, openId: null })} />
+                    <Input placeholder={t('provablyFair.clientSeedPlaceholder')} value={calc.clientSeed} onChange={(e) => setCalc({ ...calc, clientSeed: e.target.value, openId: null })} />
+                    <Input placeholder={t('provablyFair.noncePlaceholder')} value={calc.nonce} onChange={(e) => setCalc({ ...calc, nonce: e.target.value, openId: null })} />
+                    <Input placeholder={t('provablyFair.caseIdPlaceholder')} value={calc.caseId} onChange={(e) => setCalc({ ...calc, caseId: e.target.value, openId: null })} />
+                    <Button onClick={onCompute}>{t('provablyFair.compute')}</Button>
+                    {calcResult && (
+                        <div className="provablyfair-item">
+                            {t('provablyFair.computed')}: {itemName(calcResult.itemId)}
+                            {computedGrade && ` — ${computedGrade}`}
+                            <ItemColor color={calcResult.color} />
+                        </div>
+                    )}
+                    {calcResult && calcResult.source === 'snapshot' && (
+                        <>
+                            <div className={calcResult.seedMatches ? 'provablyfair-ok' : 'provablyfair-error'}>
+                                {t(calcResult.seedMatches ? 'provablyFair.seedMatches' : 'provablyFair.seedMismatch')}
+                            </div>
+                            <div className={calcResult.matchesRecord ? 'provablyfair-ok' : 'provablyfair-error'}>
+                                {t(calcResult.matchesRecord ? 'provablyFair.matchesRecord' : 'provablyFair.mismatchRecord')}
+                            </div>
+                        </>
+                    )}
+                    {calcError && <div className="provablyfair-error">{calcErrorText(calcError)}</div>}
                 </>
             )}
-            {calcError && <div className="provablyfair-error">{calcErrorText(calcError)}</div>}
         </div>
     );
 };

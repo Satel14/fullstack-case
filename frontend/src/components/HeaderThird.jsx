@@ -16,6 +16,9 @@ const { Header } = Layout;
 
 const FEED_LENGTH = 40;
 
+const isUpgradeDrop = (item) => item.source === 'upgrade'
+    || (item.source === undefined && item.storage_caseId === null);
+
 const mergeDrops = (newer, older) => {
     const newerIds = new Set(newer.map((item) => item.storage_id));
     return [...newer, ...older.filter((item) => !newerIds.has(item.storage_id))].slice(0, FEED_LENGTH);
@@ -102,7 +105,7 @@ class HeaderThird extends React.Component {
         ].filter(Boolean).join(', ');
         const player = item.user_login || this.state.userList[item.storage_userId]?.user_login
             || t('top.playerFallback', { n: item.storage_userId });
-        return t('header.winnerProfile', { player, drop: description });
+        return t(isUpgradeDrop(item) ? 'header.winnerProfileUpgrade' : 'header.winnerProfile', { player, drop: description });
     }
 
     render() {
@@ -135,6 +138,9 @@ class HeaderThird extends React.Component {
                                         }}
                                     >
                                         <ItemColor color={item.storage_color} />
+                                        {isUpgradeDrop(item) && (
+                                            <span className="feed-upgrade-badge" aria-hidden="true">{this.props.t('upgrade.badge')}</span>
+                                        )}
                                     </div>
                                 </Link>
                             </Tooltip>

@@ -45,6 +45,12 @@ export const chancePercent = (threshold, language) => new Intl.NumberFormat(site
     maximumFractionDigits: 4,
 }).format(threshold / ROLL_SCALE);
 
+export const rollPercent = (roll, language) => new Intl.NumberFormat(siteLanguage(language), {
+    style: 'percent',
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4,
+}).format(roll / ROLL_SCALE);
+
 const targetKopRange = (stakeKop) => {
     if (!isPositiveKop(stakeKop)) {
         return { minKop: 0, maxKop: 0 };

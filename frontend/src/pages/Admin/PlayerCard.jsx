@@ -11,7 +11,7 @@ import roles from '../../enum/role';
 import LocalTime from '../../components/mini/LocalTime';
 
 const { TabPane } = Tabs;
-const STATUSES = ['inventory', 'received', 'waitingtrade', 'money'];
+const STATUSES = ['inventory', 'received', 'waitingtrade', 'money', 'upgraded'];
 const ROLE_KEYS = {
     [roles.NORMAL]: 'user',
     [roles.YOUTUBER]: 'youtuber',
@@ -172,7 +172,7 @@ const PlayerCard = ({ userId, login, onClose }) => {
                                 <div className="admin-player-card__counts">
                                     {STATUSES.map((status) => (
                                         <div key={status}>
-                                            {t(`inventory.status.${status}`)}: <span className="admin-player-card__count">{data.inventory.counts[status]}</span>
+                                            {t(`inventory.status.${status}`)}: <span className="admin-player-card__count">{data.inventory.counts[status] ?? 0}</span>
                                         </div>
                                     ))}
                                 </div>
