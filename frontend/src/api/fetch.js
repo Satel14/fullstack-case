@@ -43,11 +43,15 @@ const errorPayload = async (result) => {
         const body = await result.json();
         const rate = body && typeof body.rate === 'number' ? body.rate : null;
         const threshold = body && typeof body.threshold === 'number' ? body.threshold : null;
+        const stakeValue = body && typeof body.stakeValue === 'string' ? body.stakeValue : null;
+        const targetPrice = body && typeof body.targetPrice === 'string' ? body.targetPrice : null;
         return {
             error: result.status,
             ...answerFields(body),
             ...(rate !== null && { rate }),
             ...(threshold !== null && { threshold }),
+            ...(stakeValue !== null && { stakeValue }),
+            ...(targetPrice !== null && { targetPrice }),
         };
     } catch (e) {
         return { error: result.status };

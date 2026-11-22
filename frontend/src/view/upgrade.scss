@@ -233,6 +233,11 @@
     border-radius: 8px;
     background: #101727;
 
+    h3:focus {
+        outline: 2px solid #fff;
+        outline-offset: 3px;
+    }
+
     img {
         display: block;
         width: 100%;

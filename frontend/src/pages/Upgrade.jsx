@@ -38,7 +38,8 @@ const UpgradePlayer = () => {
     const busy = useRef(false);
     const [selected, setSelected] = useState([]);
     const [target, setTarget] = useState(null);
-    const [serverThreshold, setServerThreshold] = useState(null);
+    const [serverQuote, setServerQuote] = useState(null);
+    const [targetRefresh, setTargetRefresh] = useState(0);
     const [failure, setFailure] = useState(null);
     const [limitReached, setLimitReached] = useState(false);
     const [phase, setPhase] = useState('idle');
@@ -92,7 +93,7 @@ const UpgradePlayer = () => {
             setResult(draw);
             setSelected([]);
             setTarget(null);
-            setServerThreshold(null);
+            setServerQuote(null);
             setInventory([]);
             setInventoryOffset(0);
             setPhase('idle');
@@ -114,7 +115,7 @@ const UpgradePlayer = () => {
     const chosen = rows.filter((row) => selected.includes(row.storage_id));
     const stakeKop = chosen.reduce((sum, row) => sum + row.priceKop, 0);
     const targetKop = toKop(target?.price);
-    const threshold = serverThreshold ?? upgradeThreshold(stakeKop, targetKop);
+    const threshold = serverQuote?.threshold ?? upgradeThreshold(stakeKop, targetKop);
     const locked = phase !== 'idle';
     const canUpgrade = !locked && !inventoryLoading && !inventoryFailure
         && selected.length > 0 && selected.length <= MAX_STAKE_ITEMS && chosen.length === selected.length
@@ -126,7 +127,7 @@ const UpgradePlayer = () => {
     const clearOutcome = () => {
         setFailure(null);
         setLimitReached(false);
-        setServerThreshold(null);
+        setServerQuote(null);
         setResult(null);
         setDraw(null);
     };
@@ -182,8 +183,15 @@ const UpgradePlayer = () => {
             if (!mounted.current) {
                 return;
             }
-            if (error?.error === 409 && Number.isInteger(error.threshold)) {
-                setServerThreshold(error.threshold);
+            if (error?.error === 409) {
+                if (Number.isInteger(error.threshold)) {
+                    setServerQuote({ threshold: error.threshold, stakeValue: error.stakeValue, targetPrice: error.targetPrice });
+                }
+                setTargetRefresh((value) => value + 1);
+            } else if (error?.error === 422 && ['UPGRADE.CHANCE_TOO_HIGH', 'UPGRADE.CHANCE_TOO_LOW'].includes(error.code)) {
+                setTarget(null);
+                setServerQuote(null);
+                setTargetRefresh((value) => value + 1);
             }
             setFailure(error);
             busy.current = false;
@@ -192,6 +200,7 @@ const UpgradePlayer = () => {
     };
 
     const shownDraw = phase === 'rolling' ? draw : result;
+    const shownValues = shownDraw || serverQuote;
     return (
         <div className="upgrade-layout">
             <StakePicker
@@ -210,8 +219,8 @@ const UpgradePlayer = () => {
             <section className="upgrade-panel upgrade-center" aria-label={t('upgrade.chance')}>
                 <UpgradeRing
                     threshold={shownDraw?.threshold ?? threshold}
-                    stakeKop={shownDraw ? toKop(shownDraw.stakeValue) : stakeKop}
-                    targetKop={shownDraw ? toKop(shownDraw.targetPrice) : targetKop}
+                    stakeKop={shownValues?.stakeValue != null ? toKop(shownValues.stakeValue) : stakeKop}
+                    targetKop={shownValues?.targetPrice != null ? toKop(shownValues.targetPrice) : targetKop}
                     target={shownDraw?.target || target}
                     roll={shownDraw?.roll}
                     rolling={phase === 'rolling'}
@@ -228,7 +237,7 @@ const UpgradePlayer = () => {
                     {t(locked ? 'upgrade.rolling' : 'upgrade.submit')}
                 </Button>
             </section>
-            <TargetPicker stakeKop={stakeKop} target={target} locked={locked} formatPrice={formatPrice} onSelect={chooseTarget} />
+            <TargetPicker stakeKop={stakeKop} target={target} locked={locked} refreshVersion={targetRefresh} formatPrice={formatPrice} onSelect={chooseTarget} />
         </div>
     );
 };

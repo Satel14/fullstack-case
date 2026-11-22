@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     chancePercent, ROLL_SCALE, rollAngle,
@@ -11,6 +11,14 @@ const UpgradeRing = ({
     threshold, stakeKop, targetKop, target, roll, rolling, reducedMotion, result, wonItem, formatPrice,
 }) => {
     const { t, i18n } = useTranslation();
+    const resultHeading = useRef(null);
+
+    useEffect(() => {
+        if (result) {
+            resultHeading.current?.focus();
+        }
+    }, [result]);
+
     const chance = chancePercent(threshold, i18n.language);
     const sector = Math.max(0, Math.min(ROLL_SCALE, threshold)) / ROLL_SCALE;
     const angle = roll == null ? 0 : 1440 + rollAngle(roll);
@@ -44,20 +52,22 @@ const UpgradeRing = ({
                 <div><dt>{t('upgrade.targetValue')}</dt><dd>{formatPrice(targetKop)}</dd></div>
             </dl>
             {target && <p className="upgrade-target-name">{itemName({ item_name: target.name }, t, target.itemId)} · {colorName(target.color, t)}</p>}
-            {result && (
-                <div className="upgrade-result" role="status" aria-live="polite" style={gradeStyle(result.won ? resultItem?.item_grade : null)}>
-                    <h3>{t(result.won ? 'upgrade.won' : 'upgrade.lost')}</h3>
-                    {result.won ? (
-                        <>
-                            {resultItem?.item_imagePath && <img src={resultItem.item_imagePath} alt="" />}
-                            <strong>{itemName(resultItem, t, result.item?.storage_itemId)}</strong>
-                            <p>{colorName(result.item?.storage_color || result.target.color, t)}</p>
-                            <p className="upgrade-item__grade">{gradeName(resultItem?.item_grade, t)}</p>
-                            <p>{t('upgrade.itemAdded')}</p>
-                        </>
-                    ) : <p>{t('upgrade.itemsUsed')}</p>}
-                </div>
-            )}
+            <div className={result ? 'upgrade-result' : undefined} role="status" aria-live="polite" aria-atomic="true" style={gradeStyle(result?.won ? resultItem?.item_grade : null)}>
+                {result && (
+                    <>
+                        <h3 ref={resultHeading} tabIndex={-1}>{t(result.won ? 'upgrade.won' : 'upgrade.lost')}</h3>
+                        {result.won ? (
+                            <>
+                                {resultItem?.item_imagePath && <img src={resultItem.item_imagePath} alt="" />}
+                                <strong>{itemName(resultItem, t, result.item?.storage_itemId)}</strong>
+                                <p>{colorName(result.item?.storage_color || result.target.color, t)}</p>
+                                <p className="upgrade-item__grade">{gradeName(resultItem?.item_grade, t)}</p>
+                                <p>{t('upgrade.itemAdded')}</p>
+                            </>
+                        ) : <p>{t('upgrade.itemsUsed')}</p>}
+                    </>
+                )}
+            </div>
         </>
     );
 };

@@ -125,6 +125,27 @@ test.each(['450000', null, undefined])('a refusal ignores a nonnumeric upgrade t
     await expect(post('/upgrade', {})).rejects.toEqual({ error: 409, message: 'chance changed' });
 });
 
+test.each([['POST', post], ['PUT', put]])('%s refusals carry the current upgrade values as strings', async (_, send) => {
+    global.fetch.mockReturnValue(respond(409, {
+        status: 409, code: 'UPGRADE.CHANCE_CHANGED', threshold: 514285, stakeValue: '12.00', targetPrice: '21.00',
+    }));
+    await expect(send('/upgrade', {})).rejects.toEqual({
+        error: 409, code: 'UPGRADE.CHANCE_CHANGED', threshold: 514285, stakeValue: '12.00', targetPrice: '21.00',
+    });
+});
+
+test.each([12, null, undefined, {}, []])('a refusal ignores nonstring upgrade values %p', async (value) => {
+    global.fetch.mockReturnValue(respond(409, { stakeValue: value, targetPrice: value }));
+    await expect(post('/upgrade', {})).rejects.toEqual({ error: 409 });
+});
+
+test('upgrade value fields are copied independently without coercion', async () => {
+    global.fetch.mockReturnValue(respond(409, { stakeValue: '12.00', targetPrice: 21 }));
+    await expect(post('/upgrade', {})).rejects.toEqual({ error: 409, stakeValue: '12.00' });
+    global.fetch.mockReturnValue(respond(409, { stakeValue: 12, targetPrice: '21.00' }));
+    await expect(post('/upgrade', {})).rejects.toEqual({ error: 409, targetPrice: '21.00' });
+});
+
 test('a refusal hands its code and values to the caller with the message', async () => {
     global.fetch.mockReturnValue(respond(422, {
         status: 422, message: 'Відмова', code: 'PROMOCODE.EXPIRED', params: { bonus: 5 },

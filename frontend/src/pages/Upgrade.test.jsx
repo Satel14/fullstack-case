@@ -115,6 +115,25 @@ const selectPair = async () => {
     fireEvent.click(await screen.findByRole('button', { name: /^Target skin, Regular,/ }));
 };
 
+const selectFilteredTargetPage = async () => {
+    getUpgradeTargets.mockResolvedValue({ status: 200, data: { items: TARGETS, total: 63 } });
+    await selectPair();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: i18n.t('upgrade.multiplier', { multiplier: 2 }) })); });
+    jest.useFakeTimers('legacy');
+    fireEvent.change(screen.getByRole('textbox', { name: i18n.t('upgrade.search') }), { target: { value: '  Target skin  ' } });
+    await act(async () => { jest.advanceTimersByTime(300); });
+    expect(getUpgradeTargets).toHaveBeenLastCalledWith({
+        minPrice: 18, maxPrice: 22, search: 'Target skin', limit: 60, offset: 0,
+    });
+    jest.useRealTimers();
+    expect(screen.getByRole('button', { name: i18n.t('upgrade.nextTargets') })).toBeEnabled();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: i18n.t('upgrade.nextTargets') })); });
+    fireEvent.click(screen.getByRole('button', { name: /^Target skin, Regular,/ }));
+    expect(getUpgradeTargets).toHaveBeenLastCalledWith({
+        minPrice: 18, maxPrice: 22, search: 'Target skin', limit: 60, offset: 60,
+    });
+};
+
 test('guests see the rules and can sign in with a return to this page', () => {
     renderPage({});
     expect(screen.getByText(i18n.t('upgrade.intro'))).toBeInTheDocument();
@@ -219,10 +238,66 @@ test('an older target response cannot replace the list for a newer stake', async
     expect(screen.queryByRole('button', { name: /Obsolete target/ })).toBeNull();
 });
 
+test('a 409 shows the current server values and refreshes the same target page and filters', async () => {
+    renderPage();
+    await selectFilteredTargetPage();
+    const query = getUpgradeTargets.mock.calls[getUpgradeTargets.mock.calls.length - 1][0];
+    const calls = getUpgradeTargets.mock.calls.length;
+    const refresh = deferred();
+    getUpgradeTargets.mockReturnValueOnce(refresh.promise);
+    postUpgrade.mockRejectedValueOnce({
+        error: 409, code: 'UPGRADE.CHANCE_CHANGED', threshold: 514285, stakeValue: '12.00', targetPrice: '21.00',
+    });
+    fireEvent.click(submit());
+    expect(await screen.findByRole('alert')).toHaveTextContent(i18n.t('server.UPGRADE.CHANCE_CHANGED'));
+    const ring = within(screen.getByRole('region', { name: i18n.t('upgrade.chance') }));
+    expect(ring.getByLabelText(i18n.t('upgrade.stakeValue'))).toHaveTextContent('12.00');
+    expect(ring.getByText(/21\.00/)).toBeInTheDocument();
+    expect(ring.queryByText(/20\.00/)).toBeNull();
+    expect(ring.getByRole('img', { name: i18n.t('upgrade.ringLabel', { chance: '51.4285%' }) })).toBeInTheDocument();
+    expect(stake(1)).toHaveAttribute('aria-pressed', 'true');
+    expect(submit()).toBeEnabled();
+    expect(getUpgradeTargets).toHaveBeenCalledTimes(calls + 1);
+    expect(getUpgradeTargets).toHaveBeenLastCalledWith(query);
+    expect(getProfileStorage).toHaveBeenCalledTimes(1);
+    await act(async () => refresh.resolve({ data: { items: [{ ...TARGETS[0], price: 21 }, TARGETS[1]], total: 63 } }));
+    expect(screen.getByRole('button', { name: /^Target skin, Regular, 21\.00/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(ring.getByLabelText(i18n.t('upgrade.stakeValue'))).toHaveTextContent('12.00');
+    fireEvent.click(screen.getByRole('button', { name: /^Target skin, Painted,/ }));
+    expect(ring.getByLabelText(i18n.t('upgrade.stakeValue'))).toHaveTextContent('10.00');
+    expect(ring.getByText(/40\.00/)).toBeInTheDocument();
+    expect(ring.getByRole('img', { name: i18n.t('upgrade.ringLabel', { chance: '22.5%' }) })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
+});
+
+test.each(['CHANCE_TOO_HIGH', 'CHANCE_TOO_LOW'])('a 422 %s clears the target and refreshes the current catalogue page', async (code) => {
+    renderPage();
+    await selectFilteredTargetPage();
+    const query = getUpgradeTargets.mock.calls[getUpgradeTargets.mock.calls.length - 1][0];
+    const calls = getUpgradeTargets.mock.calls.length;
+    postUpgrade.mockRejectedValueOnce({ error: 422, code: `UPGRADE.${code}` });
+    getUpgradeTargets.mockResolvedValue({ data: { items: [{ ...TARGETS[0], price: 21 }], total: 61 } });
+    fireEvent.click(submit());
+    expect(await screen.findByRole('alert')).toHaveTextContent(i18n.t(`server.UPGRADE.${code}`));
+    expect(submit()).toBeDisabled();
+    expect(stake(1)).toHaveAttribute('aria-pressed', 'true');
+    expect(getUpgradeTargets).toHaveBeenCalledTimes(calls + 1);
+    expect(getUpgradeTargets).toHaveBeenLastCalledWith(query);
+    expect(getProfileStorage).toHaveBeenCalledTimes(1);
+    const target = await screen.findByRole('button', { name: /^Target skin, Regular, 21\.00/ });
+    expect(target).toHaveAttribute('aria-pressed', 'false');
+    const ring = within(screen.getByRole('region', { name: i18n.t('upgrade.chance') }));
+    expect(ring.getByText(i18n.t('upgrade.chooseTarget'))).toBeInTheDocument();
+    expect(ring.queryByText(/Target skin/)).toBeNull();
+    fireEvent.click(target);
+    expect(submit()).toBeEnabled();
+    expect(screen.queryByRole('alert')).toBeNull();
+});
+
 test('a 409 keeps the pair and adopts the current threshold for the next press', async () => {
     postUpgrade.mockRejectedValueOnce({
- error: 409, code: 'UPGRADE.CHANCE_CHANGED', message: 'Chance changed', threshold: 400000,
-});
+        error: 409, code: 'UPGRADE.CHANCE_CHANGED', message: 'Chance changed', threshold: 400000,
+    });
     renderPage();
     await selectPair();
     fireEvent.click(submit());
@@ -253,6 +328,10 @@ test.each([true, false])('a completed roll shows won=%p after four seconds, relo
     postUpgrade.mockReturnValueOnce(pending.promise);
     const { container } = renderPage();
     await selectPair();
+    const liveRegion = screen.getByRole('status');
+    expect(liveRegion).toBeEmptyDOMElement();
+    submit().focus();
+    expect(submit()).toHaveFocus();
     jest.useFakeTimers('legacy');
     fireEvent.click(submit());
     fireEvent.click(submit());
@@ -274,7 +353,9 @@ data: {
     expect(getProfileStorage).toHaveBeenCalledTimes(1);
     await act(async () => { jest.advanceTimersByTime(1); });
     const result = screen.getByRole('status');
+    expect(result).toBe(liveRegion);
     expect(result).toHaveTextContent(i18n.t(won ? 'upgrade.won' : 'upgrade.lost'));
+    expect(within(result).getByRole('heading', { name: i18n.t(won ? 'upgrade.won' : 'upgrade.lost') })).toHaveFocus();
     if (won) {
         expect(within(result).getByText('Target skin')).toBeInTheDocument();
         expect(result.style.getPropertyValue('--rarity')).toBe('#eb4b4b');
@@ -284,12 +365,18 @@ data: {
     expect(submit()).toBeDisabled();
 });
 
-test('reduced motion shows the outcome and reloads inventory immediately', async () => {
+test.each([true, false])('reduced motion shows won=%p immediately, focuses the result, and reloads inventory', async (won) => {
     reducedMotion = true;
+    postUpgrade.mockResolvedValue({ status: 200, data: { ...win, won, item: won ? win.item : null } });
     renderPage();
     await selectPair();
+    const liveRegion = screen.getByRole('status');
+    expect(liveRegion).toBeEmptyDOMElement();
+    submit().focus();
     await act(async () => { fireEvent.click(submit()); });
-    expect(screen.getByRole('status')).toHaveTextContent(i18n.t('upgrade.won'));
+    expect(screen.getByRole('status')).toBe(liveRegion);
+    expect(liveRegion).toHaveTextContent(i18n.t(won ? 'upgrade.won' : 'upgrade.lost'));
+    expect(within(liveRegion).getByRole('heading', { name: i18n.t(won ? 'upgrade.won' : 'upgrade.lost') })).toHaveFocus();
     expect(getProfileStorage).toHaveBeenCalledTimes(2);
 });
 

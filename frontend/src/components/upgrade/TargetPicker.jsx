@@ -15,7 +15,7 @@ import {
 const PAGE_LIMIT = 60;
 
 const TargetPicker = ({
-    stakeKop, target, locked, formatPrice, onSelect,
+    stakeKop, target, locked, formatPrice, onSelect, refreshVersion = 0,
 }) => {
     const { t } = useTranslation();
     const [search, setSearch] = useState('');
@@ -27,6 +27,7 @@ const TargetPicker = ({
     const [loading, setLoading] = useState(false);
     const [failure, setFailure] = useState(null);
     const request = useRef(0);
+    const lastRefresh = useRef(refreshVersion);
     const searching = search.trim() !== query;
 
     useEffect(() => {
@@ -73,6 +74,13 @@ const TargetPicker = ({
         load();
         return () => { request.current += 1; };
     }, [load]);
+
+    useEffect(() => {
+        if (lastRefresh.current !== refreshVersion) {
+            lastRefresh.current = refreshVersion;
+            load(offset);
+        }
+    }, [refreshVersion, load, offset]);
 
     return (
         <section className="upgrade-panel" aria-labelledby="upgrade-target-title" aria-busy={loading || searching}>
