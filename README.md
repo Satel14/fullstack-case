@@ -13,6 +13,9 @@ Folder backend <code>npm install</code>
 Folder frontend <code>npm install</code>
 
 ## Docker
+
+These commands are for local use only. For a server, follow [Deploying to a server](#deploying-to-a-server).
+
 Copy <code>.env.example</code> to <code>.env</code> in the repository root and set `JWT_SECRET` to a long random value,
 e.g. <code>node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"</code> — every `docker compose`
 command refuses to run without it.
@@ -64,8 +67,10 @@ so no one else can confirm a registration or receive a password-reset link.
 
 ## Deploying to a server
 
-Use a VPS with at least 2 GB RAM running Ubuntu 24.04 (22.04 also works) and a domain. Point the domain's
-`A` record at the VPS's IPv4 address; add an `AAAA` record if the VPS also has IPv6.
+Use a VPS with at least 2 GB RAM running Ubuntu 24.04 (22.04 also works) and a domain. Point only an `A` record
+at the VPS's IPv4 address. Do not add an `AAAA` record: Docker's userland proxy forwards IPv6 connections
+through the IPv4-only compose networks with the same bridge gateway IP, so all
+IPv6 visitors share IP-based rate limits.
 
 For email, verify your domain in Resend using the DNS records it provides. After creating `.env` below,
 set `RESEND_API_KEY` and `RESEND_FROM` to an address on that verified domain. Without a key the site runs
@@ -120,8 +125,24 @@ For later updates, run:
 sh ops/deploy.sh
 ```
 
-It pulls with `git pull --ff-only`, rebuilds the containers, waits for backend health, and checks
-`/api/health` over HTTPS. Migrations run automatically when the backend starts.
+It pulls with `git pull --ff-only`, removes any leftover local nginx container, rebuilds the containers,
+and restarts Caddy and the backup service to refresh their bind-mounted files. It then waits for backend
+health and checks `/api/health` over HTTPS. Migrations run automatically when the backend starts.
+
+After `sh ops/deploy.sh`, if a release adds cases, run inside the backend container:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec backend node scripts/seedCases.js --add-new
+```
+
+After deployment, if a release changes case prices, run inside the backend container:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec backend node scripts/seedCases.js --prices-only
+```
+
+If a release does both, run both commands. These modes preserve existing case counters, publishing and
+opening limits.
 
 Database dumps land in `./backups`; copy them off the server too. Read a service's recent logs with:
 
@@ -129,8 +150,15 @@ Database dumps land in `./backups`; copy them off the server too. Read a service
 docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail 100 <service>
 ```
 
-To test HTTPS locally, use a separate fresh clone with Docker available. These commands create `.env`
-with `DOMAIN=case.localhost` and start the production stack without pulling:
+To test HTTPS locally, first stop and remove the regular stack in the checkout where it was started:
+
+```sh
+docker compose down
+```
+
+The compose file pins container names and `127.0.0.1` ports, so the regular and HTTPS stacks cannot run
+side by side, even from separate clones. Then use a fresh clone with Docker available. These commands
+create `.env` with `DOMAIN=case.localhost` and start the production stack without pulling:
 
 ```sh
 sh ops/init-env.sh case.localhost you@your-domain.com
