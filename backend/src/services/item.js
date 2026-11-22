@@ -57,8 +57,8 @@ module.exports.getAllItemsWithPrices = async () => {
     return items.map((item) => ({ ...item, pricesInCredits: parsePrices(item.pricesInCredits) }));
 };
 
-module.exports.getItemsWithPrices = async (itemIds) => {
-    const items = await Item.findAll({ where: { item_itemId: itemIds } });
+module.exports.getItemsWithPrices = async (itemIds, { transaction } = {}) => {
+    const items = await Item.findAll({ where: { item_itemId: itemIds }, transaction });
 
     if (!items.length) {
         return {};
@@ -67,7 +67,7 @@ module.exports.getItemsWithPrices = async (itemIds) => {
     const [prices] = await sequelize.query(
         "SELECT items.itemId, insider_prices.pricesInCredits FROM items "
         + "JOIN insider_prices ON insider_prices.name = items.name WHERE items.itemId IN (?)",
-        { replacements: [itemIds] },
+        { replacements: [itemIds], transaction },
     );
     const pricesById = new Map(prices.map((row) => [row.itemId, row.pricesInCredits]));
 

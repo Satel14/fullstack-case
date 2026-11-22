@@ -75,6 +75,15 @@ const adminLimiter = rateLimit({
 
 const byPlayer = (req) => String(req.user.profile.user_id);
 
+const upgradeLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    keyGenerator: byPlayer,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: 429, message: MESSAGE.LIMIT.UPGRADE },
+});
+
 const promocodeLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 10,
@@ -121,6 +130,6 @@ const withdrawCancelLimiter = rateLimit({
 });
 
 module.exports = {
-    authLimiter, caseOpenLimiter, onlineLimiter, depositLimiter, resetLimiter, bonusLimiter, adminLimiter,
+    authLimiter, caseOpenLimiter, onlineLimiter, depositLimiter, resetLimiter, bonusLimiter, adminLimiter, upgradeLimiter,
     seedRotateLimiter, verifyLimiter, promocodeLimiter, transferLimiter, sellLimiter, receiveLimiter, withdrawCancelLimiter,
 };

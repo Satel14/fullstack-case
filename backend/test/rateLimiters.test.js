@@ -30,6 +30,7 @@ const WRITE_ROUTES_WITHOUT_MONEY = [
 ];
 
 const PER_USER_LIMITERS = {
+    'POST /api/upgrade': 'upgradeLimiter',
     'PUT /api/promocode/use': 'promocodeLimiter',
     'PUT /api/profile/sendmoney': 'transferLimiter',
     'PUT /api/storage/sell/:id': 'sellLimiter',

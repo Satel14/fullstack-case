@@ -771,6 +771,13 @@
             "NOT_PUBLISHED": "This case cannot be opened",
             "LIMIT_EXCEEDED": "The case opening limit has been exceeded"
         },
+        "UPGRADE": {
+            "CHANCE_CHANGED": "The upgrade chance has changed: check the new value and try again",
+            "ITEM_NOT_AVAILABLE": "One of the items is unavailable for an upgrade",
+            "TARGET_NOT_FOUND": "The selected item is unavailable as an upgrade target",
+            "CHANCE_TOO_HIGH": "The upgrade chance cannot exceed 75%",
+            "CHANCE_TOO_LOW": "The upgrade chance must be at least 1%"
+        },
         "ITEM": {
             "NOT_EXIST": "No such item",
             "RECEIVE_INFO_REQUIRED": "Add a link to your Steam profile in the settings",
@@ -831,6 +838,7 @@
         "LIMIT": {
             "AUTH": "Too many attempts. Try again later.",
             "CASE_OPEN": "Too many openings. Wait a little.",
+            "UPGRADE": "Too many upgrade attempts. Wait a little.",
             "REQUESTS": "Too many requests. Wait a little.",
             "DEPOSIT": "Too many top-up attempts. Wait a little.",
             "PROFILE_RESET": "Too many profile resets. Wait a little.",

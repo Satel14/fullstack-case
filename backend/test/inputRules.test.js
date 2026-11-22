@@ -241,9 +241,9 @@ const routesOf = (stack) => stack.flatMap((layer) => {
     return [];
 });
 
-const LIST_HEADS = ['1', '100', '0', '-1', 'abc', '2147483647', 'inventory', true, new Date(Date.now() + 86400000).toISOString()];
+const LIST_HEADS = ['1', '100', '0', '-1', 'abc', '2147483647', 'inventory', 'default', 'painted', true, new Date(Date.now() + 86400000).toISOString()];
 
-test('no rule set lets a list through for a body field it checks, headed by any value the field takes alone', async () => {
+test('no rule set lets a list through for a scalar body field it checks, headed by any value the field takes alone', async () => {
     const leaks = [];
     const untried = [];
     await Promise.all(definedRuleSets().map(async (ruleSet) => {
@@ -258,6 +258,13 @@ test('no rule set lets a list through for a body field it checks, headed by any 
             return validationResult(req).array().some((error) => error.param === field && error.location === 'body');
         };
         await Promise.all(bodyFields.map(async (field) => {
+            if (file === path.join('src', 'controllers', 'upgrade.js') && key === 'upgrade' && field === 'storageIds') {
+                assert.strictEqual(await refuses(field, [1, 2]), false);
+                for (const value of [...LIST_HEADS, [], [1, 1], [1, 'x'], [1, [2]], [1, 2, 3, 4, 5, 6, 7]]) {
+                    assert.strictEqual(await refuses(field, value), true, `storageIds accepted ${JSON.stringify(value)}`);
+                }
+                return;
+            }
             const takenAlone = (await Promise.all(LIST_HEADS.map(async (head) => ((await refuses(field, head)) ? null : head))))
                 .filter((head) => head !== null);
             if (takenAlone.length === 0) {
