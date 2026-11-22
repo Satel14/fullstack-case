@@ -138,7 +138,7 @@ test('the case open rules pass every case there is, one at a time or a hundred',
         validationResult(await checkedBy(CaseController.validate('openCaseById'), { body })).isEmpty()
     )));
 
-    assert.strictEqual(bodies.length, 76);
+    assert.strictEqual(bodies.length, 148);
     assert.deepStrictEqual(verdicts, bodies.map(() => true));
 });
 
